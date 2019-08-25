@@ -1,0 +1,25 @@
+{
+  "name": "mnemonica",
+  "version": "0.0.1",
+  "description": "abstract technique that aids information retention : instance inheritance system",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wentout/mnemonica.git"
+  },
+  "keywords": [
+    "ETL",
+    "DFD",
+    "inheritance",
+    "mnemonica"
+  ],
+  "author": "went.out@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wentout/mnemonica/issues"
+  },
+  "homepage": "https://github.com/wentout/mnemonica#readme"
+}
