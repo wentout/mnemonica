@@ -100,7 +100,12 @@ console.log('3.1. ', userWithoutPassword);
 console.log('3.2. ', userWithoutPassword.constructor.prototype);
 console.log('3.3. ', userWithoutPassword.constructor.name);
 
-
+console.log('!!!!!!!!!!!', userWithoutPassword instanceof UserWithoutPassword);
+console.log('!!!!!!!!!!!', userWithoutPassword instanceof UserTypeConstructor);
+console.log();
+console.log();
+console.log('!!!!!! Must be False !!!!!', userTC instanceof UserWithoutPassword);
+console.log();
 debugger;
 
 const userWithoutPassword_2 = new userTC.WithoutPassword();
