@@ -2,7 +2,8 @@
 
 const {
 	define,
-	types,
+	// types,
+	collectConstructors
 } = require('..');
 
 
@@ -66,7 +67,17 @@ const OverMore = MoreOver.define(() => {
 	};
 	OverMore.prototype = {};
 	return OverMore;
+});
 
+// const EvenMore = 
+OverMore.define(() => {
+	const EvenMore = function (str) {
+		this.str = str || 're-defined OverMore str';
+	};
+	EvenMore.prototype = {
+		evenMoreSign : 'evenMoreSign'
+	};
+	return EvenMore;
 });
 
 
@@ -77,8 +88,10 @@ const user = new UserType({
 	password : 321
 });
 
+console.log('\nstart :\n');
+
 console.log('1.1. ', user);
-console.log('1.2. ', user.constructor.prototype);
+console.log('1.2. ', user.constructor.prototype); // Mnemosyne
 console.log('1.3. ', user.constructor.name);
 
 
@@ -88,7 +101,7 @@ const userTC = new UserTypeConstructor({
 });
 
 console.log('2.1. ', userTC);
-console.log('2.2. ', userTC.constructor.prototype);
+console.log('2.2. ', userTC.constructor.prototype); // Mnemosyne
 console.log('2.3. ', userTC.constructor.name);
 
 
@@ -97,10 +110,10 @@ debugger;
 const userWithoutPassword = new userTC.WithoutPassword();
 
 console.log('3.1. ', userWithoutPassword);
-console.log('3.2. ', userWithoutPassword.constructor.prototype);
+console.log('3.2. ', userWithoutPassword.constructor.prototype.constructor.prototype); // Mnemosyne
 console.log('3.3. ', userWithoutPassword.constructor.name);
 
-console.log('!!!!!!!!!!!', userWithoutPassword instanceof UserWithoutPassword);
+console.log('\n\n!!!!!!!!!!!', userWithoutPassword instanceof UserWithoutPassword);
 console.log('!!!!!!!!!!!', userWithoutPassword instanceof UserTypeConstructor);
 console.log();
 console.log();
@@ -124,6 +137,8 @@ for (const name in userWPWithAdditionalSign) {
 	console.log(`userWithoutPassword_2_WithSign.${name} : `, userWPWithAdditionalSign[name]);
 }
 
+console.log('\n: >>> ', userWPWithAdditionalSign.constructor.prototype
+	.constructor.prototype.constructor.prototype); // Mnemosyne
 
 
 const moreOver = userWPWithAdditionalSign.MoreOver('sssssssssssssssssss');
@@ -132,6 +147,8 @@ for (const name in moreOver) {
 	console.log(`moreOver.${name} : `, moreOver[name]);
 }
 
+console.log('\n: >>> ', userWPWithAdditionalSign.constructor.prototype
+	.constructor.prototype.constructor.prototype.constructor.prototype); // Mnemosyne
 
 
 
@@ -141,5 +158,23 @@ for (const name in overMore) {
 	console.log(`OverMore.${name} : `, overMore[name]);
 }
 
+console.log('\n: >>> ', overMore.constructor.prototype
+	.constructor.prototype.constructor.prototype.constructor.prototype.constructor.prototype); // Mnemosyne
 
+
+const evenMore = overMore.EvenMore();
+console.log();
+for (const name in evenMore) {
+	console.log(`EvenMore.${name} : `, evenMore[name]);
+}
+
+	
+const evenMoreConstructors = collectConstructors(evenMore);
+console.log('\n evenMore Constructors : \n');
+Object.keys(evenMoreConstructors).reverse()
+	.map((name, idx) => { return {idx, name};})
+		.reverse()
+		.forEach(({idx,name} =it) => console.log(idx, `${name}`));
+
+console.log('\nfinish\n');
 debugger;

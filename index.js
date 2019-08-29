@@ -4,14 +4,16 @@ const odp = Object.defineProperty;
 
 
 const {
-	DEFAULT_NAMESPACE_NAME,
-	namespaces,
-	namespace,
+	// DEFAULT_NAMESPACE_NAME,
+	// namespaces,
+	// namespace,
 	types,
 } = require('./lib/descriptors');
 
 const {
-	define
+	define,
+	// SymbolConstructorName,
+	collectConstructors
 } = require('./lib/api').types;
 
 const fascade = {};
@@ -28,6 +30,12 @@ odp(fascade, 'types', {
 odp(fascade, 'define', {
 	get () {
 		return define;
+	}
+});
+
+odp(fascade, 'collectConstructors', {
+	get () {
+		return collectConstructors;
 	}
 });
 
