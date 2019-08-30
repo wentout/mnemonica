@@ -2,36 +2,39 @@
 
 const {
 	define,
-	// types,
+	types,
 	collectConstructors
 } = require('..');
 
 
-const UserType = define('UserType', function ({
-	email,
-	password
-} = userData) {
+const UserType = define('UserType', function (userData) {
+	const {
+		email,
+		password
+	} = userData;
 	this.email = email;
 	this.password = password;
 }, {
 	email : '',
 	password : '',
-	zzz : 'zzz'
+	description : 'UserType'
 });
 
 const UserTypeConstructor = define(() => {
 	
-	const UserTypeConstructor = function ({
-		email,
-		password
-	} = userData) {
+	const UserTypeConstructor = function (userData) {
+		const {
+			email,
+			password
+		} = userData;
 		this.email = email;
 		this.password = password;
 	};
 	
 	UserTypeConstructor.prototype = {
 		email : '',
-		password : ''
+		password : '',
+		description : 'UserTypeConstructor'
 	};
 	
 	return UserTypeConstructor;
@@ -42,7 +45,9 @@ const UserWithoutPassword = UserTypeConstructor.define(() => {
 	const WithoutPassword = function () {
 		this.password = undefined;
 	};
-	WithoutPassword.prototype = {};
+	WithoutPassword.prototype = {
+		WithoutPasswordSign : 'WithoutPasswordSign'
+	};
 	return WithoutPassword;
 });
 
@@ -51,12 +56,18 @@ const WithAdditionalSign = UserWithoutPassword.define(() => {
 	const WithAdditionalSign = function (sign) {
 		this.sign = sign;
 	};
+	WithAdditionalSign.prototype = {
+		WithAdditionalSignSign : 'WithAdditionalSignSign'
+	};
 	return WithAdditionalSign;
 });
 
 const MoreOver = WithAdditionalSign.define(() => {
 	const MoreOver = function (str) {
 		this.str = str || 'moreover str';
+	};
+	MoreOver.prototype = {
+		MoreOverSign : 'MoreOverSign'
 	};
 	return MoreOver;
 });
@@ -65,17 +76,19 @@ const OverMore = MoreOver.define(() => {
 	const OverMore = function (str) {
 		this.str = str || 're-defined OverMore str';
 	};
-	OverMore.prototype = {};
+	OverMore.prototype = {
+		OverMoreSign : 'OverMoreSign'
+	};
 	return OverMore;
 });
 
 // const EvenMore = 
 OverMore.define(() => {
 	const EvenMore = function (str) {
-		this.str = str || 're-defined OverMore str';
+		this.str = str || 're-defined EvenMore str';
 	};
 	EvenMore.prototype = {
-		evenMoreSign : 'evenMoreSign'
+		EvenMoreSign : 'EvenMoreSign'
 	};
 	return EvenMore;
 });
@@ -91,8 +104,8 @@ const user = new UserType({
 console.log('\nstart :\n');
 
 console.log('1.1. ', user);
-console.log('1.2. ', user.constructor.prototype); // Mnemosyne
-console.log('1.3. ', user.constructor.name);
+console.log('1.2.  proto : ', user.constructor.prototype); // Mnemosyne
+console.log('1.3. ', user.constructor.name, '\n');
 
 
 const userTC = new UserTypeConstructor({
@@ -101,8 +114,8 @@ const userTC = new UserTypeConstructor({
 });
 
 console.log('2.1. ', userTC);
-console.log('2.2. ', userTC.constructor.prototype); // Mnemosyne
-console.log('2.3. ', userTC.constructor.name);
+console.log('2.2.  proto : ', userTC.constructor.prototype); // Mnemosyne
+console.log('2.3. ', userTC.constructor.name, '\n');
 
 
 debugger;
@@ -110,7 +123,7 @@ debugger;
 const userWithoutPassword = new userTC.WithoutPassword();
 
 console.log('3.1. ', userWithoutPassword);
-console.log('3.2. ', userWithoutPassword.constructor.prototype.constructor.prototype); // Mnemosyne
+console.log('3.2.  proto : ', userWithoutPassword.constructor.prototype.constructor.prototype); // Mnemosyne
 console.log('3.3. ', userWithoutPassword.constructor.name);
 
 console.log('\n\n!!!!!!!!!!!', userWithoutPassword instanceof UserWithoutPassword);
@@ -128,10 +141,7 @@ for (const name in userWithoutPassword_2) {
 	console.log(`userWithoutPassword_2.${name} : `, userWithoutPassword_2[name]);
 }
 
-
-debugger;
-
-const userWPWithAdditionalSign = new userWithoutPassword_2.WithAdditionalSign('zzzz');
+const userWPWithAdditionalSign = new userWithoutPassword_2.WithAdditionalSign('userWithoutPassword_2.WithAdditionalSign');
 console.log();
 for (const name in userWPWithAdditionalSign) {
 	console.log(`userWithoutPassword_2_WithSign.${name} : `, userWPWithAdditionalSign[name]);
@@ -140,17 +150,11 @@ for (const name in userWPWithAdditionalSign) {
 console.log('\n: >>> ', userWPWithAdditionalSign.constructor.prototype
 	.constructor.prototype.constructor.prototype); // Mnemosyne
 
-
-const moreOver = userWPWithAdditionalSign.MoreOver('sssssssssssssssssss');
+const moreOver = userWPWithAdditionalSign.MoreOver('moreOver str from data');
 console.log();
 for (const name in moreOver) {
 	console.log(`moreOver.${name} : `, moreOver[name]);
 }
-
-console.log('\n: >>> ', userWPWithAdditionalSign.constructor.prototype
-	.constructor.prototype.constructor.prototype.constructor.prototype); // Mnemosyne
-
-
 
 const overMore = moreOver.OverMore();
 console.log();
@@ -158,23 +162,39 @@ for (const name in overMore) {
 	console.log(`OverMore.${name} : `, overMore[name]);
 }
 
-console.log('\n: >>> ', overMore.constructor.prototype
-	.constructor.prototype.constructor.prototype.constructor.prototype.constructor.prototype); // Mnemosyne
-
-
 const evenMore = overMore.EvenMore();
 console.log();
 for (const name in evenMore) {
 	console.log(`EvenMore.${name} : `, evenMore[name]);
 }
 
-	
 const evenMoreConstructors = collectConstructors(evenMore);
 console.log('\n evenMore Constructors : \n');
-Object.keys(evenMoreConstructors).reverse()
-	.map((name, idx) => { return {idx, name};})
+
+
+var base = types;
+Object.keys(evenMoreConstructors)
+	.reverse()
+	.map((name, idx) => { 
+		var iof = false;
+		if (name === 'Object') {
+			iof = evenMore instanceof Object;
+		} else {
+			if (base[name]) {
+				iof = evenMore instanceof base[name];
+				base = base[name].subtypes;
+			}
+		}
+		return { idx, name, iof };
+	})
 		.reverse()
-		.forEach(({idx,name} =it) => console.log(idx, `${name}`));
+		.forEach(({idx, name, iof} = it) => console.log(idx, `${name}`, ` >> evenMore instanceof ${name} : `, iof));
+
+
+console.log('\n evenMore Constructors Sequence : \n');
+console.log(collectConstructors(evenMore, true));
 
 console.log('\nfinish\n');
+
+
 debugger;
