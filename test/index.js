@@ -104,7 +104,7 @@ const user = new UserType({
 console.log('\nstart :\n');
 
 console.log('1.1. ', user);
-console.log('1.2.  proto : ', user.constructor.prototype); // Mnemosyne
+console.log('1.2.  proto : ', user.constructor.prototype); // UserType.prototype
 console.log('1.3. ', user.constructor.name, '\n');
 
 
@@ -114,7 +114,7 @@ const userTC = new UserTypeConstructor({
 });
 
 console.log('2.1. ', userTC);
-console.log('2.2.  proto : ', userTC.constructor.prototype); // Mnemosyne
+console.log('2.2.  proto : ', userTC.constructor.prototype); // UserTypeConstructor.prototype
 console.log('2.3. ', userTC.constructor.name, '\n');
 
 
@@ -123,7 +123,7 @@ debugger;
 const userWithoutPassword = new userTC.WithoutPassword();
 
 console.log('3.1. ', userWithoutPassword);
-console.log('3.2.  proto : ', userWithoutPassword.constructor.prototype.constructor.prototype); // Mnemosyne
+console.log('3.2.  proto of proto : ', userWithoutPassword.constructor.prototype.constructor.prototype); // UserTypeConstructor.prototype
 console.log('3.3. ', userWithoutPassword.constructor.name);
 
 console.log('\n\n!!!!!!!!!!!', userWithoutPassword instanceof UserWithoutPassword);
