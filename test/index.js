@@ -18,7 +18,28 @@ const UserType = define('UserType', function (userData) {
 	email : '',
 	password : '',
 	description : 'UserType'
+}, true);
+
+UserType.define(() => {
+	const UserTypePL1 = function () {
+		this.user_pl_1_sign = 'pl_1';
+	};
+	UserTypePL1.prototype = {
+		UserTypePL1 : 'UserTypePL_1'
+	};
+	return UserTypePL1;
+}, true);
+
+UserType.define(() => {
+	const UserTypePL2 = function () {
+		this.user_pl_2_sign = 'pl_2';
+	};
+	UserTypePL2.prototype = {
+		UserTypePL2 : 'UserTypePL_2'
+	};
+	return UserTypePL2;
 });
+
 
 const UserTypeConstructor = define(() => {
 	
@@ -93,6 +114,10 @@ OverMore.define(() => {
 	return EvenMore;
 });
 
+// *****************************************************
+// *****************************************************
+// *****************************************************
+const { deepEqual, deepStrictEqual } = require('assert');
 
 debugger;
 
@@ -100,6 +125,19 @@ const user = new UserType({
 	email : 'went.out@gmail.com',
 	password : 321
 });
+debugger;
+const userPL1 = new user.UserTypePL1();
+debugger;
+const userPL2 = new user.UserTypePL2();
+debugger;
+const userPL_1_2 = new userPL1.UserTypePL2();
+const userPL_NoNew = userPL1.UserTypePL2();
+deepEqual(user, {
+	email : 'went.out@gmail.com',
+	password : 321
+});
+deepStrictEqual(userPL2, userPL_1_2, userPL_NoNew);
+debugger;
 
 console.log('\nstart :\n');
 
