@@ -120,24 +120,30 @@ OverMore.define(() => {
 const { deepEqual, deepStrictEqual } = require('assert');
 
 debugger;
-
+process._rawDebug('new UserType >>>');
 const user = new UserType({
 	email : 'went.out@gmail.com',
 	password : 321
 });
 debugger;
+process._rawDebug('new user.UserTypePL1 >>>');
 const userPL1 = new user.UserTypePL1();
+
+console.log(collectConstructors(userPL1, true));
 debugger;
+process._rawDebug('new user.UserTypePL2 >>>');
 const userPL2 = new user.UserTypePL2();
 debugger;
+process._rawDebug('new userPL1.UserTypePL2 >>>');
 const userPL_1_2 = new userPL1.UserTypePL2();
+process._rawDebug('userPL1.UserTypePL2 >>>');
 const userPL_NoNew = userPL1.UserTypePL2();
+// return;
 deepEqual(user, {
 	email : 'went.out@gmail.com',
 	password : 321
 });
-deepStrictEqual(userPL2, userPL_1_2, userPL_NoNew);
-debugger;
+deepEqual(userPL2, userPL_1_2, userPL_NoNew);
 
 console.log('\nstart :\n');
 
