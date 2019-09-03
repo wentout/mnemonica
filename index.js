@@ -4,15 +4,20 @@ const odp = Object.defineProperty;
 
 
 const {
-	// DEFAULT_NAMESPACE_NAME,
 	// namespaces,
 	// namespace,
 	types,
 } = require('./lib/descriptors');
 
 const {
+	DEFAULT_NAMESPACE_NAME,
+	MNEMONICA,
+	SymbolSubtypeCollection,
+	SymbolConstructorName,
+} = require('./lib/const');
+
+const {
 	define,
-	// SymbolConstructorName,
 	collectConstructors
 } = require('./lib/api').types;
 
@@ -36,6 +41,27 @@ odp(fascade, 'define', {
 odp(fascade, 'collectConstructors', {
 	get () {
 		return collectConstructors;
+	}
+});
+
+odp(fascade, 'DEFAULT_NAMESPACE_NAME', {
+	get () {
+		return DEFAULT_NAMESPACE_NAME;
+	}
+});
+odp(fascade, 'MNEMONICA', {
+	get () {
+		return MNEMONICA;
+	}
+});
+odp(fascade, 'SymbolSubtypeCollection', {
+	get () {
+		return SymbolSubtypeCollection;
+	}
+});
+odp(fascade, 'SymbolConstructorName', {
+	get () {
+		return SymbolConstructorName;
 	}
 });
 
