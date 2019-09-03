@@ -4,3 +4,6 @@ npm-debug.log
 package-lock.json
 todo.txt
 back.*
+coverage
+.nyc_output
+.idea

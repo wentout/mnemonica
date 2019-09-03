@@ -1,0 +1,23 @@
+sudo: false
+language: node_js
+cache:
+  directories:
+    - node_modules
+branches:
+  except:
+    - /^v\d+\.\d+\.\d+$/
+stages:
+  - test
+  - name: release
+    if: branch = master
+jobs:
+  include:
+    - stage: test
+      node_js:
+        - '12'
+      before_script:
+        - npm prune
+      script:
+        - npm run test:coverage
+      after_success:
+        - npm run report-coverage
