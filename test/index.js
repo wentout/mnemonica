@@ -170,7 +170,6 @@ const moreOver = userWPWithAdditionalSign.MoreOver(moreOverStr);
 const overMore = moreOver.OverMore();
 const evenMore = overMore.EvenMore();
 
-
 const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 	const parentType = types[SymbolSubtypeCollection];
 	const isSubType = parentType === MNEMONICA ? false : true;
@@ -371,6 +370,23 @@ describe('Instance Constructors Tests', () => {
 							assert.isTrue(iof, str);
 						});
 					});
+		});
+		describe('extraction works properly', () => {
+			const possibleProps = {
+				str: 're-defined EvenMore str',
+				EvenMoreSign: 'EvenMoreSign',
+				OverMoreSign: 'OverMoreSign',
+				MoreOverSign: 'MoreOverSign',
+				sign: 'userWithoutPassword_2.WithAdditionalSign',
+				WithAdditionalSignSign: 'WithAdditionalSignSign',
+				WithoutPasswordSign: 'WithoutPasswordSign',
+				email: 'went.out@gmail.com',
+				description: 'UserTypeConstructor'
+			};
+			const extractedProps = evenMore.extract();
+			assert.deepOwnInclude(possibleProps, extractedProps);
+			assert.deepOwnInclude(extractedProps, possibleProps);
+
 		});
 	});
 
