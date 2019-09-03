@@ -21,3 +21,8 @@ jobs:
         - npm run test:coverage
       after_success:
         - npm run report-coverage
+    - stage: test
+      node_js:
+        - '12'
+      script:
+        - npx eslint .
