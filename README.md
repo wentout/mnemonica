@@ -1,7 +1,8 @@
 # mnemonica
 abstract technique that aids information retention : instance inheritance system
 
-v0.0.2 -- it works, somehow 
+[![Coverage Status](https://coveralls.io/repos/github/wentout/mnemonica/badge.svg?branch=master)](https://coveralls.io/github/wentout/mnemonica?branch=master)
+
 ;^)
 
 ```js
