@@ -9,7 +9,13 @@ abstract technique that aids information retention : instance inheritance system
 
 ;^)
 
+```bash
+npm i mnemonica
+```
+
 ```js
+const { define } = require('mnemonica');
+
 const SomeType = define('TypeName', TypeModificatorConstructor);
 ```
 
@@ -49,10 +55,11 @@ then :
 
 ```js
 
-const someSubTypeInstance = someTypeInstance
-	.SomeSubType({
-		other  : 'data needed',
-		inside : ' of ... etc ...'
-	});
+const someSubTypeInstance =
+	someTypeInstance
+		.SomeSubType({
+			other  : 'data needed',
+			inside : ' of ... etc ...'
+		});
 
 ```
