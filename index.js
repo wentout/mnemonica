@@ -10,6 +10,12 @@ const {
 } = require('./lib/descriptors');
 
 const {
+	extract,
+	toJSON
+} = require('./lib/utils');
+
+
+const {
 	DEFAULT_NAMESPACE_NAME,
 	MNEMONICA,
 	SymbolSubtypeCollection,
@@ -62,6 +68,28 @@ odp(fascade, 'SymbolSubtypeCollection', {
 odp(fascade, 'SymbolConstructorName', {
 	get () {
 		return SymbolConstructorName;
+	}
+});
+
+
+odp(fascade, 'extract', {
+	get () {
+		return function (instance) {
+			if (!instance) {
+				instance = this;
+			}
+			return new extract(instance);
+		};
+	}
+});
+odp(fascade, 'toJSON', {
+	get () {
+		return function (instance) {
+			if (!instance) {
+				instance = this;
+			}
+			return toJSON.call(instance);
+		};
 	}
 });
 

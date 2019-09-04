@@ -9,6 +9,8 @@ const {
 	MNEMONICA,
 	SymbolSubtypeCollection,
 	// SymbolConstructorName,
+	extract,
+	toJSON
 } = require('..');
 
 const USER_DATA = {
@@ -381,12 +383,21 @@ describe('Instance Constructors Tests', () => {
 				WithAdditionalSignSign: 'WithAdditionalSignSign',
 				WithoutPasswordSign: 'WithoutPasswordSign',
 				email: 'went.out@gmail.com',
-				description: 'UserTypeConstructor'
+				description: 'UserTypeConstructor',
+				password: undefined
 			};
-			const extractedProps = evenMore.extract();
-			assert.deepOwnInclude(possibleProps, extractedProps);
-			assert.deepOwnInclude(extractedProps, possibleProps);
-
+			const extracted = extract(evenMore);
+			const extractedFromJSON = JSON.parse(toJSON(extracted)); // no password
+			const extractedFromInstance = evenMore.extract();
+			assert.deepOwnInclude(possibleProps, extracted);
+			assert.deepOwnInclude(extracted, possibleProps);
+			assert.deepOwnInclude(extracted, extractedFromInstance);
+			assert.deepOwnInclude(extractedFromInstance, extracted);
+			assert.deepOwnInclude(extracted, extractedFromJSON);
+			assert.isTrue(extracted.hasOwnProperty('password'));
+			assert.equal(extracted.password, undefined);
+			assert.isFalse(extractedFromJSON.hasOwnProperty('password'));
+			assert.equal(extractedFromJSON.password, undefined);
 		});
 	});
 
