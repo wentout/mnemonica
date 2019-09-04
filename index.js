@@ -78,7 +78,7 @@ odp(fascade, 'extract', {
 			if (!instance) {
 				instance = this;
 			}
-			return new extract(instance);
+			return extract(instance);
 		};
 	}
 });
@@ -88,7 +88,7 @@ odp(fascade, 'toJSON', {
 			if (!instance) {
 				instance = this;
 			}
-			return toJSON.call(instance);
+			return toJSON(instance);
 		};
 	}
 });

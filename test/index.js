@@ -387,8 +387,10 @@ describe('Instance Constructors Tests', () => {
 				password: undefined
 			};
 			const extracted = extract(evenMore);
-			const extractedFromJSON = JSON.parse(toJSON(extracted)); // no password
+			const extractedJSON = toJSON(extracted);
+			const extractedFromJSON = JSON.parse(extractedJSON); // no password
 			const extractedFromInstance = evenMore.extract();
+			
 			assert.deepOwnInclude(possibleProps, extracted);
 			assert.deepOwnInclude(extracted, possibleProps);
 			assert.deepOwnInclude(extracted, extractedFromInstance);
@@ -398,6 +400,13 @@ describe('Instance Constructors Tests', () => {
 			assert.equal(extracted.password, undefined);
 			assert.isFalse(extractedFromJSON.hasOwnProperty('password'));
 			assert.equal(extractedFromJSON.password, undefined);
+			const nativeExtractCall = extract.call(evenMore);
+			const nativeToJSONCall = JSON.parse(toJSON.call(evenMore));
+			assert.deepOwnInclude(nativeExtractCall, extractedFromInstance);
+			assert.deepOwnInclude(extractedFromInstance, nativeExtractCall);
+			assert.deepOwnInclude(extractedFromJSON, nativeToJSONCall);
+			assert.deepOwnInclude(nativeToJSONCall, extractedFromJSON);
+
 		});
 	});
 
