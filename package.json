@@ -4,10 +4,10 @@
   "description": "abstract technique that aids information retention : instance inheritance system",
   "main": "lib/index.js",
   "scripts": {
-    "test": "mocha test",
+    "test": "mocha test/index.js",
     "test:coverage:dev": "nyc --reporter=text mocha --ui bdd --reporter spec ./test/index.js",
     "test:coverage": "nyc --reporter=lcov mocha --ui bdd --reporter spec ./test/index.js",
-    "debugtest": "npx mocha --reporter spec --inspect-brk test",
+    "debugtest": "npx mocha --reporter spec --inspect-brk test/index",
     "report-coverage": "cat coverage/lcov.info | coveralls",
     "precommit": "lint-staged",
     "example": "node ./test/example.js"
