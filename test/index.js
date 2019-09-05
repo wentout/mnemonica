@@ -51,6 +51,7 @@ const pl1Proto = Object.assign({},
 				pl1ProtoOnlyGetterPart,
 					pl1ProtoIncludedPart);
 
+
 UserType.define(() => {
 	const UserTypePL1 = function () {
 		this.user_pl_1_sign = 'pl_1';
@@ -143,11 +144,17 @@ OverMore.define(() => {
 });
 
 
+const EmptyType = define('EmptyType');
+
+EmptyType.define('EmptySubType', function (sign) {
+	this.emptySign = sign || 'DefaultEmptySign';
+});
+
+// *****************************************************
+// *****************************************************
+// *****************************************************
 
 
-// *****************************************************
-// *****************************************************
-// *****************************************************
 
 const user = new UserType(USER_DATA);
 
@@ -171,6 +178,10 @@ const moreOver = userWPWithAdditionalSign.MoreOver(moreOverStr);
 
 const overMore = moreOver.OverMore();
 const evenMore = overMore.EvenMore();
+
+const empty = new EmptyType();
+const filledEmptySign = 'FilledEmptySign';
+const emptySub = empty.EmptySubType(filledEmptySign);
 
 const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 	const parentType = types[SymbolSubtypeCollection];
@@ -308,38 +319,41 @@ describe('Instance Constructors Tests', () => {
 	});
 	
 	describe('more nested types', () => {
-		it('.prototype is correct', () => {
-			expect(userTC.constructor.prototype).to.be.an('object')
-				.that.includes(UserTypeConstructorProto);
+		describe('inheritance works', () => {
+			it('.prototype is correct', () => {
+				expect(userTC.constructor.prototype).to.be.an('object')
+					.that.includes(UserTypeConstructorProto);
+			});
+			it('definition is correct', () => {
+				const checker = Object.assign(UserTypeConstructorProto, USER_DATA);
+				Object.keys(USER_DATA).forEach(key => {
+					assert.isFalse(userTC[key].hasOwnProperty(key));
+				});
+				Object.entries(checker).forEach(entry => {
+					const [key, value] = entry;
+					assert.equal(userTC[key], value);
+				});
+			});
+			it('clones are correct', () => {
+				assert.deepOwnInclude(userWithoutPassword, userWithoutPassword_2);
+			});
+			it('clones are nested include', () => {
+				assert.deepNestedInclude(userWithoutPassword, {
+					password: undefined
+				});
+				assert.notDeepOwnInclude(userWithoutPassword, userTC);
+				assert.deepOwnInclude(userWPWithAdditionalSign, {
+					sign: sign2add
+				});
+				assert.deepOwnInclude(moreOver, {
+					str: moreOverStr
+				});
+				
+			});
 		});
-		it('definition is correct', () => {
-			const checker = Object.assign(UserTypeConstructorProto, USER_DATA);
-			Object.keys(USER_DATA).forEach(key => {
-				assert.isFalse(userTC[key].hasOwnProperty(key));
-			});
-			Object.entries(checker).forEach(entry => {
-				const [key, value] = entry;
-				assert.equal(userTC[key], value);
-			});
-		});
-		it('clones are correct', () => {
-			assert.deepOwnInclude(userWithoutPassword, userWithoutPassword_2);
-		});
-		it('clones are nested include', () => {
-			assert.deepNestedInclude(userWithoutPassword, {
-				password: undefined
-			});
-			assert.notDeepOwnInclude(userWithoutPassword, userTC);
-			assert.deepOwnInclude(userWPWithAdditionalSign, {
-				sign: sign2add
-			});
-			assert.deepOwnInclude(moreOver, {
-				str: moreOverStr
-			});
-		});
-		const evenMoreConstructors = collectConstructors(evenMore);
-
+		
 		describe('constructors sequence is ok', () => {
+			const evenMoreConstructors = collectConstructors(evenMore);
 			var base = types;
 			Object.keys(evenMoreConstructors)
 				.reverse()
@@ -373,40 +387,69 @@ describe('Instance Constructors Tests', () => {
 						});
 					});
 		});
+		const evenMoreNecessaryProps = {
+			str: 're-defined EvenMore str',
+			EvenMoreSign: 'EvenMoreSign',
+			OverMoreSign: 'OverMoreSign',
+			MoreOverSign: 'MoreOverSign',
+			sign: 'userWithoutPassword_2.WithAdditionalSign',
+			WithAdditionalSignSign: 'WithAdditionalSignSign',
+			WithoutPasswordSign: 'WithoutPasswordSign',
+			email: 'went.out@gmail.com',
+			description: 'UserTypeConstructor',
+			password: undefined
+		};
 		describe('extraction works properly', () => {
-			const possibleProps = {
-				str: 're-defined EvenMore str',
-				EvenMoreSign: 'EvenMoreSign',
-				OverMoreSign: 'OverMoreSign',
-				MoreOverSign: 'MoreOverSign',
-				sign: 'userWithoutPassword_2.WithAdditionalSign',
-				WithAdditionalSignSign: 'WithAdditionalSignSign',
-				WithoutPasswordSign: 'WithoutPasswordSign',
-				email: 'went.out@gmail.com',
-				description: 'UserTypeConstructor',
-				password: undefined
-			};
 			const extracted = extract(evenMore);
 			const extractedJSON = toJSON(extracted);
 			const extractedFromJSON = JSON.parse(extractedJSON); // no password
 			const extractedFromInstance = evenMore.extract();
-			
-			assert.deepOwnInclude(possibleProps, extracted);
-			assert.deepOwnInclude(extracted, possibleProps);
-			assert.deepOwnInclude(extracted, extractedFromInstance);
-			assert.deepOwnInclude(extractedFromInstance, extracted);
-			assert.deepOwnInclude(extracted, extractedFromJSON);
-			assert.isTrue(extracted.hasOwnProperty('password'));
-			assert.equal(extracted.password, undefined);
-			assert.isFalse(extractedFromJSON.hasOwnProperty('password'));
-			assert.equal(extractedFromJSON.password, undefined);
 			const nativeExtractCall = extract.call(evenMore);
 			const nativeToJSONCall = JSON.parse(toJSON.call(evenMore));
-			assert.deepOwnInclude(nativeExtractCall, extractedFromInstance);
-			assert.deepOwnInclude(extractedFromInstance, nativeExtractCall);
-			assert.deepOwnInclude(extractedFromJSON, nativeToJSONCall);
-			assert.deepOwnInclude(nativeToJSONCall, extractedFromJSON);
+			it('should be equal objects', () => {
+				assert.deepOwnInclude(evenMoreNecessaryProps, extracted);
+				assert.deepOwnInclude(extracted, evenMoreNecessaryProps);
+				assert.deepOwnInclude(extracted, extractedFromInstance);
+				assert.deepOwnInclude(extractedFromInstance, extracted);
+				assert.deepOwnInclude(extracted, extractedFromJSON);
+			});
+			it('should respect data flow', () => {
+				assert.isTrue(extracted.hasOwnProperty('password'));
+				assert.equal(extracted.password, undefined);
+				assert.isFalse(extractedFromJSON.hasOwnProperty('password'));
+				assert.equal(extractedFromJSON.password, undefined);
+			});
+			it('should work the same for all the ways of extraction', () => {
+				assert.deepOwnInclude(nativeExtractCall, extractedFromInstance);
+				assert.deepOwnInclude(extractedFromInstance, nativeExtractCall);
+				assert.deepOwnInclude(extractedFromJSON, nativeToJSONCall);
+				assert.deepOwnInclude(nativeToJSONCall, extractedFromJSON);
+			});
 
+		});
+		
+	});
+	
+	describe('empty constructor works properly', () => {
+		it('should construct an object', () => {
+			assert.isDefined(empty);
+			assert.isObject(empty);
+		});
+		it('nested object of empty object is well', () => {
+			assert.isDefined(emptySub);
+			assert.isObject(emptySub);
+		});
+		it('nested object of empty object rules are ok', () => {
+			assert.isTrue(emptySub.hasOwnProperty('emptySign'));
+			assert.isDefined(emptySub.emptySign);
+			assert.isString(emptySub.emptySign);
+			assert.equal(emptySub.emptySign, filledEmptySign);
+			const sample = {
+				emptySign : filledEmptySign
+			};
+			const extracted = emptySub.extract();
+			assert.deepOwnInclude(extracted, sample);
+			assert.deepOwnInclude(sample, extracted);
 		});
 	});
 

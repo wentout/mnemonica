@@ -1,8 +1,8 @@
 {
   "name": "mnemonica",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "abstract technique that aids information retention : instance inheritance system",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "test": "mocha test",
     "test:coverage:dev": "nyc --reporter=text mocha --ui bdd --reporter spec ./test",
