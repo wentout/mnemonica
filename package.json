@@ -1,16 +1,16 @@
 {
   "name": "mnemonica",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "abstract technique that aids information retention : instance inheritance system",
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha test",
-    "test:coverage:dev": "nyc --reporter=text mocha --ui bdd --reporter spec ./test",
-    "test:coverage": "nyc --reporter=lcov mocha --ui bdd --reporter spec ./test",
+    "test:coverage:dev": "nyc --reporter=text mocha --ui bdd --reporter spec ./test/index.js",
+    "test:coverage": "nyc --reporter=lcov mocha --ui bdd --reporter spec ./test/index.js",
     "debugtest": "npx mocha --reporter spec --inspect-brk test",
     "report-coverage": "cat coverage/lcov.info | coveralls",
     "precommit": "lint-staged",
-    "example": "node example"
+    "example": "node ./test/example.js"
   },
   "repository": {
     "type": "git",
