@@ -2,9 +2,10 @@
 
 const {
 	define,
+	extract,
 	types,
 	collectConstructors
-} = require('.');
+} = require('..');
 
 
 const UserType = define('UserType', function (userData) {
@@ -117,7 +118,8 @@ OverMore.define(() => {
 // *****************************************************
 // *****************************************************
 // *****************************************************
-const { deepEqual, deepStrictEqual } = require('assert');
+const { deepEqual } = require('assert');
+
 
 debugger;
 process._rawDebug('new UserType >>>');
@@ -240,5 +242,11 @@ console.log(collectConstructors(evenMore, true));
 
 console.log('\nfinish\n');
 
+try {
+	extract(null);
+} catch (error) {
+	console.error('BELOW IS AN EXAMPLE! of thrown error :');
+	console.error(error);
+}
 
 debugger;

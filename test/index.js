@@ -452,6 +452,13 @@ describe('Instance Constructors Tests', () => {
 			assert.deepOwnInclude(sample, extracted);
 		});
 	});
-
+	
+	describe('errors tests', () => {
+		it('should throw on wrong instance 4 .extract() ', () => {
+			expect(() => {
+				extract(null);
+			}).to.throw();
+		});
+	});
 
 });
