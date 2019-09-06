@@ -2,15 +2,70 @@
 
 const { assert, expect } = require('chai');
 
+
+describe('Check Environment', () => {
+	const {
+		define,
+		namespace,
+		namespaces,
+		MNEMONICA,
+		MNEMOSYNE,
+		DEFAULT_NAMESPACE_NAME,
+		SymbolSubtypeCollection,
+		SymbolConstructorName,
+		errors,
+	} = require('..');
+	it('DEFAULT_NAMESPACE_NAME shoud be defined', () => {
+		expect(DEFAULT_NAMESPACE_NAME).to.be.a('string').and.equal('default');
+	});
+	it('MNEMONICA shoud be defined', () => {
+		expect(MNEMONICA).to.be.a('string').and.equal('mnemonica');
+	});
+	it('MNEMOSYNE shoud be defined', () => {
+		expect(MNEMOSYNE).to.be.a('string').and.equal('Mnemosyne');
+	});
+	it('SymbolSubtypeCollection shoud be defined', () => {
+		expect(SymbolSubtypeCollection).to.be.a('symbol');
+	});
+	it('SymbolConstructorName shoud be defined', () => {
+		expect(SymbolConstructorName).to.be.a('symbol');
+	});
+	it('namespace shoud be defined', () => {
+		expect(namespace).to.be.an('object');
+	});
+	it('namespaces shoud be defined', () => {
+		expect(namespaces).to.be.an('object');
+		expect(namespaces[DEFAULT_NAMESPACE_NAME]).to.be.an('object');
+		assert.deepEqual(namespaces[DEFAULT_NAMESPACE_NAME], namespace);
+	});
+	it('should throw with wrong definition', () => {
+		expect(() => {
+			define('wrong', function () {}, true);
+		}).throw();
+		try {
+			define('wrong', function () {}, true);
+		} catch (error) {
+			expect(error).to.be.an
+				.instanceof(errors
+					.WRONG_TYPE_DEFINITION);
+			expect(error).to.be.an
+				.instanceof(Error);
+		}
+		
+	});
+});
+
+describe('Main Test', () => {
 const {
 	define,
 	types,
 	collectConstructors,
 	MNEMONICA,
 	SymbolSubtypeCollection,
-	// SymbolConstructorName,
+	SymbolConstructorName,
 	extract,
-	toJSON
+	toJSON,
+	errors,
 } = require('..');
 
 const USER_DATA = {
@@ -24,11 +79,6 @@ const UserTypeProto = {
 	description : 'UserType'
 };
 
-const UserTypeConstructorProto = {
-	email : '',
-	password : '',
-	description : 'UserTypeConstructor'
-};
 
 const UserType = define('UserType', function (userData) {
 	const {
@@ -40,17 +90,10 @@ const UserType = define('UserType', function (userData) {
 }, UserTypeProto, true);
 
 
-
-const pl1ProtoOnlyGetterPart = {
-	UserTypePL1 : 'UserTypePL_1_Excluded'
+const pl1Proto = {
+	UserTypePL1 : 'UserTypePL_1',
+	UserTypePL1Extra : 'UserTypePL_1_Extra',
 };
-const pl1ProtoIncludedPart = {
-	UserTypePL1Included : 'UserTypePL_1_Included'
-};
-const pl1Proto = Object.assign({},
-				pl1ProtoOnlyGetterPart,
-					pl1ProtoIncludedPart);
-
 
 UserType.define(() => {
 	const UserTypePL1 = function () {
@@ -64,10 +107,14 @@ const pl2Proto = {
 	UserTypePL2 : 'UserTypePL_2_AlwaysIncluded'
 };
 UserType.define(() => {
-	const UserTypePL2 = function () {
-		this.user_pl_2_sign = 'pl_2';
-	};
-	UserTypePL2.prototype = pl2Proto;
+	class UserTypePL2  {
+		constructor () {
+			this.user_pl_2_sign = 'pl_2';
+		}
+		get UserTypePL2 () {
+			return pl2Proto.UserTypePL2;
+		}
+	}
 	return UserTypePL2;
 });
 
@@ -76,6 +123,12 @@ UserType.define(() => {
 /*
 UserTypeConstructor and nested types
 */
+
+const UserTypeConstructorProto = {
+	email : '',
+	password : '',
+	description : 'UserTypeConstructor'
+};
 
 define('UserTypeConstructor', function (userData) {
 	const {
@@ -90,7 +143,6 @@ define('UserTypeConstructor', function (userData) {
 const WithoutPasswordProto = {
 	WithoutPasswordSign : 'WithoutPasswordSign'
 };
-
 const UserWithoutPassword = types.UserTypeConstructor.define(() => {
 	const WithoutPassword = function () {
 		this.password = undefined;
@@ -114,10 +166,17 @@ const MoreOverProto = {
 	MoreOverSign : 'MoreOverSign'
 };
 const MoreOver = WithAdditionalSign.define(() => {
-	const MoreOver = function (str) {
-		this.str = str || 'moreover str';
-	};
-	MoreOver.prototype = MoreOverProto;
+	class MoreOver {
+		constructor (str) {
+			this.str = str || 'moreover str';
+		}
+		get MoreOverSign () {
+			return MoreOverProto.MoreOverSign;
+		}
+		// set MoreOverSign (value) {
+		// 	MoreOverProto.MoreOverSign = value;
+		// }
+	}
 	return MoreOver;
 });
 
@@ -155,17 +214,13 @@ EmptyType.define('EmptySubType', function (sign) {
 // *****************************************************
 
 
-
 const user = new UserType(USER_DATA);
-
 const userPL1 = new user.UserTypePL1();
-
 const userPL2 = new user.UserTypePL2();
 const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
 
 const userTC = new types.UserTypeConstructor(USER_DATA);
-
 const userWithoutPassword = new userTC.WithoutPassword();
 const userWithoutPassword_2 = new userTC.WithoutPassword();
 
@@ -183,6 +238,8 @@ const empty = new EmptyType();
 const filledEmptySign = 'FilledEmptySign';
 const emptySub = empty.EmptySubType(filledEmptySign);
 
+
+
 const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 	const parentType = types[SymbolSubtypeCollection];
 	const isSubType = parentType === MNEMONICA ? false : true;
@@ -197,13 +254,15 @@ const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 		it('.subtypes must be an object', () => {
 			assert.isObject(def.subtypes);
 		});
-		it('.proto must be equal with definition', () => {
-			assert.equal(def.proto, proto);
-		});
+		if (proto) {
+			it('.proto must be equal with definition', () => {
+				assert.equal(def.proto, proto);
+			});
+		}
 		it(`and declared as proper SubType : ${def.isSubType} `, () => {
 			assert.equal(def.isSubType, isSubType);
 		});
-		it(`will use old style contructor : ${useOldStyle}`, () => {
+		it(`will force use of proper style contructor : ${useOldStyle}`, () => {
 			assert.equal(def.useOldStyle, useOldStyle);
 		});
 		it('contructor exists', () => {
@@ -215,12 +274,12 @@ const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 describe('Type Definitions Tests', () => {
 	[
 		[types, 'UserType', UserTypeProto, true],
-		[UserType.subtypes, 'UserTypePL1', pl1Proto, true],
-		[UserType.subtypes, 'UserTypePL2', pl2Proto],
+		[UserType.subtypes, 'UserTypePL1', pl1Proto, false],
+		[UserType.subtypes, 'UserTypePL2'],
 		[types, 'UserTypeConstructor', UserTypeConstructorProto],
 		[types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto],
 		[UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto],
-		[WithAdditionalSign.subtypes, 'MoreOver', MoreOverProto],
+		[WithAdditionalSign.subtypes, 'MoreOver'],
 		[MoreOver.subtypes, 'OverMore', OverMoreProto],
 		[OverMore.subtypes, 'EvenMore', EvenMoreProto],
 	].forEach(entry => {
@@ -269,9 +328,9 @@ describe('Instance Constructors Tests', () => {
 			});
 		});
 		it('definition is correct', () => {
-			const checker = Object.assign({
+			const checker = {
 				user_pl_1_sign : 'pl_1',
-			});
+			};
 			Object.entries(checker).forEach(entry => {
 				const [key, value] = entry;
 				assert.isTrue(userPL1.hasOwnProperty(key));
@@ -289,6 +348,7 @@ describe('Instance Constructors Tests', () => {
 			assert.equal(userPL2.constructor.name, 'UserTypePL2');
 		});
 		it('can construct without "new" keyword', () => {
+			assert.instanceOf(userPL_NoNew, types.UserType);
 			assert.instanceOf(userPL_NoNew, types.UserType.subtypes.UserTypePL2);
 		});
 		it('and insanceof stays ok', () => {
@@ -297,23 +357,40 @@ describe('Instance Constructors Tests', () => {
 		it('and even for sibling type', () => {
 			assert.instanceOf(userPL_1_2, userPL1.UserTypePL2);
 		});
-		it('and even for sibling type constructed without "new"', () => {
+		it('and for sibling type constructed without "new"', () => {
 			assert.instanceOf(userPL_NoNew, userPL1.UserTypePL2);
 		});
 		it('.prototype is correct', () => {
-			expect(userPL2.constructor.prototype).to.be.an('object')
-				.that.includes(pl2Proto);
+			expect(userPL2.constructor.prototype)
+				.to.be.an('object')
+					.that.includes(pl2Proto);
 		});
-		it('definition is correct', () => {
+		it('definitions are correct 4 class instances', () => {
 			const checker = Object.assign({
 				user_pl_2_sign : 'pl_2',
-			}, USER_DATA);
+				description : UserTypeProto.description
+			}, USER_DATA, pl2Proto);
 			Object.keys(USER_DATA).forEach(key => {
 				assert.isFalse(userPL2[key].hasOwnProperty(key));
+				assert.equal(userPL2[key], USER_DATA[key]);
 			});
+			
 			Object.entries(checker).forEach(entry => {
 				const [key, value] = entry;
 				assert.equal(userPL2[key], value);
+			});
+		});
+		it('definitions are correct for general', () => {
+			const checker = Object.assign({
+				user_pl_1_sign : 'pl_1',
+				description : UserTypeProto.description
+			}, USER_DATA, pl1Proto);
+			Object.keys(USER_DATA).forEach(key => {
+				assert.isFalse(userPL1[key].hasOwnProperty(key));
+			});
+			Object.entries(checker).forEach(entry => {
+				const [key, value] = entry;
+				assert.equal(userPL1[key], value);
 			});
 		});
 	});
@@ -353,11 +430,39 @@ describe('Instance Constructors Tests', () => {
 		});
 		
 		describe('constructors sequence is ok', () => {
-			const evenMoreConstructors = collectConstructors(evenMore);
+			const constructorsSequence = collectConstructors(evenMore, true);
+			
+			assert.equal(constructorsSequence.length, 19);
+			assert.deepEqual(constructorsSequence, [
+				'EvenMore',
+				'EvenMore',
+				'OverMore',
+				'OverMore',
+				'OverMore',
+				'MoreOver',
+				'MoreOver',
+				'MoreOver',
+				'WithAdditionalSign',
+				'WithAdditionalSign',
+				'WithAdditionalSign',
+				'WithoutPassword',
+				'WithoutPassword',
+				'WithoutPassword',
+				'UserTypeConstructor',
+				'UserTypeConstructor',
+				'UserTypeConstructor',
+				'Mnemosyne',
+				'Object'
+			]);
+			
+			const constructors = collectConstructors(evenMore);
+			const constructorsKeys = Object.keys(constructors);
+			
 			var base = types;
-			Object.keys(evenMoreConstructors)
+			constructorsKeys
 				.reverse()
 				.map((name, idx) => {
+					assert.include(constructorsSequence, name);
 					var iof = false;
 					if (name === 'Object') {
 						iof = evenMore instanceof Object;
@@ -391,7 +496,7 @@ describe('Instance Constructors Tests', () => {
 			str: 're-defined EvenMore str',
 			EvenMoreSign: 'EvenMoreSign',
 			OverMoreSign: 'OverMoreSign',
-			MoreOverSign: 'MoreOverSign',
+			// MoreOverSign: 'MoreOverSign',
 			sign: 'userWithoutPassword_2.WithAdditionalSign',
 			WithAdditionalSignSign: 'WithAdditionalSignSign',
 			WithoutPasswordSign: 'WithoutPasswordSign',
@@ -425,7 +530,8 @@ describe('Instance Constructors Tests', () => {
 				assert.deepOwnInclude(extractedFromJSON, nativeToJSONCall);
 				assert.deepOwnInclude(nativeToJSONCall, extractedFromJSON);
 			});
-
+			assert.isDefined(evenMore.MoreOverSign);
+			assert.equal(evenMore.MoreOverSign, MoreOverProto.MoreOverSign);
 		});
 		
 	});
@@ -454,11 +560,46 @@ describe('Instance Constructors Tests', () => {
 	});
 	
 	describe('errors tests', () => {
-		it('should throw on wrong instance 4 .extract() ', () => {
+		it('should throw on wrong instance 4 .extract()', () => {
 			expect(() => {
 				extract(null);
 			}).to.throw();
 		});
+		try {
+			extract(null);
+		} catch (error) {
+			it('thrown by extract(null) should be ok with instanceof', () => {
+				expect(error).to.be.an
+					.instanceof(errors
+						.WRONG_INSTANCE_INVOCATION);
+				expect(error).to.be.an
+					.instanceof(Error);
+			});
+			it('thrown error should be ok with props', () => {
+				expect(error.BaseStack).exist.and.is.a('string');
+				expect(error.constructor[SymbolConstructorName])
+					.exist.and.is.a('string')
+						.and.equal(`base of : ${MNEMONICA} : errors`);
+			});
+		}
+		it('should throw on wrong instance 4 .collectConstructors()', () => {
+			expect(() => {
+				collectConstructors(null);
+			}).to.throw();
+		});
+		try {
+			collectConstructors(null);
+		} catch (error) {
+			it('thrown by collectConstructors(null) should be ok with instanceof', () => {
+				expect(error).to.be.an
+					.instanceof(errors
+						.WRONG_MODIFICATION_PATTERN);
+				expect(error).to.be.an
+					.instanceof(Error);
+			});
+
+		}
 	});
 
+});
 });
