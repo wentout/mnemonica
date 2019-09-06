@@ -79,12 +79,6 @@ const UserTypeProto = {
 	description : 'UserType'
 };
 
-const UserTypeConstructorProto = {
-	email : '',
-	password : '',
-	description : 'UserTypeConstructor'
-};
-
 
 const UserType = define('UserType', function (userData) {
 	const {
@@ -96,17 +90,10 @@ const UserType = define('UserType', function (userData) {
 }, UserTypeProto, true);
 
 
-
-const pl1ProtoOnlyGetterPart = {
-	UserTypePL1 : 'UserTypePL_1_Excluded'
+const pl1Proto = {
+	UserTypePL1 : 'UserTypePL_1',
+	UserTypePL1Extra : 'UserTypePL_1_Extra',
 };
-const pl1ProtoIncludedPart = {
-	UserTypePL1Included : 'UserTypePL_1_Included'
-};
-const pl1Proto = Object.assign({},
-				pl1ProtoOnlyGetterPart,
-					pl1ProtoIncludedPart);
-
 
 UserType.define(() => {
 	const UserTypePL1 = function () {
@@ -120,10 +107,14 @@ const pl2Proto = {
 	UserTypePL2 : 'UserTypePL_2_AlwaysIncluded'
 };
 UserType.define(() => {
-	const UserTypePL2 = function () {
-		this.user_pl_2_sign = 'pl_2';
-	};
-	UserTypePL2.prototype = pl2Proto;
+	class UserTypePL2  {
+		constructor () {
+			this.user_pl_2_sign = 'pl_2';
+		}
+		get UserTypePL2 () {
+			return pl2Proto.UserTypePL2;
+		}
+	}
 	return UserTypePL2;
 });
 
@@ -132,6 +123,12 @@ UserType.define(() => {
 /*
 UserTypeConstructor and nested types
 */
+
+const UserTypeConstructorProto = {
+	email : '',
+	password : '',
+	description : 'UserTypeConstructor'
+};
 
 define('UserTypeConstructor', function (userData) {
 	const {
@@ -146,7 +143,6 @@ define('UserTypeConstructor', function (userData) {
 const WithoutPasswordProto = {
 	WithoutPasswordSign : 'WithoutPasswordSign'
 };
-
 const UserWithoutPassword = types.UserTypeConstructor.define(() => {
 	const WithoutPassword = function () {
 		this.password = undefined;
@@ -170,10 +166,17 @@ const MoreOverProto = {
 	MoreOverSign : 'MoreOverSign'
 };
 const MoreOver = WithAdditionalSign.define(() => {
-	const MoreOver = function (str) {
-		this.str = str || 'moreover str';
-	};
-	MoreOver.prototype = MoreOverProto;
+	class MoreOver {
+		constructor (str) {
+			this.str = str || 'moreover str';
+		}
+		get MoreOverSign () {
+			return MoreOverProto.MoreOverSign;
+		}
+		// set MoreOverSign (value) {
+		// 	MoreOverProto.MoreOverSign = value;
+		// }
+	}
 	return MoreOver;
 });
 
@@ -218,7 +221,6 @@ const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
 
 const userTC = new types.UserTypeConstructor(USER_DATA);
-debugger;
 const userWithoutPassword = new userTC.WithoutPassword();
 const userWithoutPassword_2 = new userTC.WithoutPassword();
 
@@ -252,13 +254,15 @@ const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 		it('.subtypes must be an object', () => {
 			assert.isObject(def.subtypes);
 		});
-		it('.proto must be equal with definition', () => {
-			assert.equal(def.proto, proto);
-		});
+		if (proto) {
+			it('.proto must be equal with definition', () => {
+				assert.equal(def.proto, proto);
+			});
+		}
 		it(`and declared as proper SubType : ${def.isSubType} `, () => {
 			assert.equal(def.isSubType, isSubType);
 		});
-		it(`will use old style contructor : ${useOldStyle}`, () => {
+		it(`will force use of proper style contructor : ${useOldStyle}`, () => {
 			assert.equal(def.useOldStyle, useOldStyle);
 		});
 		it('contructor exists', () => {
@@ -270,12 +274,12 @@ const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 describe('Type Definitions Tests', () => {
 	[
 		[types, 'UserType', UserTypeProto, true],
-		[UserType.subtypes, 'UserTypePL1', pl1Proto, true],
-		[UserType.subtypes, 'UserTypePL2', pl2Proto],
+		[UserType.subtypes, 'UserTypePL1', pl1Proto, false],
+		[UserType.subtypes, 'UserTypePL2'],
 		[types, 'UserTypeConstructor', UserTypeConstructorProto],
 		[types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto],
 		[UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto],
-		[WithAdditionalSign.subtypes, 'MoreOver', MoreOverProto],
+		[WithAdditionalSign.subtypes, 'MoreOver'],
 		[MoreOver.subtypes, 'OverMore', OverMoreProto],
 		[OverMore.subtypes, 'EvenMore', EvenMoreProto],
 	].forEach(entry => {
@@ -324,9 +328,9 @@ describe('Instance Constructors Tests', () => {
 			});
 		});
 		it('definition is correct', () => {
-			const checker = Object.assign({
+			const checker = {
 				user_pl_1_sign : 'pl_1',
-			});
+			};
 			Object.entries(checker).forEach(entry => {
 				const [key, value] = entry;
 				assert.isTrue(userPL1.hasOwnProperty(key));
@@ -357,19 +361,36 @@ describe('Instance Constructors Tests', () => {
 			assert.instanceOf(userPL_NoNew, userPL1.UserTypePL2);
 		});
 		it('.prototype is correct', () => {
-			expect(userPL2.constructor.prototype).to.be.an('object')
-				.that.includes(pl2Proto);
+			expect(userPL2.constructor.prototype)
+				.to.be.an('object')
+					.that.includes(pl2Proto);
 		});
-		it('definition is correct', () => {
+		it('definitions are correct 4 class instances', () => {
 			const checker = Object.assign({
 				user_pl_2_sign : 'pl_2',
-			}, USER_DATA);
+				description : UserTypeProto.description
+			}, USER_DATA, pl2Proto);
 			Object.keys(USER_DATA).forEach(key => {
 				assert.isFalse(userPL2[key].hasOwnProperty(key));
+				assert.equal(userPL2[key], USER_DATA[key]);
 			});
+			
 			Object.entries(checker).forEach(entry => {
 				const [key, value] = entry;
 				assert.equal(userPL2[key], value);
+			});
+		});
+		it('definitions are correct for general', () => {
+			const checker = Object.assign({
+				user_pl_1_sign : 'pl_1',
+				description : UserTypeProto.description
+			}, USER_DATA, pl1Proto);
+			Object.keys(USER_DATA).forEach(key => {
+				assert.isFalse(userPL1[key].hasOwnProperty(key));
+			});
+			Object.entries(checker).forEach(entry => {
+				const [key, value] = entry;
+				assert.equal(userPL1[key], value);
 			});
 		});
 	});
@@ -475,7 +496,7 @@ describe('Instance Constructors Tests', () => {
 			str: 're-defined EvenMore str',
 			EvenMoreSign: 'EvenMoreSign',
 			OverMoreSign: 'OverMoreSign',
-			MoreOverSign: 'MoreOverSign',
+			// MoreOverSign: 'MoreOverSign',
 			sign: 'userWithoutPassword_2.WithAdditionalSign',
 			WithAdditionalSignSign: 'WithAdditionalSignSign',
 			WithoutPasswordSign: 'WithoutPasswordSign',
@@ -509,7 +530,8 @@ describe('Instance Constructors Tests', () => {
 				assert.deepOwnInclude(extractedFromJSON, nativeToJSONCall);
 				assert.deepOwnInclude(nativeToJSONCall, extractedFromJSON);
 			});
-
+			assert.isDefined(evenMore.MoreOverSign);
+			assert.equal(evenMore.MoreOverSign, MoreOverProto.MoreOverSign);
 		});
 		
 	});
