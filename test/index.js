@@ -2,60 +2,6 @@
 
 const { assert, expect } = require('chai');
 
-
-describe('Check Environment', () => {
-	const {
-		define,
-		namespace,
-		namespaces,
-		MNEMONICA,
-		MNEMOSYNE,
-		DEFAULT_NAMESPACE_NAME,
-		SymbolSubtypeCollection,
-		SymbolConstructorName,
-		errors,
-	} = require('..');
-	it('DEFAULT_NAMESPACE_NAME shoud be defined', () => {
-		expect(DEFAULT_NAMESPACE_NAME).to.be.a('string').and.equal('default');
-	});
-	it('MNEMONICA shoud be defined', () => {
-		expect(MNEMONICA).to.be.a('string').and.equal('mnemonica');
-	});
-	it('MNEMOSYNE shoud be defined', () => {
-		expect(MNEMOSYNE).to.be.a('string').and.equal('Mnemosyne');
-	});
-	it('SymbolSubtypeCollection shoud be defined', () => {
-		expect(SymbolSubtypeCollection).to.be.a('symbol');
-	});
-	it('SymbolConstructorName shoud be defined', () => {
-		expect(SymbolConstructorName).to.be.a('symbol');
-	});
-	it('namespace shoud be defined', () => {
-		expect(namespace).to.be.an('object');
-	});
-	it('namespaces shoud be defined', () => {
-		expect(namespaces).to.be.an('object');
-		expect(namespaces[DEFAULT_NAMESPACE_NAME]).to.be.an('object');
-		assert.deepEqual(namespaces[DEFAULT_NAMESPACE_NAME], namespace);
-	});
-	it('should throw with wrong definition', () => {
-		expect(() => {
-			define('wrong', function () {}, true);
-		}).throw();
-		try {
-			define('wrong', function () {}, true);
-		} catch (error) {
-			expect(error).to.be.an
-				.instanceof(errors
-					.WRONG_TYPE_DEFINITION);
-			expect(error).to.be.an
-				.instanceof(Error);
-		}
-		
-	});
-});
-
-describe('Main Test', () => {
 const {
 	define,
 	types,
@@ -87,6 +33,7 @@ const UserType = define('UserType', function (userData) {
 	} = userData;
 	this.email = email;
 	this.password = password;
+	return this;
 }, UserTypeProto, true);
 
 
@@ -117,6 +64,97 @@ UserType.define(() => {
 	}
 	return UserTypePL2;
 });
+
+const user = new UserType(USER_DATA);
+const userPL1 = new user.UserTypePL1();
+const userPL2 = new user.UserTypePL2();
+const userPL_1_2 = new userPL1.UserTypePL2();
+const userPL_NoNew = userPL1.UserTypePL2();
+
+
+describe('Check Environment', () => {
+	const {
+		define,
+		namespace,
+		namespaces,
+		MNEMONICA,
+		MNEMOSYNE,
+		DEFAULT_NAMESPACE_NAME,
+		SymbolSubtypeCollection,
+		SymbolConstructorName,
+		errors,
+	} = require('..');
+	it('DEFAULT_NAMESPACE_NAME shoud be defined', () => {
+		expect(DEFAULT_NAMESPACE_NAME).to.be.a('string').and.equal('default');
+	});
+	it('MNEMONICA shoud be defined', () => {
+		expect(MNEMONICA).to.be.a('string').and.equal('mnemonica');
+	});
+	it('MNEMOSYNE shoud be defined', () => {
+		expect(MNEMOSYNE).to.be.a('string').and.equal('Mnemosyne');
+	});
+	it('SymbolSubtypeCollection shoud be defined', () => {
+		expect(SymbolSubtypeCollection).to.be.a('symbol');
+	});
+	it('SymbolConstructorName shoud be defined', () => {
+		expect(SymbolConstructorName).to.be.a('symbol');
+	});
+	it('namespace shoud be defined', () => {
+		expect(namespace).to.be.an('object');
+	});
+	it('instance checking works', () => {
+		expect(true instanceof UserType).to.be.false;
+		expect(undefined instanceof UserType).to.be.false;
+		expect(Object.create(null) instanceof UserType).to.be.false;
+	});
+	it('namespaces shoud be defined', () => {
+		expect(namespaces).to.be.an('object');
+		expect(namespaces[DEFAULT_NAMESPACE_NAME]).to.be.an('object');
+		assert.deepEqual(namespaces[DEFAULT_NAMESPACE_NAME], namespace);
+	});
+	describe('should throw with wrong definition', () => {
+		[
+			['prototype is not an object', () => {
+				define('wrong', function () {}, true);
+			}, errors.WRONG_TYPE_DEFINITION],
+			['no definition', () => {
+				define();
+			}, errors.WRONG_TYPE_DEFINITION],
+			// ['attempt to hack subtype', () => {
+			// 	user.UserTypePL1.call(null);
+			// }, errors.WRONG_TYPE_DEFINITION],
+			['intentionally bad definition', () => {
+				define('BadType', NaN, '', 'false');
+			}, errors.HANDLER_MUST_BE_A_FUNCTION],
+			['intentionally bad typee definition', () => {
+				define(() => {
+					return {
+						name : null
+					};
+				});
+			}, errors.TYPENAME_MUST_BE_A_STRING],
+			['re-definition', () => {
+				define('UserType');
+			}, errors.ALREADY_DECLARED],
+		].forEach(entry => {
+			const [name, fn, err] = entry;
+			it(`check throw with : ${name}`, () => {
+				expect(fn).throw();
+				try {
+					fn();
+				} catch (error) {
+					expect(error).to.be.an
+						.instanceof(err);
+					expect(error).to.be.an
+						.instanceof(Error);
+				}
+			});
+		});
+	});
+});
+
+describe('Main Test', () => {
+
 
 
 
@@ -213,12 +251,6 @@ EmptyType.define('EmptySubType', function (sign) {
 // *****************************************************
 // *****************************************************
 
-
-const user = new UserType(USER_DATA);
-const userPL1 = new user.UserTypePL1();
-const userPL2 = new user.UserTypePL2();
-const userPL_1_2 = new userPL1.UserTypePL2();
-const userPL_NoNew = userPL1.UserTypePL2();
 
 const userTC = new types.UserTypeConstructor(USER_DATA);
 const userWithoutPassword = new userTC.WithoutPassword();
