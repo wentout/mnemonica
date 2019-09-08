@@ -74,43 +74,121 @@ const userPL_NoNew = userPL1.UserTypePL2();
 
 describe('Check Environment', () => {
 	const {
-		define,
 		namespace,
 		namespaces,
-		MNEMONICA,
 		MNEMOSYNE,
 		DEFAULT_NAMESPACE_NAME,
-		SymbolSubtypeCollection,
-		SymbolConstructorName,
 		errors,
+		ErrorMessages,
 	} = require('..');
-	it('DEFAULT_NAMESPACE_NAME shoud be defined', () => {
-		expect(DEFAULT_NAMESPACE_NAME).to.be.a('string').and.equal('default');
+	
+	describe('core env tests', () => {
+		it('DEFAULT_NAMESPACE_NAME shoud be defined', () => {
+			expect(DEFAULT_NAMESPACE_NAME).to.be.a('string').and.equal('default');
+		});
+		it('MNEMONICA shoud be defined', () => {
+			expect(MNEMONICA).to.be.a('string').and.equal('mnemonica');
+		});
+		it('MNEMOSYNE shoud be defined', () => {
+			expect(MNEMOSYNE).to.be.a('string').and.equal('Mnemosyne');
+		});
+		it('SymbolSubtypeCollection shoud be defined', () => {
+			expect(SymbolSubtypeCollection).to.be.a('symbol');
+		});
+		it('SymbolConstructorName shoud be defined', () => {
+			expect(SymbolConstructorName).to.be.a('symbol');
+		});
+		it('namespace shoud be defined', () => {
+			expect(namespace).to.be.an('object');
+		});
+		it('instance checking works', () => {
+			expect(true instanceof UserType).to.be.false;
+			expect(undefined instanceof UserType).to.be.false;
+			expect(Object.create(null) instanceof UserType).to.be.false;
+		});
+		it('namespaces shoud be defined', () => {
+			expect(namespaces).to.be.an('object');
+			expect(namespaces[DEFAULT_NAMESPACE_NAME]).to.be.an('object');
+			assert.deepEqual(namespaces[DEFAULT_NAMESPACE_NAME], namespace);
+		});
+
 	});
-	it('MNEMONICA shoud be defined', () => {
-		expect(MNEMONICA).to.be.a('string').and.equal('mnemonica');
+	describe('base error shoud be defined', () => {
+		expect(errors.BASE_MNEMONICA_ERROR).to.exist;
+		try {
+			throw new errors.BASE_MNEMONICA_ERROR();
+		} catch (error) {
+			it('base error instanceof Error', () => {
+				expect(error).instanceOf(Error);
+			});
+			it('base error instanceof BASE_MNEMONICA_ERROR', () => {
+				expect(error).instanceOf(errors.BASE_MNEMONICA_ERROR);
+			});
+			it('base error .message is correct', () => {
+				expect(error.message).is.equal(ErrorMessages.BASE_ERROR_MESSAGE);
+			});
+		}
 	});
-	it('MNEMOSYNE shoud be defined', () => {
-		expect(MNEMOSYNE).to.be.a('string').and.equal('Mnemosyne');
+	describe('should respect DFD', () => {
+		const BadType = define('BadType', function (NotThis) {
+			return NotThis;
+		});
+		BadType.define('ThrownBadType');
+		try {
+			new BadType({}).ThrownBadType();
+		} catch (error) {
+			it('should respect the rules', () => {
+				expect(error).instanceOf(Error);
+			});
+			it('thrown error instanceof WRONG_MODIFICATION_PATTERN', () => {
+				expect(error).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			});
+		}
 	});
-	it('SymbolSubtypeCollection shoud be defined', () => {
-		expect(SymbolSubtypeCollection).to.be.a('symbol');
+	describe('should not hack DFD', () => {
+		const BadTypeReThis = define('BadTypeReThis', function () {
+			this.constructor = undefined;
+		});
+		BadTypeReThis.define('ThrownHackType');
+		try {
+			new BadTypeReThis().ThrownHackType();
+		} catch (error) {
+			it('should respect construction rules', () => {
+				expect(error).instanceOf(Error);
+			});
+			it('thrown error instanceof WRONG_MODIFICATION_PATTERN', () => {
+				expect(error).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			});
+		}
 	});
-	it('SymbolConstructorName shoud be defined', () => {
-		expect(SymbolConstructorName).to.be.a('symbol');
+	describe('subtype property type re-definition', () => {
+		const BadTypeReContruct = define('BadTypeReContruct', function () {
+			this.ExistentConstructor = undefined;
+		});
+		BadTypeReContruct.define('ExistentConstructor');
+		try {
+			new BadTypeReContruct().ExistentConstructor();
+		} catch (error) {
+			it('should respect construction rules', () => {
+				expect(error).instanceOf(Error);
+			});
+			it('thrown error instanceof EXISTENT_PROPERTY_REDEFINITION', () => {
+				expect(error).instanceOf(errors.EXISTENT_PROPERTY_REDEFINITION);
+			});
+		}
 	});
-	it('namespace shoud be defined', () => {
-		expect(namespace).to.be.an('object');
-	});
-	it('instance checking works', () => {
-		expect(true instanceof UserType).to.be.false;
-		expect(undefined instanceof UserType).to.be.false;
-		expect(Object.create(null) instanceof UserType).to.be.false;
-	});
-	it('namespaces shoud be defined', () => {
-		expect(namespaces).to.be.an('object');
-		expect(namespaces[DEFAULT_NAMESPACE_NAME]).to.be.an('object');
-		assert.deepEqual(namespaces[DEFAULT_NAMESPACE_NAME], namespace);
+	describe('subtype property inside type re-definition', () => {
+		const BadTypeReInConstruct = define('BadTypeReInConstruct', function () {});
+		BadTypeReInConstruct.define('ExistentConstructor', function () {
+			this.ExistentConstructor = undefined;
+		});
+		try {
+			new BadTypeReInConstruct().ExistentConstructor();
+		} catch (error) {
+			it('Thrown with General JS Error', () => {
+				expect(error).instanceOf(Error);
+			});
+		}
 	});
 	describe('should throw with wrong definition', () => {
 		[
@@ -242,7 +320,6 @@ OverMore.define(() => {
 
 
 const EmptyType = define('EmptyType');
-
 EmptyType.define('EmptySubType', function (sign) {
 	this.emptySign = sign || 'DefaultEmptySign';
 });
