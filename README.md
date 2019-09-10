@@ -13,7 +13,7 @@ abstract technique that aids information retention : instance inheritance system
 npm i mnemonica
 ```
 
-# core concept
+## core concept
 
 
 ```js
@@ -69,7 +69,7 @@ const someSubTypeInstance =
 
 At this moment all stored data will inherit from `someTypeInstance` to `someSubTypeInstance`. Moreover, `someSubTypeInstance` become instanceof `SomeType` and `SomeSubType`.
 
-# .extract()
+## .extract()
 
 Here, after all might be situation you need all props and  nested props collected with one object. You can use built-in `.extract()` method:
 
