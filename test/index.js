@@ -375,7 +375,7 @@ const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 			assert.equal(def.useOldStyle, useOldStyle);
 		});
 		it('contructor exists', () => {
-			assert.isFunction(def.ConstructHandler);
+			assert.isFunction(def.constructHandler);
 		});
 	});
 };
