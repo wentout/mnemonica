@@ -5,12 +5,14 @@ const { assert, expect } = require('chai');
 const {
 	define,
 	types,
-	collectConstructors,
 	MNEMONICA,
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
-	extract,
-	toJSON,
+	utils : {
+		extract,
+		collectConstructors,
+		toJSON
+	},
 	errors,
 } = require('..');
 
@@ -246,7 +248,7 @@ const UserTypeConstructorProto = {
 	description : 'UserTypeConstructor'
 };
 
-define('UserTypeConstructor', function (userData) {
+const UserTypeConstructor = define('UserTypeConstructor', function (userData) {
 	const {
 		email,
 		password
@@ -329,7 +331,8 @@ EmptyType.define('EmptySubType', function (sign) {
 // *****************************************************
 
 
-const userTC = new types.UserTypeConstructor(USER_DATA);
+// const userTC = new types.UserTypeConstructor(USER_DATA);
+const userTC = new UserTypeConstructor(USER_DATA);
 const userWithoutPassword = new userTC.WithoutPassword();
 const userWithoutPassword_2 = new userTC.WithoutPassword();
 

@@ -2,9 +2,11 @@
 
 const {
 	define,
-	extract,
+	utils : {
+		extract,
+		collectConstructors
+	},
 	types,
-	collectConstructors
 } = require('..');
 
 
@@ -41,7 +43,7 @@ UserType.define(() => {
 	return UserTypePL2;
 });
 
-
+debugger;
 const UserTypeConstructor = define(() => {
 	
 	const UserTypeConstructor = function (userData) {
@@ -63,7 +65,7 @@ const UserTypeConstructor = define(() => {
 	
 });
 
-const UserWithoutPassword = UserTypeConstructor.define(() => {
+const UserWithoutPassword = types.UserTypeConstructor.define(() => {
 	const WithoutPassword = function () {
 		this.password = undefined;
 	};
@@ -153,7 +155,8 @@ console.log('1.1. ', user);
 console.log('1.2.  proto : ', user.constructor.prototype); // UserType.prototype
 console.log('1.3. ', user.constructor.name, '\n');
 
-
+types;
+debugger;
 const userTC = new UserTypeConstructor({
 	email : 'went.out@gmail.com',
 	password : 123
