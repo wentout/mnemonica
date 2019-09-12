@@ -6,12 +6,14 @@ const {
 	define,
 	types,
 	MNEMONICA,
+	MNEMOSYNE,
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
 	utils : {
 		extract,
 		collectConstructors,
-		toJSON
+		toJSON,
+		parse
 	},
 	errors,
 } = require('..');
@@ -78,7 +80,6 @@ describe('Check Environment', () => {
 	const {
 		namespace,
 		namespaces,
-		MNEMOSYNE,
 		DEFAULT_NAMESPACE_NAME,
 		errors,
 		ErrorMessages,
@@ -351,7 +352,6 @@ const filledEmptySign = 'FilledEmptySign';
 const emptySub = empty.EmptySubType(filledEmptySign);
 
 
-
 const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 	const parentType = types[SymbolSubtypeCollection];
 	const isSubType = parentType === MNEMONICA ? false : true;
@@ -427,10 +427,6 @@ describe('Instance Constructors Tests', () => {
 			assert.equal(userPL1.constructor.name, 'UserTypePL1');
 		});
 		it('.prototype is correct', () => {
-			// expect(userPL1.constructor.prototype).to.be.an('object')
-			// 	.that.not.includes(pl1ProtoOnlyGetterPart);
-			// expect(userPL1.constructor.prototype).to.be.an('object')
-			// 	.that.includes(pl1ProtoIncludedPart);
 			expect(userPL1.constructor.prototype).to.be.an('object')
 				.that.includes(pl1Proto);
 			assert.include(pl1Proto, userPL1.constructor.prototype);
@@ -544,28 +540,30 @@ describe('Instance Constructors Tests', () => {
 		describe('constructors sequence is ok', () => {
 			const constructorsSequence = collectConstructors(evenMore, true);
 			
-			assert.equal(constructorsSequence.length, 19);
-			assert.deepEqual(constructorsSequence, [
-				'EvenMore',
-				'EvenMore',
-				'OverMore',
-				'OverMore',
-				'OverMore',
-				'MoreOver',
-				'MoreOver',
-				'MoreOver',
-				'WithAdditionalSign',
-				'WithAdditionalSign',
-				'WithAdditionalSign',
-				'WithoutPassword',
-				'WithoutPassword',
-				'WithoutPassword',
-				'UserTypeConstructor',
-				'UserTypeConstructor',
-				'UserTypeConstructor',
-				'Mnemosyne',
-				'Object'
-			]);
+			it('must be ok', () => {
+				assert.equal(constructorsSequence.length, 19);
+				assert.deepEqual(constructorsSequence, [
+					'EvenMore',
+					'EvenMore',
+					'OverMore',
+					'OverMore',
+					'OverMore',
+					'MoreOver',
+					'MoreOver',
+					'MoreOver',
+					'WithAdditionalSign',
+					'WithAdditionalSign',
+					'WithAdditionalSign',
+					'WithoutPassword',
+					'WithoutPassword',
+					'WithoutPassword',
+					'UserTypeConstructor',
+					'UserTypeConstructor',
+					'UserTypeConstructor',
+					'Mnemosyne',
+					'Object'
+				]);
+			});
 			
 			const constructors = collectConstructors(evenMore);
 			const constructorsKeys = Object.keys(constructors);
@@ -608,7 +606,6 @@ describe('Instance Constructors Tests', () => {
 			str: 're-defined EvenMore str',
 			EvenMoreSign: 'EvenMoreSign',
 			OverMoreSign: 'OverMoreSign',
-			// MoreOverSign: 'MoreOverSign',
 			sign: 'userWithoutPassword_2.WithAdditionalSign',
 			WithAdditionalSignSign: 'WithAdditionalSignSign',
 			WithoutPasswordSign: 'WithoutPasswordSign',
@@ -711,6 +708,115 @@ describe('Instance Constructors Tests', () => {
 			});
 
 		}
+	});
+	
+	describe('parse tests', () => {
+		
+		const samples = require('./parseSamples');
+		
+		try {
+			parse(null);
+		} catch (error) {
+			it('expect wront parse invocation throw', () => {
+				expect(error).to.be.an
+					.instanceof(errors
+						.WRONG_MODIFICATION_PATTERN);
+				expect(error).to.be.an
+					.instanceof(Error);
+			});
+		}
+		
+		try {
+			parse(Object.getPrototypeOf(user));
+		} catch (error) {
+			it('expect wront parse invocation throw', () => {
+				expect(error).to.be.an
+					.instanceof(errors
+						.WRONG_ARGUMENTS_USED);
+				expect(error).to.be.an
+					.instanceof(Error);
+			});
+		}
+		try {
+			parse(Object.getPrototypeOf(Object.getPrototypeOf(userPL1)));
+		} catch (error) {
+			it('expect wront parse invocation throw', () => {
+				expect(error).to.be.an
+					.instanceof(errors
+						.WRONG_ARGUMENTS_USED);
+				expect(error).to.be.an
+					.instanceof(Error);
+			});
+		}
+		
+		const parsedUser = parse(user);
+		
+		const results = {
+			parsedUser,
+			parsedUserPL1 : parse(userPL1),
+			parsedUserPL2 : parse(userPL2),
+			
+			parsedUserTC : parse(userTC),
+			parsedEvenMore : parse(evenMore),
+		};
+		
+		it('expect proper first instance in chain constructor', () => {
+			assert.isTrue(parsedUser.parent.hasOwnProperty(SymbolConstructorName));
+			assert.equal(parsedUser.parent[SymbolConstructorName], MNEMOSYNE);
+		});
+		
+		const oneElseEmpty = new EmptyType();
+		const oneElseEmptyProto = Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(oneElseEmpty)));
+		oneElseEmptyProto[SymbolConstructorName] = undefined;
+		delete oneElseEmptyProto[SymbolConstructorName];
+		const oneElseEmptyParsed = parse(oneElseEmpty);
+		it('should be ok with broken constructor chain', () => {
+			assert.isObject(oneElseEmptyParsed.parent);
+			assert.isFalse(oneElseEmptyParsed.parent.hasOwnProperty(SymbolConstructorName));
+		});
+		
+		let count = 0;
+		const compare = (result, sample) => {
+			Object.entries(result).forEach(entry => {
+				const [name, value] = entry;
+				const sampleValue = sample[name];
+				
+				if (name === 'parent') {
+					return compare(value, sampleValue);
+				}
+				
+				if (name === 'self') {
+					it('parse results should have same "self" with samples', () => {
+						count++;
+						assert.deepOwnInclude(value, sampleValue);
+						assert.deepOwnInclude(sampleValue, value);
+					});
+					return;
+				}
+				if (name === 'proto') {
+					it('parse results should have same "proto" with samples', () => {
+						count++;
+						assert.deepInclude(value, sampleValue);
+						assert.deepInclude(sampleValue, value);
+					});
+					return;
+				}
+
+				it(`parse results should have same props with samples for "${name}"`, () => {
+					count++;
+					assert.deepEqual(value, sampleValue);
+				});
+			});
+		};
+		
+		Object.keys(results).forEach(key => {
+			compare(samples[key], results[key]);
+		});
+		
+		it('should have exactly 60 amount of generated results~sample parse tests', () => {
+			assert.equal(count, 60);
+		});
+		
 	});
 
 });
