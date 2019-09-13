@@ -6,7 +6,7 @@ const {
 		extract,
 		collectConstructors
 	},
-	types,
+	defaultTypes : types,
 } = require('..');
 
 
