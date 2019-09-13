@@ -4,11 +4,13 @@ const { assert, expect } = require('chai');
 
 const {
 	define,
-	types,
+	defaultTypes : types,
+	definedTypesCollections,
 	MNEMONICA,
 	MNEMOSYNE,
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
+	SymbolDefaultNamespace,
 	utils : {
 		extract,
 		collectConstructors,
@@ -78,16 +80,21 @@ const userPL_NoNew = userPL1.UserTypePL2();
 
 describe('Check Environment', () => {
 	const {
-		namespace,
 		namespaces,
-		DEFAULT_NAMESPACE_NAME,
+		createTypesCollection,
 		errors,
 		ErrorMessages,
 	} = require('..');
 	
 	describe('core env tests', () => {
+		const defaultNamespace = namespaces.get(SymbolDefaultNamespace);
+		it('namespaces shoud be defined', () => {
+			expect(namespaces).exist.and.is.a('map');
+		});
 		it('DEFAULT_NAMESPACE_NAME shoud be defined', () => {
-			expect(DEFAULT_NAMESPACE_NAME).to.be.a('string').and.equal('default');
+			expect(defaultNamespace).to.be.an('object');
+			expect(defaultNamespace.name).to.be.a('symbol')
+				.and.equal(SymbolDefaultNamespace);
 		});
 		it('MNEMONICA shoud be defined', () => {
 			expect(MNEMONICA).to.be.a('string').and.equal('mnemonica');
@@ -101,20 +108,21 @@ describe('Check Environment', () => {
 		it('SymbolConstructorName shoud be defined', () => {
 			expect(SymbolConstructorName).to.be.a('symbol');
 		});
-		it('namespace shoud be defined', () => {
-			expect(namespace).to.be.an('object');
-		});
 		it('instance checking works', () => {
 			expect(true instanceof UserType).to.be.false;
 			expect(undefined instanceof UserType).to.be.false;
 			expect(Object.create(null) instanceof UserType).to.be.false;
 		});
-		it('namespaces shoud be defined', () => {
-			expect(namespaces).to.be.an('object');
-			expect(namespaces[DEFAULT_NAMESPACE_NAME]).to.be.an('object');
-			assert.deepEqual(namespaces[DEFAULT_NAMESPACE_NAME], namespace);
+		try {
+			createTypesCollection({});
+		} catch (error) {
+			it('should register types collection for proper namespace', () => {
+				expect(error.message).is.equal(ErrorMessages.NAMESPACE_DOES_NOT_EXIST);
+			});
+		}
+		it('should refer defaultTypes from types.get(defaultNamespace)', () => {
+			expect(definedTypesCollections.get(defaultNamespace)).is.equal(types);
 		});
-
 	});
 	describe('base error shoud be defined', () => {
 		expect(errors.BASE_MNEMONICA_ERROR).to.exist;
@@ -237,8 +245,6 @@ describe('Check Environment', () => {
 describe('Main Test', () => {
 
 
-
-
 /*
 UserTypeConstructor and nested types
 */
@@ -262,6 +268,7 @@ const UserTypeConstructor = define('UserTypeConstructor', function (userData) {
 const WithoutPasswordProto = {
 	WithoutPasswordSign : 'WithoutPasswordSign'
 };
+
 const UserWithoutPassword = types.UserTypeConstructor.define(() => {
 	const WithoutPassword = function () {
 		this.password = undefined;
@@ -354,7 +361,7 @@ const emptySub = empty.EmptySubType(filledEmptySign);
 
 const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 	const parentType = types[SymbolSubtypeCollection];
-	const isSubType = parentType === MNEMONICA ? false : true;
+	const isSubType = parentType ? true : false;
 	describe(`initial type declaration ${TypeName}`, () => {
 		const def = types[TypeName];
 		it('should exist', () => {
@@ -539,7 +546,6 @@ describe('Instance Constructors Tests', () => {
 		
 		describe('constructors sequence is ok', () => {
 			const constructorsSequence = collectConstructors(evenMore, true);
-			
 			it('must be ok', () => {
 				assert.equal(constructorsSequence.length, 19);
 				assert.deepEqual(constructorsSequence, [
@@ -569,6 +575,7 @@ describe('Instance Constructors Tests', () => {
 			const constructorsKeys = Object.keys(constructors);
 			
 			var base = types;
+			
 			constructorsKeys
 				.reverse()
 				.map((name, idx) => {
@@ -577,7 +584,15 @@ describe('Instance Constructors Tests', () => {
 					if (name === 'Object') {
 						iof = evenMore instanceof Object;
 					} else {
-
+						// name follows the sequence :
+						// 
+						// Mnemosyne
+						// UserTypeConstructor
+						// ...
+						// EvenMore
+						// 
+						// so the first call : Mnemosyne is checked
+						// with types[DEFAULT_NAMESPACE_NAME] instanceof
 						if (base && base[name]) {
 							iof = evenMore instanceof base[name];
 							base = base[name].subtypes;
@@ -585,7 +600,6 @@ describe('Instance Constructors Tests', () => {
 							if (!base) {
 								return { idx, name, iof };
 							}
-
 						}
 					}
 					return { idx, name, iof };
@@ -762,7 +776,7 @@ describe('Instance Constructors Tests', () => {
 		
 		it('expect proper first instance in chain constructor', () => {
 			assert.isTrue(parsedUser.parent.hasOwnProperty(SymbolConstructorName));
-			assert.equal(parsedUser.parent[SymbolConstructorName], MNEMOSYNE);
+			assert.equal(parsedUser.parent[SymbolConstructorName], SymbolDefaultNamespace);
 		});
 		
 		const oneElseEmpty = new EmptyType();
