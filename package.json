@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "abstract technique that aids information retention : instance inheritance system",
   "main": "lib/index.js",
   "scripts": {
