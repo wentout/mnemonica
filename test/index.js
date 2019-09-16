@@ -6,6 +6,9 @@ const {
 	define,
 	defaultTypes : types,
 	definedTypesCollections,
+	namespaces,
+	createNamespace,
+	createTypesCollection,
 	MNEMONICA,
 	MNEMOSYNE,
 	SymbolSubtypeCollection,
@@ -30,7 +33,6 @@ const UserTypeProto = {
 	password : '',
 	description : 'UserType'
 };
-
 
 const UserType = define('UserType', function (userData) {
 	const {
@@ -71,23 +73,41 @@ UserType.define(() => {
 	return UserTypePL2;
 });
 
-const user = new UserType(USER_DATA);
-const userPL1 = new user.UserTypePL1();
-const userPL2 = new user.UserTypePL2();
-const userPL_1_2 = new userPL1.UserTypePL2();
-const userPL_NoNew = userPL1.UserTypePL2();
+const defaultNamespace = namespaces.get(SymbolDefaultNamespace);
 
+const flowCheckerInvocations = [];
+const postCreationInvocations = [];
+
+defaultNamespace.registerFlowChecker((opts) => {
+	flowCheckerInvocations.push(opts);
+});
+
+defaultNamespace.registerHook('postCreation', (opts) => {
+	postCreationInvocations.push({
+		firstPostCreationHook: opts
+	});
+});
+
+defaultNamespace.registerHook('postCreation', (opts) => {
+	postCreationInvocations.push({
+		secondPostCreationHook: opts
+	});
+});
+
+
+const anotherNamespace = createNamespace('anotherNamespace');
+const anotherTypesCollection = createTypesCollection(anotherNamespace);
+
+const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType');
+const AnotherCollectionInstance = new AnotherCollectionType();
 
 describe('Check Environment', () => {
 	const {
-		namespaces,
-		createTypesCollection,
 		errors,
 		ErrorMessages,
 	} = require('..');
 	
 	describe('core env tests', () => {
-		const defaultNamespace = namespaces.get(SymbolDefaultNamespace);
 		it('namespaces shoud be defined', () => {
 			expect(namespaces).exist.and.is.a('map');
 		});
@@ -209,9 +229,6 @@ describe('Check Environment', () => {
 			['no definition', () => {
 				define();
 			}, errors.WRONG_TYPE_DEFINITION],
-			// ['attempt to hack subtype', () => {
-			// 	user.UserTypePL1.call(null);
-			// }, errors.WRONG_TYPE_DEFINITION],
 			['intentionally bad definition', () => {
 				define('BadType', NaN, '', 'false');
 			}, errors.HANDLER_MUST_BE_A_FUNCTION],
@@ -240,7 +257,56 @@ describe('Check Environment', () => {
 			});
 		});
 	});
+	
+	describe('another namespace instance', () => {
+		it('Instance Of Another Nnamespace and AnotherCollectionType', () => {
+			expect(AnotherCollectionInstance).instanceOf(AnotherCollectionType);
+		});
+	});
+	
+	describe('hooks environment', () => {
+		try {
+			defaultNamespace.registerFlowChecker();
+		} catch (error) {
+			it('Thrown with Missing Callback', () => {
+				expect(error).instanceOf(Error);
+				expect(error).instanceOf(errors.MISSING_CALLBACK_ARGUMENT);
+			});
+		}
+		try {
+			defaultNamespace.registerFlowChecker(() => {});
+		} catch (error) {
+			it('Thrown with Re-Definition', () => {
+				expect(error).instanceOf(Error);
+				expect(error).instanceOf(errors.FLOW_CHECKER_REDEFINITION);
+			});
+		}
+		try {
+			defaultNamespace.registerHook('WrongHookType', () => {});
+		} catch (error) {
+			it('Thrown with Re-Definition', () => {
+				expect(error).instanceOf(Error);
+				expect(error).instanceOf(errors.WRONG_HOOK_TYPE);
+			});
+		}
+		try {
+			defaultNamespace.registerHook('postCreation');
+		} catch (error) {
+			it('Thrown with Re-Definition', () => {
+				expect(error).instanceOf(Error);
+				expect(error).instanceOf(errors.MISSING_HOOK_CALLBACK);
+			});
+		}
+	});
+	
+
 });
+
+const user = new UserType(USER_DATA);
+const userPL1 = new user.UserTypePL1();
+const userPL2 = new user.UserTypePL2();
+const userPL_1_2 = new userPL1.UserTypePL2();
+const userPL_NoNew = userPL1.UserTypePL2();
 
 describe('Main Test', () => {
 
@@ -358,6 +424,13 @@ const empty = new EmptyType();
 const filledEmptySign = 'FilledEmptySign';
 const emptySub = empty.EmptySubType(filledEmptySign);
 
+
+describe('Hooks Tests', () => {
+	it('check invocations count', () => {
+		assert.equal(18, flowCheckerInvocations.length);
+		assert.equal(36, postCreationInvocations.length);
+	});
+});
 
 const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 	const parentType = types[SymbolSubtypeCollection];
