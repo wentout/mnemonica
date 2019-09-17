@@ -76,10 +76,17 @@ UserType.define(() => {
 const defaultNamespace = namespaces.get(SymbolDefaultNamespace);
 
 const flowCheckerInvocations = [];
+const preCreationInvocations = [];
 const postCreationInvocations = [];
 
 defaultNamespace.registerFlowChecker((opts) => {
 	flowCheckerInvocations.push(opts);
+});
+
+defaultNamespace.registerHook('preCreation', (opts) => {
+	preCreationInvocations.push({
+		opts
+	});
 });
 
 defaultNamespace.registerHook('postCreation', (opts) => {
@@ -427,7 +434,8 @@ const emptySub = empty.EmptySubType(filledEmptySign);
 
 describe('Hooks Tests', () => {
 	it('check invocations count', () => {
-		assert.equal(18, flowCheckerInvocations.length);
+		assert.equal(38, flowCheckerInvocations.length);
+		assert.equal(20, preCreationInvocations.length);
 		assert.equal(36, postCreationInvocations.length);
 	});
 });
