@@ -44,6 +44,18 @@ const UserType = define('UserType', function (userData) {
 	return this;
 }, UserTypeProto, true);
 
+const userTypeHooksInvocations = [];
+UserType.registerHook('preCreation', (opts) => {
+	userTypeHooksInvocations.push({
+		preCreation : opts
+	});
+});
+UserType.registerHook('postCreation', (opts) => {
+	userTypeHooksInvocations.push({
+		postCreation : opts
+	});
+});
+
 
 const pl1Proto = {
 	UserTypePL1 : 'UserTypePL_1',
@@ -434,6 +446,7 @@ const emptySub = empty.EmptySubType(filledEmptySign);
 
 describe('Hooks Tests', () => {
 	it('check invocations count', () => {
+		assert.equal(2, userTypeHooksInvocations.length);
 		assert.equal(38, flowCheckerInvocations.length);
 		assert.equal(20, preCreationInvocations.length);
 		assert.equal(36, postCreationInvocations.length);
