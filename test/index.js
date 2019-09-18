@@ -130,7 +130,7 @@ describe('Check Environment', () => {
 		it('namespaces shoud be defined', () => {
 			expect(namespaces).exist.and.is.a('map');
 		});
-		it('DEFAULT_NAMESPACE_NAME shoud be defined', () => {
+		it('defaultNamespace shoud be defined', () => {
 			expect(defaultNamespace).to.be.an('object');
 			expect(defaultNamespace.name).to.be.a('symbol')
 				.and.equal(SymbolDefaultNamespace);
@@ -776,6 +776,19 @@ describe('Instance Constructors Tests', () => {
 		});
 	});
 	
+	describe('instancof checks', () => {
+		it('userWithoutPassword instanceof userTC', () => {
+			expect(userWithoutPassword).to.be.an.instanceof(userTC);
+		});
+		it('userTC NOT instanceof userWithoutPassword', () => {
+			expect(userTC).not.to.be.an.instanceof(userWithoutPassword);
+		});
+		it('other instances in chain should follow the rules', () => {
+			expect(evenMore).to.be.an.instanceof(userTC);
+			expect(evenMore).to.be.an.instanceof(userWithoutPassword);
+		});
+	});
+	
 	describe('errors tests', () => {
 		it('should throw on wrong instance 4 .extract()', () => {
 			expect(() => {
@@ -825,7 +838,7 @@ describe('Instance Constructors Tests', () => {
 		try {
 			parse(null);
 		} catch (error) {
-			it('expect wront parse invocation throw', () => {
+			it('expect wrong parse invocation throw', () => {
 				expect(error).to.be.an
 					.instanceof(errors
 						.WRONG_MODIFICATION_PATTERN);
@@ -837,7 +850,7 @@ describe('Instance Constructors Tests', () => {
 		try {
 			parse(Object.getPrototypeOf(user));
 		} catch (error) {
-			it('expect wront parse invocation throw', () => {
+			it('expect wrong parse invocation throw', () => {
 				expect(error).to.be.an
 					.instanceof(errors
 						.WRONG_ARGUMENTS_USED);
@@ -848,7 +861,7 @@ describe('Instance Constructors Tests', () => {
 		try {
 			parse(Object.getPrototypeOf(Object.getPrototypeOf(userPL1)));
 		} catch (error) {
-			it('expect wront parse invocation throw', () => {
+			it('expect wrong parse invocation throw', () => {
 				expect(error).to.be.an
 					.instanceof(errors
 						.WRONG_ARGUMENTS_USED);
