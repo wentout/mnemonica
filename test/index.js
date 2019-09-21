@@ -5,7 +5,6 @@ const { assert, expect } = require('chai');
 const {
 	define,
 	defaultTypes : types,
-	definedTypesCollections,
 	namespaces,
 	createNamespace,
 	createTypesCollection,
@@ -160,7 +159,7 @@ describe('Check Environment', () => {
 			});
 		}
 		it('should refer defaultTypes from types.get(defaultNamespace)', () => {
-			expect(definedTypesCollections.get(defaultNamespace)).is.equal(types);
+			expect(defaultNamespace.typesCollections.has(types)).is.true;
 		});
 	});
 	describe('base error shoud be defined', () => {
