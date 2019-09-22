@@ -13,6 +13,7 @@ const {
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
 	SymbolDefaultNamespace,
+	defaultNamespace,
 	utils : {
 		extract,
 		collectConstructors,
@@ -84,8 +85,6 @@ UserType.define(() => {
 	return UserTypePL2;
 });
 
-const defaultNamespace = namespaces.get(SymbolDefaultNamespace);
-
 const flowCheckerInvocations = [];
 const preCreationInvocations = [];
 const postCreationInvocations = [];
@@ -115,9 +114,13 @@ defaultNamespace.registerHook('postCreation', (opts) => {
 
 const anotherNamespace = createNamespace('anotherNamespace');
 const anotherTypesCollection = createTypesCollection(anotherNamespace);
+const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 
 const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType');
 const AnotherCollectionInstance = new AnotherCollectionType();
+
+const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionType');
+const OneElseCollectionInstance = new OneElseCollectionType();
 
 describe('Check Environment', () => {
 	const {
@@ -130,7 +133,8 @@ describe('Check Environment', () => {
 			expect(namespaces).exist.and.is.a('map');
 		});
 		it('defaultNamespace shoud be defined', () => {
-			expect(defaultNamespace).to.be.an('object');
+			expect(defaultNamespace).to.be.an('object')
+				.and.equal(namespaces.get(SymbolDefaultNamespace));
 			expect(defaultNamespace.name).to.be.a('symbol')
 				.and.equal(SymbolDefaultNamespace);
 		});
@@ -276,9 +280,24 @@ describe('Check Environment', () => {
 		});
 	});
 	
-	describe('another namespace instance', () => {
+	describe('another namespace instances', () => {
+		anotherNamespace;
+		debugger;
+		it('Another Nnamespace has both defined collections', () => {
+			debugger;
+			expect(anotherNamespace.typesCollections.has(anotherTypesCollection)).is.true;
+			expect(anotherNamespace.typesCollections.has(oneElseTypesCollection)).is.true;
+		});
+		it('Another Nnamespace typesCollections gather types', () => {
+			expect(anotherTypesCollection).hasOwnProperty('AnotherCollectionType');
+			expect(oneElseTypesCollection).hasOwnProperty('OneElseCollectionType');
+		});
+
 		it('Instance Of Another Nnamespace and AnotherCollectionType', () => {
 			expect(AnotherCollectionInstance).instanceOf(AnotherCollectionType);
+		});
+		it('Instance Of OneElse Nnamespace and OneElseCollectionType', () => {
+			expect(OneElseCollectionInstance).instanceOf(OneElseCollectionType);
 		});
 	});
 	
