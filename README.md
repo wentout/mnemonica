@@ -378,11 +378,11 @@ And here you can play much more joyfull play with hooks:
 
 defaultNamespace
 	.registerHook(
-		'preCreation', // ...
+		'preCreation', preCreationNamespaceCallback);
 		
 defaultNamespace
 	.registerHook(
-		'postCreation', // ...
+		'postCreation', postCreationNamespaceCallback);
 
 ```
 
@@ -446,6 +446,55 @@ const defineOfAnotherAnother =
 		.define;
 
 ```
+
+And even more. You can use Hooks with Types Collections also (starting from v0.3.1). Fore doing this just grab referer to collection somewhere, for example:
+
+
+```js
+const {
+	defaultTypes
+} = require('mnemonica');
+
+defaultTypes
+	.registerHook(
+		'preCreation', preCreationTypesCollectionCallback);
+		
+defaultTypes
+	.registerHook(
+		'postCreation', postCreationTypesCollectionCallback);
+
+
+```
+
+'Pre' hooks for Types Collections invoked after Namespace Hooks invocation, but before Type Hook invocation. 'Post' hooks for Types Collections invoked after Namespace Type Hook invocation, but before Namespace Hooks invocation. So, actually it looks like:
+
+```js
+
+// 1.
+namespace.invokeHook('preCreation', // ...
+
+// 2.
+typecollection.invokeHook('preCreation', // ...
+
+// 3.
+type.invokeHook('preCreation', // ...
+
+// 4. instance creation is here
+
+// 5.
+type.invokeHook('postCreation', // ...
+
+// 6.
+typecollection.invokeHook('postCreation', // ...
+
+// 7.
+namespace.invokeHook('postCreation', // ...
+
+```
+
+
+---
+# finally
 
 So, now you can craft as much types as you wish, combine them, re-define them and spend much more time playing with them:
 
