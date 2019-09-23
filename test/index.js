@@ -85,28 +85,48 @@ UserType.define(() => {
 	return UserTypePL2;
 });
 
-const flowCheckerInvocations = [];
-const preCreationInvocations = [];
-const postCreationInvocations = [];
+const typesFlowCheckerInvocations = [];
+const typesPreCreationInvocations = [];
+const typesPostCreationInvocations = [];
+const namespaceFlowCheckerInvocations = [];
+const namespacePreCreationInvocations = [];
+const namespacePostCreationInvocations = [];
+
+types.registerFlowChecker((opts) => {
+	typesFlowCheckerInvocations.push(opts);
+});
+
+types.registerHook('preCreation', (opts) => {
+	typesPreCreationInvocations.push({
+		opts
+	});
+});
+
+types.registerHook('postCreation', (opts) => {
+	typesPostCreationInvocations.push({
+		firstPostCreationHook: opts
+	});
+});
+
 
 defaultNamespace.registerFlowChecker((opts) => {
-	flowCheckerInvocations.push(opts);
+	namespaceFlowCheckerInvocations.push(opts);
 });
 
 defaultNamespace.registerHook('preCreation', (opts) => {
-	preCreationInvocations.push({
+	namespacePreCreationInvocations.push({
 		opts
 	});
 });
 
 defaultNamespace.registerHook('postCreation', (opts) => {
-	postCreationInvocations.push({
+	namespacePostCreationInvocations.push({
 		firstPostCreationHook: opts
 	});
 });
 
 defaultNamespace.registerHook('postCreation', (opts) => {
-	postCreationInvocations.push({
+	namespacePostCreationInvocations.push({
 		secondPostCreationHook: opts
 	});
 });
@@ -465,9 +485,17 @@ const emptySub = empty.EmptySubType(filledEmptySign);
 describe('Hooks Tests', () => {
 	it('check invocations count', () => {
 		assert.equal(2, userTypeHooksInvocations.length);
-		assert.equal(38, flowCheckerInvocations.length);
-		assert.equal(20, preCreationInvocations.length);
-		assert.equal(36, postCreationInvocations.length);
+		assert.equal(38, namespaceFlowCheckerInvocations.length);
+		assert.equal(38, typesFlowCheckerInvocations.length);
+		assert.equal(20, typesPreCreationInvocations.length);
+		// there are two errors on creation
+		// checked before
+		// that is why not 20, but 18
+		assert.equal(18, typesPostCreationInvocations.length);
+		assert.equal(20, namespacePreCreationInvocations.length);
+		// there are two registered Hooks
+		// that is why not 18, but 38
+		assert.equal(36, namespacePostCreationInvocations.length);
 	});
 });
 
