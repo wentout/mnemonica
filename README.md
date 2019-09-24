@@ -447,7 +447,7 @@ const defineOfAnotherAnother =
 
 ```
 
-And even more. You can use Hooks with Types Collections also (starting from v0.3.1). Fore doing this just grab referer to collection somewhere, for example:
+And even more. You can use Hooks with Types Collections also (starting from v0.3.1). For doing this just grab referer to collection somewhere, for example:
 
 
 ```js
