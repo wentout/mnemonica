@@ -5,9 +5,9 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha --allow-uncaught test/index.js",
-    "test:coverage:dev": "nyc --reporter=text mocha --ui bdd --reporter spec ./test/index.js",
-    "test:coverage": "nyc --reporter=lcov mocha --ui bdd --reporter spec ./test/index.js",
-    "debugtest": "npx mocha --reporter spec --inspect-brk test/index",
+    "test:coverage:dev": "nyc --reporter=text mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
+    "test:coverage": "nyc --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
+    "debugtest": "npx mocha --allow-uncaught  --reporter spec --inspect-brk test/index",
     "report-coverage": "cat coverage/lcov.info | coveralls",
     "example": "node ./test/example.js"
   },
