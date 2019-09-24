@@ -378,14 +378,52 @@ const UserTypeConstructorProto = {
 	description : 'UserTypeConstructor'
 };
 
+const evenMoreNecessaryProps = {
+	str: 're-defined EvenMore str',
+	EvenMoreSign: 'EvenMoreSign',
+	OverMoreSign: 'OverMoreSign',
+	sign: 'userWithoutPassword_2.WithAdditionalSign',
+	WithAdditionalSignSign: 'WithAdditionalSignSign',
+	WithoutPasswordSign: 'WithoutPasswordSign',
+	email: 'went.out@gmail.com',
+	description: 'UserTypeConstructor',
+	password: undefined
+};
+
 const UserTypeConstructor = define('UserTypeConstructor', function (userData) {
 	const {
 		email,
 		password
 	} = userData;
 	
-	this.email = email;
-	this.password = password;
+	Object.assign(this, {
+		email,
+		password
+	});
+	
+	var self;
+	
+	Object.defineProperty(this, 'uncaughtExceptionHandler', {
+		get () {
+			return function () {
+				const extracted = extract(self);
+				self.uncaughtExceptionData = extracted;
+			};
+		}
+	});
+	
+	Object.defineProperty(this, 'throwTypeError', {
+		get () {
+			self = this;
+			return function () {
+				const a = {
+					b: 1
+				};
+				a.b.c.d = 2;
+			};
+		}
+	});
+	
 }, UserTypeConstructorProto);
 
 const WithoutPasswordProto = {
@@ -464,6 +502,7 @@ EmptyType.define('EmptySubType', function (sign) {
 
 // const userTC = new types.UserTypeConstructor(USER_DATA);
 const userTC = new UserTypeConstructor(USER_DATA);
+
 const userWithoutPassword = new userTC.WithoutPassword();
 const userWithoutPassword_2 = new userTC.WithoutPassword();
 
@@ -756,17 +795,6 @@ describe('Instance Constructors Tests', () => {
 						});
 					});
 		});
-		const evenMoreNecessaryProps = {
-			str: 're-defined EvenMore str',
-			EvenMoreSign: 'EvenMoreSign',
-			OverMoreSign: 'OverMoreSign',
-			sign: 'userWithoutPassword_2.WithAdditionalSign',
-			WithAdditionalSignSign: 'WithAdditionalSignSign',
-			WithoutPasswordSign: 'WithoutPasswordSign',
-			email: 'went.out@gmail.com',
-			description: 'UserTypeConstructor',
-			password: undefined
-		};
 		describe('extraction works properly', () => {
 			const extracted = extract(evenMore);
 			const extractedJSON = toJSON(extracted);
@@ -985,6 +1013,25 @@ describe('Instance Constructors Tests', () => {
 		});
 		
 	});
+	
+	setTimeout(() => {
+		describe('uncaughtException test', () => {
+			it('should throw proper error', (passedCb) => {
+				
+				process.removeAllListeners('uncaughtException');
+
+				process.on('uncaughtException', userTC.uncaughtExceptionHandler);
+				process.on('uncaughtException', () => {
+					assert.deepOwnInclude(
+							evenMore.uncaughtExceptionData,
+							evenMoreNecessaryProps
+						);
+					passedCb();
+				});
+				evenMore.throwTypeError();
+			});
+		});
+	}, 100);
 
 });
 });
