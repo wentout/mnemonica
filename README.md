@@ -23,7 +23,7 @@ Though, for sure we have to define some sort of Class for crafting our first Ins
 ```js
 const { define } = require('mnemonica');
 
-const TypeModificatioConstructorFactory = () => {
+const TypeModificationConstructorFactory = () => {
 	class SomeTypeConstructor {
 		constructor (opts) {
 			// all this definitions
@@ -45,13 +45,13 @@ const TypeModificatioConstructorFactory = () => {
 	return SomeTypeConstructor;
 };
 
-const SomeType = define(TypeModificatioConstructorFactory);
+const SomeType = define(TypeModificationConstructorFactory);
 ```
 
 Or, we can define `SomeType` like this:
 
 ```js
-const TypeModificatioConstructorFactory = () => {
+const TypeModificationConstructorFactory = () => {
 	const SomeTypeConstructor = function (opts) {
 		// as this is absolutely the same behaviour
 		// we described upper
@@ -67,7 +67,7 @@ const TypeModificatioConstructorFactory = () => {
 	return SomeTypeConstructor;
 };
 
-const SomeType = define(TypeModificatioConstructorFactory);
+const SomeType = define(TypeModificationConstructorFactory);
 ```
 
 Or even like this:
@@ -265,7 +265,7 @@ const GoneToTheDataBase =
 			DataBaseRequestHandlerCostructor);
 ```
 
-So, now we might choose what to do: inspect some collected data or probably we wish to extract it for **tests** or, moreover for **log** or even grab them with the other consumer. And yes, we already saw `.extract()` method, but there are also two other methods could be much more helpfull...
+Here we might choose what to do: inspect some collected data or probably we wish to extract it for **tests** or **log** or even grab them with the other consumer. And yes, we already saw `.extract()` method, but there are also two other methods could be much more helpfull...
 
 # Pre & Post creation Hooks
 
@@ -492,6 +492,21 @@ namespace.invokeHook('postCreation', // ...
 
 ```
 
+As we can see, type hooks are closest one to the type itself. For sure, there can be situations, when you have to register some common hooks, but not for `typecollection` or `namespace`. Assume you have some friendly types, might be from different collections, and you have to register the same hooks definitions for them. And the plase where you wish to do this is the file, other than files you defined that types. There you can use:
+
+# .lookup
+
+```js
+const {
+	lookup
+} = require('mnemonica');
+
+const SomeType = lookup('SomeType');
+const SomeNestedType = lookup('SomeType.SomeNestedType');
+
+```
+
+that's it.
 
 ---
 # finally
