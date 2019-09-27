@@ -4,6 +4,7 @@ const { assert, expect } = require('chai');
 
 const {
 	define,
+	lookup,
 	defaultTypes : types,
 	namespaces,
 	createNamespace,
@@ -302,9 +303,7 @@ describe('Check Environment', () => {
 	
 	describe('another namespace instances', () => {
 		anotherNamespace;
-		debugger;
 		it('Another Nnamespace has both defined collections', () => {
-			debugger;
 			expect(anotherNamespace.typesCollections.has(anotherTypesCollection)).is.true;
 			expect(anotherNamespace.typesCollections.has(oneElseTypesCollection)).is.true;
 		});
@@ -488,7 +487,6 @@ OverMore.define(() => {
 	EvenMore.prototype = EvenMoreProto;
 	return EvenMore;
 });
-
 
 const EmptyType = define('EmptyType');
 EmptyType.define('EmptySubType', function (sign) {
@@ -823,6 +821,55 @@ describe('Instance Constructors Tests', () => {
 			});
 			assert.isDefined(evenMore.MoreOverSign);
 			assert.equal(evenMore.MoreOverSign, MoreOverProto.MoreOverSign);
+		});
+			
+		describe('lookup test', () => {
+			it('should throw proper error when looking up without TypeName', () => {
+				try {
+					lookup(null);
+				} catch (error) {
+					it('thrown by extract(null) should be ok with instanceof', () => {
+						expect(error).to.be.an
+							.instanceof(errors
+								.WRONG_TYPE_DEFINITION);
+						expect(error).to.be.an
+							.instanceof(Error);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'arg: type nested path must be a string');
+					});
+				}
+			});
+			it('should throw proper error when looking up for empty TypeName', () => {
+				try {
+					lookup('');
+				} catch (error) {
+					it('thrown by extract(null) should be ok with instanceof', () => {
+						expect(error).to.be.an
+							.instanceof(errors
+								.WRONG_TYPE_DEFINITION);
+						expect(error).to.be.an
+							.instanceof(Error);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'arg: type nested path has no path');
+					});
+				}
+			});
+			it('should seek proper reference of passed TypeName', () => {
+				const ut = lookup('UserType');
+				assert.equal(ut, UserType);
+				const up = lookup('UserTypeConstructor.WithoutPassword');
+				assert.equal(up, UserWithoutPassword);
+				const om = lookup('UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore');
+				assert.equal(om, OverMore);
+				const emShort = MoreOver.lookup('OverMore.EvenMore');
+				const emFull = lookup('UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore.EvenMore');
+				assert.equal(emShort, emFull);
+			});
+			
 		});
 		
 	});
