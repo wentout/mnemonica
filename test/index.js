@@ -143,6 +143,163 @@ const AnotherCollectionInstance = new AnotherCollectionType();
 const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionType');
 const OneElseCollectionInstance = new OneElseCollectionType();
 
+
+
+const user = new UserType(USER_DATA);
+const userPL1 = new user.UserTypePL1();
+const userPL2 = new user.UserTypePL2();
+const userPL_1_2 = new userPL1.UserTypePL2();
+const userPL_NoNew = userPL1.UserTypePL2();
+
+describe('Main Test', () => {
+
+
+/*
+UserTypeConstructor and nested types
+*/
+
+const UserTypeConstructorProto = {
+	email : '',
+	password : '',
+	description : 'UserTypeConstructor'
+};
+
+const evenMoreNecessaryProps = {
+	str: 're-defined EvenMore str',
+	EvenMoreSign: 'EvenMoreSign',
+	OverMoreSign: 'OverMoreSign',
+	sign: 'userWithoutPassword_2.WithAdditionalSign',
+	WithAdditionalSignSign: 'WithAdditionalSignSign',
+	WithoutPasswordSign: 'WithoutPasswordSign',
+	email: 'went.out@gmail.com',
+	description: 'UserTypeConstructor',
+	password: undefined
+};
+
+const UserTypeConstructor = define('UserTypeConstructor', function (userData) {
+	const {
+		email,
+		password
+	} = userData;
+	
+	Object.assign(this, {
+		email,
+		password
+	});
+	
+	var self;
+	
+	Object.defineProperty(this, 'uncaughtExceptionHandler', {
+		get () {
+			return function () {
+				const extracted = extract(self);
+				self.uncaughtExceptionData = extracted;
+			};
+		}
+	});
+	
+	Object.defineProperty(this, 'throwTypeError', {
+		get () {
+			self = this;
+			return function () {
+				const a = {
+					b: 1
+				};
+				a.b.c.d = 2;
+			};
+		}
+	});
+	
+}, UserTypeConstructorProto);
+
+const WithoutPasswordProto = {
+	WithoutPasswordSign : 'WithoutPasswordSign'
+};
+
+const UserWithoutPassword = types.UserTypeConstructor.define(() => {
+	const WithoutPassword = function () {
+		this.password = undefined;
+	};
+	WithoutPassword.prototype = WithoutPasswordProto;
+	return WithoutPassword;
+});
+
+const WithAdditionalSignProto = {
+	WithAdditionalSignSign : 'WithAdditionalSignSign'
+};
+const WithAdditionalSign = UserWithoutPassword.define(() => {
+	const WithAdditionalSign = function (sign) {
+		this.sign = sign;
+	};
+	WithAdditionalSign.prototype = WithAdditionalSignProto;
+	return WithAdditionalSign;
+});
+
+const MoreOverProto = {
+	MoreOverSign : 'MoreOverSign'
+};
+const MoreOver = WithAdditionalSign.define(() => {
+	class MoreOver {
+		constructor (str) {
+			this.str = str || 'moreover str';
+		}
+		get MoreOverSign () {
+			return MoreOverProto.MoreOverSign;
+		}
+	}
+	return MoreOver;
+});
+
+const OverMoreProto = {
+	OverMoreSign : 'OverMoreSign'
+};
+const OverMore = WithAdditionalSign.define(
+	'MoreOver.OverMore',
+function (str) {
+	this.str = str || 're-defined OverMore str';
+}, OverMoreProto);
+
+const EvenMoreProto = {
+	EvenMoreSign : 'EvenMoreSign'
+};
+WithAdditionalSign.define('MoreOver.OverMore', () => {
+	const EvenMore = function (str) {
+		this.str = str || 're-defined EvenMore str';
+	};
+	EvenMore.prototype = EvenMoreProto;
+	return EvenMore;
+});
+
+const EmptyType = define('EmptyType');
+EmptyType.define('EmptySubType', function (sign) {
+	this.emptySign = sign || 'DefaultEmptySign';
+});
+
+// *****************************************************
+// *****************************************************
+// *****************************************************
+
+
+// const userTC = new types.UserTypeConstructor(USER_DATA);
+const userTC = new UserTypeConstructor(USER_DATA);
+
+const userWithoutPassword = new userTC.WithoutPassword();
+const userWithoutPassword_2 = new userTC.WithoutPassword();
+
+const sign2add = 'userWithoutPassword_2.WithAdditionalSign';
+const userWPWithAdditionalSign = new userWithoutPassword_2
+	.WithAdditionalSign(sign2add);
+
+const moreOverStr = 'moreOver str from test scope';
+const moreOver = userWPWithAdditionalSign.MoreOver(moreOverStr);
+
+const overMore = moreOver.OverMore();
+const evenMore = overMore.EvenMore();
+
+const empty = new EmptyType();
+const filledEmptySign = 'FilledEmptySign';
+const emptySub = empty.EmptySubType(filledEmptySign);
+
 describe('Check Environment', () => {
 	const {
 		errors,
@@ -273,18 +430,25 @@ describe('Check Environment', () => {
 				define();
 			}, errors.WRONG_TYPE_DEFINITION],
 			['intentionally bad definition', () => {
-				define('BadType', NaN, '', 'false');
+				define('NoConstructFunctionType', NaN, '', 'false');
 			}, errors.HANDLER_MUST_BE_A_FUNCTION],
-			['intentionally bad typee definition', () => {
+			['intentionally bad type definition', () => {
 				define(() => {
 					return {
 						name : null
 					};
 				});
-			}, errors.TYPENAME_MUST_BE_A_STRING],
+			}, errors.HANDLER_MUST_BE_A_FUNCTION],
 			['re-definition', () => {
-				define('UserType');
+				define('UserTypeConstructor', () => {
+					return function WithoutPassword () {};
+				});
 			}, errors.ALREADY_DECLARED],
+			['prohibit anonymous', () => {
+				define('UserType.UserTypePL1', () => {
+					return function () {};
+				});
+			}, errors.TYPENAME_MUST_BE_A_STRING],
 		].forEach(entry => {
 			const [name, fn, err] = entry;
 			it(`check throw with : ${name}`, () => {
@@ -357,166 +521,6 @@ describe('Check Environment', () => {
 	
 
 });
-
-const user = new UserType(USER_DATA);
-const userPL1 = new user.UserTypePL1();
-const userPL2 = new user.UserTypePL2();
-const userPL_1_2 = new userPL1.UserTypePL2();
-const userPL_NoNew = userPL1.UserTypePL2();
-
-describe('Main Test', () => {
-
-
-/*
-UserTypeConstructor and nested types
-*/
-
-const UserTypeConstructorProto = {
-	email : '',
-	password : '',
-	description : 'UserTypeConstructor'
-};
-
-const evenMoreNecessaryProps = {
-	str: 're-defined EvenMore str',
-	EvenMoreSign: 'EvenMoreSign',
-	OverMoreSign: 'OverMoreSign',
-	sign: 'userWithoutPassword_2.WithAdditionalSign',
-	WithAdditionalSignSign: 'WithAdditionalSignSign',
-	WithoutPasswordSign: 'WithoutPasswordSign',
-	email: 'went.out@gmail.com',
-	description: 'UserTypeConstructor',
-	password: undefined
-};
-
-const UserTypeConstructor = define('UserTypeConstructor', function (userData) {
-	const {
-		email,
-		password
-	} = userData;
-	
-	Object.assign(this, {
-		email,
-		password
-	});
-	
-	var self;
-	
-	Object.defineProperty(this, 'uncaughtExceptionHandler', {
-		get () {
-			return function () {
-				const extracted = extract(self);
-				self.uncaughtExceptionData = extracted;
-			};
-		}
-	});
-	
-	Object.defineProperty(this, 'throwTypeError', {
-		get () {
-			self = this;
-			return function () {
-				const a = {
-					b: 1
-				};
-				a.b.c.d = 2;
-			};
-		}
-	});
-	
-}, UserTypeConstructorProto);
-
-const WithoutPasswordProto = {
-	WithoutPasswordSign : 'WithoutPasswordSign'
-};
-
-const UserWithoutPassword = types.UserTypeConstructor.define(() => {
-	const WithoutPassword = function () {
-		this.password = undefined;
-	};
-	WithoutPassword.prototype = WithoutPasswordProto;
-	return WithoutPassword;
-});
-
-const WithAdditionalSignProto = {
-	WithAdditionalSignSign : 'WithAdditionalSignSign'
-};
-const WithAdditionalSign = UserWithoutPassword.define(() => {
-	const WithAdditionalSign = function (sign) {
-		this.sign = sign;
-	};
-	WithAdditionalSign.prototype = WithAdditionalSignProto;
-	return WithAdditionalSign;
-});
-
-const MoreOverProto = {
-	MoreOverSign : 'MoreOverSign'
-};
-const MoreOver = WithAdditionalSign.define(() => {
-	class MoreOver {
-		constructor (str) {
-			this.str = str || 'moreover str';
-		}
-		get MoreOverSign () {
-			return MoreOverProto.MoreOverSign;
-		}
-		// set MoreOverSign (value) {
-		// 	MoreOverProto.MoreOverSign = value;
-		// }
-	}
-	return MoreOver;
-});
-
-const OverMoreProto = {
-	OverMoreSign : 'OverMoreSign'
-};
-const OverMore = MoreOver.define(() => {
-	const OverMore = function (str) {
-		this.str = str || 're-defined OverMore str';
-	};
-	OverMore.prototype = OverMoreProto;
-	return OverMore;
-});
-
-const EvenMoreProto = {
-	EvenMoreSign : 'EvenMoreSign'
-};
-OverMore.define(() => {
-	const EvenMore = function (str) {
-		this.str = str || 're-defined EvenMore str';
-	};
-	EvenMore.prototype = EvenMoreProto;
-	return EvenMore;
-});
-
-const EmptyType = define('EmptyType');
-EmptyType.define('EmptySubType', function (sign) {
-	this.emptySign = sign || 'DefaultEmptySign';
-});
-
-// *****************************************************
-// *****************************************************
-// *****************************************************
-
-
-// const userTC = new types.UserTypeConstructor(USER_DATA);
-const userTC = new UserTypeConstructor(USER_DATA);
-
-const userWithoutPassword = new userTC.WithoutPassword();
-const userWithoutPassword_2 = new userTC.WithoutPassword();
-
-const sign2add = 'userWithoutPassword_2.WithAdditionalSign';
-const userWPWithAdditionalSign = new userWithoutPassword_2
-	.WithAdditionalSign(sign2add);
-
-const moreOverStr = 'moreOver str from test scope';
-const moreOver = userWPWithAdditionalSign.MoreOver(moreOverStr);
-
-const overMore = moreOver.OverMore();
-const evenMore = overMore.EvenMore();
-
-const empty = new EmptyType();
-const filledEmptySign = 'FilledEmptySign';
-const emptySub = empty.EmptySubType(filledEmptySign);
 
 
 describe('Hooks Tests', () => {
@@ -793,6 +797,7 @@ describe('Instance Constructors Tests', () => {
 						});
 					});
 		});
+		
 		describe('extraction works properly', () => {
 			const extracted = extract(evenMore);
 			const extractedJSON = toJSON(extracted);
@@ -824,11 +829,12 @@ describe('Instance Constructors Tests', () => {
 		});
 			
 		describe('lookup test', () => {
+			
 			it('should throw proper error when looking up without TypeName', () => {
 				try {
 					lookup(null);
 				} catch (error) {
-					it('thrown by extract(null) should be ok with instanceof', () => {
+					it('thrown should be ok with instanceof', () => {
 						expect(error).to.be.an
 							.instanceof(errors
 								.WRONG_TYPE_DEFINITION);
@@ -841,11 +847,12 @@ describe('Instance Constructors Tests', () => {
 					});
 				}
 			});
+			
 			it('should throw proper error when looking up for empty TypeName', () => {
 				try {
 					lookup('');
 				} catch (error) {
-					it('thrown by extract(null) should be ok with instanceof', () => {
+					it('thrown should be ok with instanceof', () => {
 						expect(error).to.be.an
 							.instanceof(errors
 								.WRONG_TYPE_DEFINITION);
@@ -858,6 +865,43 @@ describe('Instance Constructors Tests', () => {
 					});
 				}
 			});
+			
+			it('should throw proper error when defining from wrong lookup', () => {
+				try {
+					define('UserTypeConstructor.WithoutPassword.WrongPath.WrongNestedType');
+				} catch (error) {
+					it('thrown should be ok with instanceof', () => {
+						expect(error).to.be.an
+							.instanceof(errors
+								.WRONG_TYPE_DEFINITION);
+						expect(error).to.be.an
+							.instanceof(Error);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'incorrect nested type usage');
+					});
+				}
+			});
+			
+			it('should throw proper error when declaring with empty TypeName', () => {
+				try {
+					define('');
+				} catch (error) {
+					it('thrown should be ok with instanceof', () => {
+						expect(error).to.be.an
+							.instanceof(errors
+								.WRONG_TYPE_DEFINITION);
+						expect(error).to.be.an
+							.instanceof(Error);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'TypeName must not be empty');
+					});
+				}
+			});
+			
 			it('should seek proper reference of passed TypeName', () => {
 				const ut = lookup('UserType');
 				assert.equal(ut, UserType);
@@ -1061,9 +1105,9 @@ describe('Instance Constructors Tests', () => {
 		
 	});
 	
-	setTimeout(() => {
-		describe('uncaughtException test', () => {
-			it('should throw proper error', (passedCb) => {
+	describe('uncaughtException test', () => {
+		it('should throw proper error', (passedCb) => {
+			setTimeout(() => {
 				
 				process.removeAllListeners('uncaughtException');
 
@@ -1076,9 +1120,9 @@ describe('Instance Constructors Tests', () => {
 					passedCb();
 				});
 				evenMore.throwTypeError();
-			});
+			}, 100);
 		});
-	}, 100);
+	});
 
 });
 });
