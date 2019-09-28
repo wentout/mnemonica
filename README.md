@@ -506,6 +506,34 @@ const SomeNestedType = lookup('SomeType.SomeNestedType');
 
 ```
 
+And now it is not so necessary easy to explain why it could be usefull to use nested definitions. Sure you can do them by using the following technique: 
+
+```js
+
+define('SomeExistentType.SomeExistentNestedType.NewType', function () {
+	// operators
+});
+
+// or from tm descriptor
+// if you have reference
+SomeExistentType.define('SomeExistentNestedType.NewType', function () {
+	// operators
+});
+
+// you can also use
+
+SomeExistentType.define('SomeExistentNestedType', () => {
+	// name of "NewType" is here
+	// nested inside of delcaration
+	return class NewType {
+		constructor (str) {
+			// operators
+		}
+	};
+});
+
+```
+
 that's it.
 
 ---
