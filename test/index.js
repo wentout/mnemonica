@@ -345,7 +345,9 @@ describe('Check Environment', () => {
 		});
 	});
 	describe('base error shoud be defined', () => {
-		expect(errors.BASE_MNEMONICA_ERROR).to.exist;
+		it('BASE_MNEMONICA_ERROR exists', () => {
+			expect(errors.BASE_MNEMONICA_ERROR).to.exist;
+		});
 		try {
 			throw new errors.BASE_MNEMONICA_ERROR();
 		} catch (error) {
@@ -830,7 +832,7 @@ describe('Instance Constructors Tests', () => {
 			
 		describe('lookup test', () => {
 			
-			it('should throw proper error when looking up without TypeName', () => {
+			describe('should throw proper error when looking up without TypeName', () => {
 				try {
 					lookup(null);
 				} catch (error) {
@@ -843,12 +845,12 @@ describe('Instance Constructors Tests', () => {
 					});
 					it('thrown error should be ok with props', () => {
 						expect(error.message).exist.and.is.a('string');
-						assert.equal(error.message, 'arg: type nested path must be a string');
+						assert.equal(error.message, 'wrong type definition : arg : type nested path must be a string');
 					});
 				}
 			});
 			
-			it('should throw proper error when looking up for empty TypeName', () => {
+			describe('should throw proper error when looking up for empty TypeName', () => {
 				try {
 					lookup('');
 				} catch (error) {
@@ -861,12 +863,12 @@ describe('Instance Constructors Tests', () => {
 					});
 					it('thrown error should be ok with props', () => {
 						expect(error.message).exist.and.is.a('string');
-						assert.equal(error.message, 'arg: type nested path has no path');
+						assert.equal(error.message, 'wrong type definition : arg : type nested path has no path');
 					});
 				}
 			});
 			
-			it('should throw proper error when defining from wrong lookup', () => {
+			describe('should throw proper error when defining from wrong lookup', () => {
 				try {
 					define('UserTypeConstructor.WithoutPassword.WrongPath.WrongNestedType');
 				} catch (error) {
@@ -879,12 +881,12 @@ describe('Instance Constructors Tests', () => {
 					});
 					it('thrown error should be ok with props', () => {
 						expect(error.message).exist.and.is.a('string');
-						assert.equal(error.message, 'incorrect nested type usage');
+						assert.equal(error.message, 'wrong type definition : WrongPath definition is not yet exists');
 					});
 				}
 			});
 			
-			it('should throw proper error when declaring with empty TypeName', () => {
+			describe('should throw proper error when declaring with empty TypeName', () => {
 				try {
 					define('');
 				} catch (error) {
@@ -897,7 +899,7 @@ describe('Instance Constructors Tests', () => {
 					});
 					it('thrown error should be ok with props', () => {
 						expect(error.message).exist.and.is.a('string');
-						assert.equal(error.message, 'TypeName must not be empty');
+						assert.equal(error.message, 'wrong type definition : TypeName must not be empty');
 					});
 				}
 			});
