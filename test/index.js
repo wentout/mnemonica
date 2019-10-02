@@ -307,6 +307,12 @@ describe('Check Environment', () => {
 	} = require('..');
 	
 	describe('core env tests', () => {
+		
+		it('.SubTypes definition is correct Second', () => {
+			Object.getPrototypeOf(Object.getPrototypeOf(overMore)).hasOwnProperty('EvenMore');
+			Object.getPrototypeOf(Object.getPrototypeOf(moreOver)).hasOwnProperty('OverMore');
+		});
+		
 		it('namespaces shoud be defined', () => {
 			expect(namespaces).exist.and.is.a('map');
 		});
@@ -364,6 +370,7 @@ describe('Check Environment', () => {
 	});
 	describe('should respect DFD', () => {
 		const BadType = define('BadType', function (NotThis) {
+			// returns not instanceof this
 			return NotThis;
 		});
 		BadType.define('ThrownBadType');
@@ -376,10 +383,15 @@ describe('Check Environment', () => {
 			it('thrown error instanceof WRONG_MODIFICATION_PATTERN', () => {
 				expect(error).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
 			});
+			it('thrown error should be ok with props', () => {
+				expect(error.message).exist.and.is.a('string');
+				assert.equal(error.message, 'wrong modification pattern : should inherit from mnemonica instance');
+			});
 		}
 	});
 	describe('should not hack DFD', () => {
 		const BadTypeReThis = define('BadTypeReThis', function () {
+			// removing constructor
 			this.constructor = undefined;
 		});
 		BadTypeReThis.define('ThrownHackType');
@@ -391,6 +403,10 @@ describe('Check Environment', () => {
 			});
 			it('thrown error instanceof WRONG_MODIFICATION_PATTERN', () => {
 				expect(error).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			});
+			it('thrown error should be ok with props', () => {
+				expect(error.message).exist.and.is.a('string');
+				assert.equal(error.message, 'wrong modification pattern : should inherit from mnemonica instance');
 			});
 		}
 	});
@@ -528,19 +544,20 @@ describe('Check Environment', () => {
 describe('Hooks Tests', () => {
 	it('check invocations count', () => {
 		assert.equal(2, userTypeHooksInvocations.length);
-		assert.equal(38, namespaceFlowCheckerInvocations.length);
-		assert.equal(38, typesFlowCheckerInvocations.length);
+		assert.equal(36, namespaceFlowCheckerInvocations.length);
+		assert.equal(36, typesFlowCheckerInvocations.length);
 		assert.equal(20, typesPreCreationInvocations.length);
 		// there are two errors on creation
 		// checked before
 		// that is why not 20, but 18
-		assert.equal(18, typesPostCreationInvocations.length);
+		assert.equal(16, typesPostCreationInvocations.length);
 		assert.equal(20, namespacePreCreationInvocations.length);
 		// there are two registered Hooks
-		// that is why not 18, but 38
-		assert.equal(36, namespacePostCreationInvocations.length);
+		// that is why not 16, but 32
+		assert.equal(32, namespacePostCreationInvocations.length);
 	});
 });
+
 
 const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 	const parentType = types[SymbolSubtypeCollection];
@@ -606,6 +623,15 @@ describe('Instance Constructors Tests', () => {
 	});
 	it('.prototype is correct', () => {
 		assert.deepEqual(user.constructor.prototype, UserTypeProto);
+	});
+	
+	it('.SubTypes definition is correct', () => {
+		expect(user.hasOwnProperty('UserTypePL1')).is.false;
+		expect(user.hasOwnProperty('UserTypePL2')).is.false;
+	});
+	it('.SubTypes definition is correct First', () => {
+		expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL1')).is.true;
+		expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL2')).is.true;
 	});
 	
 	describe('nested type with old style check', () => {
