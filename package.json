@@ -1,13 +1,13 @@
 {
   "name": "mnemonica",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "abstract technique that aids information retention : instance inheritance system",
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha --allow-uncaught test/index.js",
     "test:coverage:dev": "nyc --reporter=text mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
     "test:coverage": "nyc --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
-    "debugtest": "npx mocha --allow-uncaught  --reporter spec --inspect-brk test/index",
+    "debugtest": "npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
     "report-coverage": "cat coverage/lcov.info | coveralls",
     "example": "node ./test/example.js"
   },
