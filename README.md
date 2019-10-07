@@ -538,29 +538,29 @@ SomeExistentType.define('SomeExistentNestedType', () => {
 
 Also starting from `v0.3.8` the following non enumerable props are availiable from instance itself (`instance.hasOwnProperty(__prop__)`):
 
-## .__args__
+## `.__args__`
 
 Arguments, used for calling instance creation constructor.
 
-## .__type__
+## `.__type__`
 The definition of instance type.
 
-## .__parent__
+## `.__parent__`
 If instance is nested, then it is a reference of it's parent.
 
-## .__subtypes__
+## `.__subtypes__`
 What you can craft from this instance accordingly with it's defined Type, the same as `__type__.subtypes`.
 
-## .__collection__
+## `.__collection__`
 Collection of types where `__type__` was defined.
 
-## .__namespace__
+## `.__namespace__`
 Namespace where `__collection__` was defined.
 
-## .clone
+## `.clone`
 Returns cloned instance, with the following condition `instance !== instance.clone`. Cloning includes all the inheritance, with hooks invocations and so on. Therfore cloned instance is not the same as instance, but both made from the same `.__parent__` instance.
 
-## **.fork( some, new, arguments )**
+## **`.fork( some, new, arguments )`**
 Returns forked instance. Behaviour is same as for cloned instance, both made from the same `.__parent__`. But this is a method, not the property, so you can apply another arguments to the constructor.
 
 
