@@ -144,15 +144,14 @@ const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionTy
 const OneElseCollectionInstance = new OneElseCollectionType();
 
 
-
 const user = new UserType(USER_DATA);
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
 const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
 
-describe('Main Test', () => {
 
+describe('Main Test', () => {
 
 /*
 UserTypeConstructor and nested types
@@ -262,7 +261,7 @@ function (str) {
 const EvenMoreProto = {
 	EvenMoreSign : 'EvenMoreSign'
 };
-WithAdditionalSign.define('MoreOver.OverMore', () => {
+WithAdditionalSign.define('MoreOver.OverMore', function () {
 	const EvenMore = function (str) {
 		this.str = str || 're-defined EvenMore str';
 	};
@@ -308,9 +307,20 @@ describe('Check Environment', () => {
 	
 	describe('core env tests', () => {
 		
-		it('.SubTypes definition is correct Second', () => {
-			Object.getPrototypeOf(Object.getPrototypeOf(overMore)).hasOwnProperty('EvenMore');
-			Object.getPrototypeOf(Object.getPrototypeOf(moreOver)).hasOwnProperty('OverMore');
+		it('.SubTypes definition is correct Regular', () => {
+			expect(userTC.hasOwnProperty('WithoutPassword')).is.false;
+		});
+		it('.SubTypes definition is correct Regular FirstChild', () => {
+			expect(Object.getPrototypeOf(Object.getPrototypeOf(userTC)).hasOwnProperty('WithoutPassword')).is.true;
+		});
+
+		it('.SubTypes definition is correct Regular Nested Children', () => {
+			assert.notEqual(
+				Object.getPrototypeOf(Object.getPrototypeOf(overMore)),
+				Object.getPrototypeOf(Object.getPrototypeOf(moreOver))
+			);
+			expect(Object.getPrototypeOf(Object.getPrototypeOf(overMore)).hasOwnProperty('EvenMore')).is.true;
+			expect(Object.getPrototypeOf(Object.getPrototypeOf(moreOver)).hasOwnProperty('OverMore')).is.true;
 		});
 		
 		it('namespaces shoud be defined', () => {
@@ -544,17 +554,17 @@ describe('Check Environment', () => {
 describe('Hooks Tests', () => {
 	it('check invocations count', () => {
 		assert.equal(2, userTypeHooksInvocations.length);
-		assert.equal(36, namespaceFlowCheckerInvocations.length);
-		assert.equal(36, typesFlowCheckerInvocations.length);
-		assert.equal(20, typesPreCreationInvocations.length);
+		assert.equal(37, namespaceFlowCheckerInvocations.length);
+		assert.equal(37, typesFlowCheckerInvocations.length);
+		assert.equal(19, typesPreCreationInvocations.length);
 		// there are two errors on creation
 		// checked before
-		// that is why not 20, but 18
-		assert.equal(16, typesPostCreationInvocations.length);
-		assert.equal(20, namespacePreCreationInvocations.length);
+		// that is why not 20, but 15 + 3 of clones
+		assert.equal(18, typesPostCreationInvocations.length);
+		assert.equal(19, namespacePreCreationInvocations.length);
 		// there are two registered Hooks
-		// that is why not 16, but 32
-		assert.equal(32, namespacePostCreationInvocations.length);
+		// that is why not 16, but 32 + 6 of clones
+		assert.equal(36, namespacePostCreationInvocations.length);
 	});
 });
 
@@ -625,11 +635,11 @@ describe('Instance Constructors Tests', () => {
 		assert.deepEqual(user.constructor.prototype, UserTypeProto);
 	});
 	
-	it('.SubTypes definition is correct', () => {
+	it('.SubTypes definition is correct 20XX', () => {
 		expect(user.hasOwnProperty('UserTypePL1')).is.false;
 		expect(user.hasOwnProperty('UserTypePL2')).is.false;
 	});
-	it('.SubTypes definition is correct First', () => {
+	it('.SubTypes definition is correct  20XX First Child', () => {
 		expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL1')).is.true;
 		expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL2')).is.true;
 	});
@@ -638,6 +648,18 @@ describe('Instance Constructors Tests', () => {
 		it('actually do construction', () => {
 			assert.instanceOf(userPL1, types.UserType.subtypes.UserTypePL1);
 			assert.instanceOf(userPL1, user.UserTypePL1);
+			assert.equal(
+				Object.getPrototypeOf(
+					Object.getPrototypeOf(
+						Object.getPrototypeOf(userPL1))),
+				user
+			);
+			assert.equal(
+				Object.getPrototypeOf(
+					Object.getPrototypeOf(
+						Object.getPrototypeOf(userPL2))),
+				user
+			);
 		});
 		it('.constructor.name is correct', () => {
 			assert.equal(userPL1.constructor.name, 'UserTypePL1');
@@ -735,10 +757,22 @@ describe('Instance Constructors Tests', () => {
 					assert.equal(userTC[key], value);
 				});
 			});
-			it('clones are correct', () => {
+			it('siblings are correct', () => {
+				assert.equal(
+					Object.getPrototypeOf(
+						Object.getPrototypeOf(
+							Object.getPrototypeOf(userWithoutPassword))),
+					userTC
+				);
+				assert.equal(
+					Object.getPrototypeOf(
+						Object.getPrototypeOf(
+							Object.getPrototypeOf(userWithoutPassword_2))),
+					userTC
+				);
 				assert.deepOwnInclude(userWithoutPassword, userWithoutPassword_2);
 			});
-			it('clones are nested include', () => {
+			it('siblings are nested include', () => {
 				assert.deepNestedInclude(userWithoutPassword, {
 					password: undefined
 				});
@@ -1079,14 +1113,17 @@ describe('Instance Constructors Tests', () => {
 			assert.equal(parsedUser.parent[SymbolConstructorName], SymbolDefaultNamespace);
 		});
 		
-		const oneElseEmpty = new EmptyType();
-		const oneElseEmptyProto = Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(oneElseEmpty)));
-		oneElseEmptyProto[SymbolConstructorName] = undefined;
-		delete oneElseEmptyProto[SymbolConstructorName];
-		const oneElseEmptyParsed = parse(oneElseEmpty);
 		it('should be ok with broken constructor chain', () => {
-			assert.isObject(oneElseEmptyParsed.parent);
-			assert.isFalse(oneElseEmptyParsed.parent.hasOwnProperty(SymbolConstructorName));
+			
+			const oneElseEmpty = new EmptyType();
+			const oneElseEmptyProto = Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(oneElseEmpty)));
+			
+			expect(() => {
+				oneElseEmptyProto[SymbolConstructorName] = undefined;
+			}).to.throw;
+			expect(() => {
+				delete oneElseEmptyProto[SymbolConstructorName];
+			}).to.throw;
 		});
 		
 		let count = 0;
@@ -1133,6 +1170,156 @@ describe('Instance Constructors Tests', () => {
 		
 	});
 	
+	
+	describe('instance .proto props tests', () => {
+		it('should have proper prototype .__args__', () => {
+			assert.equal(user.__args__[0], USER_DATA);
+		});
+		it('should have proper prototype .__type__', () => {
+			assert.equal(user.__type__.TypeProxy, UserType);
+			assert.equal(user.__type__.TypeName, UserType.TypeName);
+		});
+		it('should have proper prototype .__namespace__', () => {
+			assert.equal(user.__namespace__, UserType.namespace);
+		});
+		it('should have proper prototype .__collection__', () => {
+			assert.equal(user.__collection__, UserType.collection);
+		});
+		it('should have proper prototype .__subtypes__', () => {
+			assert.equal(user.__subtypes__, UserType.subtypes);
+		});
+		it('should have proper prototype .__parent__', () => {
+			assert.equal(evenMore.__parent__, overMore);
+			assert.notEqual(evenMore.__parent__, moreOver);
+		});
+		
+		it('should have proper first .clone old style', () => {
+			
+			const userClone = user.clone;
+			
+			assert.notEqual(
+				Object.getPrototypeOf(Object.getPrototypeOf(user)),
+				Object.getPrototypeOf(Object.getPrototypeOf(userClone))
+			);
+
+			assert.notEqual(user, userClone);
+			assert.deepInclude(user, userClone);
+			assert.deepInclude(userClone, user);
+			assert.deepEqual(userClone, user);
+			
+		});
+		
+		it('should have proper first .fork() old style', () => {
+			
+			const forkData = {
+				email : 'went.out@gmail.com',
+				password : 'fork old style password'
+			};
+			const userArgs = user.__args__;
+			
+			const userFork = new user.fork(forkData);
+			
+			const userPP =
+				Object.getPrototypeOf(Object.getPrototypeOf(user));
+			const userForkPP =
+				Object.getPrototypeOf(Object.getPrototypeOf(userFork));
+			
+			assert.notEqual(userPP, userForkPP);
+			
+			assert.notEqual(user, userFork);
+			assert.deepEqual(userArgs[0], USER_DATA);
+			assert.deepEqual(new UserType(forkData), userFork);
+			assert.notDeepEqual(userArgs, userFork.__args__);
+			expect(userFork).instanceof(UserType);
+			assert.deepEqual(Object.keys(userFork), Object.keys(user));
+			
+		});
+		
+		it('should have proper first .fork() regular style', () => {
+			
+			const forkData = {
+				email : 'went.out@gmail.com',
+				password : 'fork regular style password'
+			};
+			const userTCArgs = userTC.__args__;
+			const userTCFork = new userTC.fork(forkData);
+			
+			const userTCPP =
+				Object.getPrototypeOf(Object.getPrototypeOf(userTC));
+			const userTCForkPP =
+				Object.getPrototypeOf(Object.getPrototypeOf(userTCFork));
+			assert.notEqual(userTCPP, userTCForkPP);
+
+			assert.notEqual(userTC, userTCFork);
+			assert.deepEqual(userTCArgs[0], USER_DATA);
+			assert.deepEqual(new UserTypeConstructor(forkData), userTCFork);
+			assert.notDeepEqual(userTCArgs, userTCFork.__args__);
+			expect(userTCFork).instanceof(UserTypeConstructor);
+			assert.deepEqual(Object.keys(userTCFork), Object.keys(userTC));
+			
+		});
+		
+		it('should have proper nested .fork() old style', () => {
+			
+			const userPL1Fork = new userPL1.fork();
+			
+			const userPL1PP =
+				Object.getPrototypeOf(Object.getPrototypeOf(userPL1));
+			const userPL1ForkPP =
+				Object.getPrototypeOf(Object.getPrototypeOf(userPL1Fork));
+			
+			assert.equal(userPL1PP, userPL1ForkPP);
+			
+			assert.notEqual(userPL1, userPL1Fork);
+			assert.deepInclude(userPL1, userPL1Fork);
+			assert.deepInclude(userPL1Fork, userPL1);
+			assert.deepEqual(userPL1Fork, userPL1);
+			
+		});
+		
+		it('should have proper nested .clone regular style', () => {
+			
+			const evenMoreClone = evenMore.clone;
+			assert.equal(
+				Object.getPrototypeOf(Object.getPrototypeOf(evenMore)),
+				Object.getPrototypeOf(Object.getPrototypeOf(evenMoreClone))
+			);
+			assert.notEqual(evenMore, evenMoreClone);
+			assert.deepInclude(evenMore, evenMoreClone);
+			assert.deepInclude(evenMoreClone, evenMore);
+			assert.deepEqual(evenMoreClone, evenMore);
+			
+		});
+		
+		it('should have proper nested .fork()', () => {
+			const str = 'fork of evenMore';
+			const evenMoreArgs = evenMore.__args__;
+			
+			const evenMoreFork = new evenMore.fork(str);
+			const evenMoreForkFork = new evenMoreFork.fork(str);
+			
+			assert.notEqual(evenMore, evenMoreFork);
+			assert.notEqual(evenMoreForkFork, evenMoreFork);
+			
+			const evenMorePP =
+				Object.getPrototypeOf(Object.getPrototypeOf(evenMore));
+			const evenMoreForkPP =
+				Object.getPrototypeOf(Object.getPrototypeOf(evenMoreFork));
+			
+			assert.equal(evenMorePP, evenMoreForkPP);
+			assert.equal(evenMoreFork.str, str);
+			
+			assert.deepEqual(evenMore.__args__, evenMoreArgs);
+			assert.deepEqual(overMore.EvenMore(str), evenMoreFork);
+			assert.notDeepEqual(evenMore.__args__, evenMoreFork.__args__);
+			assert.notEqual(overMore.__args__, evenMore.__args__);
+			expect(evenMoreFork).instanceof(OverMore.lookup('EvenMore'));
+			assert.deepEqual(Object.keys(evenMore), Object.keys(evenMoreFork));
+			
+		});
+		
+	});
+
 	describe('uncaughtException test', () => {
 		it('should throw proper error', (passedCb) => {
 			setTimeout(() => {

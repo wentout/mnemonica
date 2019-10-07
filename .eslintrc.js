@@ -50,7 +50,7 @@ module.exports = {
 		'newline-per-chained-call' : 'warn',
 		'new-cap' : 'warn',
 		'func-name-matching' : 'error',
-		'consistent-this' : 'error',
+		// 'consistent-this' : 'error',
 		'line-comment-position' : [
 			'warn', {
 				position : 'above'
