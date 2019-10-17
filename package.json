@@ -7,7 +7,7 @@
     "test": "mocha --allow-uncaught test/index.js",
     "test:coverage:dev": "nyc --reporter=text mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
     "test:coverage": "nyc --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
-    "debug": "npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
+    "debugtest": "npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
     "report-coverage": "cat coverage/lcov.info | coveralls",
     "example": "node ./test/example.js"
   },
