@@ -15,6 +15,7 @@ const {
 	defaultNamespace,
 	utils : {
 		extract,
+		pick,
 		collectConstructors,
 	},
 	errors,
@@ -435,12 +436,25 @@ describe('Instance Constructors Tests', () => {
 			assert.isDefined(emptySub.emptySign);
 			assert.isString(emptySub.emptySign);
 			assert.equal(emptySub.emptySign, filledEmptySign);
+		});
+		it('nested object of empty object .extract() ok', () => {
 			const sample = {
 				emptySign : filledEmptySign
 			};
 			const extracted = emptySub.extract();
 			assert.deepOwnInclude(extracted, sample);
 			assert.deepOwnInclude(sample, extracted);
+		});
+		it('nested object of empty object .pick() ok', () => {
+			const sample = {
+				emptySign : filledEmptySign
+			};
+			const pickedArg = emptySub.pick('emptySign');
+			const pickedArR = emptySub.pick(['emptySign']);
+			assert.deepOwnInclude(pickedArg, sample);
+			assert.deepOwnInclude(sample, pickedArg);
+			assert.deepOwnInclude(pickedArR, sample);
+			assert.deepOwnInclude(sample, pickedArR);
 		});
 	});
 	
@@ -500,6 +514,29 @@ describe('Instance Constructors Tests', () => {
 			extract(null);
 		} catch (error) {
 			it('thrown by extract(null) should be ok with instanceof', () => {
+				expect(error).to.be.an
+					.instanceof(errors
+						.WRONG_INSTANCE_INVOCATION);
+				expect(error).to.be.an
+					.instanceof(Error);
+			});
+			it('thrown error should be ok with props', () => {
+				expect(error.BaseStack).exist.and.is.a('string');
+				expect(error.constructor[SymbolConstructorName])
+					.exist.and.is.a('string')
+						.and.equal(`base of : ${MNEMONICA} : errors`);
+			});
+		}
+		
+		it('should throw on wrong instance 4 .pick()', () => {
+			expect(() => {
+				pick(null);
+			}).to.throw();
+		});
+		try {
+			pick(null);
+		} catch (error) {
+			it('thrown by pick(null) should be ok with instanceof', () => {
 				expect(error).to.be.an
 					.instanceof(errors
 						.WRONG_INSTANCE_INVOCATION);
