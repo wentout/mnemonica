@@ -2,6 +2,8 @@
 
 const { assert, expect } = require('chai');
 
+const { inspect } = require('util');
+
 const {
 	define,
 	defaultTypes : types,
@@ -40,14 +42,22 @@ const UserType = define('UserType', function (userData) {
 }, UserTypeProto, true);
 
 const userTypeHooksInvocations = [];
-UserType.registerHook('preCreation', (opts) => {
+
+UserType.registerHook('preCreation', function (opts) {
 	userTypeHooksInvocations.push({
-		preCreation : opts
+		kind : 'pre', 
+		sort : 'type', 
+		self : this,
+		opts
 	});
 });
-UserType.registerHook('postCreation', (opts) => {
+
+UserType.registerHook('postCreation', function (opts) {
 	userTypeHooksInvocations.push({
-		postCreation : opts
+		kind : 'post', 
+		sort : 'type', 
+		self : this,
+		opts
 	});
 });
 
@@ -91,15 +101,21 @@ types.registerFlowChecker((opts) => {
 	typesFlowCheckerInvocations.push(opts);
 });
 
-types.registerHook('preCreation', (opts) => {
+types.registerHook('preCreation', function (opts) {
 	typesPreCreationInvocations.push({
+		kind : 'pre', 
+		sort : 'collection', 
+		self : this,
 		opts
 	});
 });
 
-types.registerHook('postCreation', (opts) => {
+types.registerHook('postCreation', function (opts) {
 	typesPostCreationInvocations.push({
-		firstPostCreationHook: opts
+		kind : 'post', 
+		sort : 'collection', 
+		self : this,
+		opts
 	});
 });
 
@@ -108,21 +124,32 @@ defaultNamespace.registerFlowChecker((opts) => {
 	namespaceFlowCheckerInvocations.push(opts);
 });
 
-defaultNamespace.registerHook('preCreation', (opts) => {
+defaultNamespace.registerHook('preCreation', function (opts) {
 	namespacePreCreationInvocations.push({
+		kind : 'pre', 
+		sort : 'namespace', 
+		self : this,
 		opts
 	});
 });
 
-defaultNamespace.registerHook('postCreation', (opts) => {
+defaultNamespace.registerHook('postCreation', function (opts) {
 	namespacePostCreationInvocations.push({
-		firstPostCreationHook: opts
+		kind : 'pre', 
+		sort : 'namespace', 
+		self : this,
+		order : 'first',
+		opts
 	});
 });
 
-defaultNamespace.registerHook('postCreation', (opts) => {
+defaultNamespace.registerHook('postCreation', function (opts) {
 	namespacePostCreationInvocations.push({
-		secondPostCreationHook: opts
+		kind : 'pre', 
+		sort : 'namespace', 
+		self : this,
+		order : 'second',
+		opts
 	});
 });
 
@@ -288,7 +315,6 @@ const moreOver = userWPWithAdditionalSign.MoreOver(moreOverStr);
 
 const overMore = moreOver.OverMore();
 const evenMore = overMore.EvenMore();
-
 const empty = new EmptyType();
 const filledEmptySign = 'FilledEmptySign';
 const emptySub = empty.EmptySubType(filledEmptySign);
@@ -308,21 +334,14 @@ require('./test.environment')({
 	OneElseCollectionType
 });
 
-describe('Hooks Tests', () => {
-	it('check invocations count', () => {
-		assert.equal(2, userTypeHooksInvocations.length);
-		assert.equal(37, namespaceFlowCheckerInvocations.length);
-		assert.equal(37, typesFlowCheckerInvocations.length);
-		assert.equal(19, typesPreCreationInvocations.length);
-		// there are two errors on creation
-		// checked before
-		// that is why not 20, but 15 + 3 of clones
-		assert.equal(18, typesPostCreationInvocations.length);
-		assert.equal(19, namespacePreCreationInvocations.length);
-		// there are two registered Hooks
-		// that is why not 16, but 32 + 6 of clones
-		assert.equal(36, namespacePostCreationInvocations.length);
-	});
+require('./test.hooks')({
+	userTypeHooksInvocations,
+	namespaceFlowCheckerInvocations,
+	typesFlowCheckerInvocations,
+	typesPreCreationInvocations,
+	typesPostCreationInvocations,
+	namespacePreCreationInvocations,
+	namespacePostCreationInvocations,
 });
 
 
@@ -400,103 +419,7 @@ describe('Instance Constructors Tests', () => {
 		expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL1')).is.true;
 		expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL2')).is.true;
 	});
-	
-	describe('nested type with old style check', () => {
-		it('actually do construction', () => {
-			assert.instanceOf(userPL1, types.UserType.subtypes.UserTypePL1);
-			assert.instanceOf(userPL1, user.UserTypePL1);
-			assert.equal(
-				Object.getPrototypeOf(
-					Object.getPrototypeOf(
-						Object.getPrototypeOf(userPL1))),
-				user
-			);
-			assert.equal(
-				Object.getPrototypeOf(
-					Object.getPrototypeOf(
-						Object.getPrototypeOf(userPL2))),
-				user
-			);
-		});
-		it('.constructor.name is correct', () => {
-			assert.equal(userPL1.constructor.name, 'UserTypePL1');
-		});
-		it('.prototype is correct', () => {
-			expect(userPL1.constructor.prototype).to.be.an('object')
-				.that.includes(pl1Proto);
-			assert.include(pl1Proto, userPL1.constructor.prototype);
-			Object.entries(pl1Proto).forEach(entry => {
-				const [key, value] = entry;
-				assert.equal(userPL1[key], value);
-			});
-		});
-		it('definition is correct', () => {
-			const checker = {
-				user_pl_1_sign : 'pl_1',
-			};
-			Object.entries(checker).forEach(entry => {
-				const [key, value] = entry;
-				assert.isTrue(userPL1.hasOwnProperty(key));
-				assert.equal(userPL1[key], value);
-			});
-		});
-	});
-	
-	describe('nested type with new style check', () => {
-		it('actually do construction', () => {
-			assert.instanceOf(userPL2, types.UserType.subtypes.UserTypePL2);
-			assert.instanceOf(userPL2, user.UserTypePL2);
-		});
-		it('.constructor.name is correct', () => {
-			assert.equal(userPL2.constructor.name, 'UserTypePL2');
-		});
-		it('can construct without "new" keyword', () => {
-			assert.instanceOf(userPL_NoNew, types.UserType);
-			assert.instanceOf(userPL_NoNew, types.UserType.subtypes.UserTypePL2);
-		});
-		it('and insanceof stays ok', () => {
-			assert.instanceOf(userPL_NoNew, user.UserTypePL2);
-		});
-		it('and even for sibling type', () => {
-			assert.instanceOf(userPL_1_2, userPL1.UserTypePL2);
-		});
-		it('and for sibling type constructed without "new"', () => {
-			assert.instanceOf(userPL_NoNew, userPL1.UserTypePL2);
-		});
-		it('.prototype is correct', () => {
-			expect(userPL2.constructor.prototype)
-				.to.be.an('object')
-					.that.includes(pl2Proto);
-		});
-		it('definitions are correct 4 class instances', () => {
-			const checker = Object.assign({
-				user_pl_2_sign : 'pl_2',
-				description : UserTypeProto.description
-			}, USER_DATA, pl2Proto);
-			Object.keys(USER_DATA).forEach(key => {
-				assert.isFalse(userPL2[key].hasOwnProperty(key));
-				assert.equal(userPL2[key], USER_DATA[key]);
-			});
-			
-			Object.entries(checker).forEach(entry => {
-				const [key, value] = entry;
-				assert.equal(userPL2[key], value);
-			});
-		});
-		it('definitions are correct for general', () => {
-			const checker = Object.assign({
-				user_pl_1_sign : 'pl_1',
-				description : UserTypeProto.description
-			}, USER_DATA, pl1Proto);
-			Object.keys(USER_DATA).forEach(key => {
-				assert.isFalse(userPL1[key].hasOwnProperty(key));
-			});
-			Object.entries(checker).forEach(entry => {
-				const [key, value] = entry;
-				assert.equal(userPL1[key], value);
-			});
-		});
-	});
+
 	
 	describe('empty constructor works properly', () => {
 		it('should construct an object', () => {
@@ -532,6 +455,39 @@ describe('Instance Constructors Tests', () => {
 			expect(evenMore).to.be.an.instanceof(userTC);
 			expect(evenMore).to.be.an.instanceof(userWithoutPassword);
 		});
+	});
+	
+	describe('util.inspect tests', () => {
+		
+		it('should have proper util inspect 4 UserType', () => {
+			expect(inspect(user).indexOf('UserType')).equal(0);
+		});
+		
+		it('should have proper util inspect 4 UserTypeConstructor', () => {
+			expect(inspect(userTC).indexOf('UserTypeConstructor')).equal(0);
+		});
+		
+		it('should have proper util inspect 4 WithoutPassword', () => {
+			expect(inspect(userWithoutPassword).indexOf('WithoutPassword')).equal(0);
+			expect(inspect(userWithoutPassword_2).indexOf('WithoutPassword')).equal(0);
+		});
+		
+		it('should have proper util inspect 4 WithAdditionalSign', () => {
+			expect(inspect(userWPWithAdditionalSign).indexOf('WithAdditionalSign')).equal(0);
+		});
+		
+		it('should have proper util inspect 4 MoreOver', () => {
+			expect(inspect(moreOver).indexOf('MoreOver')).equal(0);
+		});
+		
+		it('should have proper util inspect 4 OverMore', () => {
+			expect(inspect(overMore).indexOf('OverMore')).equal(0);
+		});
+		
+		it('should have proper util inspect 4 EvenMore', () => {
+			expect(inspect(evenMore).indexOf('EvenMore')).equal(0);
+		});
+		
 	});
 	
 	describe('errors tests', () => {
@@ -572,12 +528,22 @@ describe('Instance Constructors Tests', () => {
 				expect(error).to.be.an
 					.instanceof(Error);
 			});
-
 		}
 	});
-	
 
-	require('./test.more.nested')({
+	require('./test.nested')({
+		user,
+		userPL1,
+		userPL2,
+		pl1Proto,
+		pl2Proto,
+		userPL_NoNew,
+		userPL_1_2,
+		UserTypeProto,
+		USER_DATA,
+	});
+	
+	require('./test.nested.more')({
 		userTC,
 		UserType,
 		evenMore,
@@ -616,16 +582,6 @@ describe('Instance Constructors Tests', () => {
 		userTC,
 		evenMore,
 		EmptyType,
-	});
-	
-	describe('inspect tests', () => {
-		it('should have proper util inspect', () => {
-			const util = require('util');
-			const userInspect = util.inspect(user);
-			const userTCInspect = util.inspect(userTC);
-			expect(userInspect.indexOf('UserType')).equal(0);
-			expect(userTCInspect.indexOf('UserTypeConstructor')).equal(0);
-		});
 	});
 	
 	describe('uncaughtException test', () => {

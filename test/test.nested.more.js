@@ -122,12 +122,6 @@ const test = (opts) => {
 					assert.include(constructorsSequence, name);
 					var iof = false;
 					
-					if (name === 'Mnemonica') {
-						base;
-						evenMore;
-						debugger;
-					}
-					
 					if (name === 'Object') {
 						iof = evenMore instanceof Object;
 					} else {
