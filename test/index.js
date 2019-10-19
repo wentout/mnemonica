@@ -324,7 +324,7 @@ const emptySub = empty.EmptySubType(filledEmptySign);
 
 
 const strFork = 'fork of evenMore';
-const strForkOfFork = 'fork of evenMore';
+const strForkOfFork = 'fork of fork of evenMore';
 
 const overMoreFork = overMore.fork();
 
@@ -641,9 +641,10 @@ describe('Instance Constructors Tests', () => {
 		overMoreFork,
 		evenMoreFork,
 		evenMoreForkFork,
+		userWithoutPassword,
 		userWPWithAdditionalSign
 	});
-	
+	debugger;
 	
 	describe('uncaughtException test', () => {
 		it('should throw proper error', (passedCb) => {

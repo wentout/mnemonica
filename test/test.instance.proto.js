@@ -2,9 +2,9 @@
 
 const { assert, expect } = require('chai');
 
-const {
-	errors,
-} = require('..');
+// const {
+// 	errors,
+// } = require('..');
 
 const test = (opts) => {
 
@@ -26,7 +26,8 @@ const test = (opts) => {
 		overMoreFork,
 		evenMoreFork,
 		evenMoreForkFork,
-		userWPWithAdditionalSign,
+		// userWithoutPassword,
+		// userWPWithAdditionalSign,
 	} = opts;
 
 	describe('instance .proto props tests', () => {
@@ -50,6 +51,9 @@ const test = (opts) => {
 		it('should have proper prototype .__parent__', () => {
 			assert.equal(evenMore.__parent__, overMore);
 			assert.notEqual(evenMore.__parent__, moreOver);
+		});
+		it('should have proper prototype .__timestamp__', () => {
+			assert.exists(evenMore.__timestamp__);
 		});
 
 		it('should have proper first .clone old style', () => {
@@ -159,7 +163,7 @@ const test = (opts) => {
 			assert.notEqual(overMore.__proto_proto__, overMoreFork.__proto_proto__);
 
 			assert.notEqual(evenMore.__proto_proto__, evenMoreFork.__proto_proto__);
-			assert.notEqual(evenMore.__timestamp__, evenMoreFork.__timestamp__);
+			// assert.notEqual(evenMore.__timestamp__, evenMoreFork.__timestamp__);
 
 			assert.notEqual(evenMore, evenMoreFork);
 			assert.notEqual(evenMoreForkFork, evenMoreFork);
@@ -189,31 +193,106 @@ const test = (opts) => {
 
 		});
 
-		describe('shared proto must fail', () => {
-			debugger;
-			try {
-				userWPWithAdditionalSign.fork('should fail');
-			} catch (error) {
-				it('should respect construction rules', () => {
-					expect(error).instanceOf(Error);
-				});
-				it('thrown error instanceof WRONG_TYPE_DEFINITION', () => {
-					expect(error).instanceOf(errors.WRONG_TYPE_DEFINITION);
-				});
-				it('thrown error should be ok with props', () => {
-					expect(error.message).exist.and.is.a('string');
-					const checkStr = [
-						'wrong type definition : shared proto usage is prohibited',
-						'\t[ WithAdditionalSign ]',
-						'should fail',
-						'\tnot equal to',
-						'userWithoutPassword_2.WithAdditionalSign',
-					].join('\n');
+		// describe('shared proto fork must fail', () => {
+		// 	let testPassed = 'test not passed';
+		// 	try {
+		// 		userWPWithAdditionalSign.fork('should fail');
+		// 	} catch (error) {
+		// 		testPassed = 'test passed';
+		// 		it('should respect construction rules', () => {
+		// 			expect(error).instanceOf(Error);
+		// 		});
+		// 		it('thrown error instanceof WRONG_TYPE_DEFINITION', () => {
+		// 			expect(error).instanceOf(errors.WRONG_TYPE_DEFINITION);
+		// 		});
+		// 		it('thrown error should be ok with props', () => {
+		// 			expect(error.message).exist.and.is.a('string');
+		// 			const checkStr = [
+		// 				'wrong type definition : shared proto usage is prohibited',
+		// 				'\t[ WithAdditionalSign ]',
+		// 				'should fail',
+		// 				'\tnot equal to',
+		// 				'userWithoutPassword_2.WithAdditionalSign',
+		// 			].join('\n');
 
-					assert.equal(error.message, checkStr);
-				});
-			}
-		});
+		// 			assert.equal(error.message, checkStr);
+		// 		});
+		// 	} finally {
+		// 		it('shared proto fork must fail : test passed', () => {
+		// 			assert.equal(testPassed, 'test passed');
+		// 		});
+		// 	}
+		// });
+		
+		// describe('shared proto second fork must fail: we show the reason why', () => {
+		// 	let testPassed = 'test not passed';
+		// 	try {
+		// 		const t = userWPWithAdditionalSign.fork('fail fork');
+		// 		// t.fork('fail fork');
+		// 	} catch (error) {
+		// 		testPassed = 'test passed';
+		// 		it('should respect construction rules', () => {
+		// 			expect(error).instanceOf(Error);
+		// 		});
+		// 		it('thrown error instanceof WRONG_TYPE_DEFINITION', () => {
+		// 			expect(error).instanceOf(errors.WRONG_TYPE_DEFINITION);
+		// 		});
+		// 		it('thrown error should be ok with props', () => {
+		// 			expect(error.message).exist.and.is.a('string');
+		// 			const checkStr = [
+		// 				'wrong type definition : shared proto usage is prohibited',
+		// 				'\t[ WithAdditionalSign ]',
+		// 				'fail fork',
+		// 				'\tnot equal to',
+		// 				'should fail',
+		// 			].join('\n');
+
+		// 			assert.equal(error.message, checkStr);
+		// 		});
+		// 	} finally {
+		// 		it('shared proto native must fail too : test passed', () => {
+		// 			assert.equal(testPassed, 'test passed');
+		// 		});
+		// 	}
+		// });
+		
+		// describe('shared proto naive fork fail', () => {
+		// 	let testPassed = 'test not passed';
+		// 	try {
+		// 		userTC.fork({email:'zzz', password:1});
+				
+		// 		// const t = moreOver.OverMore('fail fork');
+		// 		// const t = moreOver.OverMore('fail fork');
+		// 		// t.fork('fail fork');
+		// 	} catch (error) {
+		// 		testPassed = 'test passed';
+		// 		it('should respect construction rules', () => {
+		// 			expect(error).instanceOf(Error);
+		// 		});
+		// 		it('thrown error instanceof WRONG_TYPE_DEFINITION', () => {
+		// 			expect(error).instanceOf(errors.WRONG_TYPE_DEFINITION);
+		// 		});
+		// 		it('thrown error should be ok with props', () => {
+		// 			expect(error.message).exist.and.is.a('string');
+		// 			const checkStr = [
+		// 				'wrong type definition : shared proto usage is prohibited',
+		// 				'\t[ WithAdditionalSign ]',
+		// 				'fail fork',
+		// 				'\tnot equal to',
+		// 				'should fail',
+		// 			].join('\n');
+
+		// 			assert.equal(error.message, checkStr);
+		// 		});
+		// 	} finally {
+		// 		it('shared proto native must fail too : test passed', () => {
+		// 			console.log(userTC.__args__)
+					
+		// 			assert.equal(testPassed, 'test passed');
+		// 		});
+		// 	}
+		// });
+		
 	});
 
 };
