@@ -55,15 +55,19 @@ const test = (opts) => {
 			});
 			it('siblings are correct', () => {
 				assert.equal(
-					Object.getPrototypeOf(
+					// Object.getPrototypeOf(
 						Object.getPrototypeOf(
-							Object.getPrototypeOf(userWithoutPassword))),
+							Object.getPrototypeOf(
+								// Object.getPrototypeOf(userWithoutPassword)))),
+								Object.getPrototypeOf(userWithoutPassword))),
 					userTC
 				);
 				assert.equal(
-					Object.getPrototypeOf(
+					// Object.getPrototypeOf(
 						Object.getPrototypeOf(
-							Object.getPrototypeOf(userWithoutPassword_2))),
+							Object.getPrototypeOf(
+								// Object.getPrototypeOf(userWithoutPassword_2)))),
+								Object.getPrototypeOf(userWithoutPassword_2))),
 					userTC
 				);
 				assert.deepOwnInclude(userWithoutPassword, userWithoutPassword_2);
@@ -86,22 +90,28 @@ const test = (opts) => {
 		describe('constructors sequence is ok', () => {
 			const constructorsSequence = collectConstructors(evenMore, true);
 			it('must be ok', () => {
+				// assert.equal(constructorsSequence.length, 25);
 				assert.equal(constructorsSequence.length, 20);
 				assert.deepEqual(constructorsSequence, [
 					'EvenMore',
 					'EvenMore',
+					// 'OverMore',
 					'OverMore',
 					'OverMore',
 					'OverMore',
+					// 'MoreOver',
 					'MoreOver',
 					'MoreOver',
 					'MoreOver',
+					// 'WithAdditionalSign',
 					'WithAdditionalSign',
 					'WithAdditionalSign',
 					'WithAdditionalSign',
+					// 'WithoutPassword',
 					'WithoutPassword',
 					'WithoutPassword',
 					'WithoutPassword',
+					// 'UserTypeConstructor',
 					'UserTypeConstructor',
 					'UserTypeConstructor',
 					'UserTypeConstructor',

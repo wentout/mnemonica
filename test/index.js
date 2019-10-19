@@ -172,7 +172,7 @@ const userPL2 = new user.UserTypePL2();
 const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
 
-
+// debugger;
 describe('Main Test', () => {
 
 /*
@@ -274,20 +274,21 @@ const MoreOver = WithAdditionalSign.define(() => {
 const OverMoreProto = {
 	OverMoreSign : 'OverMoreSign'
 };
-const OverMore = WithAdditionalSign.define(
-	'MoreOver.OverMore',
-function (str) {
-	this.str = str || 're-defined OverMore str';
-}, OverMoreProto);
+const OverMore = WithAdditionalSign
+	.define('MoreOver.OverMore',
+		function (str) {
+			this.str = str || 're-defined OverMore str';
+		}, OverMoreProto);
 
 const EvenMoreProto = {
 	EvenMoreSign : 'EvenMoreSign'
 };
+
 WithAdditionalSign.define('MoreOver.OverMore', function () {
 	const EvenMore = function (str) {
 		this.str = str || 're-defined EvenMore str';
 	};
-	EvenMore.prototype = EvenMoreProto;
+	EvenMore.prototype = Object.assign({}, EvenMoreProto);
 	return EvenMore;
 });
 
@@ -319,6 +320,18 @@ const evenMore = overMore.EvenMore();
 const empty = new EmptyType();
 const filledEmptySign = 'FilledEmptySign';
 const emptySub = empty.EmptySubType(filledEmptySign);
+
+
+
+const strFork = 'fork of evenMore';
+const strForkOfFork = 'fork of evenMore';
+
+const overMoreFork = overMore.fork();
+
+const evenMoreArgs = evenMore.__args__;
+
+const evenMoreFork = new evenMore.fork(strFork);
+const evenMoreForkFork = new evenMoreFork.fork(strForkOfFork);
 
 
 require('./test.environment')({
@@ -362,7 +375,8 @@ const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
 		});
 		if (proto) {
 			it('.proto must be equal with definition', () => {
-				assert.equal(def.proto, proto);
+				assert.deepEqual(def.proto, proto);
+				assert.deepEqual(proto, def.proto);
 			});
 		}
 		it(`and declared as proper SubType : ${def.isSubType} `, () => {
@@ -566,6 +580,16 @@ describe('Instance Constructors Tests', () => {
 					.instanceof(Error);
 			});
 		}
+
+	});
+	
+	require('./test.parse')({
+		user,
+		userPL1,
+		userPL2,
+		userTC,
+		evenMore,
+		EmptyType,
 	});
 
 	require('./test.nested')({
@@ -609,17 +633,17 @@ describe('Instance Constructors Tests', () => {
 		overMore,
 		moreOver,
 		UserTypeConstructor,
-		OverMore
+		OverMore,
+		EvenMoreProto,
+		evenMoreArgs,
+		strFork,
+		strForkOfFork,
+		overMoreFork,
+		evenMoreFork,
+		evenMoreForkFork,
+		userWPWithAdditionalSign
 	});
 	
-	require('./test.parse')({
-		user,
-		userPL1,
-		userPL2,
-		userTC,
-		evenMore,
-		EmptyType,
-	});
 	
 	describe('uncaughtException test', () => {
 		it('should throw proper error', (passedCb) => {
