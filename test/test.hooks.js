@@ -22,17 +22,21 @@ const test = (opts) => {
 
 	describe('Hooks Tests', () => {
 		it('check invocations count', () => {
+			const FCC = 43;
+			const TCC = 22;
+			const NCI = 21;
+			const PCI = 42;
 			assert.equal(2, userTypeHooksInvocations.length);
-			assert.equal(45, namespaceFlowCheckerInvocations.length);
-			assert.equal(45, typesFlowCheckerInvocations.length);
-			assert.equal(23, typesPreCreationInvocations.length);
+			assert.equal(FCC, namespaceFlowCheckerInvocations.length);
+			assert.equal(FCC, typesFlowCheckerInvocations.length);
+			assert.equal(TCC, typesPreCreationInvocations.length);
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
-			assert.equal(22, typesPostCreationInvocations.length);
-			assert.equal(23, namespacePreCreationInvocations.length);
+			assert.equal(NCI, typesPostCreationInvocations.length);
+			assert.equal(TCC, namespacePreCreationInvocations.length);
 			// there are two registered Hooks, that is why
-			assert.equal(44, namespacePostCreationInvocations.length);
+			assert.equal(PCI, namespacePostCreationInvocations.length);
 		});
 		it('check invocations "this"', () => {
 			userTypeHooksInvocations.forEach(entry => {
