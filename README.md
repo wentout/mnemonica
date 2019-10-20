@@ -23,7 +23,50 @@ Though, for sure we have to define some sort of Class for crafting our first Ins
 ```js
 const { define } = require('mnemonica');
 
+const TypeModificationProcedure = function (opts) {
+	Object.assign(this, opts);
+};
+
+// prototype definition is NOT obligatory
+const TypeModificationPrototypeProperties = {
+	description : 'SomeType Constructor'
+};
+
+// SomeTypeConstructor -- is a constructor.name
+const SomeType = define('SomeTypeConstructor',
+		TypeModificationProcedure,
+			TypeModificationPrototypeProperties);
+
+```
+
+Or, we can define `SomeType` like this:
+
+```js
 const TypeModificationConstructorFactory = () => {
+	// SomeTypeConstructor -- is a constructor.name
+	const SomeTypeConstructor = function (opts) {
+		// as this is absolutely the same behaviour
+		// we described upper
+		// in TypeModificationProcedure
+		// we allowed to do the following
+		// for shortening this example lines
+		Object.assign(this, opts);
+	};
+	// prototype definition is NOT obligatory
+	SomeTypeConstructor.prototype
+		.description = 'SomeType Constructor';
+
+	return SomeTypeConstructor;
+};
+
+const SomeType = define(TypeModificationConstructorFactory);
+```
+
+Or using Classes:
+
+```js
+const TypeModificationConstructorFactory = () => {
+	// SomeTypeConstructor -- is a constructor.name
 	class SomeTypeConstructor {
 		constructor (opts) {
 			// all this definitions
@@ -46,46 +89,6 @@ const TypeModificationConstructorFactory = () => {
 };
 
 const SomeType = define(TypeModificationConstructorFactory);
-```
-
-Or, we can define `SomeType` like this:
-
-```js
-const TypeModificationConstructorFactory = () => {
-	const SomeTypeConstructor = function (opts) {
-		// as this is absolutely the same behaviour
-		// we described upper
-		// in TypeModificationProcedure
-		// we allowed to do the following
-		// for shortening this example lines
-		Object.assign(this, opts);
-	};
-	// prototype definition is NOT obligatory
-	SomeTypeConstructor.prototype
-		.description = 'SomeType Constructor';
-
-	return SomeTypeConstructor;
-};
-
-const SomeType = define(TypeModificationConstructorFactory);
-```
-
-Or even like this:
-
-```js
-
-const TypeModificationProcedure = function (opts) {
-	Object.assign(this, opts);
-};
-
-// prototype definition is NOT obligatory
-const TypeModificationPrototypeProperties = {
-	description : 'SomeType Constructor'
-};
-
-const SomeType = define('SomeTypeConstructor',
-		TypeModificationProcedure,
-			TypeModificationPrototypeProperties);
 ```
 
 Then we can define some nested type, using our crafted `SomeType` definition:

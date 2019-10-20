@@ -1,33 +1,36 @@
 const mnemonica = require('..');
 const { define } = mnemonica;
-const { extract } = mnemonica.utils;
+const {
+	extract,
+	parse
+} = mnemonica.utils;
 
 const TypeModificationProcedure = function (opts) {
-		// all this definitions
-		// just to show the example
-		// of how it works
-		const {
-			some,
-			data,
-			// we will re-define
-			// "inside" property later
-			// using nested sub-type
-			inside
-		} = opts;
-		this.some = some;
-		this.data = data;
-		this.inside = inside;
+	// all this definitions
+	// just to show the example
+	// of how it works
+	const {
+		some,
+		data,
+		// we will re-define
+		// "inside" property later
+		// using nested sub-type
+		inside
+	} = opts;
+	this.some = some;
+	this.data = data;
+	this.inside = inside;
 
 };
 
 const TypeModificationPrototype = {
-	description : 'SomeType Constructor'
+	description: 'SomeType Constructor'
 };
 
 const SomeType = define('SomeTypeConstructor',
-		TypeModificationProcedure,
-		// prototype definition is NOT obligatory
-			TypeModificationPrototype);
+	TypeModificationProcedure,
+	// prototype definition is NOT obligatory
+	TypeModificationPrototype);
 
 const SomeSubType = SomeType.define('SomeSubType', function (opts) {
 	const {
@@ -40,13 +43,13 @@ const SomeSubType = SomeType.define('SomeSubType', function (opts) {
 	// with the new value
 	this.inside = inside;
 }, {
-	description : 'SomeSubType Constructor'
+	description: 'SomeSubType Constructor'
 });
 
 const someTypeInstance = new SomeType({
-	some   : 'arguments',
-	data   : 'necessary',
-	inside : 'of SomeType definition'
+	some: 'arguments',
+	data: 'necessary',
+	inside: 'of SomeType definition'
 });
 
 const someSubTypeInstance =
@@ -62,14 +65,16 @@ const someSubTypeInstance =
 		// utilising  instance
 		// crafted from it's parent
 		.SomeSubType({
-			other  : 'data needed',
+			other: 'data needed',
 			// and this is -re-definition
 			// of "inside" property
 			// as we promised before
-			inside : ' of ... etc ...'
+			inside: ' of ... etc ...'
 		});
 
-		
+
+const parsed = parse(someSubTypeInstance);
+console.log(parsed);
 
 const extracted = someSubTypeInstance.extract();
 console.log(extracted);
