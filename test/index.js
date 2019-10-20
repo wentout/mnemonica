@@ -159,8 +159,10 @@ const anotherNamespace = createNamespace('anotherNamespace');
 const anotherTypesCollection = createTypesCollection(anotherNamespace);
 const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 
-const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType');
-const AnotherCollectionInstance = new AnotherCollectionType();
+const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType',  function (check) {
+	Object.assign(this, { check });
+});
+const anotherCollectionInstance = AnotherCollectionType.call(process, 'check');
 
 const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionType', function () {
 	this.self = this;
@@ -174,7 +176,7 @@ const userPL2 = new user.UserTypePL2();
 const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
 
-// debugger;
+debugger;
 describe('Main Test', () => {
 
 	/*
@@ -344,7 +346,7 @@ describe('Main Test', () => {
 		anotherNamespace,
 		anotherTypesCollection,
 		oneElseTypesCollection,
-		AnotherCollectionInstance,
+		anotherCollectionInstance,
 		AnotherCollectionType,
 		oneElseCollectionInstance,
 		OneElseCollectionType
@@ -415,7 +417,7 @@ describe('Main Test', () => {
 
 		it('type constructor itself is correct', () => {
 			assert.instanceOf(user, types.UserType);
-			assert.equal(types.UserType, UserType);
+			assert.equal(types.UserType.__type__, UserType.__type__);
 		});
 		it('actually do construction', () => {
 			assert.instanceOf(user, UserType);

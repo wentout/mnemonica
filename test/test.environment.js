@@ -29,7 +29,7 @@ const test = (opts) => {
 		anotherNamespace,
 		anotherTypesCollection,
 		oneElseTypesCollection,
-		AnotherCollectionInstance,
+		anotherCollectionInstance,
 		AnotherCollectionType,
 		oneElseCollectionInstance,
 		OneElseCollectionType
@@ -241,7 +241,15 @@ const test = (opts) => {
 			});
 
 			it('Instance Of Another Nnamespace and AnotherCollectionType', () => {
-				expect(AnotherCollectionInstance).instanceOf(AnotherCollectionType);
+				expect(anotherCollectionInstance).instanceOf(AnotherCollectionType);
+			});
+			it('starter Instance can extend', () => {
+				const {
+					on,
+					check
+				} = anotherCollectionInstance;
+				expect(check).equal('check');
+				expect(on).equal(process.on);
 			});
 			it('Instance Of OneElse Nnamespace and OneElseCollectionType', () => {
 				expect(oneElseCollectionInstance).instanceOf(OneElseCollectionType);

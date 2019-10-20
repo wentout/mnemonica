@@ -36,7 +36,7 @@ const test = (opts) => {
 			assert.equal(user.__args__[0], USER_DATA);
 		});
 		it('should have proper prototype .__type__', () => {
-			assert.equal(user.__type__.TypeProxy, UserType);
+			assert.equal(user.__type__.TypeProxy, UserType.__type__);
 			assert.equal(user.__type__.TypeName, UserType.TypeName);
 		});
 		it('should have proper prototype .__namespace__', () => {

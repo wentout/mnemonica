@@ -139,7 +139,7 @@ const test = (opts) => {
 						// 
 						// Mnemosyne
 						// UserTypeConstructor
-						// ...
+						// ..
 						// EvenMore
 						// 
 						// so the first call : Mnemosyne is checked
@@ -271,17 +271,17 @@ const test = (opts) => {
 					});
 				}
 			});
-
+			
 			it('should seek proper reference of passed TypeName', () => {
 				const ut = lookup('UserType');
-				assert.equal(ut, UserType);
+				assert.equal(ut.__type__, UserType.__type__);
 				const up = lookup('UserTypeConstructor.WithoutPassword');
-				assert.equal(up, UserWithoutPassword);
+				assert.equal(up.__type__, UserWithoutPassword.__type__);
 				const om = lookup('UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore');
-				assert.equal(om, OverMore);
+				assert.equal(om.__type__, OverMore.__type__);
 				const emShort = MoreOver.lookup('OverMore.EvenMore');
 				const emFull = lookup('UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore.EvenMore');
-				assert.equal(emShort, emFull);
+				assert.equal(emShort.__type__, emFull.__type__);
 			});
 
 		});

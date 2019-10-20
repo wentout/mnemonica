@@ -537,6 +537,18 @@ SomeExistentType.define('SomeExistentNestedType', () => {
 
 ```
 
+# SomeType.call ( this_obj, ...args)
+You can combine existing TypeConstructor with any instance or other classic constructor:
+
+```js
+const someTypeInstance = SomeType.call(process, {
+	some   : 'arguments',
+	data   : 'necessary',
+	inside : 'of SomeType definition'
+});
+console.log(typeof someTypeInstance.on) // function
+```
+
 # Instance Props
 
 Also starting from `v0.3.8` the following non enumerable props are availiable from instance itself (`instance.hasOwnProperty(__prop__)`):
