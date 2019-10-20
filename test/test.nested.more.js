@@ -6,17 +6,17 @@ const {
 	errors,
 	define,
 	lookup,
-	utils : {
+	utils: {
 		extract,
 		collectConstructors,
 		toJSON,
 	},
-	defaultTypes : types,
+	defaultTypes: types,
 } = require('..');
 
 
 const test = (opts) => {
-		
+
 	const {
 		userTC,
 		UserType,
@@ -35,8 +35,8 @@ const test = (opts) => {
 		UserWithoutPassword,
 		MoreOver
 	} = opts;
-	
-	
+
+
 	describe('more nested types', () => {
 		describe('inheritance works', () => {
 			it('.prototype is correct', () => {
@@ -56,18 +56,18 @@ const test = (opts) => {
 			it('siblings are correct', () => {
 				assert.equal(
 					// Object.getPrototypeOf(
+					Object.getPrototypeOf(
 						Object.getPrototypeOf(
-							Object.getPrototypeOf(
-								// Object.getPrototypeOf(userWithoutPassword)))),
-								Object.getPrototypeOf(userWithoutPassword))),
+							// Object.getPrototypeOf(userWithoutPassword)))),
+							Object.getPrototypeOf(userWithoutPassword))),
 					userTC
 				);
 				assert.equal(
 					// Object.getPrototypeOf(
+					Object.getPrototypeOf(
 						Object.getPrototypeOf(
-							Object.getPrototypeOf(
-								// Object.getPrototypeOf(userWithoutPassword_2)))),
-								Object.getPrototypeOf(userWithoutPassword_2))),
+							// Object.getPrototypeOf(userWithoutPassword_2)))),
+							Object.getPrototypeOf(userWithoutPassword_2))),
 					userTC
 				);
 				assert.deepOwnInclude(userWithoutPassword, userWithoutPassword_2);
@@ -83,10 +83,10 @@ const test = (opts) => {
 				assert.deepOwnInclude(moreOver, {
 					str: moreOverStr
 				});
-				
+
 			});
 		});
-		
+
 		describe('constructors sequence is ok', () => {
 			const constructorsSequence = collectConstructors(evenMore, true);
 			it('must be ok', () => {
@@ -120,18 +120,18 @@ const test = (opts) => {
 					'Object'
 				]);
 			});
-			
+
 			const constructors = collectConstructors(evenMore);
 			const constructorsKeys = Object.keys(constructors);
-			
+
 			var base = types;
-			
+
 			constructorsKeys
 				.reverse()
 				.map((name, idx) => {
 					assert.include(constructorsSequence, name);
 					var iof = false;
-					
+
 					if (name === 'Object') {
 						iof = evenMore instanceof Object;
 					} else {
@@ -155,19 +155,19 @@ const test = (opts) => {
 					}
 					return { idx, name, iof };
 				})
-					.reverse()
-					.forEach(props => {
-						if (!props) {
-							return;
-						}
-						const {idx, name, iof} = props;
-						const str = `${idx} evenMore instanceof ${name}`;
-						it(`must be true : ${str}`, () => {
-							assert.isTrue(iof, str);
-						});
+				.reverse()
+				.forEach(props => {
+					if (!props) {
+						return;
+					}
+					const { idx, name, iof } = props;
+					const str = `${idx} evenMore instanceof ${name}`;
+					it(`must be true : ${str}`, () => {
+						assert.isTrue(iof, str);
 					});
+				});
 		});
-		
+
 		describe('extraction works properly', () => {
 			const extracted = extract(evenMore);
 			const extractedJSON = toJSON(extracted);
@@ -197,9 +197,9 @@ const test = (opts) => {
 			assert.isDefined(evenMore.MoreOverSign);
 			assert.equal(evenMore.MoreOverSign, MoreOverProto.MoreOverSign);
 		});
-			
+
 		describe('lookup test', () => {
-			
+
 			describe('should throw proper error when looking up without TypeName', () => {
 				try {
 					lookup(null);
@@ -217,7 +217,7 @@ const test = (opts) => {
 					});
 				}
 			});
-			
+
 			describe('should throw proper error when looking up for empty TypeName', () => {
 				try {
 					lookup('');
@@ -235,7 +235,7 @@ const test = (opts) => {
 					});
 				}
 			});
-			
+
 			describe('should throw proper error when defining from wrong lookup', () => {
 				try {
 					define('UserTypeConstructor.WithoutPassword.WrongPath.WrongNestedType');
@@ -253,7 +253,7 @@ const test = (opts) => {
 					});
 				}
 			});
-			
+
 			describe('should throw proper error when declaring with empty TypeName', () => {
 				try {
 					define('');
@@ -271,7 +271,7 @@ const test = (opts) => {
 					});
 				}
 			});
-			
+
 			it('should seek proper reference of passed TypeName', () => {
 				const ut = lookup('UserType');
 				assert.equal(ut, UserType);
@@ -283,12 +283,12 @@ const test = (opts) => {
 				const emFull = lookup('UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore.EvenMore');
 				assert.equal(emShort, emFull);
 			});
-			
+
 		});
-		
+
 	});
 
-	
+
 };
 
 module.exports = test;

@@ -5,14 +5,14 @@ const { assert, expect } = require('chai');
 const {
 	SymbolConstructorName,
 	SymbolDefaultNamespace,
-	utils : {
+	utils: {
 		parse
 	},
 	errors,
 } = require('..');
 
 const test = (opts) => {
-		
+
 	const {
 		user,
 		userPL1,
@@ -21,11 +21,11 @@ const test = (opts) => {
 		evenMore,
 		EmptyType,
 	} = opts;
-	
+
 	describe('parse tests', () => {
-		
+
 		const samples = require('./parseSamples');
-		
+
 		try {
 			parse(null);
 		} catch (error) {
@@ -37,7 +37,7 @@ const test = (opts) => {
 					.instanceof(Error);
 			});
 		}
-		
+
 		try {
 			parse(Object.getPrototypeOf(user));
 		} catch (error) {
@@ -60,31 +60,31 @@ const test = (opts) => {
 					.instanceof(Error);
 			});
 		}
-		
+
 		const parsedUser = parse(user);
 		const parsedUserTC = parse(userTC);
-		
+
 		const results = {
 			parsedUser,
-			parsedUserPL1 : parse(userPL1),
-			parsedUserPL2 : parse(userPL2),
-			
+			parsedUserPL1: parse(userPL1),
+			parsedUserPL2: parse(userPL2),
+
 			parsedUserTC,
-			parsedEvenMore : parse(evenMore),
+			parsedEvenMore: parse(evenMore),
 		};
-		
+
 		it('expect proper first instance in chain constructor', () => {
 			assert.equal(parsedUser.self[SymbolConstructorName], SymbolDefaultNamespace);
 			assert.equal(parsedUser.parent.self[SymbolConstructorName], SymbolDefaultNamespace);
 			assert.equal(parsedUserTC.self[SymbolConstructorName], SymbolDefaultNamespace);
 			assert.equal(parsedUserTC.parent.self[SymbolConstructorName], SymbolDefaultNamespace);
 		});
-		
+
 		it('should be ok with broken constructor chain', () => {
-			
+
 			const oneElseEmpty = new EmptyType();
 			const oneElseEmptyProto = Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(oneElseEmpty)));
-			
+
 			expect(() => {
 				oneElseEmptyProto[SymbolConstructorName] = undefined;
 			}).to.throw;
@@ -92,17 +92,17 @@ const test = (opts) => {
 				delete oneElseEmptyProto[SymbolConstructorName];
 			}).to.throw;
 		});
-		
+
 		let count = 0;
 		const compare = (result, sample) => {
 			Object.entries(result).forEach(entry => {
 				const [name, value] = entry;
 				const sampleValue = sample[name];
-				
+
 				if (name === 'parent') {
 					return compare(value, sampleValue);
 				}
-				
+
 				if (name === 'self') {
 					it(`parse results should have same "self" with samples for ${name}`, () => {
 						count++;
@@ -126,17 +126,17 @@ const test = (opts) => {
 				});
 			});
 		};
-		
+
 		Object.keys(results).forEach(key => {
 			compare(samples[key], results[key]);
 		});
-		
+
 		it('should have exactly 60 amount of generated results~sample parse tests', () => {
 			assert.equal(count, 60);
 		});
-		
+
 	});
-	
+
 };
 
 module.exports = test;
