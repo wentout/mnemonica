@@ -4,7 +4,7 @@ const { assert, expect } = require('chai');
 
 const {
 	define,
-	defaultTypes : types,
+	defaultTypes: types,
 	defaultNamespace,
 	namespaces,
 	SymbolDefaultNamespace,
@@ -12,11 +12,15 @@ const {
 	SymbolConstructorName,
 	MNEMONICA,
 	MNEMOSYNE,
-	createTypesCollection
+	createTypesCollection,
+	utils: {
+		toJSON,
+	}
 } = require('..');
 
+
 const test = (opts) => {
-		
+
 	const {
 		userTC,
 		UserType,
@@ -27,18 +31,18 @@ const test = (opts) => {
 		oneElseTypesCollection,
 		AnotherCollectionInstance,
 		AnotherCollectionType,
-		OneElseCollectionInstance,
+		oneElseCollectionInstance,
 		OneElseCollectionType
 	} = opts;
-	
+
 	describe('Check Environment', () => {
 		const {
 			errors,
 			ErrorMessages,
 		} = require('..');
-		
+
 		describe('core env tests', () => {
-			
+
 			it('.SubTypes definition is correct Regular', () => {
 				expect(userTC.hasOwnProperty('WithoutPassword')).is.false;
 			});
@@ -54,7 +58,7 @@ const test = (opts) => {
 				expect(Object.getPrototypeOf(Object.getPrototypeOf(overMore)).hasOwnProperty('EvenMore')).is.true;
 				expect(Object.getPrototypeOf(Object.getPrototypeOf(moreOver)).hasOwnProperty('OverMore')).is.true;
 			});
-			
+
 			it('namespaces shoud be defined', () => {
 				expect(namespaces).exist.and.is.a('map');
 			});
@@ -169,7 +173,7 @@ const test = (opts) => {
 			}
 		});
 		describe('subtype property inside type re-definition', () => {
-			const BadTypeReInConstruct = define('BadTypeReInConstruct', function () {});
+			const BadTypeReInConstruct = define('BadTypeReInConstruct', function () { });
 			BadTypeReInConstruct.define('ExistentConstructor', function () {
 				this.ExistentConstructor = undefined;
 			});
@@ -184,7 +188,7 @@ const test = (opts) => {
 		describe('should throw with wrong definition', () => {
 			[
 				['prototype is not an object', () => {
-					define('wrong', function () {}, true);
+					define('wrong', function () { }, true);
 				}, errors.WRONG_TYPE_DEFINITION],
 				['no definition', () => {
 					define();
@@ -195,18 +199,18 @@ const test = (opts) => {
 				['intentionally bad type definition', () => {
 					define(() => {
 						return {
-							name : null
+							name: null
 						};
 					});
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
 				['re-definition', () => {
 					define('UserTypeConstructor', () => {
-						return function WithoutPassword () {};
+						return function WithoutPassword() { };
 					});
 				}, errors.ALREADY_DECLARED],
 				['prohibit anonymous', () => {
 					define('UserType.UserTypePL1', () => {
-						return function () {};
+						return function () { };
 					});
 				}, errors.TYPENAME_MUST_BE_A_STRING],
 			].forEach(entry => {
@@ -224,7 +228,7 @@ const test = (opts) => {
 				});
 			});
 		});
-		
+
 		describe('another namespace instances', () => {
 			anotherNamespace;
 			it('Another Nnamespace has both defined collections', () => {
@@ -240,10 +244,33 @@ const test = (opts) => {
 				expect(AnotherCollectionInstance).instanceOf(AnotherCollectionType);
 			});
 			it('Instance Of OneElse Nnamespace and OneElseCollectionType', () => {
-				expect(OneElseCollectionInstance).instanceOf(OneElseCollectionType);
+				expect(oneElseCollectionInstance).instanceOf(OneElseCollectionType);
+			});
+			it('Instance circular .toJSON works', () => {
+				const circularExtracted = JSON.parse(toJSON(oneElseCollectionInstance));
+				const { description } = circularExtracted.self;
+				expect(description).equal('This value type is not supported by JSON.stringify');
+			});
+			it('Instance circular .toJSON works', () => {
+				const proto = Object.getPrototypeOf(
+					Object.getPrototypeOf(
+						Object.getPrototypeOf(
+							oneElseCollectionInstance)));
+				const { 
+					constructor : {
+						name,
+						prototype : {
+							[SymbolConstructorName] : protoConstructSymbol
+						}
+					},
+					[SymbolConstructorName] : namespaceName
+				} = proto;
+				expect(name).equal(MNEMONICA);
+				expect(protoConstructSymbol).equal(MNEMONICA);
+				expect(namespaceName).equal('anotherNamespace');
 			});
 		});
-		
+
 		describe('hooks environment', () => {
 			try {
 				defaultNamespace.registerFlowChecker();
@@ -254,7 +281,7 @@ const test = (opts) => {
 				});
 			}
 			try {
-				defaultNamespace.registerFlowChecker(() => {});
+				defaultNamespace.registerFlowChecker(() => { });
 			} catch (error) {
 				it('Thrown with Re-Definition', () => {
 					expect(error).instanceOf(Error);
@@ -262,7 +289,7 @@ const test = (opts) => {
 				});
 			}
 			try {
-				defaultNamespace.registerHook('WrongHookType', () => {});
+				defaultNamespace.registerHook('WrongHookType', () => { });
 			} catch (error) {
 				it('Thrown with Re-Definition', () => {
 					expect(error).instanceOf(Error);
@@ -278,9 +305,9 @@ const test = (opts) => {
 				});
 			}
 		});
-		
+
 	});
-	
+
 };
 
 module.exports = test;

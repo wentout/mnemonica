@@ -223,7 +223,7 @@ const test = (opts) => {
 		// 		});
 		// 	}
 		// });
-		
+
 		// describe('shared proto second fork must fail: we show the reason why', () => {
 		// 	let testPassed = 'test not passed';
 		// 	try {
@@ -255,12 +255,12 @@ const test = (opts) => {
 		// 		});
 		// 	}
 		// });
-		
+
 		// describe('shared proto naive fork fail', () => {
 		// 	let testPassed = 'test not passed';
 		// 	try {
 		// 		userTC.fork({email:'zzz', password:1});
-				
+
 		// 		// const t = moreOver.OverMore('fail fork');
 		// 		// const t = moreOver.OverMore('fail fork');
 		// 		// t.fork('fail fork');
@@ -287,12 +287,12 @@ const test = (opts) => {
 		// 	} finally {
 		// 		it('shared proto native must fail too : test passed', () => {
 		// 			console.log(userTC.__args__)
-					
+
 		// 			assert.equal(testPassed, 'test passed');
 		// 		});
 		// 	}
 		// });
-		
+
 	});
 
 };
