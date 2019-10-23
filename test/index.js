@@ -155,8 +155,19 @@ defaultNamespace.registerHook('postCreation', function (opts) {
 });
 
 
-const anotherNamespace = createNamespace('anotherNamespace');
 const anotherDefaultTypesCollection = createTypesCollection();
+
+const {
+	define : adtcDefine
+} = anotherDefaultTypesCollection;
+
+const SomeADTCType = adtcDefine('SomeADTCType', function () {
+	this.test = 123;
+});
+const someADTCInstance = new SomeADTCType();
+
+
+const anotherNamespace = createNamespace('anotherNamespace');
 const anotherTypesCollection = createTypesCollection(anotherNamespace);
 const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 
@@ -344,8 +355,9 @@ describe('Main Test', () => {
 		UserType,
 		overMore,
 		moreOver,
-		anotherNamespace,
 		anotherDefaultTypesCollection,
+		someADTCInstance,
+		anotherNamespace,
 		anotherTypesCollection,
 		oneElseTypesCollection,
 		anotherCollectionInstance,

@@ -26,8 +26,9 @@ const test = (opts) => {
 		UserType,
 		overMore,
 		moreOver,
-		anotherNamespace,
 		anotherDefaultTypesCollection,
+		someADTCInstance,
+		anotherNamespace,
 		anotherTypesCollection,
 		oneElseTypesCollection,
 		anotherCollectionInstance,
@@ -98,6 +99,9 @@ const test = (opts) => {
 			});
 			it('should create collections in defaultNamespace by default', () => {
 				expect(anotherDefaultTypesCollection.namespace).equal(defaultNamespace);
+			});
+			it('should create instances for in anotherDefaultTypesCollection', () => {
+				expect(someADTCInstance.test).equal(123);
 			});
 		});
 		describe('base error shoud be defined', () => {
