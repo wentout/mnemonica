@@ -156,6 +156,7 @@ defaultNamespace.registerHook('postCreation', function (opts) {
 
 
 const anotherNamespace = createNamespace('anotherNamespace');
+const anotherDefaultTypesCollection = createTypesCollection();
 const anotherTypesCollection = createTypesCollection(anotherNamespace);
 const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 
@@ -344,6 +345,7 @@ describe('Main Test', () => {
 		overMore,
 		moreOver,
 		anotherNamespace,
+		anotherDefaultTypesCollection,
 		anotherTypesCollection,
 		oneElseTypesCollection,
 		anotherCollectionInstance,
