@@ -27,6 +27,7 @@ const test = (opts) => {
 		overMore,
 		moreOver,
 		anotherNamespace,
+		anotherDefaultTypesCollection,
 		anotherTypesCollection,
 		oneElseTypesCollection,
 		anotherCollectionInstance,
@@ -94,6 +95,9 @@ const test = (opts) => {
 			}
 			it('should refer defaultTypes from types.get(defaultNamespace)', () => {
 				expect(defaultNamespace.typesCollections.has(types)).is.true;
+			});
+			it('should create collections in defaultNamespace by default', () => {
+				expect(anotherDefaultTypesCollection.namespace).equal(defaultNamespace);
 			});
 		});
 		describe('base error shoud be defined', () => {
