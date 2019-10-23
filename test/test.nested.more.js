@@ -10,8 +10,11 @@ const {
 		extract,
 		collectConstructors,
 		toJSON,
+		parent
 	},
 	defaultTypes: types,
+	SymbolConstructorName,
+	MNEMONICA
 } = require('..');
 
 
@@ -23,6 +26,7 @@ const test = (opts) => {
 		evenMore,
 		USER_DATA,
 		moreOver,
+		overMore,
 		OverMore,
 		UserTypeConstructorProto,
 		userWithoutPassword,
@@ -38,6 +42,7 @@ const test = (opts) => {
 
 
 	describe('more nested types', () => {
+		
 		describe('inheritance works', () => {
 			it('.prototype is correct', () => {
 				expect(userTC.constructor.prototype).to.be.an('object')
@@ -285,7 +290,45 @@ const test = (opts) => {
 			});
 
 		});
-
+		
+		
+		describe('.parent("TypeName") chcks', () => {
+			
+			it('should seek proper .parent()', () => {
+			
+				const parentStraight = parent(evenMore, 'UserTypeConstructor');
+				const parentThroughMethod = evenMore.parent('UserTypeConstructor');
+				
+				assert.equal(userTC, parentStraight);
+				assert.equal(userTC, parentThroughMethod);
+				assert.equal(parentStraight, parentThroughMethod);
+				
+				const wrong = evenMore.parent('SomeWrongName');
+				assert.equal(wrong, undefined);
+				
+				const oneParent = evenMore.parent();
+				assert.equal(oneParent, overMore);
+				
+			});
+			
+			try {
+				parent(null);
+			} catch (error) {
+				it('thrown by parent(null) should be ok with instanceof', () => {
+					expect(error).to.be.an
+						.instanceof(errors
+							.WRONG_INSTANCE_INVOCATION);
+					expect(error).to.be.an
+						.instanceof(Error);
+				});
+				it('thrown error should be ok with props', () => {
+					expect(error.BaseStack).exist.and.is.a('string');
+					expect(error.constructor[SymbolConstructorName])
+						.exist.and.is.a('string')
+						.and.equal(`base of : ${MNEMONICA} : errors`);
+				});
+			}
+		});
 	});
 
 

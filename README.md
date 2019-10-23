@@ -537,6 +537,35 @@ SomeExistentType.define('SomeExistentNestedType', () => {
 
 ```
 
+# .parent("TypeName")
+
+Let assume our `instance` has indeed deep prototype chain:
+
+```js
+EvenMore
+	.MoreOver
+		.OverMore
+			// ...
+			// ...
+			.InitialType
+```
+
+And we wish to get reference to one of the prececessors, though we have only reference to insance itself. Here we can use builtin `instance.parent()` method:
+
+```js
+
+// fisrst parent
+// simply equal to instance.__parent__
+const parent = instance.parent();
+
+// deep parent from chain
+const parent = instance
+	.parent( 'DeepParentName' );
+
+```
+
+
+
 # SomeType.call ( this_obj, ...args)
 You can combine existing TypeConstructor with any instance or other classic constructor:
 
