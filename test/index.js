@@ -351,7 +351,7 @@ describe('Main Test', () => {
 		oneElseCollectionInstance,
 		OneElseCollectionType
 	});
-
+	
 	require('./test.hooks')({
 		userTypeHooksInvocations,
 		namespaceFlowCheckerInvocations,
@@ -614,6 +614,7 @@ describe('Main Test', () => {
 			evenMore,
 			USER_DATA,
 			moreOver,
+			overMore,
 			OverMore,
 			UserTypeConstructorProto,
 			userWithoutPassword,

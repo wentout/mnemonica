@@ -6,6 +6,7 @@ const { assert, expect } = require('chai');
 // 	errors,
 // } = require('..');
 
+
 const test = (opts) => {
 
 	const {
@@ -71,6 +72,7 @@ const test = (opts) => {
 			assert.deepEqual(userClone, user);
 
 		});
+		
 
 		it('should have proper first .fork() old style', () => {
 
@@ -157,7 +159,6 @@ const test = (opts) => {
 		it('should not mutate()', () => {
 			assert.notEqual(evenMore.__proto_proto__, EvenMoreProto);
 		});
-
 
 		it('should have proper nested .fork()', () => {
 			assert.notEqual(overMore.__proto_proto__, overMoreFork.__proto_proto__);
