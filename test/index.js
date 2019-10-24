@@ -196,13 +196,32 @@ const AsyncType = define('AsyncType', async function (data) {
 	});
 });
 
-const NestedAsyncType = AsyncType.define('NestedAsyncType', async function (data) {
+const SubOfAsync = AsyncType.define('SubOfAsync', function (data) {
+	Object.assign(this, {
+		data
+	});
+});
+
+const NestedAsyncType = SubOfAsync.define('NestedAsyncType', async function (data) {
 	return Object.assign(this, {
 		data
 	});
 }, {
 	description: 'nested async instance'
 });
+
+const SubOfNestedAsync = NestedAsyncType.define('SubOfNestedAsync', function (data) {
+	Object.assign(this, {
+		data
+	});
+});
+
+var SubOfNestedAsyncPostHookData;
+SubOfNestedAsync.registerHook('postCreation', function (opts) {
+	SubOfNestedAsyncPostHookData = opts;
+});
+
+
 
 // debugger;
 describe('Main Test', () => {
@@ -682,13 +701,19 @@ describe('Main Test', () => {
 
 
 		describe('Async Constructors Test', () => {
-			var asyncInstance, nestedAsyncInstance;
+			var asyncInstance,
+				asyncSub,
+				nestedAsyncInstance,
+				nestedAsyncSub;
 			
 			before(function (done) {
 				const wait = async function () {
 					asyncInstance = await new AsyncType('tada');
-					nestedAsyncInstance = await new asyncInstance
-						.NestedAsyncType('nested');
+					asyncSub = asyncInstance.SubOfAsync('some');
+					nestedAsyncInstance = await new asyncSub
+								.NestedAsyncType('nested');
+					nestedAsyncSub = nestedAsyncInstance
+								.SubOfNestedAsync('done');
 					done();
 				};
 				wait();
@@ -701,6 +726,18 @@ describe('Main Test', () => {
 			it('should be able to construct nested async', () => {
 				expect(nestedAsyncInstance).instanceof(AsyncType);
 				expect(nestedAsyncInstance).instanceof(NestedAsyncType);
+				expect(nestedAsyncSub).instanceof(AsyncType);
+				expect(nestedAsyncSub).instanceof(SubOfAsync);
+				expect(nestedAsyncSub).instanceof(NestedAsyncType);
+				expect(nestedAsyncSub).instanceof(SubOfNestedAsync);
+				expect(SubOfNestedAsyncPostHookData
+					.existentInstance)
+						.equal(nestedAsyncInstance);
+				
+				expect(SubOfNestedAsyncPostHookData
+					.inheritedInstance)
+						.equal(nestedAsyncSub);
+				
 				expect(nestedAsyncInstance.data).equal('nested');
 				expect(nestedAsyncInstance.description)
 					.equal('nested async instance');
