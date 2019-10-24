@@ -578,6 +578,29 @@ const someTypeInstance = SomeType.call(process, {
 console.log(typeof someTypeInstance.on) // function
 ```
 
+
+# Asyncronous Constructors
+First of all you should understand what you wish to are doing!
+
+Then you should understand what you wish. And only after doing so you might use this technic:
+
+```js
+const AsyncType = define('AsyncType', async function (data) {
+	return Object.assign(this, {
+		data
+	});
+});
+const asyncCall = async function () {
+	const asyncConstructedInstance = await new AsyncType('tada');
+	console.log(asyncConstructedInstance) // { data: "tada" }
+};
+asyncCall();
+```
+
+Also nothing will warn you from doing this for SubTypes.
+
+
+
 # Instance Props
 
 Also starting from `v0.3.8` the following non enumerable props are availiable from instance itself (`instance.hasOwnProperty(__prop__)`):
