@@ -42,6 +42,7 @@ const UserType = define('UserType', function (userData) {
 	return this;
 }, UserTypeProto, true);
 
+
 const userTypeHooksInvocations = [];
 
 UserType.registerHook('preCreation', function (opts) {
@@ -158,7 +159,7 @@ defaultNamespace.registerHook('postCreation', function (opts) {
 const anotherDefaultTypesCollection = createTypesCollection();
 
 const {
-	define : adtcDefine
+	define: adtcDefine
 } = anotherDefaultTypesCollection;
 
 const SomeADTCType = adtcDefine('SomeADTCType', function () {
@@ -171,7 +172,7 @@ const anotherNamespace = createNamespace('anotherNamespace');
 const anotherTypesCollection = createTypesCollection(anotherNamespace);
 const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 
-const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType',  function (check) {
+const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType', function (check) {
 	Object.assign(this, { check });
 });
 const anotherCollectionInstance = AnotherCollectionType.call(process, 'check');
@@ -188,7 +189,41 @@ const userPL2 = new user.UserTypePL2();
 const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
 
-debugger;
+
+const AsyncType = define('AsyncType', async function (data) {
+	return Object.assign(this, {
+		data
+	});
+});
+
+const SubOfAsync = AsyncType.define('SubOfAsync', function (data) {
+	Object.assign(this, {
+		data
+	});
+});
+
+const NestedAsyncType = SubOfAsync.define('NestedAsyncType', async function (data) {
+	return Object.assign(this, {
+		data
+	});
+}, {
+	description: 'nested async instance'
+});
+
+const SubOfNestedAsync = NestedAsyncType.define('SubOfNestedAsync', function (data) {
+	Object.assign(this, {
+		data
+	});
+});
+
+var SubOfNestedAsyncPostHookData;
+SubOfNestedAsync.registerHook('postCreation', function (opts) {
+	SubOfNestedAsyncPostHookData = opts;
+});
+
+
+
+// debugger;
 describe('Main Test', () => {
 
 	/*
@@ -365,7 +400,7 @@ describe('Main Test', () => {
 		oneElseCollectionInstance,
 		OneElseCollectionType
 	});
-	
+
 	require('./test.hooks')({
 		userTypeHooksInvocations,
 		namespaceFlowCheckerInvocations,
@@ -663,7 +698,52 @@ describe('Main Test', () => {
 			userWithoutPassword,
 			userWPWithAdditionalSign
 		});
-		
+
+
+		describe('Async Constructors Test', () => {
+			var asyncInstance,
+				asyncSub,
+				nestedAsyncInstance,
+				nestedAsyncSub;
+			
+			before(function (done) {
+				const wait = async function () {
+					asyncInstance = await new AsyncType('tada');
+					asyncSub = asyncInstance.SubOfAsync('some');
+					nestedAsyncInstance = await new asyncSub
+								.NestedAsyncType('nested');
+					nestedAsyncSub = nestedAsyncInstance
+								.SubOfNestedAsync('done');
+					done();
+				};
+				wait();
+			});
+
+			it('should be able to construct async', () => {
+				expect(asyncInstance.data).equal('tada');
+			});
+
+			it('should be able to construct nested async', () => {
+				expect(nestedAsyncInstance).instanceof(AsyncType);
+				expect(nestedAsyncInstance).instanceof(NestedAsyncType);
+				expect(nestedAsyncSub).instanceof(AsyncType);
+				expect(nestedAsyncSub).instanceof(SubOfAsync);
+				expect(nestedAsyncSub).instanceof(NestedAsyncType);
+				expect(nestedAsyncSub).instanceof(SubOfNestedAsync);
+				expect(SubOfNestedAsyncPostHookData
+					.existentInstance)
+						.equal(nestedAsyncInstance);
+				
+				expect(SubOfNestedAsyncPostHookData
+					.inheritedInstance)
+						.equal(nestedAsyncSub);
+				
+				expect(nestedAsyncInstance.data).equal('nested');
+				expect(nestedAsyncInstance.description)
+					.equal('nested async instance');
+			});
+
+		});
 
 		describe('uncaughtException test', () => {
 			it('should throw proper error', (passedCb) => {
