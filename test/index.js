@@ -196,7 +196,7 @@ const AsyncType = define('AsyncType', async function (data) {
 	});
 });
 
-AsyncType.define('NestedAsyncType', async function (data) {
+const NestedAsyncType = AsyncType.define('NestedAsyncType', async function (data) {
 	return Object.assign(this, {
 		data
 	});
@@ -699,6 +699,8 @@ describe('Main Test', () => {
 			});
 
 			it('should be able to construct nested async', () => {
+				expect(nestedAsyncInstance).instanceof(AsyncType);
+				expect(nestedAsyncInstance).instanceof(NestedAsyncType);
 				expect(nestedAsyncInstance.data).equal('nested');
 				expect(nestedAsyncInstance.description)
 					.equal('nested async instance');
