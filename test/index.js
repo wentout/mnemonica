@@ -702,13 +702,15 @@ describe('Main Test', () => {
 
 		describe('Async Constructors Test', () => {
 			var asyncInstance,
+				asyncInstancePromise,
 				asyncSub,
 				nestedAsyncInstance,
 				nestedAsyncSub;
 			
 			before(function (done) {
 				const wait = async function () {
-					asyncInstance = await new AsyncType.call(process, 'tada');
+					asyncInstancePromise = new AsyncType.call(process, 'tada');
+					asyncInstance = await asyncInstancePromise;
 					asyncSub = asyncInstance.SubOfAsync('some');
 					nestedAsyncInstance = await new asyncSub
 								.NestedAsyncType('nested');
@@ -724,6 +726,8 @@ describe('Main Test', () => {
 			});
 
 			it('should be able to construct nested async', () => {
+				expect(asyncInstancePromise).instanceof(Promise);
+				expect(asyncInstancePromise).instanceof(AsyncType);
 				expect(typeof asyncInstance.on === 'function').is.true;
 				expect(nestedAsyncInstance).instanceof(AsyncType);
 				expect(nestedAsyncInstance).instanceof(NestedAsyncType);
