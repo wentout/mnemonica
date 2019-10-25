@@ -708,7 +708,7 @@ describe('Main Test', () => {
 			
 			before(function (done) {
 				const wait = async function () {
-					asyncInstance = await new AsyncType('tada');
+					asyncInstance = await new AsyncType.call(process, 'tada');
 					asyncSub = asyncInstance.SubOfAsync('some');
 					nestedAsyncInstance = await new asyncSub
 								.NestedAsyncType('nested');
@@ -724,6 +724,7 @@ describe('Main Test', () => {
 			});
 
 			it('should be able to construct nested async', () => {
+				expect(typeof asyncInstance.on === 'function').is.true;
 				expect(nestedAsyncInstance).instanceof(AsyncType);
 				expect(nestedAsyncInstance).instanceof(NestedAsyncType);
 				expect(nestedAsyncSub).instanceof(AsyncType);

@@ -579,9 +579,8 @@ console.log(typeof someTypeInstance.on) // function
 ```
 
 
-# Asyncronous Constructors
+# Asynchronous Constructors
 First of all you should understand what you wish to are doing!
-
 Then you should understand what you wish. And only after doing so you might use this technic:
 
 ```js
@@ -590,15 +589,43 @@ const AsyncType = define('AsyncType', async function (data) {
 		data
 	});
 });
+
 const asyncCall = async function () {
 	const asyncConstructedInstance = await new AsyncType('tada');
 	console.log(asyncConstructedInstance) // { data: "tada" }
+	console.log(asyncConstructedInstance instanceof AsyncType) // true
 };
+
 asyncCall();
 ```
 
-Also nothing will warn you from doing this for SubTypes.
+Also nothing will warn you from doing this for SubTypes:
 
+```js
+const NestedAsyncType = AsyncType
+	.define('NestedAsyncType',async function (data) {
+		return Object.assign(this, {
+			data
+		});
+	}, {
+		description: 'nested async instance'
+	});
+
+const nestedAsyncTypeInstance = await new 
+	asyncConstructedInstance.NestedAsyncType('boom');
+
+console.log(nestedAsyncTypeInstance instanceof AsyncType) // true
+console.log(nestedAsyncTypeInstance instanceof NestedAsyncType) // true
+```
+
+Also for the first instance in chain you can do for example inherit from singletone:
+
+```js
+const asyncCalledInstance = await new AsyncType
+	.call(process, 'wat');
+console.log(asyncCalledInstance) // { data: "wat" }
+console.log(asyncCalledInstance instanceof AsyncType) // true
+```
 
 
 # Instance Props
