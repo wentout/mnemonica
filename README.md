@@ -567,17 +567,35 @@ const parent = instance
 
 
 # SomeType.call ( this_obj, ...args)
-You can combine existing TypeConstructor with any instance or other classic constructor:
+You can combine existing TypeConstructor with any instance, even with Singletones:
 
 ```js
-const someTypeInstance = SomeType.call(process, {
+const usingProcessAsProto = Singletoned.call(process, {
 	some   : 'arguments',
 	data   : 'necessary',
-	inside : 'of SomeType definition'
+	inside : 'for definition'
 });
-console.log(typeof someTypeInstance.on) // function
+console.log(typeof instanceUsingProcessSingletone.on) // function
 ```
 
+or you can combine with window, or document or...
+
+```js
+
+const usingWindowAsProto = Windowed.call(window);
+const usingDocumentAsProto = Documented.call(document);
+const usingJQueryAsProto = JQueried.call(jQuery);
+
+// or even ReactDOM
+import ReactDOM from "react-dom";
+import { define } from "mnemonica";
+const ReactDOOMed = define("ReactDOOMed", function() {});
+const usingReactAsProto = ReactDOOMed.call(ReactDOM);
+
+const root = document.getElementById("root");
+usingReactAsProto.render("just works", root);
+
+```
 
 # Asynchronous Constructors
 First of all you should understand what you wish to are doing!
@@ -608,7 +626,7 @@ const NestedAsyncType = AsyncType
 			data
 		});
 	}, {
-		description: 'nested async instance'
+		description: 'async of nested'
 	});
 
 const nestedAsyncTypeInstance = await new 
@@ -616,6 +634,7 @@ const nestedAsyncTypeInstance = await new
 
 console.log(nestedAsyncTypeInstance instanceof AsyncType) // true
 console.log(nestedAsyncTypeInstance instanceof NestedAsyncType) // true
+console.log(nestedAsyncTypeInstance.description); // 'async of nested'
 ```
 
 Also for the first instance in chain you can do for example inherit from singletone:
