@@ -47,7 +47,6 @@ const test = (opts) => {
 		it('.prototype is correct', () => {
 			expect(userPL1.constructor.prototype).to.be.an('object')
 				.that.includes(pl1Proto);
-			assert.include(pl1Proto, userPL1.constructor.prototype);
 			Object.entries(pl1Proto).forEach(entry => {
 				const [key, value] = entry;
 				assert.equal(userPL1[key], value);

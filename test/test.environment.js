@@ -34,7 +34,10 @@ const test = (opts) => {
 		anotherCollectionInstance,
 		AnotherCollectionType,
 		oneElseCollectionInstance,
-		OneElseCollectionType
+		OneElseCollectionType,
+		userWithoutPassword,
+		chained,
+		derived,
 	} = opts;
 
 	describe('Check Environment', () => {
@@ -320,6 +323,14 @@ const test = (opts) => {
 					expect(error).instanceOf(errors.MISSING_HOOK_CALLBACK);
 				});
 			}
+		});
+		describe('chain repeat check', () => {
+			const keys1_1 = Object.keys(userTC);
+			const keys1_2 = Object.keys(chained);
+			const keys2_1 = Object.keys(userWithoutPassword);
+			const keys2_2 = Object.keys(derived);
+			assert.deepEqual(keys1_1, keys1_2);
+			assert.deepEqual(keys2_1, keys2_2);
 		});
 
 	});
