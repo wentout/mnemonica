@@ -117,7 +117,8 @@ const test = (opts) => {
 
 			assert.notEqual(userTC, userTCFork);
 			assert.deepEqual(userTCArgs[0], USER_DATA);
-			assert.deepEqual(new UserTypeConstructor(forkData), userTCFork);
+			const naiveFork = new UserTypeConstructor(forkData);
+			assert.deepOwnInclude(naiveFork, userTCFork);
 			assert.notDeepEqual(userTCArgs, userTCFork.__args__);
 			expect(userTCFork).instanceof(UserTypeConstructor);
 			assert.deepEqual(Object.keys(userTCFork), Object.keys(userTC));
@@ -132,13 +133,15 @@ const test = (opts) => {
 				Object.getPrototypeOf(Object.getPrototypeOf(userPL1));
 			const userPL1ForkPP =
 				Object.getPrototypeOf(Object.getPrototypeOf(userPL1Fork));
+			
+			assert.equal(userPL1ForkPP.UserTypePL1.toString(), userPL1PP.UserTypePL1.toString());
+			assert.equal(userPL1ForkPP.UserTypePL2.toString(), userPL1PP.UserTypePL2.toString());
 
-			assert.equal(userPL1PP, userPL1ForkPP);
-
+			assert.notEqual(userPL1PP, userPL1ForkPP);
 			assert.notEqual(userPL1, userPL1Fork);
 			assert.deepInclude(userPL1, userPL1Fork);
 			assert.deepInclude(userPL1Fork, userPL1);
-			assert.deepEqual(userPL1Fork, userPL1);
+			assert.deepEqual(userPL1Fork.extract(), userPL1.extract());
 
 		});
 

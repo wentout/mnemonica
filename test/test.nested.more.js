@@ -59,20 +59,24 @@ const test = (opts) => {
 				});
 			});
 			it('siblings are correct', () => {
-				assert.equal(
+				const proto1 =
 					// Object.getPrototypeOf(
 					Object.getPrototypeOf(
 						Object.getPrototypeOf(
 							// Object.getPrototypeOf(userWithoutPassword)))),
-							Object.getPrototypeOf(userWithoutPassword))),
+							Object.getPrototypeOf(userWithoutPassword)));
+				assert.equal(
+					proto1,
 					userTC
 				);
-				assert.equal(
+				const proto2 =
 					// Object.getPrototypeOf(
 					Object.getPrototypeOf(
 						Object.getPrototypeOf(
-							// Object.getPrototypeOf(userWithoutPassword_2)))),
-							Object.getPrototypeOf(userWithoutPassword_2))),
+							// Object.getPrototypeOf(userWithoutPassword)))),
+							Object.getPrototypeOf(userWithoutPassword)));
+				assert.equal(
+					proto2,
 					userTC
 				);
 				assert.deepOwnInclude(userWithoutPassword, userWithoutPassword_2);
@@ -292,10 +296,10 @@ const test = (opts) => {
 		});
 		
 		
-		describe('.parent("TypeName") chcks', () => {
+		describe('.parent("TypeName") cheks', () => {
 			
 			it('should seek proper .parent()', () => {
-			
+				
 				const parentStraight = parent(evenMore, 'UserTypeConstructor');
 				const parentThroughMethod = evenMore.parent('UserTypeConstructor');
 				

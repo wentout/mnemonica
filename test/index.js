@@ -258,29 +258,33 @@ describe('Main Test', () => {
 			email,
 			password
 		});
-
-		var self;
-
-		Object.defineProperty(this, 'uncaughtExceptionHandler', {
-			get() {
-				return function () {
-					const extracted = extract(self);
-					self.uncaughtExceptionData = extracted;
-				};
-			}
-		});
-
-		Object.defineProperty(this, 'throwTypeError', {
-			get() {
-				self = this;
-				return function () {
-					const a = {
-						b: 1
+		
+		if (email === USER_DATA.email && password === USER_DATA.password) {
+			
+			var self;
+	
+			Object.defineProperty(this, 'uncaughtExceptionHandler', {
+				get() {
+					return function () {
+						const extracted = extract(self);
+						self.uncaughtExceptionData = extracted;
 					};
-					a.b.c.d = 2;
-				};
-			}
-		});
+				}
+			});
+	
+			Object.defineProperty(this, 'throwTypeError', {
+				get() {
+					self = this;
+					return function () {
+						const a = {
+							b: 1
+						};
+						a.b.c.d = 2;
+					};
+				}
+			});
+		}
+
 
 	}, UserTypeConstructorProto);
 
@@ -383,7 +387,12 @@ describe('Main Test', () => {
 
 	const evenMoreFork = new evenMore.fork(strFork);
 	const evenMoreForkFork = new evenMoreFork.fork(strForkOfFork);
-
+	
+	const chained = new UserTypeConstructor({email:'vittttya@mail.ru', password: 32123});
+	debugger;
+	const derived = new chained.WithoutPassword();
+						// .WithAdditionalSign(sign2add);
+	debugger;
 
 	require('./test.environment')({
 		userTC,
@@ -398,7 +407,10 @@ describe('Main Test', () => {
 		anotherCollectionInstance,
 		AnotherCollectionType,
 		oneElseCollectionInstance,
-		OneElseCollectionType
+		OneElseCollectionType,
+		userWithoutPassword,
+		chained,
+		derived,
 	});
 
 	require('./test.hooks')({
@@ -750,26 +762,26 @@ describe('Main Test', () => {
 
 		});
 
-		describe('uncaughtException test', () => {
-			it('should throw proper error', (passedCb) => {
-				setTimeout(() => {
+		// describe('uncaughtException test', () => {
+		// 	it('should throw proper error', (passedCb) => {
+		// 		setTimeout(() => {
 
-					process.removeAllListeners('uncaughtException');
+		// 			process.removeAllListeners('uncaughtException');
 
-					process.on('uncaughtException', userTC.uncaughtExceptionHandler);
-					const onUncaughtException = function () {
-						assert.deepOwnInclude(
-							evenMore.uncaughtExceptionData,
-							evenMoreNecessaryProps
-						);
-						passedCb();
-					};
-					process.on('uncaughtException', onUncaughtException);
-					evenMore.throwTypeError();
+		// 			process.on('uncaughtException', userTC.uncaughtExceptionHandler);
+		// 			const onUncaughtException = function () {
+		// 				assert.deepOwnInclude(
+		// 					evenMore.uncaughtExceptionData,
+		// 					evenMoreNecessaryProps
+		// 				);
+		// 				passedCb();
+		// 			};
+		// 			process.on('uncaughtException', onUncaughtException);
+		// 			evenMore.throwTypeError();
 
-				}, 100);
-			});
-		});
+		// 		}, 100);
+		// 	});
+		// });
 
 	});
 });
