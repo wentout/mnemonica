@@ -36,8 +36,11 @@ const test = (opts) => {
 		oneElseCollectionInstance,
 		OneElseCollectionType,
 		userWithoutPassword,
+		UserTypeConstructor,
 		chained,
 		derived,
+		rounded,
+		chained2,
 	} = opts;
 
 	describe('Check Environment', () => {
@@ -275,14 +278,14 @@ const test = (opts) => {
 					Object.getPrototypeOf(
 						Object.getPrototypeOf(
 							oneElseCollectionInstance)));
-				const { 
-					constructor : {
+				const {
+					constructor: {
 						name,
-						prototype : {
-							[SymbolConstructorName] : protoConstructSymbol
+						prototype: {
+							[SymbolConstructorName]: protoConstructSymbol
 						}
 					},
-					[SymbolConstructorName] : namespaceName
+					[SymbolConstructorName]: namespaceName
 				} = proto;
 				expect(name).equal(MNEMONICA);
 				expect(protoConstructSymbol).equal(MNEMONICA);
@@ -329,8 +332,112 @@ const test = (opts) => {
 			const keys1_2 = Object.keys(chained);
 			const keys2_1 = Object.keys(userWithoutPassword);
 			const keys2_2 = Object.keys(derived);
-			assert.deepEqual(keys1_1, keys1_2);
-			assert.deepEqual(keys2_1, keys2_2);
+			it('simple chain is ok', () => {
+				assert.deepEqual(keys1_1, keys1_2);
+				assert.deepEqual(keys2_1, keys2_2);
+			});
+			it('real chain is ok too', () => {
+				assert.deepEqual(rounded.extract(), chained2.extract());
+			});
+		});
+
+		describe('async chain check', () => {
+
+			var
+				syncWAsync1,
+				syncWAsync2;
+			// var syncWAsyncChained;
+
+			const etalon = {
+				WithAdditionalSignSign: 'WithAdditionalSignSign',
+				WithoutPasswordSign: 'WithoutPasswordSign',
+				async1st: '1st',
+				description: 'UserTypeConstructor',
+				email: 'async@gmail.com',
+				password: undefined,
+				sign: 'async sign',
+				async2nd: '2nd',
+				sync: 'is',
+				async: '3rd',
+			};
+
+			before(function (done) {
+
+				(async () => {
+
+					// working one
+					syncWAsync1 =
+						await (
+							(
+								await (
+									await (
+
+										new UserTypeConstructor({
+											email: 'async@gmail.com', password: 32123
+										})
+											.WithoutPassword()
+											.WithAdditionalSign('async sign')
+
+									).AsyncChain1st({ async1st: '1st' })
+
+									// after promise
+								).AsyncChain2nd({ async2nd: '2nd' })
+								// sync 2 async
+							).Async2Sync2nd({ sync: 'is' })
+						).AsyncChain3rd({ async: '3rd' });
+
+
+					// working two
+					syncWAsync2 = await (
+
+						new UserTypeConstructor({
+							email: 'async@gmail.com', password: 32123
+						})
+							.WithoutPassword()
+							.WithAdditionalSign('async sign')
+
+					).AsyncChain1st({ async1st: '1st' })
+
+						// after promise
+						.then(async function (instance) {
+							return await instance.AsyncChain1st({ async1st: '1st' });
+						})
+						.then(async function (instance) {
+							return await instance.AsyncChain2nd({ async2nd: '2nd' });
+						})
+						.then(async function (instance) {
+							// sync 2 async
+							return await instance.Async2Sync2nd({ sync: 'is' });
+						})
+						.then(async function (instance) {
+							return await instance.AsyncChain3rd({ async: '3rd' });
+						});
+					
+					// debugger;
+					// syncWAsyncChained = await /* (await (await */ 
+					// 	(new UserTypeConstructor({
+					// 		email: 'async@gmail.com', password: 32123
+					// 	})
+					// 	.WithoutPassword()
+					// 	.WithAdditionalSign('async sign')
+					// 	.AsyncChain1st({ async1st: '1st' })
+					// 	// after promise
+					// 	.AsyncChain2nd({ async2nd: '2nd' })
+					// 	.Async2Sync2nd({ sync: 'is' })
+					// 	.AsyncChain3rd({ async: '3rd' }));
+
+					done();
+					
+				})();
+
+			});
+			it('chain should work', () => {
+
+				assert.deepEqual(etalon, syncWAsync1.extract());
+				assert.deepEqual(etalon, syncWAsync2.extract());
+				// debugger;
+				// assert.deepEqual(etalon, syncWAsyncChained.extract());
+			});
 		});
 
 	});

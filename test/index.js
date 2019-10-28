@@ -4,6 +4,9 @@ const { assert, expect } = require('chai');
 
 const { inspect } = require('util');
 
+const hooksTest = true;
+const uncaughtExceptionTest = true;
+
 const {
 	define,
 	defaultTypes: types,
@@ -258,11 +261,11 @@ describe('Main Test', () => {
 			email,
 			password
 		});
-		
+
 		if (email === USER_DATA.email && password === USER_DATA.password) {
-			
+
 			var self;
-	
+
 			Object.defineProperty(this, 'uncaughtExceptionHandler', {
 				get() {
 					return function () {
@@ -271,7 +274,7 @@ describe('Main Test', () => {
 					};
 				}
 			});
-	
+
 			Object.defineProperty(this, 'throwTypeError', {
 				get() {
 					self = this;
@@ -347,6 +350,20 @@ describe('Main Test', () => {
 		return EvenMore;
 	});
 
+	const AsyncChain1st = WithAdditionalSign.define('AsyncChain1st', async function (opts) {
+		return Object.assign(this, opts);
+	});
+	const AsyncChain2nd = AsyncChain1st.define('AsyncChain2nd', async function (opts) {
+		return Object.assign(this, opts);
+	});
+	const Async2Sync2nd = AsyncChain2nd.define('Async2Sync2nd', function (opts) {
+		Object.assign(this, opts);
+	});
+	Async2Sync2nd.define('AsyncChain3rd', async function (opts) {
+		return Object.assign(this, opts);
+	});
+
+
 	const EmptyType = define('EmptyType');
 	EmptyType.define('EmptySubType', function (sign) {
 		this.emptySign = sign || 'DefaultEmptySign';
@@ -387,12 +404,14 @@ describe('Main Test', () => {
 
 	const evenMoreFork = new evenMore.fork(strFork);
 	const evenMoreForkFork = new evenMoreFork.fork(strForkOfFork);
-	
-	const chained = new UserTypeConstructor({email:'vittttya@mail.ru', password: 32123});
-	debugger;
+
+	const chained = new UserTypeConstructor({ email: 'someother@gmail.com', password: 32123 });
 	const derived = new chained.WithoutPassword();
-						// .WithAdditionalSign(sign2add);
-	debugger;
+	const rounded = new derived.WithAdditionalSign(sign2add);
+
+	const chained2 = new UserTypeConstructor({ email: 'someother@gmail.com', password: 32123 })
+		.WithoutPassword()
+		.WithAdditionalSign(sign2add);
 
 	require('./test.environment')({
 		userTC,
@@ -409,19 +428,24 @@ describe('Main Test', () => {
 		oneElseCollectionInstance,
 		OneElseCollectionType,
 		userWithoutPassword,
+		UserTypeConstructor,
 		chained,
 		derived,
+		rounded,
+		chained2,
 	});
 
-	require('./test.hooks')({
-		userTypeHooksInvocations,
-		namespaceFlowCheckerInvocations,
-		typesFlowCheckerInvocations,
-		typesPreCreationInvocations,
-		typesPostCreationInvocations,
-		namespacePreCreationInvocations,
-		namespacePostCreationInvocations,
-	});
+	if (hooksTest) {
+		require('./test.hooks')({
+			userTypeHooksInvocations,
+			namespaceFlowCheckerInvocations,
+			typesFlowCheckerInvocations,
+			typesPreCreationInvocations,
+			typesPostCreationInvocations,
+			namespacePreCreationInvocations,
+			namespacePostCreationInvocations,
+		});
+	}
 
 
 	const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
@@ -718,16 +742,16 @@ describe('Main Test', () => {
 				asyncSub,
 				nestedAsyncInstance,
 				nestedAsyncSub;
-			
+
 			before(function (done) {
 				const wait = async function () {
 					asyncInstancePromise = new AsyncType.call(process, 'tada');
 					asyncInstance = await asyncInstancePromise;
 					asyncSub = asyncInstance.SubOfAsync('some');
 					nestedAsyncInstance = await new asyncSub
-								.NestedAsyncType('nested');
+						.NestedAsyncType('nested');
 					nestedAsyncSub = nestedAsyncInstance
-								.SubOfNestedAsync('done');
+						.SubOfNestedAsync('done');
 					done();
 				};
 				wait();
@@ -740,6 +764,7 @@ describe('Main Test', () => {
 			it('should be able to construct nested async', () => {
 				expect(asyncInstancePromise).instanceof(Promise);
 				expect(asyncInstancePromise).instanceof(AsyncType);
+				expect(asyncInstance).instanceof(AsyncType);
 				expect(typeof asyncInstance.on === 'function').is.true;
 				expect(nestedAsyncInstance).instanceof(AsyncType);
 				expect(nestedAsyncInstance).instanceof(NestedAsyncType);
@@ -749,39 +774,41 @@ describe('Main Test', () => {
 				expect(nestedAsyncSub).instanceof(SubOfNestedAsync);
 				expect(SubOfNestedAsyncPostHookData
 					.existentInstance)
-						.equal(nestedAsyncInstance);
-				
+					.equal(nestedAsyncInstance);
+
 				expect(SubOfNestedAsyncPostHookData
 					.inheritedInstance)
-						.equal(nestedAsyncSub);
-				
+					.equal(nestedAsyncSub);
+
 				expect(nestedAsyncInstance.data).equal('nested');
 				expect(nestedAsyncInstance.description)
 					.equal('nested async instance');
 			});
 
 		});
+		
+		if (uncaughtExceptionTest) {
+			describe('uncaughtException test', () => {
+				it('should throw proper error', (passedCb) => {
+					setTimeout(() => {
 
-		// describe('uncaughtException test', () => {
-		// 	it('should throw proper error', (passedCb) => {
-		// 		setTimeout(() => {
+						process.removeAllListeners('uncaughtException');
 
-		// 			process.removeAllListeners('uncaughtException');
+						process.on('uncaughtException', userTC.uncaughtExceptionHandler);
+						const onUncaughtException = function () {
+							assert.deepOwnInclude(
+								evenMore.uncaughtExceptionData,
+								evenMoreNecessaryProps
+							);
+							passedCb();
+						};
+						process.on('uncaughtException', onUncaughtException);
+						evenMore.throwTypeError();
 
-		// 			process.on('uncaughtException', userTC.uncaughtExceptionHandler);
-		// 			const onUncaughtException = function () {
-		// 				assert.deepOwnInclude(
-		// 					evenMore.uncaughtExceptionData,
-		// 					evenMoreNecessaryProps
-		// 				);
-		// 				passedCb();
-		// 			};
-		// 			process.on('uncaughtException', onUncaughtException);
-		// 			evenMore.throwTypeError();
-
-		// 		}, 100);
-		// 	});
-		// });
+					}, 100);
+				});
+			});
+		}
 
 	});
 });
