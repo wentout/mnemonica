@@ -763,6 +763,7 @@ describe('Main Test', () => {
 
 			it('should be able to construct nested async', () => {
 				expect(asyncInstancePromise).instanceof(Promise);
+				expect(asyncInstancePromise).instanceof(AsyncType);
 				expect(asyncInstance).instanceof(AsyncType);
 				expect(typeof asyncInstance.on === 'function').is.true;
 				expect(nestedAsyncInstance).instanceof(AsyncType);
