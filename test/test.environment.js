@@ -410,7 +410,6 @@ const test = (opts) => {
 							.WithAdditionalSign('async sign')
 
 					).AsyncChain1st({ async1st: '1st' })
-
 						// after promise
 						.then(async function (instance) {
 							return await instance.AsyncChain1st({ async1st: '2_1st' });
@@ -426,7 +425,7 @@ const test = (opts) => {
 							return await instance.AsyncChain3rd({ async: '2_3rd' });
 						});
 
-					debugger;
+					// debugger;
 					syncWAsyncChained = await /* (await (await */
 						new UserTypeConstructor({
 							email: 'async@gmail.com',
@@ -439,8 +438,8 @@ const test = (opts) => {
 							.AsyncChain2nd({ async2nd: '2nd' })
 							.Async2Sync2nd({ sync: 'is' })
 							.AsyncChain3rd({ async: '3rd' });
-					
-							debugger;
+
+					// debugger;
 					done();
 
 				})();
@@ -460,9 +459,9 @@ const test = (opts) => {
 					email: 'async@gmail.com',
 					password: undefined,
 					sign: 'async sign',
-					// async2nd: '2nd',
-					// sync: 'is',
-					// async: '3rd',
+					async2nd: '2nd',
+					sync: 'is',
+					async: '3rd',
 				};
 
 				assert.deepEqual(etalon3, syncWAsyncChained.extract());
