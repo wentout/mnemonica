@@ -426,7 +426,7 @@ const test = (opts) => {
 						});
 
 					// debugger;
-					syncWAsyncChained = await /* (await (await */
+					syncWAsyncChained = await /* (await (await sure */
 						new UserTypeConstructor({
 							email: 'async@gmail.com',
 							password: 32123

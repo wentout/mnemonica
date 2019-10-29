@@ -646,6 +646,91 @@ console.log(asyncCalledInstance) // { data: "wat" }
 console.log(asyncCalledInstance instanceof AsyncType) // true
 ```
 
+# Asynch Chain & single await
+
+```js
+async (req, res) => {
+	
+	const {
+		email    // : 'async@check.mail',
+		password // : 'some password'
+	} = req.body
+
+	const user = await
+		new UserTypeConstructor({
+			email,
+			password
+		})
+		.UserEntityValidate('valid sign') // sync
+		.WithoutPassword() // sync, rid of password
+	
+	const storagePushResult =
+		await user.AsyncPushToStorage();
+	const storageGetResult =
+		await storagePushResult.AsyncGetStorageResponse();
+	const storageValidateResult =
+		storagePushResult.SyncValidateStorageData()
+	const requestRplyResult = 
+		await StorageValidateResult.AsyncReplyToRequest(res);
+	return requestRplyResult;
+};
+```
+
+Here we have a lot of unnecessary variables. Though we can combine our chain using `.then()` or simpy brakets `(await ...)`, but it will definetely look weird:
+
+```js
+async (req, res) => {
+	
+	const {
+		email,    // : 'async@check.mail',
+		password // : 'some password'
+	} = req.body
+
+	const user =
+		await (
+			  (
+		await (
+		await (
+			new UserTypeConstructor({
+				email,
+				password
+			})
+			.UserEntityValidate('valid sign')
+			.WithoutPassword()
+		).AsyncPushToStorage()
+		).AsyncGetStorageResponse()
+		).SyncValidateStorageData()
+		).AsyncReplyToRequest(res);
+};
+```
+
+And with using .then() of promises it will look much more badly, even more weird than callback hell.
+
+And, if so, starting from `v.0.5.8` we are able to use async chains for async constructors:
+
+```js
+async (req, res) => {
+	
+	const {
+		email,    // : 'async@check.mail',
+		password // : 'some password'
+	} = req.body
+
+	const user =
+		await new UserTypeConstructor({
+				email,
+				password
+			})
+			.UserEntityValidate('valid sign')
+			.WithoutPassword()
+			.AsyncPushToStorage()
+			.AsyncGetStorageResponse()
+			.SyncValidateStorageData()
+			.AsyncReplyToRequest(res);
+};
+```
+So now you don't have to care if this constructor is async or sync and where to put brakets and how many of them. It is enough to type constructor name after the dot and pass necessary arguments. That's it.
+
 
 # Instance Props
 
