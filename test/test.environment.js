@@ -346,20 +346,33 @@ const test = (opts) => {
 			var
 				syncWAsync1,
 				syncWAsync2;
-			// var syncWAsyncChained;
 
-			const etalon = {
+			const etalon1 = {
 				WithAdditionalSignSign: 'WithAdditionalSignSign',
 				WithoutPasswordSign: 'WithoutPasswordSign',
-				async1st: '1st',
+				async1st: '1_1st',
 				description: 'UserTypeConstructor',
 				email: 'async@gmail.com',
 				password: undefined,
 				sign: 'async sign',
-				async2nd: '2nd',
-				sync: 'is',
-				async: '3rd',
+				async2nd: '1_2nd',
+				sync: '1_is',
+				async: '1_3rd',
 			};
+			const etalon2 = {
+				WithAdditionalSignSign: 'WithAdditionalSignSign',
+				WithoutPasswordSign: 'WithoutPasswordSign',
+				async1st: '2_1st',
+				description: 'UserTypeConstructor',
+				email: 'async@gmail.com',
+				password: undefined,
+				sign: 'async sign',
+				async2nd: '2_2nd',
+				sync: '2_is',
+				async: '2_3rd',
+			};
+
+			var syncWAsyncChained;
 
 			before(function (done) {
 
@@ -378,13 +391,13 @@ const test = (opts) => {
 											.WithoutPassword()
 											.WithAdditionalSign('async sign')
 
-									).AsyncChain1st({ async1st: '1st' })
+									).AsyncChain1st({ async1st: '1_1st' })
 
 									// after promise
-								).AsyncChain2nd({ async2nd: '2nd' })
+								).AsyncChain2nd({ async2nd: '1_2nd' })
 								// sync 2 async
-							).Async2Sync2nd({ sync: 'is' })
-						).AsyncChain3rd({ async: '3rd' });
+							).Async2Sync2nd({ sync: '1_is' })
+						).AsyncChain3rd({ async: '1_3rd' });
 
 
 					// working two
@@ -397,46 +410,61 @@ const test = (opts) => {
 							.WithAdditionalSign('async sign')
 
 					).AsyncChain1st({ async1st: '1st' })
-
 						// after promise
 						.then(async function (instance) {
-							return await instance.AsyncChain1st({ async1st: '1st' });
+							return await instance.AsyncChain1st({ async1st: '2_1st' });
 						})
 						.then(async function (instance) {
-							return await instance.AsyncChain2nd({ async2nd: '2nd' });
+							return await instance.AsyncChain2nd({ async2nd: '2_2nd' });
 						})
 						.then(async function (instance) {
 							// sync 2 async
-							return await instance.Async2Sync2nd({ sync: 'is' });
+							return await instance.Async2Sync2nd({ sync: '2_is' });
 						})
 						.then(async function (instance) {
-							return await instance.AsyncChain3rd({ async: '3rd' });
+							return await instance.AsyncChain3rd({ async: '2_3rd' });
 						});
-					
-					// debugger;
-					// syncWAsyncChained = await /* (await (await */ 
-					// 	(new UserTypeConstructor({
-					// 		email: 'async@gmail.com', password: 32123
-					// 	})
-					// 	.WithoutPassword()
-					// 	.WithAdditionalSign('async sign')
-					// 	.AsyncChain1st({ async1st: '1st' })
-					// 	// after promise
-					// 	.AsyncChain2nd({ async2nd: '2nd' })
-					// 	.Async2Sync2nd({ sync: 'is' })
-					// 	.AsyncChain3rd({ async: '3rd' }));
 
+					// debugger;
+					syncWAsyncChained = await /* (await (await */
+						new UserTypeConstructor({
+							email: 'async@gmail.com',
+							password: 32123
+						})
+							.WithoutPassword()
+							.WithAdditionalSign('async sign')
+							.AsyncChain1st({ async1st: '1st' })
+							// after promise
+							.AsyncChain2nd({ async2nd: '2nd' })
+							.Async2Sync2nd({ sync: 'is' })
+							.AsyncChain3rd({ async: '3rd' });
+
+					// debugger;
 					done();
-					
+
 				})();
 
 			});
 			it('chain should work', () => {
 
-				assert.deepEqual(etalon, syncWAsync1.extract());
-				assert.deepEqual(etalon, syncWAsync2.extract());
+				assert.deepEqual(etalon1, syncWAsync1.extract());
+				assert.deepEqual(etalon2, syncWAsync2.extract());
+
 				// debugger;
-				// assert.deepEqual(etalon, syncWAsyncChained.extract());
+				const etalon3 = {
+					WithAdditionalSignSign: 'WithAdditionalSignSign',
+					WithoutPasswordSign: 'WithoutPasswordSign',
+					async1st: '1st',
+					description: 'UserTypeConstructor',
+					email: 'async@gmail.com',
+					password: undefined,
+					sign: 'async sign',
+					async2nd: '2nd',
+					sync: 'is',
+					async: '3rd',
+				};
+
+				assert.deepEqual(etalon3, syncWAsyncChained.extract());
 			});
 		});
 

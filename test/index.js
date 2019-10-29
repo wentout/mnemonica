@@ -6,6 +6,7 @@ const { inspect } = require('util');
 
 const hooksTest = true;
 const uncaughtExceptionTest = true;
+const asyncConstructionTest = true;
 
 const {
 	define,
@@ -735,58 +736,59 @@ describe('Main Test', () => {
 			userWPWithAdditionalSign
 		});
 
+		if (asyncConstructionTest) {
+			describe('Async Constructors Test', () => {
+				var asyncInstance,
+					asyncInstancePromise,
+					asyncSub,
+					nestedAsyncInstance,
+					nestedAsyncSub;
 
-		describe('Async Constructors Test', () => {
-			var asyncInstance,
-				asyncInstancePromise,
-				asyncSub,
-				nestedAsyncInstance,
-				nestedAsyncSub;
+				before(function (done) {
+					const wait = async function () {
+						asyncInstancePromise = new AsyncType.call(process, 'tada');
+						asyncInstance = await asyncInstancePromise;
+						asyncSub = asyncInstance.SubOfAsync('some');
+						nestedAsyncInstance = await new asyncSub
+							.NestedAsyncType('nested');
+						nestedAsyncSub = nestedAsyncInstance
+							.SubOfNestedAsync('done');
+						done();
+					};
+					wait();
+				});
 
-			before(function (done) {
-				const wait = async function () {
-					asyncInstancePromise = new AsyncType.call(process, 'tada');
-					asyncInstance = await asyncInstancePromise;
-					asyncSub = asyncInstance.SubOfAsync('some');
-					nestedAsyncInstance = await new asyncSub
-						.NestedAsyncType('nested');
-					nestedAsyncSub = nestedAsyncInstance
-						.SubOfNestedAsync('done');
-					done();
-				};
-				wait();
+				it('should be able to construct async', () => {
+					expect(asyncInstance.data).equal('tada');
+				});
+
+				it('should be able to construct nested async', () => {
+					expect(asyncInstancePromise).instanceof(Promise);
+					expect(asyncInstancePromise).instanceof(AsyncType);
+					expect(asyncInstance).instanceof(AsyncType);
+					expect(typeof asyncInstance.on === 'function').is.true;
+					expect(nestedAsyncInstance).instanceof(AsyncType);
+					expect(nestedAsyncInstance).instanceof(NestedAsyncType);
+					expect(nestedAsyncSub).instanceof(AsyncType);
+					expect(nestedAsyncSub).instanceof(SubOfAsync);
+					expect(nestedAsyncSub).instanceof(NestedAsyncType);
+					expect(nestedAsyncSub).instanceof(SubOfNestedAsync);
+					expect(SubOfNestedAsyncPostHookData
+						.existentInstance)
+						.equal(nestedAsyncInstance);
+
+					expect(SubOfNestedAsyncPostHookData
+						.inheritedInstance)
+						.equal(nestedAsyncSub);
+
+					expect(nestedAsyncInstance.data).equal('nested');
+					expect(nestedAsyncInstance.description)
+						.equal('nested async instance');
+				});
+
 			});
+		}
 
-			it('should be able to construct async', () => {
-				expect(asyncInstance.data).equal('tada');
-			});
-
-			it('should be able to construct nested async', () => {
-				expect(asyncInstancePromise).instanceof(Promise);
-				expect(asyncInstancePromise).instanceof(AsyncType);
-				expect(asyncInstance).instanceof(AsyncType);
-				expect(typeof asyncInstance.on === 'function').is.true;
-				expect(nestedAsyncInstance).instanceof(AsyncType);
-				expect(nestedAsyncInstance).instanceof(NestedAsyncType);
-				expect(nestedAsyncSub).instanceof(AsyncType);
-				expect(nestedAsyncSub).instanceof(SubOfAsync);
-				expect(nestedAsyncSub).instanceof(NestedAsyncType);
-				expect(nestedAsyncSub).instanceof(SubOfNestedAsync);
-				expect(SubOfNestedAsyncPostHookData
-					.existentInstance)
-					.equal(nestedAsyncInstance);
-
-				expect(SubOfNestedAsyncPostHookData
-					.inheritedInstance)
-					.equal(nestedAsyncSub);
-
-				expect(nestedAsyncInstance.data).equal('nested');
-				expect(nestedAsyncInstance.description)
-					.equal('nested async instance');
-			});
-
-		});
-		
 		if (uncaughtExceptionTest) {
 			describe('uncaughtException test', () => {
 				it('should throw proper error', (passedCb) => {
