@@ -15,6 +15,7 @@ const {
 	createTypesCollection,
 	utils: {
 		toJSON,
+		merge
 	}
 } = require('..');
 
@@ -41,6 +42,7 @@ const test = (opts) => {
 		derived,
 		rounded,
 		chained2,
+		merged,
 	} = opts;
 
 	describe('Check Environment', () => {
@@ -327,6 +329,76 @@ const test = (opts) => {
 				});
 			}
 		});
+
+		describe('merge tests', () => {
+			const mergedSample = {
+				OverMoreSign: 'OverMoreSign',
+				WithAdditionalSignSign: 'WithAdditionalSignSign',
+				WithoutPasswordSign: 'WithoutPasswordSign',
+				description: 'UserType',
+				email: 'went.out@gmail.com',
+				password: 321,
+				sign: 'userWithoutPassword_2.WithAdditionalSign',
+				str: 're-defined OverMore str',
+			};
+			it('merge works correctly', () => {
+				assert.deepEqual(merged.extract(), mergedSample);
+			});
+
+			describe('wrong A 1', () => {
+				try {
+					merge(null, userTC);
+				} catch (error) {
+					it('should respect the rules', () => {
+						expect(error).instanceOf(Error);
+					});
+					it('thrown error instanceof WRONG_ARGUMENTS_USED', () => {
+						expect(error).instanceOf(errors.WRONG_ARGUMENTS_USED);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'wrong arguments : should use proper invocation : A should be an object');
+					});
+				}
+			});
+			describe('wrong A 2', () => {
+				debugger;
+				const Cstr = function(){};
+				Cstr.prototype.clone = Object.create({});
+				const d = new Cstr();
+				try {
+					merge(d, userTC);
+				} catch (error) {
+					it('should respect the rules', () => {
+						expect(error).instanceOf(Error);
+					});
+					it('thrown error instanceof WRONG_ARGUMENTS_USED', () => {
+						expect(error).instanceOf(errors.WRONG_ARGUMENTS_USED);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'wrong arguments : should use proper invocation : A should have A.extract()');
+					});
+				}
+			});
+			describe('wrong B', () => {
+				try {
+					merge(userTC, null);
+				} catch (error) {
+					it('should respect the rules', () => {
+						expect(error).instanceOf(Error);
+					});
+					it('thrown error instanceof WRONG_ARGUMENTS_USED', () => {
+						expect(error).instanceOf(errors.WRONG_ARGUMENTS_USED);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'wrong arguments : should use proper invocation : B should be an object');
+					});
+				}
+			});
+		});
+
 		describe('chain repeat check', () => {
 			const keys1_1 = Object.keys(userTC);
 			const keys1_2 = Object.keys(chained);

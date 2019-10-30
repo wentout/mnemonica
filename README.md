@@ -497,7 +497,7 @@ namespace.invokeHook('postCreation', // ...
 
 As we can see, type hooks are closest one to the type itself. For sure, there can be situations, when you have to register some common hooks, but not for `typecollection` or `namespace`. Assume you have some friendly types, might be from different collections, and you have to register the same hooks definitions for them. And the plase where you wish to do this is the file, other than files you defined that types. There you can use:
 
-# .lookup
+# .lookup('TypeName')
 
 ```js
 const {
@@ -537,7 +537,7 @@ SomeExistentType.define('SomeExistentNestedType', () => {
 
 ```
 
-# .parent("TypeName")
+# .parent('TypeName')
 
 Let assume our `instance` has indeed deep prototype chain:
 
@@ -563,7 +563,6 @@ const parent = instance
 	.parent( 'DeepParentName' );
 
 ```
-
 
 
 # SomeType.call ( this_obj, ...args)
@@ -596,6 +595,17 @@ const root = document.getElementById("root");
 usingReactAsProto.render("just works", root);
 
 ```
+
+# mnemonica.utils.merge(A, B)
+
+It will get `A.clone`, then assign all its enumerable props to it and then put `B` as its prototype, lets look for pseudocode:
+
+```js
+const aa = A.clone
+Object.assign(aa, aa.extract())
+Object.setPrototypeOf(aa, B);
+```
+
 
 # Asynchronous Constructors
 First of all you should understand what you wish to are doing!
@@ -648,6 +658,8 @@ console.log(asyncCalledInstance instanceof AsyncType) // true
 
 # Asynch Chain & single await
 
+Let for example suppose you need the following code:
+
 ```js
 async (req, res) => {
 	
@@ -676,7 +688,7 @@ async (req, res) => {
 };
 ```
 
-Here we have a lot of unnecessary variables. Though we can combine our chain using `.then()` or simpy brakets `(await ...)`, but it will definetely look weird:
+Here we have a lot of unnecessary variables. Though we can combine our chain using `.then()` or simpy brakets `(await ...)`, but it will definetely looks weird:
 
 ```js
 async (req, res) => {
@@ -704,7 +716,7 @@ async (req, res) => {
 };
 ```
 
-And with using .then() of promises it will look much more badly, even more weird than callback hell.
+And with using `.then()` of general promises it will look much more badly, even over than "callback hell".
 
 And, if so, starting from `v.0.5.8` we are able to use async chains for async constructors:
 

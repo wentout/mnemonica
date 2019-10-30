@@ -21,6 +21,7 @@ const {
 		extract,
 		pick,
 		collectConstructors,
+		merge
 	},
 	errors,
 } = require('..');
@@ -413,6 +414,9 @@ describe('Main Test', () => {
 	const chained2 = new UserTypeConstructor({ email: 'someother@gmail.com', password: 32123 })
 		.WithoutPassword()
 		.WithAdditionalSign(sign2add);
+		
+	const merged = merge(user, overMore);
+	debugger;
 
 	require('./test.environment')({
 		userTC,
@@ -434,6 +438,7 @@ describe('Main Test', () => {
 		derived,
 		rounded,
 		chained2,
+		merged
 	});
 
 	if (hooksTest) {
