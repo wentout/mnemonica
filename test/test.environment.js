@@ -10,8 +10,10 @@ const {
 	SymbolDefaultNamespace,
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
+	SymbolGaia,
 	MNEMONICA,
 	MNEMOSYNE,
+	GAIA,
 	createTypesCollection,
 	utils: {
 		toJSON,
@@ -52,7 +54,10 @@ const test = (opts) => {
 		} = require('..');
 
 		describe('core env tests', () => {
-
+			
+			it('Symbol Gaia', () => {
+				expect(userTC[SymbolGaia][MNEMONICA] === GAIA).is.true;
+			});
 			it('.SubTypes definition is correct Regular', () => {
 				expect(userTC.hasOwnProperty('WithoutPassword')).is.false;
 			});

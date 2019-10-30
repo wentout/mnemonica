@@ -5,6 +5,7 @@ const { assert, expect } = require('chai');
 const { inspect } = require('util');
 
 const hooksTest = true;
+const parseTest = true;
 const uncaughtExceptionTest = true;
 const asyncConstructionTest = true;
 
@@ -14,8 +15,10 @@ const {
 	createNamespace,
 	createTypesCollection,
 	MNEMONICA,
+	URANUS,
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
+	SymbolGaia,
 	defaultNamespace,
 	utils: {
 		extract,
@@ -404,8 +407,8 @@ describe('Main Test', () => {
 
 	const evenMoreArgs = evenMore.__args__;
 
-	const evenMoreFork = new evenMore.fork(strFork);
-	const evenMoreForkFork = new evenMoreFork.fork(strForkOfFork);
+	const evenMoreFork = evenMore.fork(strFork);
+	const evenMoreForkFork = evenMoreFork.fork(strForkOfFork);
 
 	const chained = new UserTypeConstructor({ email: 'someother@gmail.com', password: 32123 });
 	const derived = new chained.WithoutPassword();
@@ -677,15 +680,17 @@ describe('Main Test', () => {
 			}
 
 		});
-
-		require('./test.parse')({
-			user,
-			userPL1,
-			userPL2,
-			userTC,
-			evenMore,
-			EmptyType,
-		});
+		
+		if (parseTest) {
+			require('./test.parse')({
+				user,
+				userPL1,
+				userPL2,
+				userTC,
+				evenMore,
+				EmptyType,
+			});
+		}
 
 		require('./test.nested')({
 			user,
@@ -747,7 +752,9 @@ describe('Main Test', () => {
 					asyncInstancePromise,
 					asyncSub,
 					nestedAsyncInstance,
-					nestedAsyncSub;
+					nestedAsyncSub,
+					asyncInstanceClone,
+					asyncInstanceFork;
 
 				before(function (done) {
 					const wait = async function () {
@@ -758,6 +765,9 @@ describe('Main Test', () => {
 							.NestedAsyncType('nested');
 						nestedAsyncSub = nestedAsyncInstance
 							.SubOfNestedAsync('done');
+							
+						asyncInstanceClone = await asyncInstance.clone;
+						asyncInstanceFork = await asyncInstance.fork('dada');
 						done();
 					};
 					wait();
@@ -765,13 +775,21 @@ describe('Main Test', () => {
 
 				it('should be able to construct async', () => {
 					expect(asyncInstance.data).equal('tada');
+					expect(asyncInstanceClone.data).equal('tada');
+					expect(asyncInstanceFork.data).equal('dada');
 				});
 
 				it('should be able to construct nested async', () => {
 					expect(asyncInstancePromise).instanceof(Promise);
 					expect(asyncInstancePromise).instanceof(AsyncType);
 					expect(asyncInstance).instanceof(AsyncType);
+					expect(asyncInstanceClone).instanceof(AsyncType);
+					expect(asyncInstanceFork).instanceof(AsyncType);
+					expect(asyncInstanceFork).instanceof(AsyncType);
 					expect(typeof asyncInstance.on === 'function').is.true;
+					expect(Object.getPrototypeOf(asyncInstance[SymbolGaia]) === process).is.true;
+					debugger;
+					expect(asyncInstance[SymbolGaia][MNEMONICA] === URANUS).is.true;
 					expect(nestedAsyncInstance).instanceof(AsyncType);
 					expect(nestedAsyncInstance).instanceof(NestedAsyncType);
 					expect(nestedAsyncSub).instanceof(AsyncType);

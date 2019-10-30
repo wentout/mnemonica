@@ -60,7 +60,8 @@ const test = (opts) => {
 					.instanceof(Error);
 			});
 		}
-
+		
+		debugger;
 		const parsedUser = parse(user);
 		const parsedUserTC = parse(userTC);
 

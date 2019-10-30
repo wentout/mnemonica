@@ -82,7 +82,7 @@ const test = (opts) => {
 			};
 			const userArgs = user.__args__;
 
-			const userFork = new user.fork(forkData);
+			const userFork = user.fork(forkData);
 
 			const userPP =
 				Object.getPrototypeOf(Object.getPrototypeOf(user));
@@ -107,7 +107,7 @@ const test = (opts) => {
 				password: 'fork regular style password'
 			};
 			const userTCArgs = userTC.__args__;
-			const userTCFork = new userTC.fork(forkData);
+			const userTCFork = userTC.fork(forkData);
 
 			const userTCPP =
 				Object.getPrototypeOf(Object.getPrototypeOf(userTC));
@@ -127,7 +127,7 @@ const test = (opts) => {
 
 		it('should have proper nested .fork() old style', () => {
 
-			const userPL1Fork = new userPL1.fork();
+			const userPL1Fork = userPL1.fork();
 
 			const userPL1PP =
 				Object.getPrototypeOf(Object.getPrototypeOf(userPL1));

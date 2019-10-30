@@ -596,17 +596,6 @@ usingReactAsProto.render("just works", root);
 
 ```
 
-# mnemonica.utils.merge(A, B)
-
-It will get `A.clone`, then assign all its enumerable props to it and then put `B` as its prototype, lets look for pseudocode:
-
-```js
-const aa = A.clone
-Object.assign(aa, aa.extract())
-Object.setPrototypeOf(aa, B);
-```
-
-
 # Asynchronous Constructors
 First of all you should understand what you wish to are doing!
 Then you should understand what you wish. And only after doing so you might use this technic:
@@ -767,12 +756,30 @@ Collection of types where `__type__` was defined.
 ## `.__namespace__`
 Namespace where `__collection__` was defined.
 
-## `.clone`
+
+# `instance.clone`
 Returns cloned instance, with the following condition `instance !== instance.clone`. Cloning includes all the inheritance, with hooks invocations and so on. Therfore cloned instance is not the same as instance, but both made from the same `.__parent__` instance.
 
-## **`.fork( some, new, arguments )`**
+_Note_: if you are cloning instance, which has `async Constructor`, you should `await` it;
+
+
+# **`instance.fork( some, new, arguments )`**
 Returns forked instance. Behaviour is same as for cloned instance, both made from the same `.__parent__`. But this is a method, not the property, so you can apply another arguments to the constructor.
 
+_Note_: if you are forking instance, which has `async Constructor`, you should `await` it;
+
+# **`instance.fullFork( some, new, arguments )`**
+
+# mnemonica.utils.merge(A, B)
+
+Let assume you nedd [Directed Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph). Then you need to construct it somehow. Use `merge` utility, which, when called will get `A.extract()` and then put `B` as extracted object prototype. It will look like this written in pseudo-js-code:
+
+```js
+module.exports = (A,B) => {
+	const aa = A.rechain(B);
+	return aa;
+};
+```
 
 ---
 # finally
