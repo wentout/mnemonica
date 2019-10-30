@@ -24,7 +24,8 @@ const {
 		extract,
 		pick,
 		collectConstructors,
-		merge
+		merge,
+		parse
 	},
 	errors,
 } = require('..');
@@ -347,7 +348,9 @@ describe('Main Test', () => {
 		EvenMoreSign: 'EvenMoreSign'
 	};
 
-	WithAdditionalSign.define('MoreOver.OverMore', function () {
+	WithAdditionalSign.define(`
+		MoreOver . OverMore
+	`, function () {
 		const EvenMore = function (str) {
 			this.str = str || 're-defined EvenMore str';
 		};
@@ -417,7 +420,7 @@ describe('Main Test', () => {
 	const chained2 = new UserTypeConstructor({ email: 'someother@gmail.com', password: 32123 })
 		.WithoutPassword()
 		.WithAdditionalSign(sign2add);
-		
+
 	const merged = merge(user, overMore);
 	debugger;
 
@@ -680,7 +683,7 @@ describe('Main Test', () => {
 			}
 
 		});
-		
+
 		if (parseTest) {
 			require('./test.parse')({
 				user,
@@ -765,7 +768,7 @@ describe('Main Test', () => {
 							.NestedAsyncType('nested');
 						nestedAsyncSub = nestedAsyncInstance
 							.SubOfNestedAsync('done');
-							
+
 						asyncInstanceClone = await asyncInstance.clone;
 						asyncInstanceFork = await asyncInstance.fork('dada');
 						done();
@@ -788,7 +791,6 @@ describe('Main Test', () => {
 					expect(asyncInstanceFork).instanceof(AsyncType);
 					expect(typeof asyncInstance.on === 'function').is.true;
 					expect(Object.getPrototypeOf(asyncInstance[SymbolGaia]) === process).is.true;
-					debugger;
 					expect(asyncInstance[SymbolGaia][MNEMONICA] === URANUS).is.true;
 					expect(nestedAsyncInstance).instanceof(AsyncType);
 					expect(nestedAsyncInstance).instanceof(NestedAsyncType);
@@ -807,6 +809,12 @@ describe('Main Test', () => {
 					expect(nestedAsyncInstance.data).equal('nested');
 					expect(nestedAsyncInstance.description)
 						.equal('nested async instance');
+				});
+
+				it('parse shouls work with async .call\'ed instances', () => {
+					const etalon = ['name', 'props', 'self', 'proto', 'joint', 'parent', 'gaia'];
+					const keys = Object.keys(parse(asyncInstance));
+					assert.deepEqual(keys, etalon);
 				});
 
 			});
