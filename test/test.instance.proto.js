@@ -16,6 +16,7 @@ const test = (opts) => {
 		userTCForkCall,
 		userTCForkApply,
 		userTCForkBind,
+		utcfcwp,
 		FORK_CALL_DATA,
 		UserType,
 		evenMore,
@@ -220,7 +221,7 @@ const test = (opts) => {
 			assert.deepInclude(userTCForkCall, FORK_CALL_DATA);
 			assert.deepInclude(userTCForkApply, FORK_CALL_DATA);
 			assert.deepInclude(userTCForkBind, FORK_CALL_DATA);
-			
+			expect(utcfcwp.password).equal(undefined);
 			debugger;
 			const EvenMore = OverMore.EvenMore;
 			expect(overMore).instanceof(OverMore);
