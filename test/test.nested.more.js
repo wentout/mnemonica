@@ -140,6 +140,9 @@ const test = (opts) => {
 				.map((name, idx) => {
 					assert.include(constructorsSequence, name);
 					var iof = false;
+					if (name === 'Gaia') {
+						debugger;
+					}
 
 					if (name === 'Object') {
 						iof = evenMore instanceof Object;

@@ -5,6 +5,7 @@ const { assert, expect } = require('chai');
 const { inspect } = require('util');
 
 const hooksTest = true;
+const parseTest = true;
 const uncaughtExceptionTest = true;
 const asyncConstructionTest = true;
 
@@ -14,13 +15,17 @@ const {
 	createNamespace,
 	createTypesCollection,
 	MNEMONICA,
+	URANUS,
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
+	SymbolGaia,
 	defaultNamespace,
 	utils: {
 		extract,
 		pick,
 		collectConstructors,
+		merge,
+		parse
 	},
 	errors,
 } = require('..');
@@ -179,7 +184,7 @@ const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType', function (check) {
 	Object.assign(this, { check });
 });
-const anotherCollectionInstance = AnotherCollectionType.call(process, 'check');
+const anotherCollectionInstance = AnotherCollectionType.apply(process, ['check']);
 
 const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionType', function () {
 	this.self = this;
@@ -343,7 +348,9 @@ describe('Main Test', () => {
 		EvenMoreSign: 'EvenMoreSign'
 	};
 
-	WithAdditionalSign.define('MoreOver.OverMore', function () {
+	WithAdditionalSign.define(`
+		MoreOver . OverMore
+	`, function () {
 		const EvenMore = function (str) {
 			this.str = str || 're-defined EvenMore str';
 		};
@@ -377,6 +384,15 @@ describe('Main Test', () => {
 
 	// const userTC = new types.UserTypeConstructor(USER_DATA);
 	const userTC = new UserTypeConstructor(USER_DATA);
+	const FORK_CALL_DATA = {
+		email: 'forkmail@gmail.com',
+		password : '54321'
+	};
+	const userTCForkCall = userTC.fork.call(user, FORK_CALL_DATA);
+	const userTCForkApply = userTC.fork.apply(user, [
+		FORK_CALL_DATA
+	]);
+	const userTCForkBind = userTC.fork.bind(user)(FORK_CALL_DATA);
 
 	const userWithoutPassword = new userTC.WithoutPassword();
 	const userWithoutPassword_2 = new userTC.WithoutPassword();
@@ -394,7 +410,7 @@ describe('Main Test', () => {
 	const filledEmptySign = 'FilledEmptySign';
 	const emptySub = empty.EmptySubType(filledEmptySign);
 
-
+	const evenMoreForkCall = evenMore.fork.call(user, USER_DATA);
 
 	const strFork = 'fork of evenMore';
 	const strForkOfFork = 'fork of fork of evenMore';
@@ -403,8 +419,8 @@ describe('Main Test', () => {
 
 	const evenMoreArgs = evenMore.__args__;
 
-	const evenMoreFork = new evenMore.fork(strFork);
-	const evenMoreForkFork = new evenMoreFork.fork(strForkOfFork);
+	const evenMoreFork = evenMore.fork(strFork);
+	const evenMoreForkFork = evenMoreFork.fork(strForkOfFork);
 
 	const chained = new UserTypeConstructor({ email: 'someother@gmail.com', password: 32123 });
 	const derived = new chained.WithoutPassword();
@@ -413,6 +429,8 @@ describe('Main Test', () => {
 	const chained2 = new UserTypeConstructor({ email: 'someother@gmail.com', password: 32123 })
 		.WithoutPassword()
 		.WithAdditionalSign(sign2add);
+
+	const merged = merge(user, overMore, FORK_CALL_DATA);
 
 	require('./test.environment')({
 		userTC,
@@ -434,6 +452,7 @@ describe('Main Test', () => {
 		derived,
 		rounded,
 		chained2,
+		merged
 	});
 
 	if (hooksTest) {
@@ -673,14 +692,16 @@ describe('Main Test', () => {
 
 		});
 
-		require('./test.parse')({
-			user,
-			userPL1,
-			userPL2,
-			userTC,
-			evenMore,
-			EmptyType,
-		});
+		if (parseTest) {
+			require('./test.parse')({
+				user,
+				userPL1,
+				userPL2,
+				userTC,
+				evenMore,
+				EmptyType,
+			});
+		}
 
 		require('./test.nested')({
 			user,
@@ -718,6 +739,10 @@ describe('Main Test', () => {
 			user,
 			userPL1,
 			userTC,
+			userTCForkCall,
+			userTCForkApply,
+			userTCForkBind,
+			FORK_CALL_DATA,
 			UserType,
 			evenMore,
 			USER_DATA,
@@ -732,6 +757,7 @@ describe('Main Test', () => {
 			overMoreFork,
 			evenMoreFork,
 			evenMoreForkFork,
+			evenMoreForkCall,
 			userWithoutPassword,
 			userWPWithAdditionalSign
 		});
@@ -742,7 +768,9 @@ describe('Main Test', () => {
 					asyncInstancePromise,
 					asyncSub,
 					nestedAsyncInstance,
-					nestedAsyncSub;
+					nestedAsyncSub,
+					asyncInstanceClone,
+					asyncInstanceFork;
 
 				before(function (done) {
 					const wait = async function () {
@@ -753,6 +781,9 @@ describe('Main Test', () => {
 							.NestedAsyncType('nested');
 						nestedAsyncSub = nestedAsyncInstance
 							.SubOfNestedAsync('done');
+
+						asyncInstanceClone = await asyncInstance.clone;
+						asyncInstanceFork = await asyncInstance.fork('dada');
 						done();
 					};
 					wait();
@@ -760,13 +791,20 @@ describe('Main Test', () => {
 
 				it('should be able to construct async', () => {
 					expect(asyncInstance.data).equal('tada');
+					expect(asyncInstanceClone.data).equal('tada');
+					expect(asyncInstanceFork.data).equal('dada');
 				});
 
 				it('should be able to construct nested async', () => {
 					expect(asyncInstancePromise).instanceof(Promise);
 					expect(asyncInstancePromise).instanceof(AsyncType);
 					expect(asyncInstance).instanceof(AsyncType);
+					expect(asyncInstanceClone).instanceof(AsyncType);
+					expect(asyncInstanceFork).instanceof(AsyncType);
+					expect(asyncInstanceFork).instanceof(AsyncType);
 					expect(typeof asyncInstance.on === 'function').is.true;
+					expect(Object.getPrototypeOf(asyncInstance[SymbolGaia]) === process).is.true;
+					expect(asyncInstance[SymbolGaia][MNEMONICA] === URANUS).is.true;
 					expect(nestedAsyncInstance).instanceof(AsyncType);
 					expect(nestedAsyncInstance).instanceof(NestedAsyncType);
 					expect(nestedAsyncSub).instanceof(AsyncType);
@@ -784,6 +822,12 @@ describe('Main Test', () => {
 					expect(nestedAsyncInstance.data).equal('nested');
 					expect(nestedAsyncInstance.description)
 						.equal('nested async instance');
+				});
+
+				it('parse shouls work with async .call\'ed instances', () => {
+					const etalon = ['name', 'props', 'self', 'proto', 'joint', 'parent', 'gaia'];
+					const keys = Object.keys(parse(asyncInstance));
+					assert.deepEqual(keys, etalon);
 				});
 
 			});

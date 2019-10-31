@@ -10,11 +10,14 @@ const {
 	SymbolDefaultNamespace,
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
+	SymbolGaia,
 	MNEMONICA,
 	MNEMOSYNE,
+	GAIA,
 	createTypesCollection,
 	utils: {
 		toJSON,
+		merge
 	}
 } = require('..');
 
@@ -41,6 +44,7 @@ const test = (opts) => {
 		derived,
 		rounded,
 		chained2,
+		merged,
 	} = opts;
 
 	describe('Check Environment', () => {
@@ -51,6 +55,9 @@ const test = (opts) => {
 
 		describe('core env tests', () => {
 
+			it('Symbol Gaia', () => {
+				expect(userTC[SymbolGaia][MNEMONICA] === GAIA).is.true;
+			});
 			it('.SubTypes definition is correct Regular', () => {
 				expect(userTC.hasOwnProperty('WithoutPassword')).is.false;
 			});
@@ -327,6 +334,75 @@ const test = (opts) => {
 				});
 			}
 		});
+
+		describe('merge tests', () => {
+			const mergedSample = {
+				OverMoreSign: 'OverMoreSign',
+				WithAdditionalSignSign: 'WithAdditionalSignSign',
+				WithoutPasswordSign: 'WithoutPasswordSign',
+				description: 'UserType',
+				email: 'forkmail@gmail.com',
+				password: '54321',
+				sign: 'userWithoutPassword_2.WithAdditionalSign',
+				str: 're-defined OverMore str',
+			};
+			it('merge works correctly', () => {
+				assert.deepEqual(merged.extract(), mergedSample);
+			});
+
+			describe('wrong A 1', () => {
+				try {
+					merge(null, userTC);
+				} catch (error) {
+					it('should respect the rules', () => {
+						expect(error).instanceOf(Error);
+					});
+					it('thrown error instanceof WRONG_ARGUMENTS_USED', () => {
+						expect(error).instanceOf(errors.WRONG_ARGUMENTS_USED);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'wrong arguments : should use proper invocation : A should be an object');
+					});
+				}
+			});
+			describe('wrong A 2', () => {
+				const Cstr = function () { };
+				Cstr.prototype.clone = Object.create({});
+				const d = new Cstr();
+				try {
+					merge(d, userTC);
+				} catch (error) {
+					it('should respect the rules', () => {
+						expect(error).instanceOf(Error);
+					});
+					it('thrown error instanceof WRONG_ARGUMENTS_USED', () => {
+						expect(error).instanceOf(errors.WRONG_ARGUMENTS_USED);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'wrong arguments : should use proper invocation : A should have A.fork()');
+					});
+				}
+			});
+			describe('wrong B', () => {
+				try {
+					merge(userTC, null);
+				} catch (error) {
+					it('should respect the rules', () => {
+						expect(error).instanceOf(Error);
+					});
+					it('thrown error instanceof WRONG_ARGUMENTS_USED', () => {
+						expect(error).instanceOf(errors.WRONG_ARGUMENTS_USED);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'wrong arguments : should use proper invocation : B should be an object');
+					});
+				}
+			});
+		});
+
 		describe('chain repeat check', () => {
 			const keys1_1 = Object.keys(userTC);
 			const keys1_2 = Object.keys(chained);
@@ -378,6 +454,7 @@ const test = (opts) => {
 
 				(async () => {
 
+					// debugger;
 					// working one
 					syncWAsync1 =
 						await (
@@ -399,7 +476,7 @@ const test = (opts) => {
 							).Async2Sync2nd({ sync: '1_is' })
 						).AsyncChain3rd({ async: '1_3rd' });
 
-
+					// debugger;
 					// working two
 					syncWAsync2 = await (
 

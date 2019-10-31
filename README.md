@@ -497,7 +497,7 @@ namespace.invokeHook('postCreation', // ...
 
 As we can see, type hooks are closest one to the type itself. For sure, there can be situations, when you have to register some common hooks, but not for `typecollection` or `namespace`. Assume you have some friendly types, might be from different collections, and you have to register the same hooks definitions for them. And the plase where you wish to do this is the file, other than files you defined that types. There you can use:
 
-# .lookup
+# .lookup('TypeName')
 
 ```js
 const {
@@ -537,7 +537,7 @@ SomeExistentType.define('SomeExistentNestedType', () => {
 
 ```
 
-# .parent("TypeName")
+# .parent('TypeName')
 
 Let assume our `instance` has indeed deep prototype chain:
 
@@ -563,7 +563,6 @@ const parent = instance
 	.parent( 'DeepParentName' );
 
 ```
-
 
 
 # SomeType.call ( this_obj, ...args)
@@ -648,6 +647,8 @@ console.log(asyncCalledInstance instanceof AsyncType) // true
 
 # Asynch Chain & single await
 
+Let for example suppose you need the following code:
+
 ```js
 async (req, res) => {
 	
@@ -676,7 +677,7 @@ async (req, res) => {
 };
 ```
 
-Here we have a lot of unnecessary variables. Though we can combine our chain using `.then()` or simpy brakets `(await ...)`, but it will definetely look weird:
+Here we have a lot of unnecessary variables. Though we can combine our chain using `.then()` or simpy brakets `(await ...)`, but it will definetely looks weird:
 
 ```js
 async (req, res) => {
@@ -704,7 +705,7 @@ async (req, res) => {
 };
 ```
 
-And with using .then() of promises it will look much more badly, even more weird than callback hell.
+And with using `.then()` of general promises it will look much more badly, even over than "callback hell".
 
 And, if so, starting from `v.0.5.8` we are able to use async chains for async constructors:
 
@@ -755,12 +756,35 @@ Collection of types where `__type__` was defined.
 ## `.__namespace__`
 Namespace where `__collection__` was defined.
 
-## `.clone`
+
+# `instance.clone`
 Returns cloned instance, with the following condition `instance !== instance.clone`. Cloning includes all the inheritance, with hooks invocations and so on. Therfore cloned instance is not the same as instance, but both made from the same `.__parent__` instance.
 
-## **`.fork( some, new, arguments )`**
+_Note_: if you are cloning instance, which has `async Constructor`, you should `await` it;
+
+
+# **`instance.fork( some, new, arguments )`**
 Returns forked instance. Behaviour is same as for cloned instance, both made from the same `.__parent__`. But this is a method, not the property, so you can apply another arguments to the constructor.
 
+_Note_: if you are forking instance, which has `async Constructor`, you should `await` it;
+
+# **`instance.fork.call( thisArg, ...arguments )`**
+# **`instance.fork.apply( thisArg, [arguments] )`**
+Let assume you nedd [Directed Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph). Then you have to be able to construct it somehow. Starting from `v0.6.1` you can use `fork.call` or `fork.apply` for doing this:
+
+```js
+// the following equals
+A.fork.call(B, ...args);
+A.fork.apply(B, [args]);
+A.fork.bind(B)(...args);
+```
+_Note_: if you are `fork.clone`'ing instance, which has `async Constructor`, you should `await` it;
+
+
+# mnemonica.utils.merge(A, B, ...args)
+The same as `fork.call` but providing instsnces directly.
+
+_Note_: if you are `merge`'ing instances, where A.constructor is `async Constructor`, you should `await` it;
 
 ---
 # finally
