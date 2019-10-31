@@ -768,18 +768,23 @@ Returns forked instance. Behaviour is same as for cloned instance, both made fro
 
 _Note_: if you are forking instance, which has `async Constructor`, you should `await` it;
 
-# **`instance.fullFork( some, new, arguments )`**
-
-# mnemonica.utils.merge(A, B)
-
-Let assume you nedd [Directed Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph). Then you need to construct it somehow. Use `merge` utility, which, when called will get `A.extract()` and then put `B` as extracted object prototype. It will look like this written in pseudo-js-code:
+# **`instance.fork.call( thisArg, ...arguments )`**
+# **`instance.fork.apply( thisArg, [arguments] )`**
+Let assume you nedd [Directed Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph). Then you have to be able to construct it somehow. Starting from `v0.6.1` you can use `fork.call` or `fork.apply` for doing this:
 
 ```js
-module.exports = (A,B) => {
-	const aa = A.rechain(B);
-	return aa;
-};
+// the following equals
+A.fork.call(B, ...args);
+A.fork.apply(B, [args]);
+A.fork.bind(B)(...args);
 ```
+_Note_: if you are `fork.clone`'ing instance, which has `async Constructor`, you should `await` it;
+
+
+# mnemonica.utils.merge(A, B, ...args)
+The same as `fork.call` but providing instsnces directly.
+
+_Note_: if you are `merge`'ing instances, where A.constructor is `async Constructor`, you should `await` it;
 
 ---
 # finally

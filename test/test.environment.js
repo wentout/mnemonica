@@ -54,7 +54,7 @@ const test = (opts) => {
 		} = require('..');
 
 		describe('core env tests', () => {
-			
+
 			it('Symbol Gaia', () => {
 				expect(userTC[SymbolGaia][MNEMONICA] === GAIA).is.true;
 			});
@@ -341,8 +341,8 @@ const test = (opts) => {
 				WithAdditionalSignSign: 'WithAdditionalSignSign',
 				WithoutPasswordSign: 'WithoutPasswordSign',
 				description: 'UserType',
-				email: 'went.out@gmail.com',
-				password: 321,
+				email: 'forkmail@gmail.com',
+				password: '54321',
 				sign: 'userWithoutPassword_2.WithAdditionalSign',
 				str: 're-defined OverMore str',
 			};
@@ -367,8 +367,7 @@ const test = (opts) => {
 				}
 			});
 			describe('wrong A 2', () => {
-				debugger;
-				const Cstr = function(){};
+				const Cstr = function () { };
 				Cstr.prototype.clone = Object.create({});
 				const d = new Cstr();
 				try {
@@ -382,7 +381,7 @@ const test = (opts) => {
 					});
 					it('thrown error should be ok with props', () => {
 						expect(error.message).exist.and.is.a('string');
-						assert.equal(error.message, 'wrong arguments : should use proper invocation : A should have A.extract()');
+						assert.equal(error.message, 'wrong arguments : should use proper invocation : A should have A.fork()');
 					});
 				}
 			});
@@ -455,6 +454,7 @@ const test = (opts) => {
 
 				(async () => {
 
+					// debugger;
 					// working one
 					syncWAsync1 =
 						await (
@@ -476,7 +476,7 @@ const test = (opts) => {
 							).Async2Sync2nd({ sync: '1_is' })
 						).AsyncChain3rd({ async: '1_3rd' });
 
-
+					// debugger;
 					// working two
 					syncWAsync2 = await (
 

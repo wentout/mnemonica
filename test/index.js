@@ -184,7 +184,7 @@ const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType', function (check) {
 	Object.assign(this, { check });
 });
-const anotherCollectionInstance = AnotherCollectionType.call(process, 'check');
+const anotherCollectionInstance = AnotherCollectionType.apply(process, ['check']);
 
 const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionType', function () {
 	this.self = this;
@@ -384,6 +384,15 @@ describe('Main Test', () => {
 
 	// const userTC = new types.UserTypeConstructor(USER_DATA);
 	const userTC = new UserTypeConstructor(USER_DATA);
+	const FORK_CALL_DATA = {
+		email: 'forkmail@gmail.com',
+		password : '54321'
+	};
+	const userTCForkCall = userTC.fork.call(user, FORK_CALL_DATA);
+	const userTCForkApply = userTC.fork.apply(user, [
+		FORK_CALL_DATA
+	]);
+	const userTCForkBind = userTC.fork.bind(user)(FORK_CALL_DATA);
 
 	const userWithoutPassword = new userTC.WithoutPassword();
 	const userWithoutPassword_2 = new userTC.WithoutPassword();
@@ -401,7 +410,7 @@ describe('Main Test', () => {
 	const filledEmptySign = 'FilledEmptySign';
 	const emptySub = empty.EmptySubType(filledEmptySign);
 
-
+	const evenMoreForkCall = evenMore.fork.call(user, USER_DATA);
 
 	const strFork = 'fork of evenMore';
 	const strForkOfFork = 'fork of fork of evenMore';
@@ -421,8 +430,7 @@ describe('Main Test', () => {
 		.WithoutPassword()
 		.WithAdditionalSign(sign2add);
 
-	const merged = merge(user, overMore);
-	debugger;
+	const merged = merge(user, overMore, FORK_CALL_DATA);
 
 	require('./test.environment')({
 		userTC,
@@ -731,6 +739,10 @@ describe('Main Test', () => {
 			user,
 			userPL1,
 			userTC,
+			userTCForkCall,
+			userTCForkApply,
+			userTCForkBind,
+			FORK_CALL_DATA,
 			UserType,
 			evenMore,
 			USER_DATA,
@@ -745,6 +757,7 @@ describe('Main Test', () => {
 			overMoreFork,
 			evenMoreFork,
 			evenMoreForkFork,
+			evenMoreForkCall,
 			userWithoutPassword,
 			userWPWithAdditionalSign
 		});

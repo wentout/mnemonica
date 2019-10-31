@@ -13,6 +13,10 @@ const test = (opts) => {
 		user,
 		userPL1,
 		userTC,
+		userTCForkCall,
+		userTCForkApply,
+		userTCForkBind,
+		FORK_CALL_DATA,
 		UserType,
 		evenMore,
 		USER_DATA,
@@ -27,6 +31,7 @@ const test = (opts) => {
 		overMoreFork,
 		evenMoreFork,
 		evenMoreForkFork,
+		evenMoreForkCall,
 		// userWithoutPassword,
 		// userWPWithAdditionalSign,
 	} = opts;
@@ -197,6 +202,37 @@ const test = (opts) => {
 
 		});
 
+		it('instance.fork.call() should work + SomeType.SomeSubType', () => {
+			expect(userTCForkCall).instanceof(UserTypeConstructor);
+			expect(userTCForkCall).instanceof(UserType);
+			expect(userTCForkCall).instanceof(user);
+			expect(userTCForkApply).instanceof(UserTypeConstructor);
+			expect(userTCForkApply).instanceof(UserType);
+			expect(userTCForkApply).instanceof(user);
+			expect(userTCForkBind).instanceof(UserTypeConstructor);
+			expect(userTCForkBind).instanceof(UserType);
+			expect(userTCForkBind).instanceof(user);
+			assert.equal(user.__args__[0], USER_DATA);
+			assert.equal(userTC.__args__[0], USER_DATA);
+			assert.deepEqual(userTCForkCall.__args__[0], FORK_CALL_DATA);
+			assert.deepEqual(userTCForkApply.__args__[0], FORK_CALL_DATA);
+			assert.deepEqual(userTCForkBind.__args__[0], FORK_CALL_DATA);
+			assert.deepInclude(userTCForkCall, FORK_CALL_DATA);
+			assert.deepInclude(userTCForkApply, FORK_CALL_DATA);
+			assert.deepInclude(userTCForkBind, FORK_CALL_DATA);
+			
+			debugger;
+			const EvenMore = OverMore.EvenMore;
+			expect(overMore).instanceof(OverMore);
+			expect(overMore).instanceof(moreOver);
+			expect(evenMore).instanceof(EvenMore);
+			expect(evenMore).instanceof(OverMore);
+			expect(evenMore).instanceof(overMore);
+			expect(evenMoreForkCall).instanceof(EvenMore);
+			expect(evenMoreForkCall).instanceof(UserType);
+			expect(evenMoreForkCall).instanceof(user);
+		});
+		
 		// describe('shared proto fork must fail', () => {
 		// 	let testPassed = 'test not passed';
 		// 	try {
