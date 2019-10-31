@@ -393,6 +393,8 @@ describe('Main Test', () => {
 		FORK_CALL_DATA
 	]);
 	const userTCForkBind = userTC.fork.bind(user)(FORK_CALL_DATA);
+	const utcfcwp = userTCForkCall.WithoutPassword();
+	
 
 	const userWithoutPassword = new userTC.WithoutPassword();
 	const userWithoutPassword_2 = new userTC.WithoutPassword();
@@ -742,6 +744,7 @@ describe('Main Test', () => {
 			userTCForkCall,
 			userTCForkApply,
 			userTCForkBind,
+			utcfcwp,
 			FORK_CALL_DATA,
 			UserType,
 			evenMore,
