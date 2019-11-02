@@ -101,6 +101,18 @@ UserType.define(() => {
 	return UserTypePL2;
 });
 
+
+const ProxyTyped = function (str) {
+	this.str = str;
+};
+ProxyTyped.prototype = {
+	proxyTyped: true
+};
+Object.assign(UserType, {
+	ProxyTyped
+});
+
+
 const typesFlowCheckerInvocations = [];
 const typesPreCreationInvocations = [];
 const typesPostCreationInvocations = [];
@@ -437,6 +449,7 @@ describe('Main Test', () => {
 	const merged = merge(user, overMore, FORK_CALL_DATA);
 
 	require('./test.environment')({
+		user,
 		userTC,
 		UserType,
 		overMore,
@@ -456,7 +469,7 @@ describe('Main Test', () => {
 		derived,
 		rounded,
 		chained2,
-		merged
+		merged,
 	});
 
 	if (hooksTest) {

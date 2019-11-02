@@ -61,7 +61,7 @@ const test = (opts) => {
 			});
 		}
 		
-		debugger;
+		// debugger;
 		const parsedUser = parse(user);
 		const parsedUserTC = parse(userTC);
 

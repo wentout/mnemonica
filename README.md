@@ -107,6 +107,22 @@ SomeType.define('SomeSubType', function (opts) {
 }, {
 	description : 'SomeSubType Constructor'
 });
+
+// or, absolutely equal
+SomeType.SomeSubType = function (opts) {
+	const {
+		other,
+		inside // again
+	} = opts;
+	this.other = other;
+	// here we will re-define
+	// our previously defined property
+	// with the new value
+	this.inside = inside;
+};
+SomeType.SomeSubType.prototype = {
+	description : 'SomeSubType Constructor'
+};
 ```
 
 Now our type modification chain looks like this:
