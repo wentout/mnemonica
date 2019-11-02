@@ -107,6 +107,22 @@ SomeType.define('SomeSubType', function (opts) {
 }, {
 	description : 'SomeSubType Constructor'
 });
+
+// or, absolutely equal
+SomeType.SomeSubType = function (opts) {
+	const {
+		other,
+		inside // again
+	} = opts;
+	this.other = other;
+	// here we will re-define
+	// our previously defined property
+	// with the new value
+	this.inside = inside;
+};
+SomeType.SomeSubType.prototype = {
+	description : 'SomeSubType Constructor'
+};
 ```
 
 Now our type modification chain looks like this:
@@ -763,13 +779,16 @@ Returns cloned instance, with the following condition `instance !== instance.clo
 _Note_: if you are cloning instance, which has `async Constructor`, you should `await` it;
 
 
-# **`instance.fork( some, new, arguments )`**
+# **`instance.fork( some, new, args )`**
 Returns forked instance. Behaviour is same as for cloned instance, both made from the same `.__parent__`. But this is a method, not the property, so you can apply another arguments to the constructor.
 
 _Note_: if you are forking instance, which has `async Constructor`, you should `await` it;
 
-# **`instance.fork.call( thisArg, ...arguments )`**
-# **`instance.fork.apply( thisArg, [arguments] )`**
+
+# Directed Acyclic Graphs
+
+## **`instance.fork.call( thisArg, ...args )`**
+## **`instance.fork.apply( thisArg, [args] )`**
 Let assume you nedd [Directed Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph). Then you have to be able to construct it somehow. Starting from `v0.6.1` you can use `fork.call` or `fork.apply` for doing this:
 
 ```js
@@ -781,7 +800,7 @@ A.fork.bind(B)(...args);
 _Note_: if you are `fork.clone`'ing instance, which has `async Constructor`, you should `await` it;
 
 
-# mnemonica.utils.merge(A, B, ...args)
+## mnemonica.utils.merge(A, B, ...args)
 The same as `fork.call` but providing instsnces directly.
 
 _Note_: if you are `merge`'ing instances, where A.constructor is `async Constructor`, you should `await` it;

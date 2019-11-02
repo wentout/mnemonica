@@ -101,6 +101,18 @@ UserType.define(() => {
 	return UserTypePL2;
 });
 
+
+const ProxyTyped = function (str) {
+	this.str = str;
+};
+ProxyTyped.prototype = {
+	proxyTyped: true
+};
+Object.assign(UserType, {
+	ProxyTyped
+});
+
+
 const typesFlowCheckerInvocations = [];
 const typesPreCreationInvocations = [];
 const typesPostCreationInvocations = [];
@@ -205,19 +217,21 @@ const AsyncType = define('AsyncType', async function (data) {
 	});
 });
 
-const SubOfAsync = AsyncType.define('SubOfAsync', function (data) {
+AsyncType.SubOfAsync = function (data) {
 	Object.assign(this, {
 		data
 	});
-});
+};
 
-const NestedAsyncType = SubOfAsync.define('NestedAsyncType', async function (data) {
+AsyncType.SubOfAsync.NestedAsyncType = async function (data) {
 	return Object.assign(this, {
 		data
 	});
-}, {
+};
+AsyncType.SubOfAsync.NestedAsyncType.prototype = {
 	description: 'nested async instance'
-});
+};
+const NestedAsyncType = AsyncType.SubOfAsync.NestedAsyncType;
 
 const SubOfNestedAsync = NestedAsyncType.define('SubOfNestedAsync', function (data) {
 	Object.assign(this, {
@@ -435,6 +449,7 @@ describe('Main Test', () => {
 	const merged = merge(user, overMore, FORK_CALL_DATA);
 
 	require('./test.environment')({
+		user,
 		userTC,
 		UserType,
 		overMore,
@@ -454,7 +469,7 @@ describe('Main Test', () => {
 		derived,
 		rounded,
 		chained2,
-		merged
+		merged,
 	});
 
 	if (hooksTest) {
@@ -811,7 +826,7 @@ describe('Main Test', () => {
 					expect(nestedAsyncInstance).instanceof(AsyncType);
 					expect(nestedAsyncInstance).instanceof(NestedAsyncType);
 					expect(nestedAsyncSub).instanceof(AsyncType);
-					expect(nestedAsyncSub).instanceof(SubOfAsync);
+					expect(nestedAsyncSub).instanceof(AsyncType.SubOfAsync);
 					expect(nestedAsyncSub).instanceof(NestedAsyncType);
 					expect(nestedAsyncSub).instanceof(SubOfNestedAsync);
 					expect(SubOfNestedAsyncPostHookData

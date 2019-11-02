@@ -25,6 +25,7 @@ const {
 const test = (opts) => {
 
 	const {
+		user,
 		userTC,
 		UserType,
 		overMore,
@@ -116,6 +117,43 @@ const test = (opts) => {
 			it('should create instances for in anotherDefaultTypesCollection', () => {
 				expect(someADTCInstance.test).equal(123);
 			});
+			describe('should create type from Proxy.set()', () => {
+				it('type creation from Proxy.set()', () => {
+					const userProxyTyped = user.ProxyTyped('aha');
+					expect(userProxyTyped.str).equal('aha');
+					expect(userProxyTyped.proxyTyped).is.true;
+					expect(UserType.ProxyTyped.prototype.proxyTyped).is.true;
+				});
+				try {
+					UserType.ProxyType1 = null;
+				} catch (error) {
+					it('should respect the rules', () => {
+						expect(error).instanceOf(Error);
+					});
+					it('thrown error instanceof WRONG_ARGUMENTS_USED', () => {
+						expect(error).instanceOf(errors.WRONG_TYPE_DEFINITION);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'wrong type definition : should use function for type definition');
+					});
+				}
+				try {
+					UserType[''] = function () {};
+				} catch (error) {
+					it('should respect the rules', () => {
+						expect(error).instanceOf(Error);
+					});
+					it('thrown error instanceof WRONG_ARGUMENTS_USED', () => {
+						expect(error).instanceOf(errors.WRONG_TYPE_DEFINITION);
+					});
+					it('thrown error should be ok with props', () => {
+						expect(error.message).exist.and.is.a('string');
+						assert.equal(error.message, 'wrong type definition : should use non empty string as TypeName');
+					});
+				}
+			});
+			
 		});
 		describe('base error shoud be defined', () => {
 			it('BASE_MNEMONICA_ERROR exists', () => {

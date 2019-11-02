@@ -60,7 +60,7 @@ module.exports = {
 			'error', 'single'
 		],
 		'no-arrow-this/no-arrow-this': [
-			'warn', {
+			'error', {
 				onlyGlobals : true
 			}
 		],
