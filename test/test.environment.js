@@ -122,6 +122,7 @@ const test = (opts) => {
 					const userProxyTyped = user.ProxyTyped('aha');
 					expect(userProxyTyped.str).equal('aha');
 					expect(userProxyTyped.proxyTyped).is.true;
+					expect(UserType.ProxyTyped.prototype.proxyTyped).is.true;
 				});
 				try {
 					UserType.ProxyType1 = null;
