@@ -13,11 +13,17 @@ abstract technique that aids information retention : instance inheritance system
 
 ---
 
-## core concept 
 
-This lib might help us to create some sort of order or sequence or precedence of how we modify data inside of our code. It utilizes the concept of tree or [Trie](https://en.wikipedia.org/wiki/Trie) by combining both: Object Instances and Inheritance through the Prototype Chain. So we are able to inherit new instance from existing one as much times as we need. Sounds like obvious, but ... we tell about Instances, not about Classes, meaning Plain Objects, crafted from real Constructors before we start the process of inheriting them one from another.
+# core concept
 
-Though, for sure we have to define some sort of Class for crafting our first Instance:
+This lib might help us to create some sort of order or sequence or precedence of how we modify data inside of our code. It utilizes the concept of tree or [Trie](https://en.wikipedia.org/wiki/Trie) by combining both: Object Instances and Inheritance through the Prototype Chain, where we are able to create new instance inherited from existing one as much times as we need. It might look like obvious, but ... we tell about Instances, not about Classes, meaning Plain Objects, crafted from real Constructors before we start the process of inheriting them one from another. In an attempt to describe this approach let me suggest this article:
+
+### [Inheritance in JavaScript : Factory of Constructors with Prototype Chain](https://medium.com/@went.out/javascript-prototype-inheritance-point-of-view-from-boring-nerd-9c7924afc9fc)
+
+
+## Factory of Constructors
+
+As we discrovered from that article, we need some tooling, giving us the best experience with Prototype Chain Inheritance pattern. First of all it must be reproducible and maintainable. And from the first point we have to define some sort of Factory Constructor for start crafting our Instances, it might look like so:
 
 
 ```js
