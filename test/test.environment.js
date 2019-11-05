@@ -193,8 +193,12 @@ const test = (opts) => {
 					assert.equal(error.message, 'wrong modification pattern : should inherit from mnemonica instance');
 				});
 				it('thrown error.stack should have seekable definition', () => {
-					const stackstart = '<-- creation of [ BadType ] from -->\n    at Suite.describe (/home/went/_dev/mnemonica/core/test/test.environment.js:183:5)';
+					const stackstart = '<-- creation of [ BadType ] from -->';
 					expect(error.stack.indexOf(stackstart)).equal(0);
+					expect(error.stack
+						.indexOf('test.environment.js:183'))
+						.equal(96);
+
 				});
 			}
 		});
@@ -577,7 +581,6 @@ const test = (opts) => {
 							password: 111
 						});
 					} catch (err) {
-						debugger;
 						wrongSyncTypeErr = err;
 					}
 
@@ -587,7 +590,6 @@ const test = (opts) => {
 							password: 111
 						});
 					} catch (err) {
-						debugger;
 						wrongAsyncTypeErr = err;
 					}
 
@@ -627,48 +629,42 @@ const test = (opts) => {
 					__stack__
 				} = syncWAsyncChained;
 				expect(__stack__.indexOf(stackstart)).equal(0);
-				// console.log(__stack__
-				// 	.indexOf('at /home/went/_dev/mnemonica/core/test/test.environment.js:'))
 				expect(__stack__
-					.indexOf('at /home/went/_dev/mnemonica/core/test/test.environment.js:559:7'))
-					.equal(318);
+					.indexOf('test.environment.js:563:7'))
+					.equal(357);
 
 			});
 
 			it('SyncError.stack should have seekable definition', () => {
-				debugger;
 				const stackstart = '<-- creation of [ WrongSyncType ] from -->';
-				// at /home/went/_dev/mnemonica/core/test/test.environment.js:571:13`;
 				const {
 					stack
 				} = wrongSyncTypeErr;
 				expect(stack.indexOf(stackstart)).equal(0);
 				expect(stack
-					.indexOf('at /home/went/_dev/mnemonica/core/test/test.environment.js:575:'))
-					.equal(47);
+					.indexOf('test.environment.js:579:'))
+					.equal(86);
 				expect(wrongSyncTypeErr).instanceOf(Error);
 				expect(wrongSyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
 				expect(wrongSyncTypeErr.message).exist.and.is.a('string');
-				assert.equal(wrongSyncTypeErr.message, 'wrong modification pattern : should inherit from WrongSyncType but got UserType');
 
+				assert.equal(wrongSyncTypeErr.message, 'wrong modification pattern : should inherit from WrongSyncType but got UserType');
 			});
 
 			it('AsyncError.stack should have seekable definition', () => {
-				debugger;
 				const stackstart = '<-- creation of [ WrongAsyncType ] from -->';
-				// at /home/went/_dev/mnemonica/core/test/test.environment.js:571:13`;
 				const {
 					stack
 				} = wrongAsyncTypeErr;
 				expect(stack.indexOf(stackstart)).equal(0);
 				expect(stack
-					.indexOf('at /home/went/_dev/mnemonica/core/test/test.environment.js:585:'))
-					.equal(48);
+					.indexOf('test.environment.js:588:'))
+					.equal(87);
 				expect(wrongAsyncTypeErr).instanceOf(Error);
 				expect(wrongAsyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
 				expect(wrongAsyncTypeErr.message).exist.and.is.a('string');
-				assert.equal(wrongAsyncTypeErr.message, 'wrong modification pattern : should inherit from WrongAsyncType but got UserType');
 
+				assert.equal(wrongAsyncTypeErr.message, 'wrong modification pattern : should inherit from WrongAsyncType but got UserType');
 			});
 
 		});
