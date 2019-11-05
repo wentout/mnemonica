@@ -139,7 +139,7 @@ const test = (opts) => {
 					});
 				}
 				try {
-					UserType[''] = function () {};
+					UserType[''] = function () { };
 				} catch (error) {
 					it('should respect the rules', () => {
 						expect(error).instanceOf(Error);
@@ -153,7 +153,7 @@ const test = (opts) => {
 					});
 				}
 			});
-			
+
 		});
 		describe('base error shoud be defined', () => {
 			it('BASE_MNEMONICA_ERROR exists', () => {
@@ -191,6 +191,14 @@ const test = (opts) => {
 				it('thrown error should be ok with props', () => {
 					expect(error.message).exist.and.is.a('string');
 					assert.equal(error.message, 'wrong modification pattern : should inherit from mnemonica instance');
+				});
+				it('thrown error.stack should have seekable definition', () => {
+					const stackstart = '<-- creation of [ BadType ] from -->';
+					expect(error.stack.indexOf(stackstart)).equal(0);
+					expect(error.stack
+						.indexOf('test.environment.js:183') > 0).is.true;
+						// .equal(96);
+
 				});
 			}
 		});
@@ -457,9 +465,19 @@ const test = (opts) => {
 
 		describe('async chain check', () => {
 
+			var WrongSyncType = define('WrongSyncType', function (data) {
+				return new UserType(data);
+			});
+			var WrongAsyncType = define('WrongAsyncType', async function (data) {
+				return new UserType(data);
+			});
+
+
 			var
 				syncWAsync1,
-				syncWAsync2;
+				syncWAsync2,
+				wrongSyncTypeErr,
+				wrongAsyncTypeErr;
 
 			const etalon1 = {
 				WithAdditionalSignSign: 'WithAdditionalSignSign',
@@ -557,6 +575,24 @@ const test = (opts) => {
 					// debugger;
 					done();
 
+					try {
+						new WrongSyncType({
+							email: 'wrong@gmail.com',
+							password: 111
+						});
+					} catch (err) {
+						wrongSyncTypeErr = err;
+					}
+
+					try {
+						await new WrongAsyncType({
+							email: 'wrong@gmail.com',
+							password: 111
+						});
+					} catch (err) {
+						wrongAsyncTypeErr = err;
+					}
+
 				})();
 
 			});
@@ -581,6 +617,56 @@ const test = (opts) => {
 
 				assert.deepEqual(etalon3, syncWAsyncChained.extract());
 			});
+			it('.__stack__ should have seekable definition', () => {
+				const stackstart = `<-- creation of [ AsyncChain3rd ] from -->
+<-- creation of [ Async2Sync2nd ] from -->
+<-- creation of [ AsyncChain2nd ] from -->
+<-- creation of [ AsyncChain1st ] from -->
+<-- creation of [ WithAdditionalSign ] from -->
+<-- creation of [ WithoutPassword ] from -->
+<-- creation of [ UserTypeConstructor ] from -->`;
+				const {
+					__stack__
+				} = syncWAsyncChained;
+				expect(__stack__.indexOf(stackstart)).equal(0);
+				expect(__stack__
+					.indexOf('test.environment.js:563:7') > 0).is.true;
+					// .equal(357);
+
+			});
+
+			it('SyncError.stack should have seekable definition', () => {
+				const stackstart = '<-- creation of [ WrongSyncType ] from -->';
+				const {
+					stack
+				} = wrongSyncTypeErr;
+				expect(stack.indexOf(stackstart)).equal(0);
+				expect(stack
+					.indexOf('test.environment.js:579:') > 0).is.true;
+					// .equal(86);
+				expect(wrongSyncTypeErr).instanceOf(Error);
+				expect(wrongSyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+				expect(wrongSyncTypeErr.message).exist.and.is.a('string');
+
+				assert.equal(wrongSyncTypeErr.message, 'wrong modification pattern : should inherit from WrongSyncType but got UserType');
+			});
+
+			it('AsyncError.stack should have seekable definition', () => {
+				const stackstart = '<-- creation of [ WrongAsyncType ] from -->';
+				const {
+					stack
+				} = wrongAsyncTypeErr;
+				expect(stack.indexOf(stackstart)).equal(0);
+				expect(stack
+					.indexOf('test.environment.js:588:') > 0).is.true;
+					// .equal(87);
+				expect(wrongAsyncTypeErr).instanceOf(Error);
+				expect(wrongAsyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+				expect(wrongAsyncTypeErr.message).exist.and.is.a('string');
+
+				assert.equal(wrongAsyncTypeErr.message, 'wrong modification pattern : should inherit from WrongAsyncType but got UserType');
+			});
+
 		});
 
 	});
