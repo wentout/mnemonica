@@ -4,7 +4,7 @@ const { assert, expect } = require('chai');
 
 const { inspect } = require('util');
 
-const hooksTest = true;
+const hooksTest = false;
 const parseTest = true;
 const uncaughtExceptionTest = true;
 const asyncConstructionTest = true;
