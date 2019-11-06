@@ -193,8 +193,8 @@ const test = (opts) => {
 					assert.equal(error.message, 'wrong modification pattern : should inherit from mnemonica instance');
 				});
 				it('thrown error.stack should have seekable definition', () => {
-					const stackstart = '<-- creation of [ BadType ] from -->';
-					expect(error.stack.indexOf(stackstart)).equal(0);
+					const stackstart = '<-- creation of [ BadType ] traced -->';
+					expect(error.stack.indexOf(stackstart)).equal(1);
 					expect(error.stack
 						.indexOf('test.environment.js:183') > 0).is.true;
 						// .equal(96);
@@ -597,11 +597,9 @@ const test = (opts) => {
 
 			});
 			it('chain should work', () => {
-
 				assert.deepEqual(etalon1, syncWAsync1.extract());
 				assert.deepEqual(etalon2, syncWAsync2.extract());
 
-				// debugger;
 				const etalon3 = {
 					WithAdditionalSignSign: 'WithAdditionalSignSign',
 					WithoutPasswordSign: 'WithoutPasswordSign',
@@ -618,29 +616,33 @@ const test = (opts) => {
 				assert.deepEqual(etalon3, syncWAsyncChained.extract());
 			});
 			it('.__stack__ should have seekable definition', () => {
-				const stackstart = `<-- creation of [ AsyncChain3rd ] from -->
-<-- creation of [ Async2Sync2nd ] from -->
-<-- creation of [ AsyncChain2nd ] from -->
-<-- creation of [ AsyncChain1st ] from -->
-<-- creation of [ WithAdditionalSign ] from -->
-<-- creation of [ WithoutPassword ] from -->
-<-- creation of [ UserTypeConstructor ] from -->`;
+				const stackstart = '<-- creation of [ AsyncChain3rd ] traced -->';
+				const stackTrack = [
+					'<-- creation of [ Async2Sync2nd ] traced -->',
+					'<-- creation of [ AsyncChain2nd ] traced -->',
+					'<-- creation of [ AsyncChain1st ] traced -->',
+					'<-- creation of [ WithAdditionalSign ] traced -->',
+					'<-- creation of [ WithoutPassword ] traced -->',
+					'<-- creation of [ UserTypeConstructor ] traced -->'
+				];
 				const {
 					__stack__
 				} = syncWAsyncChained;
-				expect(__stack__.indexOf(stackstart)).equal(0);
-				expect(__stack__
-					.indexOf('test.environment.js:563:7') > 0).is.true;
+				expect(__stack__.indexOf(stackstart)).equal(1);
+				stackTrack.forEach(line => {
+					expect(__stack__.indexOf(line) > 0).is.true;
+				});
+				expect(__stack__.indexOf('test.environment.js:56') > 0).is.true;
 					// .equal(357);
 
 			});
 
 			it('SyncError.stack should have seekable definition', () => {
-				const stackstart = '<-- creation of [ WrongSyncType ] from -->';
+				const stackstart = '<-- creation of [ WrongSyncType ] traced -->';
 				const {
 					stack
 				} = wrongSyncTypeErr;
-				expect(stack.indexOf(stackstart)).equal(0);
+				expect(stack.indexOf(stackstart)).equal(1);
 				expect(stack
 					.indexOf('test.environment.js:579:') > 0).is.true;
 					// .equal(86);
@@ -652,11 +654,11 @@ const test = (opts) => {
 			});
 
 			it('AsyncError.stack should have seekable definition', () => {
-				const stackstart = '<-- creation of [ WrongAsyncType ] from -->';
+				const stackstart = '<-- creation of [ WrongAsyncType ] traced -->';
 				const {
 					stack
 				} = wrongAsyncTypeErr;
-				expect(stack.indexOf(stackstart)).equal(0);
+				expect(stack.indexOf(stackstart)).equal(1);
 				expect(stack
 					.indexOf('test.environment.js:588:') > 0).is.true;
 					// .equal(87);
