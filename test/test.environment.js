@@ -600,7 +600,6 @@ const test = (opts) => {
 				assert.deepEqual(etalon1, syncWAsync1.extract());
 				assert.deepEqual(etalon2, syncWAsync2.extract());
 
-				// debugger;
 				const etalon3 = {
 					WithAdditionalSignSign: 'WithAdditionalSignSign',
 					WithoutPasswordSign: 'WithoutPasswordSign',
@@ -617,22 +616,23 @@ const test = (opts) => {
 				assert.deepEqual(etalon3, syncWAsyncChained.extract());
 			});
 			it('.__stack__ should have seekable definition', () => {
-				debugger;
-				const stackstart = `
-<-- creation of [ AsyncChain3rd ] traced -->`;
-// <-- creation of [ Async2Sync2nd ] traced -->
-// <-- creation of [ AsyncChain2nd ] traced -->
-// <-- creation of [ AsyncChain1st ] traced -->
-// <-- creation of [ WithAdditionalSign ] traced -->
-// <-- creation of [ WithoutPassword ] traced -->
-// <-- creation of [ UserTypeConstructor ] traced -->`;
+				const stackstart = '<-- creation of [ AsyncChain3rd ] traced -->';
+				const stackTrack = [
+					'<-- creation of [ Async2Sync2nd ] traced -->',
+					'<-- creation of [ AsyncChain2nd ] traced -->',
+					'<-- creation of [ AsyncChain1st ] traced -->',
+					'<-- creation of [ WithAdditionalSign ] traced -->',
+					'<-- creation of [ WithoutPassword ] traced -->',
+					'<-- creation of [ UserTypeConstructor ] traced -->'
+				];
 				const {
 					__stack__
 				} = syncWAsyncChained;
-				console.log(__stack__);
-				expect(__stack__.indexOf(stackstart)).equal(0);
-				expect(__stack__
-					.indexOf('test.environment.js:56') > 0).is.true;
+				expect(__stack__.indexOf(stackstart)).equal(1);
+				stackTrack.forEach(line => {
+					expect(__stack__.indexOf(line) > 0).is.true;
+				});
+				expect(__stack__.indexOf('test.environment.js:56') > 0).is.true;
 					// .equal(357);
 
 			});
