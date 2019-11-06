@@ -628,6 +628,7 @@ const test = (opts) => {
 				const {
 					__stack__
 				} = syncWAsyncChained;
+				console.log(__stack__)
 				expect(__stack__.indexOf(stackstart)).equal(0);
 				expect(__stack__
 					.indexOf('test.environment.js:569:') > 0).is.true;
