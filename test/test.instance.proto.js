@@ -33,6 +33,8 @@ const test = (opts) => {
 		evenMoreFork,
 		evenMoreForkFork,
 		evenMoreForkCall,
+		overMoreCallEvenMoreNull,
+		overMoreCallEvenMoreProcess
 		// userWithoutPassword,
 		// userWPWithAdditionalSign,
 	} = opts;
@@ -203,6 +205,14 @@ const test = (opts) => {
 
 		});
 
+		it('instance.ConstructorName.call() should work', () => {
+			expect(overMoreCallEvenMoreNull).instanceof(overMore.EvenMore);
+			expect(overMoreCallEvenMoreNull).instanceof(evenMore);
+			expect(overMoreCallEvenMoreProcess).instanceof(overMore.EvenMore);
+			expect(overMoreCallEvenMoreProcess).instanceof(evenMore);
+			assert.isFunction(overMoreCallEvenMoreProcess.on);
+		});
+		
 		it('instance.fork.call() should work + SomeType.SomeSubType', () => {
 			expect(userTCForkCall).instanceof(UserTypeConstructor);
 			expect(userTCForkCall).instanceof(UserType);

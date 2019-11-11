@@ -23,6 +23,7 @@ const test = (opts) => {
 	describe('nested type with old style check', () => {
 		it('actually do construction', () => {
 			assert.instanceOf(userPL1, types.UserType.subtypes.UserTypePL1);
+			debugger;
 			assert.instanceOf(userPL1, user.UserTypePL1);
 			assert.equal(
 				// Object.getPrototypeOf(

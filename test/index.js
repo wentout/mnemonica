@@ -432,9 +432,12 @@ describe('Main Test', () => {
 	const strForkOfFork = 'fork of fork of evenMore';
 
 	const overMoreFork = overMore.fork();
+	
+	const overMoreCallEvenMoreNull = overMore.EvenMore.call(null);
+	const overMoreCallEvenMoreProcess = overMore.EvenMore.call(process);
 
 	const evenMoreArgs = evenMore.__args__;
-
+	debugger;
 	const evenMoreFork = evenMore.fork(strFork);
 	const evenMoreForkFork = evenMoreFork.fork(strForkOfFork);
 
@@ -777,7 +780,9 @@ describe('Main Test', () => {
 			evenMoreForkFork,
 			evenMoreForkCall,
 			userWithoutPassword,
-			userWPWithAdditionalSign
+			userWPWithAdditionalSign,
+			overMoreCallEvenMoreNull,
+			overMoreCallEvenMoreProcess
 		});
 
 		if (asyncConstructionTest) {
