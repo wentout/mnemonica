@@ -788,6 +788,8 @@ describe('Main Test', () => {
 		if (asyncConstructionTest) {
 			describe('Async Constructors Test', () => {
 				var asyncInstance,
+					asyncInstanceDirect,
+					asyncInstanceDirectApply,
 					asyncInstancePromise,
 					asyncSub,
 					nestedAsyncInstance,
@@ -797,8 +799,10 @@ describe('Main Test', () => {
 
 				before(function (done) {
 					const wait = async function () {
-						asyncInstancePromise = new AsyncType.call(process, 'tada');
+						asyncInstancePromise = new AsyncType('tada');
 						asyncInstance = await asyncInstancePromise;
+						asyncInstanceDirect = await AsyncType.call(process, 'dadada');
+						asyncInstanceDirectApply = await AsyncType.apply(process, ['da da da']);
 						asyncSub = asyncInstance.SubOfAsync('some');
 						nestedAsyncInstance = await new asyncSub
 							.NestedAsyncType('nested');
@@ -816,6 +820,8 @@ describe('Main Test', () => {
 					expect(asyncInstance.data).equal('tada');
 					expect(asyncInstanceClone.data).equal('tada');
 					expect(asyncInstanceFork.data).equal('dada');
+					expect(asyncInstanceDirect.data).equal('dadada');
+					expect(asyncInstanceDirectApply.data).equal('da da da');
 				});
 
 				it('should be able to construct nested async', () => {
@@ -825,9 +831,14 @@ describe('Main Test', () => {
 					expect(asyncInstanceClone).instanceof(AsyncType);
 					expect(asyncInstanceFork).instanceof(AsyncType);
 					expect(asyncInstanceFork).instanceof(AsyncType);
-					expect(typeof asyncInstance.on === 'function').is.true;
-					expect(Object.getPrototypeOf(asyncInstance[SymbolGaia]) === process).is.true;
-					expect(asyncInstance[SymbolGaia][MNEMONICA] === URANUS).is.true;
+					
+					expect(typeof asyncInstanceDirect.on === 'function').is.true;
+					expect(Object.getPrototypeOf(asyncInstanceDirect[SymbolGaia]) === process).is.true;
+					expect(asyncInstanceDirect[SymbolGaia][MNEMONICA] === URANUS).is.true;
+					expect(typeof asyncInstanceDirectApply.on === 'function').is.true;
+					expect(Object.getPrototypeOf(asyncInstanceDirectApply[SymbolGaia]) === process).is.true;
+					expect(asyncInstanceDirectApply[SymbolGaia][MNEMONICA] === URANUS).is.true;
+					
 					expect(nestedAsyncInstance).instanceof(AsyncType);
 					expect(nestedAsyncInstance).instanceof(NestedAsyncType);
 					expect(nestedAsyncSub).instanceof(AsyncType);
