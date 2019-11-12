@@ -661,8 +661,11 @@ console.log(nestedAsyncTypeInstance.description); // 'async of nested'
 Also for the first instance in chain you can do for example inherit from singletone:
 
 ```js
-const asyncCalledInstance = await new AsyncType
+const asyncCalledInstance = await AsyncType
 	.call(process, 'wat');
+// or
+const asyncCalledInstance = await AsyncType
+	.apply(process, ['wat']);
 console.log(asyncCalledInstance) // { data: "wat" }
 console.log(asyncCalledInstance instanceof AsyncType) // true
 ```
