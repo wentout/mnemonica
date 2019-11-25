@@ -21,10 +21,16 @@ This lib might help us to create some sort of order or sequence or precedence of
 ### [Inheritance in JavaScript : Factory of Constructors with Prototype Chain](https://medium.com/@went.out/javascript-prototype-inheritance-point-of-view-from-boring-nerd-9c7924afc9fc)
 
 
+## ESM Support
+Starting from v0.6.8 you can try to import ESM using the following scenario:
+
+```js
+import { define, lookup } from 'mnemonica/module';
+```
+
 ## Factory of Constructors
 
 As we discrovered from that article, we need some tooling, giving us the best experience with Prototype Chain Inheritance pattern. First of all it must be reproducible and maintainable. And from the first point we have to define some sort of Factory Constructor for start crafting our Instances, it might look like so:
-
 
 ```js
 const { define } = require('mnemonica');
