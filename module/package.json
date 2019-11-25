@@ -1,0 +1,9 @@
+{
+  "name": "mnemonica",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    "default": "index.js"
+  }
+}
+

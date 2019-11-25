@@ -1,7 +1,12 @@
 {
   "name": "mnemonica",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "abstract technique that aids information retention : instance inheritance system",
+  "exports": {
+    "module": "module/index.js",
+    "default": "module/index.js",
+    "require": "lib/index.js"
+  },
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha --allow-uncaught test/index.js",
