@@ -307,7 +307,7 @@ const preCreationCallback = (hookData) => {
 	const {
 		
 		// { string }
-		TypeModificatorName,
+		TypeName : TypeModificatorConstructor.name,
 		
 		// 1. [ array ]
 		// ...args of TypeModificator
@@ -332,7 +332,7 @@ RequestDataTypeModificator
 const postCreationCallback = (hookData) => {
 	const {
 		// { string }
-		TypeModificatorName,
+		TypeName : TypeModificatorConstructor.name,
 		
 		// 1. [ array ]
 		argumentsOfTypeModificator,
