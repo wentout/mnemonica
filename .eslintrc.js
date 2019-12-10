@@ -31,6 +31,13 @@ module.exports = {
 				allow: [],
 			},
 		],
+		'space-before-function-paren' : [
+			'warn', {
+				'anonymous': 'always',
+				'named': 'always',
+				'asyncArrow': 'always'
+			}
+		],
 		'prefer-template': 'warn',
 		'prefer-spread': 'warn',
 		'no-useless-concat': 'warn',
