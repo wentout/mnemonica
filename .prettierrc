@@ -1,0 +1,13 @@
+{
+	"requirePragma": true,
+	"printWidth": 80,
+	"useTabs": true,
+	"semi": true,
+	"singleQuote": true,
+	"trailingComma": "all",
+	"arrowParens": "avoid",
+	"bracketSpacing": true,
+	"proseWrap": "preserve",
+	"endOfLine": "lf",
+	"vueIndentScriptAndStyle": true
+}
