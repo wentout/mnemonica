@@ -13,6 +13,14 @@ abstract technique that aids information retention : instance inheritance system
 
 ---
 
+# shortcuts
+
+* ?. : state : **mad science**
+* ?. : type : **asynchronouse monad descriptor** => this
+* ?. : prod ready : **we wonder about**
+
+---
+
 
 # core concept
 
