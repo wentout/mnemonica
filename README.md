@@ -771,8 +771,13 @@ async (req, res) => {
 ```
 So now you don't have to care if this constructor is async or sync and where to put brakets and how many of them. It is enough to type constructor name after the dot and pass necessary arguments. That's it.
 
+## require('util').callbackify
 
-# Instance Props
+It is important: if we make `util.callbackify` from our instance async creation method, we shall [`.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/Function/call) it then.
+
+
+
+# Instance Properties
 
 Also starting from `v0.3.8` the following non enumerable props are availiable from instance itself (`instance.hasOwnProperty(__prop__)`):
 
@@ -829,6 +834,8 @@ The same as `fork.call` but providing instsnces directly.
 _Note_: if you are `merge`'ing instances, where A.constructor is `async Constructor`, you should `await` it;
 
 ---
+
+
 # finally
 
 So, now you can craft as much types as you wish, combine them, re-define them and spend much more time playing with them:
