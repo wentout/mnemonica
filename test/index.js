@@ -2,7 +2,11 @@
 
 const { assert, expect } = require('chai');
 
-const { inspect } = require('util');
+const {
+	inspect,
+	callbackify,
+	promisify
+} = require('util');
 
 const hooksTest = true;
 const parseTest = true;
@@ -795,7 +799,8 @@ describe('Main Test', () => {
 					nestedAsyncInstance,
 					nestedAsyncSub,
 					asyncInstanceClone,
-					asyncInstanceFork;
+					asyncInstanceFork,
+					asyncInstanceForkCb;
 
 				before(function (done) {
 					const wait = async function () {
@@ -811,6 +816,15 @@ describe('Main Test', () => {
 
 						asyncInstanceClone = await asyncInstance.clone;
 						asyncInstanceFork = await asyncInstance.fork('dada');
+						
+						await (promisify((cb) => {
+							const cbfork = callbackify(asyncInstance.fork);
+							cbfork.call(asyncInstance, 'cb forked data', (err, result) => {
+								asyncInstanceForkCb = result;
+								cb();
+							});
+						}))();
+						
 						done();
 					};
 					wait();
@@ -822,6 +836,7 @@ describe('Main Test', () => {
 					expect(asyncInstanceFork.data).equal('dada');
 					expect(asyncInstanceDirect.data).equal('dadada');
 					expect(asyncInstanceDirectApply.data).equal('da da da');
+					expect(asyncInstanceForkCb.data).equal('cb forked data');
 				});
 
 				it('should be able to construct nested async', () => {
