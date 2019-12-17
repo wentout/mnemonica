@@ -101,11 +101,20 @@ const test = (opts) => {
 				expect(undefined instanceof UserType).to.be.false;
 				expect(Object.create(null) instanceof UserType).to.be.false;
 			});
+
 			try {
 				createTypesCollection({});
 			} catch (error) {
 				it('should register types collection for proper namespace', () => {
 					expect(error.message).is.equal(ErrorMessages.NAMESPACE_DOES_NOT_EXIST);
+				});
+			}
+			
+			try {
+				createTypesCollection(anotherNamespace, 'another types collection');
+			} catch (error) {
+				it('should dismiss register types collection with the same name', () => {
+					expect(error.message).is.equal(ErrorMessages.ASSOCIATION_EXISTS);
 				});
 			}
 			it('should refer defaultTypes from types.get(defaultNamespace)', () => {
@@ -196,7 +205,7 @@ const test = (opts) => {
 					const stackstart = '<-- creation of [ BadType ] traced -->';
 					expect(error.stack.indexOf(stackstart)).equal(1);
 					expect(error.stack
-						.indexOf('test.environment.js:183') > 0).is.true;
+						.indexOf('test.environment.js') > 0).is.true;
 						// .equal(96);
 
 				});
@@ -297,7 +306,6 @@ const test = (opts) => {
 		});
 
 		describe('another namespace instances', () => {
-			anotherNamespace;
 			it('Another Nnamespace has both defined collections', () => {
 				expect(anotherNamespace.typesCollections.has(anotherTypesCollection)).is.true;
 				expect(anotherNamespace.typesCollections.has(oneElseTypesCollection)).is.true;
@@ -632,7 +640,7 @@ const test = (opts) => {
 				stackTrack.forEach(line => {
 					expect(__stack__.indexOf(line) > 0).is.true;
 				});
-				expect(__stack__.indexOf('test.environment.js:56') > 0).is.true;
+				expect(__stack__.indexOf('test.environment.js:5') > 0).is.true;
 					// .equal(357);
 
 			});
@@ -644,7 +652,7 @@ const test = (opts) => {
 				} = wrongSyncTypeErr;
 				expect(stack.indexOf(stackstart)).equal(1);
 				expect(stack
-					.indexOf('test.environment.js:579:') > 0).is.true;
+					.indexOf('test.environment.js:') > 0).is.true;
 					// .equal(86);
 				expect(wrongSyncTypeErr).instanceOf(Error);
 				expect(wrongSyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
@@ -660,7 +668,7 @@ const test = (opts) => {
 				} = wrongAsyncTypeErr;
 				expect(stack.indexOf(stackstart)).equal(1);
 				expect(stack
-					.indexOf('test.environment.js:588:') > 0).is.true;
+					.indexOf('test.environment.js:5') > 0).is.true;
 					// .equal(87);
 				expect(wrongAsyncTypeErr).instanceOf(Error);
 				expect(wrongAsyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);

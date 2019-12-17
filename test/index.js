@@ -190,7 +190,7 @@ const someADTCInstance = new SomeADTCType();
 
 
 const anotherNamespace = createNamespace('anotherNamespace');
-const anotherTypesCollection = createTypesCollection(anotherNamespace);
+const anotherTypesCollection = createTypesCollection(anotherNamespace, 'another types collection');
 const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 
 const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType', function (check) {
