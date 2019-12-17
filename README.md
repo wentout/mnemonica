@@ -257,7 +257,7 @@ console.log(extract(someTypeInstance));
 
 Here `extracted` object will contain all iterable props of `someSubTypeInstance`. It means props are accessible via `Symbol.iterator`. So if you will define some hidden props, it will not consume them. This technique allows us acheive concentration only on meaningfull parts of [Data Flow Definition](https://en.wikipedia.org/wiki/Data-flow_diagram). So, all this might help to cover the gap between declared data flow and indeed flow written in code through describing flow itself with that simple way. For sure you are free to make your own `.extractor()` functions on the top of acheived multiplie inherited data object (storage):
 
-![Inheritance of someSubTypeInstance](./test/doc.example.png)
+![Inheritance of someSubTypeInstance](https://raw.githubusercontent.com/mythographica/stash/master/img/doc.example.png)
 
 And back to definitions, for sure, all of the following is true:
 
@@ -847,6 +847,6 @@ So, now you can craft as much types as you wish, combine them, re-define them an
 * validate : everything, 4 example use sort of TS in runtime
 * and even .parse them using `mnemonica.utils.parse`:
 
-![Inheritance of someSubTypeInstance](./test/doc.example.parse.png)
+![Inheritance of someSubTypeInstance](https://raw.githubusercontent.com/mythographica/stash/master/img/doc.example.parse.png)
 
 Good Luck!
