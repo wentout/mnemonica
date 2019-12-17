@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "abstract technique that aids information retention : instance inheritance system",
   "exports": {
     "./module": {
