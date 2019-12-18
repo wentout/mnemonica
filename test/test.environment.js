@@ -550,11 +550,11 @@ const test = (opts) => {
 							.WithoutPassword()
 							.WithAdditionalSign('async sign')
 
-					).AsyncChain1st({ async1st: '1st' })
+					).AsyncChain1st({ async1st: '2_1st' })
 						// after promise
-						.then(async function (instance) {
-							return await instance.AsyncChain1st({ async1st: '2_1st' });
-						})
+						// .then(async function (instance) {
+							// return await instance.AsyncChain1st({ async1st: '2_1st' });
+						// })
 						.then(async function (instance) {
 							return await instance.AsyncChain2nd({ async2nd: '2_2nd' });
 						})

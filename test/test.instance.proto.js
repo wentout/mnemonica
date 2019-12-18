@@ -141,9 +141,11 @@ const test = (opts) => {
 				Object.getPrototypeOf(Object.getPrototypeOf(userPL1));
 			const userPL1ForkPP =
 				Object.getPrototypeOf(Object.getPrototypeOf(userPL1Fork));
-			
-			assert.equal(userPL1ForkPP.UserTypePL1.toString(), userPL1PP.UserTypePL1.toString());
-			assert.equal(userPL1ForkPP.UserTypePL2.toString(), userPL1PP.UserTypePL2.toString());
+				
+			// assert.equal(userPL1ForkPP.UserTypePL1.toString(), userPL1PP.UserTypePL1.toString());
+			// assert.equal(userPL1ForkPP.UserTypePL2.toString(), userPL1PP.UserTypePL2.toString());
+			assert.equal(userPL1ForkPP.UserTypePL1, userPL1PP.UserTypePL1);
+			assert.equal(userPL1ForkPP.UserTypePL2, userPL1PP.UserTypePL2);
 
 			assert.notEqual(userPL1PP, userPL1ForkPP);
 			assert.notEqual(userPL1, userPL1Fork);
