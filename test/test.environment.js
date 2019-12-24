@@ -389,6 +389,12 @@ const test = (opts) => {
 			}
 		});
 
+		describe('strict chain test', () => {
+			it('deep chained type should be undefined', () => {
+				expect(userWithoutPassword.WithoutPassword).equal(undefined);
+			});
+		});
+		
 		describe('merge tests', () => {
 			const mergedSample = {
 				OverMoreSign: 'OverMoreSign',

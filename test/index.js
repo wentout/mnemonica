@@ -88,11 +88,14 @@ UserType.define(() => {
 	};
 	UserTypePL1.prototype = pl1Proto;
 	return UserTypePL1;
-}, true);
+}, {
+	strictChain : false
+});
 
 const pl2Proto = {
 	UserTypePL2: 'UserTypePL_2_AlwaysIncluded'
 };
+
 UserType.define(() => {
 	class UserTypePL2 {
 		constructor() {
@@ -103,6 +106,9 @@ UserType.define(() => {
 		}
 	}
 	return UserTypePL2;
+}, {
+	useOldStyle : true,
+	strictChain : false
 });
 
 
@@ -213,8 +219,8 @@ const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
 debugger;
 
-// const userPL_1_2 = new userPL1.UserTypePL2();
-// const userPL_NoNew = userPL1.UserTypePL2();
+const userPL_1_2 = new userPL1.UserTypePL2();
+const userPL_NoNew = userPL1.UserTypePL2();
 
 const AsyncType = define('AsyncType', async function (data) {
 	return Object.assign(this, {
@@ -740,8 +746,8 @@ describe('Main Test', () => {
 			userPL2,
 			pl1Proto,
 			pl2Proto,
-			// userPL_1_2,
-			// userPL_NoNew,
+			userPL_1_2,
+			userPL_NoNew,
 			UserTypeProto,
 			USER_DATA,
 		});
