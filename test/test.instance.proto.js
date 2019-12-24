@@ -144,8 +144,10 @@ const test = (opts) => {
 				
 			// assert.equal(userPL1ForkPP.UserTypePL1.toString(), userPL1PP.UserTypePL1.toString());
 			// assert.equal(userPL1ForkPP.UserTypePL2.toString(), userPL1PP.UserTypePL2.toString());
-			assert.equal(userPL1ForkPP.UserTypePL1, userPL1PP.UserTypePL1);
-			assert.equal(userPL1ForkPP.UserTypePL2, userPL1PP.UserTypePL2);
+			assert.deepInclude(userPL1ForkPP.UserTypePL1, userPL1PP.UserTypePL1);
+			assert.deepInclude(userPL1PP.UserTypePL1, userPL1ForkPP.UserTypePL1);
+			assert.deepInclude(userPL1ForkPP.UserTypePL2, userPL1PP.UserTypePL2);
+			assert.deepInclude(userPL1PP.UserTypePL2, userPL1ForkPP.UserTypePL2);
 
 			assert.notEqual(userPL1PP, userPL1ForkPP);
 			assert.notEqual(userPL1, userPL1Fork);
