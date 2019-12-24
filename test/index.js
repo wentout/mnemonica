@@ -480,6 +480,12 @@ describe('Main Test', () => {
 		merged,
 	});
 
+	require('./test.async.chain')({
+		UserType,
+		UserTypeConstructor,
+	});
+	
+	
 	if (hooksTest) {
 		require('./test.hooks')({
 			userTypeHooksInvocations,
@@ -516,8 +522,8 @@ describe('Main Test', () => {
 			it(`and declared as proper SubType : ${def.isSubType} `, () => {
 				assert.equal(def.isSubType, isSubType);
 			});
-			it(`will force use of proper style contructor : ${useOldStyle}`, () => {
-				assert.equal(def.useOldStyle, useOldStyle);
+			it(`will force use of proper style contructor for ${TypeName} as: ${useOldStyle}`, () => {
+				assert.equal(def.config.useOldStyle, useOldStyle);
 			});
 			it('contructor exists', () => {
 				assert.isFunction(def.constructHandler);
