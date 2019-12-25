@@ -9,6 +9,16 @@
       "require": "lib/index.js"
     }
   },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "module",
+    "lib"
+  ],
+  "directories": {
+    "lib": "lib/",
+    "module": "module/"
+  },
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha --allow-uncaught test/index.js",
