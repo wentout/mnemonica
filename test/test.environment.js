@@ -11,6 +11,7 @@ const {
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
 	SymbolGaia,
+	SymbolConfig,
 	MNEMONICA,
 	MNEMOSYNE,
 	GAIA,
@@ -492,15 +493,15 @@ const test = (opts) => {
 		const goodNamespaceDescription = 'good config namespace';
 		const goodNamespace = createNamespace('good_config_namespace', goodNamespaceDescription);
 		it('namespace with string instead of config should have description', () => {
-			expect(goodNamespace.config.description).is.equal(goodNamespaceDescription);
+			expect(goodNamespace[SymbolConfig].description).is.equal(goodNamespaceDescription);
 		});
 		
 		const goodNamespaceTC = goodNamespace.createTypesCollection('good namespace types collection', {
 			useOldStyle : true
 		});
 		it('namespace types collection creation check', () => {
-			expect(goodNamespaceTC.config.useOldStyle).is.equal(true);
-			expect(goodNamespaceTC.config.strictChain).is.equal(true);
+			expect(goodNamespaceTC[SymbolConfig].useOldStyle).is.equal(true);
+			expect(goodNamespaceTC[SymbolConfig].strictChain).is.equal(true);
 		});
 		
 	});

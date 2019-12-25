@@ -1,15 +1,7 @@
-# mnemonica
+# mnemonica is
 abstract technique that aids information retention : instance inheritance system
 
----
-
-[![Coverage Status](https://coveralls.io/repos/github/wentout/mnemonica/badge.svg?branch=master)](https://coveralls.io/github/wentout/mnemonica?branch=master)
-![Travis (.org)](https://img.shields.io/travis/wentout/mnemonica)
-![NPM](https://img.shields.io/npm/l/mnemonica)
-![GitHub package.json version](https://img.shields.io/github/package-json/v/wentout/mnemonica)
-![GitHub last commit](https://img.shields.io/github/last-commit/wentout/mnemonica)
-
-[![NPM](https://nodei.co/npm/mnemonica.png?mini=true)](https://www.npmjs.com/package/mnemonica)
+... allows us to make inherited descriptions of mappings of transformations from predecessor structured data types to the successors, as if it was math `f(x)=>y` ... and we will use `this` keyword as a persistent data structure where we will apply that transformations
 
 ---
 
@@ -21,10 +13,21 @@ abstract technique that aids information retention : instance inheritance system
 
 ---
 
+[![Coverage Status](https://coveralls.io/repos/github/wentout/mnemonica/badge.svg?branch=master)](https://coveralls.io/github/wentout/mnemonica?branch=master)
+![Travis (.org)](https://img.shields.io/travis/wentout/mnemonica)
+![NPM](https://img.shields.io/npm/l/mnemonica)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/wentout/mnemonica)
+![GitHub last commit](https://img.shields.io/github/last-commit/wentout/mnemonica)
+
+[![NPM](https://nodei.co/npm/mnemonica.png?mini=true)](https://www.npmjs.com/package/mnemonica)
+
+
+
+---
 
 # core concept
 
-This lib might help us to create some sort of order or sequence or precedence of how we modify data inside of our code. It utilizes the concept of tree or [Trie](https://en.wikipedia.org/wiki/Trie) by combining both: Object Instances and Inheritance through the Prototype Chain, where we are able to create new instance inherited from existing one as much times as we need. It might look like obvious, but ... we tell about Instances, not about Classes, meaning Plain Objects, crafted from real Constructors before we start the process of inheriting them one from another. In an attempt to describe this approach let me suggest this article:
+This lib might help to create some sort of order or sequence or precedence of how we modify data inside of our code. It utilizes the concept of tree or [Trie](https://en.wikipedia.org/wiki/Trie) by combining both: Object Instances and Inheritance through the Prototype Chain, where we are able to create new instance inherited from existing one as much times as we need. It might look like obvious, but ... we tell about Instances, not about Classes, meaning Plain Objects, crafted from real Constructors before we start the process of inheriting them one from another. In an attempt to describe this approach let me suggest this article:
 
 ### [Inheritance in JavaScript : Factory of Constructors with Prototype Chain](https://medium.com/@went.out/javascript-prototype-inheritance-point-of-view-from-boring-nerd-9c7924afc9fc)
 
