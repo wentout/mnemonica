@@ -2,6 +2,8 @@
 
 const { assert, expect } = require('chai');
 
+const mnemonica = require('..');
+
 const {
 	define,
 	defaultTypes: types,
@@ -23,7 +25,7 @@ const {
 	},
 	errors,
 	ErrorMessages,
-} = require('..');
+} = mnemonica;
 
 
 const test = (opts) => {
@@ -54,6 +56,54 @@ const test = (opts) => {
 	describe('Check Environment', () => {
 		
 
+		describe('interface test', () => {
+			
+			const interface_keys = [
+				'SymbolSubtypeCollection',
+				'SymbolConstructorName',
+				'SymbolGaia',
+				'SymbolDefaultNamespace',
+				'SymbolDefaultTypesCollection',
+				'SymbolConfig',
+				'MNEMONICA',
+				'MNEMOSYNE',
+				'GAIA',
+				'URANUS',
+				'TYPE_TITLE_PREFIX',
+				'ErrorMessages',
+				'createNamespace',
+				'namespaces',
+				'defaultNamespace',
+				'createTypesCollection',
+				'defaultTypes',
+				'errors',
+				'utils',
+				'define',
+				'lookup'
+			];
+			
+			const mnemonica_keys = Object.keys(mnemonica);
+			
+			it('interface length', () => {
+				expect(mnemonica_keys.length).equal(interface_keys.length);
+			});
+			
+			it('interface keys', () => {
+				const missingKeys = interface_keys.filter(key => {
+					return !mnemonica_keys.includes(key);
+				});
+				expect(missingKeys.length).equal(0);
+			});
+			
+			it('mnemonica keys', () => {
+				const missingKeys = mnemonica_keys.filter(key => {
+					return !interface_keys.includes(key);
+				});
+				expect(missingKeys.length).equal(0);
+			});
+			
+		});
+		
 		describe('core env tests', () => {
 
 			it('Symbol Gaia', () => {
