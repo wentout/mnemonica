@@ -54,7 +54,6 @@ const test = (opts) => {
 	} = opts;
 
 	describe('Check Environment', () => {
-		
 
 		describe('interface test', () => {
 			
@@ -168,7 +167,7 @@ const test = (opts) => {
 				});
 			}
 			
-			it('should refer defaultTypes from types.get(defaultNamespace)', () => {
+			it('should refer defaultTypes from defaultNamespace', () => {
 				expect(defaultNamespace.typesCollections.has(types)).is.true;
 			});
 			it('should create collections in defaultNamespace by default', () => {
@@ -233,6 +232,7 @@ const test = (opts) => {
 				});
 			}
 		});
+		
 		describe('should respect DFD', () => {
 			const BadType = define('BadType', function (NotThis) {
 				// returns not instanceof this
@@ -262,6 +262,7 @@ const test = (opts) => {
 				});
 			}
 		});
+		
 		describe('should not hack DFD', () => {
 			const BadTypeReThis = define('BadTypeReThis', function () {
 				// removing constructor
@@ -283,6 +284,7 @@ const test = (opts) => {
 				});
 			}
 		});
+		
 		describe('subtype property type re-definition', () => {
 			const BadTypeReContruct = define('BadTypeReContruct', function () {
 				this.ExistentConstructor = undefined;
@@ -314,35 +316,43 @@ const test = (opts) => {
 		});
 		describe('should throw with wrong definition', () => {
 			[
-				['prototype is not an object', () => {
-					define('wrong', function () { }, true);
+				['wrong type definition : expect prototype to be an object', () => {
+					define('Wrong', function () { }, true);
 				}, errors.WRONG_TYPE_DEFINITION],
-				['no definition', () => {
+				['wrong type definition : TypeName should start with Uppercase Letter', () => {
+					// define('wrong', function () { }, true);
+					types.wrong = function () {};
+				}, errors.WRONG_TYPE_DEFINITION],
+				// ['wrong type definition : collection property re-definition', () => {
+				// 	debugger;
+				// 	types[MNEMONICA] = function () {};
+				// }, errors.WRONG_TYPE_DEFINITION],
+				['wrong type definition : definition is not provided', () => {
 					define();
 				}, errors.WRONG_TYPE_DEFINITION],
-				['intentionally bad definition', () => {
+				['handler must be a function', () => {
 					define('NoConstructFunctionType', NaN, '', 'false');
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
-				['intentionally bad type definition', () => {
+				['handler must be a function', () => {
 					define(() => {
 						return {
 							name: null
 						};
 					});
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
-				['re-definition', () => {
+				['this type has already been declared', () => {
 					define('UserTypeConstructor', () => {
 						return function WithoutPassword() { };
 					});
 				}, errors.ALREADY_DECLARED],
-				['prohibit anonymous', () => {
+				['typename must be a string', () => {
 					define('UserType.UserTypePL1', () => {
 						return function () { };
 					});
 				}, errors.TYPENAME_MUST_BE_A_STRING],
 			].forEach(entry => {
-				const [name, fn, err] = entry;
-				it(`check throw with : ${name}`, () => {
+				const [errorMessage, fn, err] = entry;
+				it(`check throw with : '${errorMessage}'`, () => {
 					expect(fn).throw();
 					try {
 						fn();
@@ -351,6 +361,7 @@ const test = (opts) => {
 							.instanceof(err);
 						expect(error).to.be.an
 							.instanceof(Error);
+						expect(error.message).equal(errorMessage);
 					}
 				});
 			});
