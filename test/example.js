@@ -31,7 +31,10 @@ UserType.define(() => {
 		UserTypePL1 : 'UserTypePL_1'
 	};
 	return UserTypePL1;
-}, true);
+}, {
+	useOldStyle : true,
+	strictChain : false
+});
 
 UserType.define(() => {
 	const UserTypePL2 = function () {
