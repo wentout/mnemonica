@@ -22,8 +22,7 @@ const test = (opts) => {
 
 	describe('nested type with old style check', () => {
 		it('actually do construction', () => {
-			assert.instanceOf(userPL1, types.UserType.subtypes.UserTypePL1);
-			debugger;
+			assert.instanceOf(userPL1, types.UserType.subtypes.get('UserTypePL1'));
 			assert.instanceOf(userPL1, user.UserTypePL1);
 			assert.equal(
 				// Object.getPrototypeOf(
@@ -67,7 +66,7 @@ const test = (opts) => {
 
 	describe('nested type with new style check', () => {
 		it('actually do construction', () => {
-			assert.instanceOf(userPL2, types.UserType.subtypes.UserTypePL2);
+			assert.instanceOf(userPL2, types.UserType.subtypes.get('UserTypePL2'));
 			assert.instanceOf(userPL2, user.UserTypePL2);
 		});
 		it('.constructor.name is correct', () => {

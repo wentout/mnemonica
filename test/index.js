@@ -214,10 +214,10 @@ const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionTy
 const oneElseCollectionInstance = new OneElseCollectionType();
 
 
+// debugger;
 const user = new UserType(USER_DATA);
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
-debugger;
 
 const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
@@ -233,7 +233,7 @@ AsyncType.SubOfAsync = function (data) {
 		data
 	});
 };
-
+// debugger;
 AsyncType.SubOfAsync.NestedAsyncType = async function (data) {
 	return Object.assign(this, {
 		data
@@ -325,7 +325,9 @@ describe('Main Test', () => {
 	const WithoutPasswordProto = {
 		WithoutPasswordSign: 'WithoutPasswordSign'
 	};
-
+	
+	// debugger;
+	
 	const UserWithoutPassword = types.UserTypeConstructor.define(() => {
 		const WithoutPassword = function () {
 			this.password = undefined;
@@ -363,6 +365,7 @@ describe('Main Test', () => {
 	const OverMoreProto = {
 		OverMoreSign: 'OverMoreSign'
 	};
+	// debugger;
 	const OverMore = WithAdditionalSign
 		.define('MoreOver.OverMore',
 			function (str) {
@@ -448,7 +451,7 @@ describe('Main Test', () => {
 	const overMoreCallEvenMoreProcess = overMore.EvenMore.call(process);
 
 	const evenMoreArgs = evenMore.__args__;
-	debugger;
+	// debugger;
 	const evenMoreFork = evenMore.fork(strFork);
 	const evenMoreForkFork = evenMoreFork.fork(strForkOfFork);
 
@@ -509,15 +512,15 @@ describe('Main Test', () => {
 		const parentType = types[SymbolSubtypeCollection];
 		const isSubType = parentType ? true : false;
 		describe(`initial type declaration ${TypeName}`, () => {
-			const def = types[TypeName];
+			const def = types.get(TypeName);
 			it('should exist', () => {
 				assert.isDefined(def);
 			});
 			it('and have proper name', () => {
 				assert.ok(def.TypeName === TypeName);
 			});
-			it('.subtypes must be an object', () => {
-				assert.isObject(def.subtypes);
+			it('.subtypes must be Map', () => {
+				assert.isTrue(def.subtypes instanceof Map);
 			});
 			if (proto) {
 				it('.proto must be equal with definition', () => {
@@ -539,10 +542,10 @@ describe('Main Test', () => {
 
 	describe('Type Definitions Tests', () => {
 		[
-			[types, 'UserType', UserTypeProto, true],
+			[types.subtypes, 'UserType', UserTypeProto, true],
 			[UserType.subtypes, 'UserTypePL1', pl1Proto, false],
 			[UserType.subtypes, 'UserTypePL2'],
-			[types, 'UserTypeConstructor', UserTypeConstructorProto],
+			[types.subtypes, 'UserTypeConstructor', UserTypeConstructorProto],
 			[types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto],
 			[UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto],
 			[WithAdditionalSign.subtypes, 'MoreOver'],
