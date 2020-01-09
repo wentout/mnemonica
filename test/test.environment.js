@@ -10,6 +10,7 @@ const {
 	defaultNamespace,
 	namespaces,
 	SymbolDefaultNamespace,
+	SymbolDefaultTypesCollection,
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
 	SymbolGaia,
@@ -132,6 +133,9 @@ const test = (opts) => {
 					.and.equal(namespaces.get(SymbolDefaultNamespace));
 				expect(defaultNamespace.name).to.be.a('symbol')
 					.and.equal(SymbolDefaultNamespace);
+			});
+			it('SymbolDefaultTypesCollection shoud be default', () => {
+				expect(types[SymbolDefaultTypesCollection]).equal(true);
 			});
 			it('MNEMONICA shoud be defined', () => {
 				expect(MNEMONICA).to.be.a('string').and.equal('Mnemonica');
@@ -314,19 +318,24 @@ const test = (opts) => {
 				});
 			}
 		});
+		describe('should define through typesCollection proxy', () => {
+			it('check typesCollection proxified creation', () => {
+				types.ProxifiedCreation = function () {};
+			});
+		});
 		describe('should throw with wrong definition', () => {
 			[
 				['wrong type definition : expect prototype to be an object', () => {
 					define('Wrong', function () { }, true);
 				}, errors.WRONG_TYPE_DEFINITION],
 				['wrong type definition : TypeName should start with Uppercase Letter', () => {
-					// define('wrong', function () { }, true);
+					// next line same as 
+					// define('wrong', function () { /* ... */ });
 					types.wrong = function () {};
 				}, errors.WRONG_TYPE_DEFINITION],
-				// ['wrong type definition : collection property re-definition', () => {
-				// 	debugger;
-				// 	types[MNEMONICA] = function () {};
-				// }, errors.WRONG_TYPE_DEFINITION],
+				['wrong type definition : TypeName of reserved keyword', () => {
+					types[MNEMONICA] = function () {};
+				}, errors.WRONG_TYPE_DEFINITION],
 				['wrong type definition : definition is not provided', () => {
 					define();
 				}, errors.WRONG_TYPE_DEFINITION],

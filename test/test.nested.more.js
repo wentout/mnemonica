@@ -134,7 +134,7 @@ const test = (opts) => {
 			const constructorsKeys = Object.keys(constructors);
 
 			var base = types;
-
+			// debugger;
 			constructorsKeys
 				.reverse()
 				.map((name, idx) => {
@@ -158,7 +158,7 @@ const test = (opts) => {
 						// with types[DEFAULT_NAMESPACE_NAME] instanceof
 						if (base && base[name]) {
 							iof = evenMore instanceof base[name];
-							base = base[name].subtypes;
+							base = base[name];
 						} else {
 							if (!base) {
 								return { idx, name, iof };
