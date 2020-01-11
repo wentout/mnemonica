@@ -213,9 +213,8 @@ const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionTy
 });
 const oneElseCollectionInstance = new OneElseCollectionType();
 
-
-// debugger;
 const user = new UserType(USER_DATA);
+debugger;
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
 
@@ -416,6 +415,7 @@ describe('Main Test', () => {
 		email: 'forkmail@gmail.com',
 		password : '54321'
 	};
+	debugger;
 	const userTCForkCall = userTC.fork.call(user, FORK_CALL_DATA);
 	const userTCForkApply = userTC.fork.apply(user, [
 		FORK_CALL_DATA
@@ -580,8 +580,11 @@ describe('Main Test', () => {
 			expect(user.hasOwnProperty('UserTypePL2')).is.false;
 		});
 		it('.SubTypes definition is correct  20XX First Child', () => {
-			expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL1')).is.true;
-			expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL2')).is.true;
+			expect(user.__subtypes__.has('UserTypePL1')).is.true;
+			expect(user.__subtypes__.has('UserTypePL2')).is.true;
+			// 0.8.4 -- changed interface, no more methods inside of prototype chain
+			// expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL1')).is.true;
+			// expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL2')).is.true;
 		});
 
 

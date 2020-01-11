@@ -113,7 +113,9 @@ const test = (opts) => {
 				expect(userTC.hasOwnProperty('WithoutPassword')).is.false;
 			});
 			it('.SubTypes definition is correct Regular FirstChild', () => {
-				expect(Object.getPrototypeOf(Object.getPrototypeOf(userTC)).hasOwnProperty('WithoutPassword')).is.true;
+				// 0.8.4 -- changed interface, no more methods inside of prototype chain
+				// expect(Object.getPrototypeOf(Object.getPrototypeOf(userTC)).hasOwnProperty('WithoutPassword')).is.true;
+				expect(userTC.__subtypes__.has('WithoutPassword')).is.true;
 			});
 
 			it('.SubTypes definition is correct Regular Nested Children', () => {
@@ -121,8 +123,11 @@ const test = (opts) => {
 					Object.getPrototypeOf(Object.getPrototypeOf(overMore)),
 					Object.getPrototypeOf(Object.getPrototypeOf(moreOver))
 				);
-				expect(Object.getPrototypeOf(Object.getPrototypeOf(overMore)).hasOwnProperty('EvenMore')).is.true;
-				expect(Object.getPrototypeOf(Object.getPrototypeOf(moreOver)).hasOwnProperty('OverMore')).is.true;
+				expect(overMore.__subtypes__.has('EvenMore')).is.true;
+				expect(moreOver.__subtypes__.has('OverMore')).is.true;
+				// 0.8.4 -- changed interface, no more methods inside of prototype chain
+				// expect(Object.getPrototypeOf(Object.getPrototypeOf(overMore)).hasOwnProperty('EvenMore')).is.true;
+				// expect(Object.getPrototypeOf(Object.getPrototypeOf(moreOver)).hasOwnProperty('OverMore')).is.true;
 			});
 
 			it('namespaces shoud be defined', () => {
@@ -289,22 +294,26 @@ const test = (opts) => {
 			}
 		});
 		
-		describe('subtype property type re-definition', () => {
-			const BadTypeReContruct = define('BadTypeReContruct', function () {
-				this.ExistentConstructor = undefined;
-			});
-			BadTypeReContruct.define('ExistentConstructor');
-			try {
-				new BadTypeReContruct().ExistentConstructor();
-			} catch (error) {
-				it('should respect construction rules', () => {
-					expect(error).instanceOf(Error);
-				});
-				it('thrown error instanceof EXISTENT_PROPERTY_REDEFINITION', () => {
-					expect(error).instanceOf(errors.EXISTENT_PROPERTY_REDEFINITION);
-				});
-			}
-		});
+		// next test is meaningless since 0.8.4
+		// describe('subtype property type re-definition', () => {
+		// 	const BadTypeReContruct = define('BadTypeReContruct', function () {
+		// 		this.ExistentConstructor = undefined;
+		// 	});
+		// 	BadTypeReContruct.define('ExistentConstructor');
+		// 	try {
+		// 		debugger;
+		// 		const badType = new BadTypeReContruct();
+		// 		// badType.ExistentConstructor;
+		// 		new badType.ExistentConstructor();
+		// 	} catch (error) {
+		// 		it('should respect construction rules', () => {
+		// 			expect(error).instanceOf(Error);
+		// 		});
+		// 		it('thrown error instanceof EXISTENT_PROPERTY_REDEFINITION', () => {
+		// 			expect(error).instanceOf(errors.EXISTENT_PROPERTY_REDEFINITION);
+		// 		});
+		// 	}
+		// });
 		describe('subtype property inside type re-definition', () => {
 			const BadTypeReInConstruct = define('BadTypeReInConstruct', function () { });
 			BadTypeReInConstruct.define('ExistentConstructor', function () {
