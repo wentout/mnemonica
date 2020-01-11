@@ -294,26 +294,6 @@ const test = (opts) => {
 			}
 		});
 		
-		// next test is meaningless since 0.8.4
-		// describe('subtype property type re-definition', () => {
-		// 	const BadTypeReContruct = define('BadTypeReContruct', function () {
-		// 		this.ExistentConstructor = undefined;
-		// 	});
-		// 	BadTypeReContruct.define('ExistentConstructor');
-		// 	try {
-		// 		debugger;
-		// 		const badType = new BadTypeReContruct();
-		// 		// badType.ExistentConstructor;
-		// 		new badType.ExistentConstructor();
-		// 	} catch (error) {
-		// 		it('should respect construction rules', () => {
-		// 			expect(error).instanceOf(Error);
-		// 		});
-		// 		it('thrown error instanceof EXISTENT_PROPERTY_REDEFINITION', () => {
-		// 			expect(error).instanceOf(errors.EXISTENT_PROPERTY_REDEFINITION);
-		// 		});
-		// 	}
-		// });
 		describe('subtype property inside type re-definition', () => {
 			const BadTypeReInConstruct = define('BadTypeReInConstruct', function () { });
 			BadTypeReInConstruct.define('ExistentConstructor', function () {
