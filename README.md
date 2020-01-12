@@ -351,7 +351,7 @@ const postCreationCallback = (hookData) => {
 		// with argumentsOfTypeModificator
 		// and ... inheritedInstance
 		//  .constructor.name is 
-		// 'TypeModificatorName'
+		// TypeName
 		inheritedInstance
 		
 	} = hookData;
