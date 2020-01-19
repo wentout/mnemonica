@@ -196,6 +196,7 @@ const test = (opts) => {
 			expect(stack.indexOf(stackstart)).equal(1);
 			expect(stack.indexOf('test.async.chain.js:1') > 0).is.true;
 			expect(wrongSyncTypeErr).instanceOf(Error);
+			expect(wrongSyncTypeErr).instanceOf(WrongSyncType);
 			expect(wrongSyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
 			expect(wrongSyncTypeErr.message).exist.and.is.a('string');
 
@@ -210,6 +211,7 @@ const test = (opts) => {
 			expect(stack.indexOf(stackstart)).equal(1);
 			expect(stack.indexOf('test.async.chain.js:1') > 0).is.true;
 			expect(wrongAsyncTypeErr).instanceOf(Error);
+			expect(wrongAsyncTypeErr).instanceOf(WrongAsyncType);
 			expect(wrongAsyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
 			expect(wrongAsyncTypeErr.message).exist.and.is.a('string');
 
