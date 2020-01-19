@@ -254,6 +254,9 @@ const test = (opts) => {
 				it('should respect the rules', () => {
 					expect(error).instanceOf(Error);
 				});
+				it('should be instanceof BadType', () => {
+					expect(error).instanceOf(BadType);
+				});
 				it('thrown error instanceof WRONG_MODIFICATION_PATTERN', () => {
 					expect(error).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
 				});
@@ -277,12 +280,19 @@ const test = (opts) => {
 				// removing constructor
 				this.constructor = undefined;
 			});
-			BadTypeReThis.define('ThrownHackType');
+			const ThrownHackType = BadTypeReThis.define('ThrownHackType');
 			try {
 				new BadTypeReThis().ThrownHackType();
 			} catch (error) {
 				it('should respect construction rules', () => {
 					expect(error).instanceOf(Error);
+				});
+				it('should be instanceof BadTypeReThis', () => {
+					expect(error).instanceOf(BadTypeReThis);
+				});
+				it('should be not instanceof ThrownHackType', () => {
+					// cause there was no .constructor
+					expect(error).not.instanceOf(ThrownHackType);
 				});
 				it('thrown error instanceof WRONG_MODIFICATION_PATTERN', () => {
 					expect(error).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
