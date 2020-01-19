@@ -2,6 +2,8 @@
 
 const { assert, expect } = require('chai');
 
+const ogp = Object.getPrototypeOf;
+
 const {
 	inspect,
 	callbackify,
@@ -580,8 +582,8 @@ describe('Main Test', () => {
 			expect(user.__subtypes__.has('UserTypePL1')).is.true;
 			expect(user.__subtypes__.has('UserTypePL2')).is.true;
 			// 0.8.4 -- changed interface, no more methods inside of prototype chain
-			// expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL1')).is.true;
-			// expect(Object.getPrototypeOf(Object.getPrototypeOf(user)).hasOwnProperty('UserTypePL2')).is.true;
+			// expect(ogp(ogp(user)).hasOwnProperty('UserTypePL1')).is.true;
+			// expect(ogp(ogp(user)).hasOwnProperty('UserTypePL2')).is.true;
 		});
 
 
@@ -864,10 +866,10 @@ describe('Main Test', () => {
 					expect(asyncInstanceFork).instanceof(AsyncType);
 					
 					expect(typeof asyncInstanceDirect.on === 'function').is.true;
-					expect(Object.getPrototypeOf(asyncInstanceDirect[SymbolGaia]) === process).is.true;
+					expect(ogp(ogp(asyncInstanceDirect[SymbolGaia])) === process).is.true;
 					expect(asyncInstanceDirect[SymbolGaia][MNEMONICA] === URANUS).is.true;
 					expect(typeof asyncInstanceDirectApply.on === 'function').is.true;
-					expect(Object.getPrototypeOf(asyncInstanceDirectApply[SymbolGaia]) === process).is.true;
+					expect(ogp(ogp(asyncInstanceDirectApply[SymbolGaia])) === process).is.true;
 					expect(asyncInstanceDirectApply[SymbolGaia][MNEMONICA] === URANUS).is.true;
 					
 					expect(nestedAsyncInstance).instanceof(AsyncType);
