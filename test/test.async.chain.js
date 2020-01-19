@@ -226,7 +226,10 @@ const test = (opts) => {
 		var sleepInstance = null;
 		var otherSleepInstance = null;
 		var anotherSleepInstance = null;
-		var syncError = null;
+		var syncErrorStart = null;
+		var syncErrorEnd = null;
+		
+		const argsTest = { argsTest : 123 };
 		
 		const sleep = (time) =>{
 			return new Promise((resolve) => setTimeout(resolve, time));
@@ -240,17 +243,17 @@ const test = (opts) => {
 			
 		});
 		
-		const AsyncErroredType = SleepType.define('AsyncErroredType', async function () {
+		const AsyncErroredType = SleepType.define('AsyncErroredType', async function (...args) {
 			await sleep(100);
-			const b = {};
+			const b = { ...args };
 			b.c.async = null; // TypeError
 		}, {}, {
 			forceErrors : true
 		});
 		
-		const SyncErroredType = SleepType.define('SyncErroredType', function () {
+		const SyncErroredType = SleepType.define('SyncErroredType', function (...args) {
 			this.SyncErroredType = true;
-			const b = {};
+			const b = { ...args };
 			b.c.sync = null; // TypeError
 		}, {}, {
 			forceErrors : true
@@ -262,7 +265,7 @@ const test = (opts) => {
 				sleepInstance = await new SleepType();
 				
 				try {
-					await sleepInstance.AsyncErroredType();
+					await sleepInstance.AsyncErroredType(argsTest);
 				} catch (error) {
 					sleepError = error;
 				}
@@ -272,16 +275,15 @@ const test = (opts) => {
 				anotherSleepInstance = await new SleepType();
 				
 				try {
-					anotherSleepInstance.SyncErroredType();
+					anotherSleepInstance.SyncErroredType(argsTest);
 				} catch (error) {
-					syncError = error;
+					syncErrorStart = error;
 				}
 				
 				try {
-					debugger;
-					anotherSleepInstance.SyncErroredType();
+					anotherSleepInstance.SyncErroredType(argsTest);
 				} catch (error) {
-					syncError = error;
+					syncErrorEnd = error;
 				}
 				
 				done();
@@ -307,6 +309,10 @@ const test = (opts) => {
 		it('sleepError shold be instanceof AsyncErroredType', () => {
 			expect(sleepError).instanceOf(AsyncErroredType);
 		});
+		it('sleepError expect args of SyncErroredType', () => {
+			expect(sleepError.__args__[0]).equal(argsTest);
+		});
+
 		
 		it('sleepInstance shold be instanceof SleepType', () => {
 			expect(sleepInstance).instanceOf(SleepType);
@@ -338,18 +344,36 @@ const test = (opts) => {
 		it('anotherSleepInstance shold be instanceof TypeError', () => {
 			expect(anotherSleepInstance).instanceOf(TypeError);
 		});
+
 		
 		it('sleepInstance sholdn\'t be instanceof AsyncErroredType', () => {
 			expect(sleepInstance).not.instanceOf(AsyncErroredType);
 		});
-		it('syncError shold be instanceof Error', () => {
-			expect(syncError).instanceOf(Error);
+		
+		it('syncErrorStart shold be instanceof Error', () => {
+			expect(syncErrorStart).instanceOf(Error);
 		});
-		it('syncError shold be instanceof TypeError', () => {
-			expect(syncError).instanceOf(TypeError);
+		it('syncErrorStart shold be instanceof TypeError', () => {
+			expect(syncErrorStart).instanceOf(TypeError);
 		});
-		it('sleepInstance shold be instanceof SyncErroredType', () => {
-			expect(syncError).instanceOf(SyncErroredType);
+		it('syncErrorStart shold be instanceof SyncErroredType', () => {
+			expect(syncErrorStart).instanceOf(SyncErroredType);
+		});
+		it('syncErrorEnd expect args of SyncErroredType', () => {
+			expect(syncErrorStart.__args__[0]).equal(argsTest);
+		});
+		
+		it('syncErrorEnd shold be instanceof Error', () => {
+			expect(syncErrorEnd).instanceOf(Error);
+		});
+		it('syncErrorEnd shold be instanceof TypeError', () => {
+			expect(syncErrorEnd).instanceOf(TypeError);
+		});
+		it('syncErrorEnd shold be instanceof SyncErroredType', () => {
+			expect(syncErrorEnd).instanceOf(SyncErroredType);
+		});
+		it('syncErrorEnd expect args of SyncErroredType', () => {
+			expect(syncErrorEnd.__args__[0]).equal(argsTest);
 		});
 
 		
