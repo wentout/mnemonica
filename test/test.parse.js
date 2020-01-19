@@ -61,10 +61,8 @@ const test = (opts) => {
 			});
 		}
 		
-		// debugger;
 		const parsedUser = parse(user);
 		const parsedUserTC = parse(userTC);
-
 		const results = {
 			parsedUser,
 			parsedUserPL1: parse(userPL1),
