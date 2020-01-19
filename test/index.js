@@ -55,7 +55,6 @@ const UserType = define('UserType', function (userData) {
 	return this;
 }, UserTypeProto, true);
 
-
 const userTypeHooksInvocations = [];
 
 UserType.registerHook('preCreation', function (opts) {
@@ -232,7 +231,6 @@ AsyncType.SubOfAsync = function (data) {
 		data
 	});
 };
-// debugger;
 AsyncType.SubOfAsync.NestedAsyncType = async function (data) {
 	return Object.assign(this, {
 		data
@@ -253,7 +251,6 @@ var SubOfNestedAsyncPostHookData;
 SubOfNestedAsync.registerHook('postCreation', function (opts) {
 	SubOfNestedAsyncPostHookData = opts;
 });
-
 
 
 // debugger;
@@ -411,11 +408,12 @@ describe('Main Test', () => {
 
 	// const userTC = new types.UserTypeConstructor(USER_DATA);
 	const userTC = new UserTypeConstructor(USER_DATA);
+	
 	const FORK_CALL_DATA = {
 		email: 'forkmail@gmail.com',
 		password : '54321'
 	};
-	debugger;
+	
 	const userTCForkCall = userTC.fork.call(user, FORK_CALL_DATA);
 	const userTCForkApply = userTC.fork.apply(user, [
 		FORK_CALL_DATA
@@ -451,7 +449,6 @@ describe('Main Test', () => {
 	const overMoreCallEvenMoreProcess = overMore.EvenMore.call(process);
 
 	const evenMoreArgs = evenMore.__args__;
-	// debugger;
 	const evenMoreFork = evenMore.fork(strFork);
 	const evenMoreForkFork = evenMoreFork.fork(strForkOfFork);
 

@@ -13,6 +13,36 @@ const test = (opts) => {
 		UserType,
 		UserTypeConstructor,
 	} = opts;
+
+	const sleep = (time) =>{
+		return new Promise((resolve) => setTimeout(resolve, time));
+	};
+
+	const SleepType = define('SleepType', async function () {
+		
+		await sleep(100);
+		
+		this.slept = true;
+		
+		return this;
+		
+	});
+	
+	const AsyncErroredType = SleepType.define('AsyncErroredType', async function () {
+		await sleep(100);
+		const b = {};
+		b.c.d = null; // TypeError
+	}, {}, {
+		forceErrors : true
+	});
+	
+	const SyncErroredType = define('SyncErroredType', function () {
+		const b = {};
+		b.c.d = null; // TypeError
+	}, {}, {
+		forceErrors : true
+	});
+	
 	
 	describe('async chain check', () => {
 
@@ -207,6 +237,7 @@ const test = (opts) => {
 			const {
 				stack
 			} = wrongAsyncTypeErr;
+			debugger;
 			expect(stack.indexOf(stackstart)).equal(1);
 			expect(stack.indexOf('test.async.chain.js:1') > 0).is.true;
 			expect(wrongAsyncTypeErr).instanceOf(Error);
@@ -216,6 +247,87 @@ const test = (opts) => {
 			assert.equal(wrongAsyncTypeErr.message, 'wrong modification pattern : should inherit from WrongAsyncType but got UserType');
 		});
 
+	});
+	
+	describe('async chain forced errors types check', () => {
+		var sleepError = null;
+		var sleepInstance = null;
+		var otherSleepInstance = null;
+		var syncError = null;
+		
+		before(function (done) {
+			(async () => {
+				
+				try {
+					sleepInstance = await new SleepType();
+					otherSleepInstance = await new SleepType();
+					await sleepInstance.AsyncErroredType();
+				} catch (error) {
+					sleepError = error;
+				}
+				
+				try {
+					new SyncErroredType();
+				} catch (error) {
+					debugger;
+					syncError = error;
+				}
+				
+				done();
+				
+			})();
+		});
+		
+		it('shold have props', () => {
+			expect(sleepError.slept).is.true;
+		});
+		it('sleepError shold be instanceof Error', () => {
+			expect(sleepError).instanceOf(Error);
+		});
+		it('sleepError shold be instanceof Error', () => {
+			expect(sleepError).instanceOf(TypeError);
+		});
+		it('sleepError shold be instanceof SleepType', () => {
+			expect(sleepError).instanceOf(SleepType);
+		});
+		it('sleepError shold be instanceof AsyncErroredType', () => {
+			expect(sleepError).instanceOf(AsyncErroredType);
+		});
+		
+		it('sleepInstance shold be instanceof SleepType', () => {
+			expect(sleepInstance).instanceOf(SleepType);
+		});
+		it('sleepInstance shold be instanceof Error', () => {
+			expect(sleepInstance).instanceOf(Error);
+		});
+		it('sleepInstance shold be instanceof Error', () => {
+			expect(sleepInstance).instanceOf(TypeError);
+		});
+		
+		it('otherSleepInstance shold be instanceof SleepType', () => {
+			expect(otherSleepInstance).instanceOf(SleepType);
+		});
+		it('otherSleepInstance shold be instanceof Error', () => {
+			expect(otherSleepInstance).instanceOf(Error);
+		});
+		it('otherSleepInstance shold be instanceof Error', () => {
+			expect(otherSleepInstance).instanceOf(TypeError);
+		});
+		
+		it('sleepInstance sholdn\'t be instanceof AsyncErroredType', () => {
+			expect(sleepInstance).not.instanceOf(AsyncErroredType);
+		});
+		it('syncError shold be instanceof Error', () => {
+			expect(syncError).instanceOf(Error);
+		});
+		it('syncError shold be instanceof Error', () => {
+			expect(syncError).instanceOf(TypeError);
+		});
+		it('sleepInstance shold be instanceof SyncErroredType', () => {
+			expect(syncError).instanceOf(SyncErroredType);
+		});
+
+		
 	});
 
 };
