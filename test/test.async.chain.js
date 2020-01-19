@@ -228,11 +228,16 @@ const test = (opts) => {
 	describe('async chain forced errors types check', () => {
 		
 		var sleepError = null;
+		
 		var sleepInstance = null;
 		var otherSleepInstance = null;
 		var anotherSleepInstance = null;
+		
 		var syncErrorStart = null;
 		var syncErrorEnd = null;
+		
+		var straightErrorSync = null;
+		var straightErrorAsync = null;
 		
 		const argsTest = { argsTest : 123 };
 		
@@ -252,16 +257,26 @@ const test = (opts) => {
 			await sleep(100);
 			const b = { ...args };
 			b.c.async = null; // TypeError
-		}, {}, {
-			forceErrors : true
 		});
 		
 		const SyncErroredType = SleepType.define('SyncErroredType', function (...args) {
-			this.SyncErroredType = true;
+			const b = { ...args };
+			b.c.sync = null; // TypeError
+		});
+		
+		const AsyncErroredTypeStraight = SleepType.define('AsyncErroredTypeStraight', async function (...args) {
+			await sleep(100);
+			const b = { ...args };
+			b.c.async = null; // TypeError
+		}, {}, {
+			blockErrors : false
+		});
+		
+		const SyncErroredTypeStraight = SleepType.define('SyncErroredTypeStraight', function (...args) {
 			const b = { ...args };
 			b.c.sync = null; // TypeError
 		}, {}, {
-			forceErrors : true
+			blockErrors : false
 		});
 		
 		before(function (done) {
@@ -291,6 +306,18 @@ const test = (opts) => {
 					syncErrorEnd = error;
 				}
 				
+				try {
+					await new SleepType().AsyncErroredTypeStraight(argsTest);
+				} catch (error) {
+					straightErrorAsync = error;
+				}
+				
+				try {
+					await new SleepType().SyncErroredTypeStraight(argsTest);
+				} catch (error) {
+					straightErrorSync = error;
+				}
+				
 				done();
 				
 			})();
@@ -316,6 +343,14 @@ const test = (opts) => {
 		});
 		it('sleepError expect args of SyncErroredType', () => {
 			expect(sleepError.__args__[0]).equal(argsTest);
+		});
+		
+		
+		it('straightErrorAsync expect args of AsyncErroredTypeStraight', () => {
+			expect(straightErrorAsync.__args__).equal(undefined);
+		});
+		it('straightErrorSync expect args of SyncErroredTypeStraight', () => {
+			expect(straightErrorSync.__args__).equal(undefined);
 		});
 
 		
