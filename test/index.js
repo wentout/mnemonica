@@ -55,7 +55,6 @@ const UserType = define('UserType', function (userData) {
 	return this;
 }, UserTypeProto, true);
 
-
 const userTypeHooksInvocations = [];
 
 UserType.registerHook('preCreation', function (opts) {
