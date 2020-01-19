@@ -291,33 +291,6 @@ describe('Main Test', () => {
 			password
 		});
 
-		if (email === USER_DATA.email && password === USER_DATA.password) {
-
-			var self;
-
-			Object.defineProperty(this, 'uncaughtExceptionHandler', {
-				get() {
-					return function () {
-						const extracted = extract(self);
-						self.uncaughtExceptionData = extracted;
-					};
-				}
-			});
-
-			Object.defineProperty(this, 'throwTypeError', {
-				get() {
-					self = this;
-					return function () {
-						const a = {
-							b: 1
-						};
-						a.b.c.d = 2;
-					};
-				}
-			});
-		}
-
-
 	}, UserTypeConstructorProto);
 
 	const WithoutPasswordProto = {
@@ -374,7 +347,7 @@ describe('Main Test', () => {
 		EvenMoreSign: 'EvenMoreSign'
 	};
 
-	WithAdditionalSign.define(`
+	const EvenMore = WithAdditionalSign.define(`
 		MoreOver . OverMore
 	`, function () {
 		const EvenMore = function (str) {
@@ -382,6 +355,14 @@ describe('Main Test', () => {
 		};
 		EvenMore.prototype = Object.assign({}, EvenMoreProto);
 		return EvenMore;
+	});
+	
+	const ThrowTypeError = EvenMore.define('ThrowTypeError', function (...args) {
+		this.args = args;
+		const a = {
+			b: 1
+		};
+		a.b.c.d = 2;
 	});
 
 	const AsyncChain1st = WithAdditionalSign.define('AsyncChain1st', async function (opts) {
@@ -903,20 +884,27 @@ describe('Main Test', () => {
 		if (uncaughtExceptionTest) {
 			describe('uncaughtException test', () => {
 				it('should throw proper error', (passedCb) => {
+					const throwArgs = {
+						uncaughtException : true
+					};
+					
 					setTimeout(() => {
 
 						process.removeAllListeners('uncaughtException');
 
-						process.on('uncaughtException', userTC.uncaughtExceptionHandler);
-						const onUncaughtException = function () {
-							assert.deepOwnInclude(
-								evenMore.uncaughtExceptionData,
-								evenMoreNecessaryProps
+						const onUncaughtException = function (error) {
+							assert.equal(
+								error.__args__[0],
+								throwArgs
 							);
+							expect(error).instanceOf(Error);
+							expect(error).instanceOf(TypeError);
+							expect(error).instanceOf(ThrowTypeError);
 							passedCb();
 						};
+						
 						process.on('uncaughtException', onUncaughtException);
-						evenMore.throwTypeError();
+						new evenMore.ThrowTypeError(throwArgs);
 
 					}, 100);
 				});
