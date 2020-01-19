@@ -191,6 +191,7 @@ const test = (opts) => {
 					expect(userProxyTyped.str).equal('aha');
 					expect(userProxyTyped.proxyTyped).is.true;
 					expect(UserType.ProxyTyped.prototype.proxyTyped).is.true;
+					expect(userProxyTyped.SaySomething()).equal('something : true');
 				});
 				try {
 					UserType.ProxyType1 = null;
@@ -387,6 +388,9 @@ const test = (opts) => {
 
 			it('Instance Of Another Nnamespace and AnotherCollectionType', () => {
 				expect(anotherCollectionInstance).instanceOf(AnotherCollectionType);
+			});
+			it('anotherCollectionInstance.TestForAddition pass gaia proxy', () => {
+				expect(anotherCollectionInstance.TestForAddition).equal('passed');
 			});
 			it('starter Instance can extend', () => {
 				const {

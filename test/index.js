@@ -117,7 +117,10 @@ const ProxyTyped = function (str) {
 	this.str = str;
 };
 ProxyTyped.prototype = {
-	proxyTyped: true
+	proxyTyped: true,
+	SaySomething () {
+		return `something : ${this.proxyTyped}`;
+	}
 };
 Object.assign(UserType, {
 	ProxyTyped
@@ -207,6 +210,8 @@ const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType', function (check) {
 	Object.assign(this, { check });
 });
+
+process.TestForAddition = 'passed';
 const anotherCollectionInstance = AnotherCollectionType.apply(process, ['check']);
 
 const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionType', function () {
