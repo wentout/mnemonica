@@ -17,11 +17,15 @@ const test = (opts) => {
 	describe('async chain check', () => {
 
 		var WrongSyncType = define('WrongSyncType', function (data) {
-			return new UserType(data);
+			const self = new UserType(data);
+			debugger;
+			return self;
 		});
 		
 		var WrongAsyncType = define('WrongAsyncType', async function (data) {
-			return new UserType(data);
+			const self = new UserType(data);
+			debugger;
+			return self;
 		});
 
 
@@ -205,6 +209,7 @@ const test = (opts) => {
 
 		it('AsyncError.stack should have seekable definition', () => {
 			const stackstart = '<-- creation of [ WrongAsyncType ] traced -->';
+			wrongAsyncTypeErr;
 			const {
 				stack
 			} = wrongAsyncTypeErr;
