@@ -349,10 +349,20 @@ const test = (opts) => {
 		it('straightErrorAsync expect args of AsyncErroredTypeStraight', () => {
 			expect(straightErrorAsync.__args__).equal(undefined);
 		});
+		it('sleepError shold be instanceof plain Error only', () => {
+			expect(straightErrorAsync).instanceOf(Error);
+			expect(straightErrorAsync).instanceOf(TypeError);
+			expect(straightErrorAsync).not.instanceOf(AsyncErroredTypeStraight);
+		});
+
 		it('straightErrorSync expect args of SyncErroredTypeStraight', () => {
 			expect(straightErrorSync.__args__).equal(undefined);
 		});
-
+		it('sleepError shold be instanceof plain Error only', () => {
+			expect(straightErrorSync).instanceOf(Error);
+			expect(straightErrorSync).instanceOf(TypeError);
+			expect(straightErrorSync).not.instanceOf(SyncErroredTypeStraight);
+		});
 		
 		it('sleepInstance shold be instanceof SleepType', () => {
 			expect(sleepInstance).instanceOf(SleepType);
