@@ -56,6 +56,7 @@ const UserType = define('UserType', function (userData) {
 	this.password = password;
 	return this;
 }, UserTypeProto, true);
+debugger;
 
 const userTypeHooksInvocations = [];
 
@@ -90,7 +91,8 @@ UserType.define(() => {
 	UserTypePL1.prototype = pl1Proto;
 	return UserTypePL1;
 }, {
-	strictChain : false
+	strictChain : false,
+	submitStack : true
 });
 
 const pl2Proto = {
@@ -220,7 +222,6 @@ const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionTy
 const oneElseCollectionInstance = new OneElseCollectionType();
 
 const user = new UserType(USER_DATA);
-debugger;
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
 

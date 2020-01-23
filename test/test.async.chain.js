@@ -186,9 +186,13 @@ const test = (opts) => {
 			const {
 				__stack__
 			} = syncWAsyncChained;
-			expect(__stack__.indexOf(stackstart)).equal(1);
+			var lastIndex = __stack__.indexOf(stackstart);
+			expect(lastIndex).equal(1);
 			stackTrack.forEach(line => {
-				expect(__stack__.indexOf(line) > 0).is.true;
+				let newIndex = __stack__.indexOf(line);
+				expect(newIndex > 0).is.true;
+				expect(newIndex > lastIndex).is.true;
+				lastIndex = newIndex;
 			});
 			expect(__stack__.indexOf('test.async.chain.js:1') > 0).is.true;
 
@@ -309,6 +313,7 @@ const test = (opts) => {
 				}
 				
 				try {
+					debugger;
 					await new SleepType().AsyncErroredTypeStraight(argsTest);
 				} catch (error) {
 					straightErrorAsync = error;
