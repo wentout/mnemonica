@@ -296,7 +296,9 @@ describe('Main Test', () => {
 			password
 		});
 
-	}, UserTypeConstructorProto);
+	}, UserTypeConstructorProto, {
+		submitStack : true
+	});
 
 	const WithoutPasswordProto = {
 		WithoutPasswordSign: 'WithoutPasswordSign'
@@ -310,6 +312,8 @@ describe('Main Test', () => {
 		};
 		WithoutPassword.prototype = WithoutPasswordProto;
 		return WithoutPassword;
+	}, {
+		submitStack : true
 	});
 
 	const WithAdditionalSignProto = {
@@ -321,6 +325,8 @@ describe('Main Test', () => {
 		};
 		WithAdditionalSign.prototype = WithAdditionalSignProto;
 		return WithAdditionalSign;
+	}, {
+		submitStack : true
 	});
 
 	const MoreOverProto = {
@@ -336,6 +342,8 @@ describe('Main Test', () => {
 			}
 		}
 		return MoreOver;
+	}, {
+		submitStack : true
 	});
 
 	const OverMoreProto = {
@@ -346,7 +354,9 @@ describe('Main Test', () => {
 		.define('MoreOver.OverMore',
 			function (str) {
 				this.str = str || 're-defined OverMore str';
-			}, OverMoreProto);
+			}, OverMoreProto, {
+				submitStack : true
+			});
 
 	const EvenMoreProto = {
 		EvenMoreSign: 'EvenMoreSign'
@@ -360,6 +370,8 @@ describe('Main Test', () => {
 		};
 		EvenMore.prototype = Object.assign({}, EvenMoreProto);
 		return EvenMore;
+	}, {}, {
+		submitStack : true
 	});
 	
 	const ThrowTypeError = EvenMore.define('ThrowTypeError', function (...args) {
@@ -372,15 +384,23 @@ describe('Main Test', () => {
 
 	const AsyncChain1st = WithAdditionalSign.define('AsyncChain1st', async function (opts) {
 		return Object.assign(this, opts);
+	}, {}, {
+		submitStack : true
 	});
 	const AsyncChain2nd = AsyncChain1st.define('AsyncChain2nd', async function (opts) {
 		return Object.assign(this, opts);
+	}, {}, {
+		submitStack : true
 	});
 	const Async2Sync2nd = AsyncChain2nd.define('Async2Sync2nd', function (opts) {
 		Object.assign(this, opts);
+	}, {}, {
+		submitStack : true
 	});
 	Async2Sync2nd.define('AsyncChain3rd', async function (opts) {
 		return Object.assign(this, opts);
+	}, {}, {
+		submitStack : true
 	});
 
 
@@ -905,6 +925,7 @@ describe('Main Test', () => {
 							expect(error).instanceOf(Error);
 							expect(error).instanceOf(TypeError);
 							expect(error).instanceOf(ThrowTypeError);
+							debugger;
 							passedCb();
 						};
 						

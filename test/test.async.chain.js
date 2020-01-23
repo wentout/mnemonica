@@ -18,14 +18,16 @@ const test = (opts) => {
 
 		var WrongSyncType = define('WrongSyncType', function (data) {
 			const self = new UserType(data);
-			debugger;
 			return self;
+		}, {}, {
+			submitStack : true
 		});
 		
 		var WrongAsyncType = define('WrongAsyncType', async function (data) {
 			const self = new UserType(data);
-			debugger;
 			return self;
+		}, {}, {
+			submitStack : true
 		});
 
 
@@ -197,7 +199,7 @@ const test = (opts) => {
 			const {
 				stack
 			} = wrongSyncTypeErr;
-			expect(stack.indexOf(stackstart)).equal(1);
+			expect(stack.indexOf(stackstart)).equal(0);
 			expect(stack.indexOf('test.async.chain.js:1') > 0).is.true;
 			expect(wrongSyncTypeErr).instanceOf(Error);
 			expect(wrongSyncTypeErr).instanceOf(WrongSyncType);
@@ -213,7 +215,7 @@ const test = (opts) => {
 			const {
 				stack
 			} = wrongAsyncTypeErr;
-			expect(stack.indexOf(stackstart)).equal(1);
+			expect(stack.indexOf(stackstart)).equal(0);
 			expect(stack.indexOf('test.async.chain.js:1') > 0).is.true;
 			expect(wrongAsyncTypeErr).instanceOf(Error);
 			expect(wrongAsyncTypeErr).instanceOf(WrongAsyncType);

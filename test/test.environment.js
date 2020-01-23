@@ -247,6 +247,8 @@ const test = (opts) => {
 			const BadType = define('BadType', function (NotThis) {
 				// returns not instanceof this
 				return NotThis;
+			}, {}, {
+				submitStack : true
 			});
 			BadType.define('ThrownBadType');
 			try {
@@ -267,11 +269,10 @@ const test = (opts) => {
 				});
 				it('thrown error.stack should have seekable definition', () => {
 					const stackstart = '<-- creation of [ BadType ] traced -->';
-					expect(error.stack.indexOf(stackstart)).equal(1);
+					expect(error.stack.indexOf(stackstart)).equal(0);
 					expect(error.stack
 						.indexOf('test.environment.js') > 0).is.true;
 						// .equal(96);
-
 				});
 			}
 		});
