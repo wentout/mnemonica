@@ -133,6 +133,15 @@ const test = (opts) => {
 
 		});
 
+		it('should have seekable __stack__', () => {
+			const stackstart = '<-- creation of [ UserTypePL1 ] traced -->';
+			const {
+				__stack__
+			} = userPL1;
+			debugger;
+			expect(__stack__.indexOf(stackstart)).equal(1);
+		});
+		
 		it('should have proper nested .fork() old style', () => {
 
 			const userPL1Fork = userPL1.fork();

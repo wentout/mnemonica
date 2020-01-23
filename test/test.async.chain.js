@@ -18,14 +18,16 @@ const test = (opts) => {
 
 		var WrongSyncType = define('WrongSyncType', function (data) {
 			const self = new UserType(data);
-			debugger;
 			return self;
+		}, {}, {
+			submitStack : true
 		});
 		
 		var WrongAsyncType = define('WrongAsyncType', async function (data) {
 			const self = new UserType(data);
-			debugger;
 			return self;
+		}, {}, {
+			submitStack : true
 		});
 
 
@@ -184,9 +186,13 @@ const test = (opts) => {
 			const {
 				__stack__
 			} = syncWAsyncChained;
-			expect(__stack__.indexOf(stackstart)).equal(1);
+			var lastIndex = __stack__.indexOf(stackstart);
+			expect(lastIndex).equal(1);
 			stackTrack.forEach(line => {
-				expect(__stack__.indexOf(line) > 0).is.true;
+				let newIndex = __stack__.indexOf(line);
+				expect(newIndex > 0).is.true;
+				expect(newIndex > lastIndex).is.true;
+				lastIndex = newIndex;
 			});
 			expect(__stack__.indexOf('test.async.chain.js:1') > 0).is.true;
 
@@ -197,7 +203,7 @@ const test = (opts) => {
 			const {
 				stack
 			} = wrongSyncTypeErr;
-			expect(stack.indexOf(stackstart)).equal(1);
+			expect(stack.indexOf(stackstart)).equal(0);
 			expect(stack.indexOf('test.async.chain.js:1') > 0).is.true;
 			expect(wrongSyncTypeErr).instanceOf(Error);
 			expect(wrongSyncTypeErr).instanceOf(WrongSyncType);
@@ -213,7 +219,7 @@ const test = (opts) => {
 			const {
 				stack
 			} = wrongAsyncTypeErr;
-			expect(stack.indexOf(stackstart)).equal(1);
+			expect(stack.indexOf(stackstart)).equal(0);
 			expect(stack.indexOf('test.async.chain.js:1') > 0).is.true;
 			expect(wrongAsyncTypeErr).instanceOf(Error);
 			expect(wrongAsyncTypeErr).instanceOf(WrongAsyncType);
@@ -307,6 +313,7 @@ const test = (opts) => {
 				}
 				
 				try {
+					debugger;
 					await new SleepType().AsyncErroredTypeStraight(argsTest);
 				} catch (error) {
 					straightErrorAsync = error;

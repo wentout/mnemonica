@@ -23,6 +23,7 @@ const test = (opts) => {
 	describe('Hooks Tests', () => {
 		it('check invocations count', () => {
 			assert.equal(8, userTypeHooksInvocations.length);
+			debugger;
 			assert.equal(133, namespaceFlowCheckerInvocations.length);
 			assert.equal(131, typesFlowCheckerInvocations.length);
 			assert.equal(70, typesPreCreationInvocations.length);
@@ -36,7 +37,7 @@ const test = (opts) => {
 		});
 	});
 
-	describe('check invocations "this"', () => {
+	describe('check invocations of "this"', () => {
 		userTypeHooksInvocations.forEach(entry => {
 			const {
 				self,
@@ -46,7 +47,7 @@ const test = (opts) => {
 				sort,
 				kind,
 			} = entry;
-			it(`"this" for ${kind}-hook of ${sort} should refer to type ${type.TypeName}`, () => {
+			it(`'this' for ${kind}-hook of ${sort} should refer to type ${type.TypeName}`, () => {
 				assert.equal(self, type);
 			});
 		});
@@ -56,7 +57,7 @@ const test = (opts) => {
 				sort,
 				kind,
 			} = entry;
-			it(`"this" for ${kind}-hook of ${sort} should refer to type defaultTypes`, () => {
+			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultTypes`, () => {
 				assert.equal(self, types);
 			});
 		});
@@ -66,7 +67,7 @@ const test = (opts) => {
 				sort,
 				kind,
 			} = entry;
-			it(`"this" for ${kind}-hook of ${sort} should refer to type defaultTypes`, () => {
+			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultTypes`, () => {
 				assert.equal(self, types);
 			});
 		});
@@ -76,7 +77,7 @@ const test = (opts) => {
 				sort,
 				kind,
 			} = entry;
-			it(`"this" for ${kind}-hook of ${sort} should refer to type defaultNamespace`, () => {
+			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultNamespace`, () => {
 				assert.equal(self, defaultNamespace);
 			});
 		});
@@ -86,7 +87,7 @@ const test = (opts) => {
 				sort,
 				kind,
 			} = entry;
-			it(`"this" for ${kind}-hook of ${sort} should refer to type defaultNamespace`, () => {
+			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultNamespace`, () => {
 				assert.equal(self, defaultNamespace);
 			});
 		});
