@@ -219,6 +219,7 @@ const test = (opts) => {
 			const {
 				stack
 			} = wrongAsyncTypeErr;
+			debugger;
 			expect(stack.indexOf(stackstart)).equal(0);
 			expect(stack.indexOf('test.async.chain.js:1') > 0).is.true;
 			expect(wrongAsyncTypeErr).instanceOf(Error);
@@ -313,7 +314,6 @@ const test = (opts) => {
 				}
 				
 				try {
-					debugger;
 					await new SleepType().AsyncErroredTypeStraight(argsTest);
 				} catch (error) {
 					straightErrorAsync = error;

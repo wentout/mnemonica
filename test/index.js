@@ -926,7 +926,8 @@ describe('Main Test', () => {
 							expect(error).instanceOf(Error);
 							expect(error).instanceOf(TypeError);
 							expect(error).instanceOf(ThrowTypeError);
-							debugger;
+							// debugger;
+							// console.log(error.stack);
 							passedCb();
 						};
 						

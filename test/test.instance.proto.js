@@ -138,7 +138,7 @@ const test = (opts) => {
 			const {
 				__stack__
 			} = userPL1;
-			debugger;
+			// debugger;
 			expect(__stack__.indexOf(stackstart)).equal(1);
 		});
 		

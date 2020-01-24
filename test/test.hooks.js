@@ -23,7 +23,7 @@ const test = (opts) => {
 	describe('Hooks Tests', () => {
 		it('check invocations count', () => {
 			assert.equal(8, userTypeHooksInvocations.length);
-			debugger;
+			// debugger;
 			assert.equal(133, namespaceFlowCheckerInvocations.length);
 			assert.equal(131, typesFlowCheckerInvocations.length);
 			assert.equal(70, typesPreCreationInvocations.length);
