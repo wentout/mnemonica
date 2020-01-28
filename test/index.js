@@ -375,13 +375,7 @@ describe('Main Test', () => {
 		submitStack : true
 	});
 	
-	const ThrowTypeError = EvenMore.define('ThrowTypeError', function (...args) {
-		this.args = args;
-		const a = {
-			b: 1
-		};
-		a.b.c.d = 2;
-	});
+	const ThrowTypeError = EvenMore.define('ThrowTypeError', require('./throw-type-error'));
 
 	const AsyncChain1st = WithAdditionalSign.define('AsyncChain1st', async function (opts) {
 		return Object.assign(this, opts);
@@ -471,7 +465,7 @@ describe('Main Test', () => {
 
 	const merged = merge(user, overMore, FORK_CALL_DATA);
 
-	require('./test.environment')({
+	require('./environment')({
 		user,
 		userTC,
 		UserType,
@@ -495,14 +489,14 @@ describe('Main Test', () => {
 		merged,
 	});
 
-	require('./test.async.chain')({
+	require('./async.chain')({
 		UserType,
 		UserTypeConstructor,
 	});
 	
 	
 	if (hooksTest) {
-		require('./test.hooks')({
+		require('./hooks')({
 			userTypeHooksInvocations,
 			namespaceFlowCheckerInvocations,
 			typesFlowCheckerInvocations,
@@ -742,7 +736,7 @@ describe('Main Test', () => {
 		});
 
 		if (parseTest) {
-			require('./test.parse')({
+			require('./parse')({
 				user,
 				userPL1,
 				userPL2,
@@ -752,7 +746,7 @@ describe('Main Test', () => {
 			});
 		}
 
-		require('./test.nested')({
+		require('./nested')({
 			user,
 			userPL1,
 			userPL2,
@@ -764,7 +758,7 @@ describe('Main Test', () => {
 			USER_DATA,
 		});
 
-		require('./test.nested.more')({
+		require('./nested.more')({
 			userTC,
 			UserType,
 			evenMore,
@@ -784,7 +778,7 @@ describe('Main Test', () => {
 			MoreOver
 		});
 
-		require('./test.instance.proto')({
+		require('./instance.proto')({
 			user,
 			userPL1,
 			userTC,
@@ -908,34 +902,9 @@ describe('Main Test', () => {
 		}
 
 		if (uncaughtExceptionTest) {
-			describe('uncaughtException test', () => {
-				it('should throw proper error', (passedCb) => {
-					const throwArgs = {
-						uncaughtException : true
-					};
-					
-					setTimeout(() => {
-
-						process.removeAllListeners('uncaughtException');
-
-						const onUncaughtException = function (error) {
-							assert.equal(
-								error.__args__[0],
-								throwArgs
-							);
-							expect(error).instanceOf(Error);
-							expect(error).instanceOf(TypeError);
-							expect(error).instanceOf(ThrowTypeError);
-							// debugger;
-							// console.log(error.stack);
-							passedCb();
-						};
-						
-						process.on('uncaughtException', onUncaughtException);
-						new evenMore.ThrowTypeError(throwArgs);
-
-					}, 100);
-				});
+			require('./uncaughtExceptionTest')({
+				evenMore,
+				ThrowTypeError
 			});
 		}
 

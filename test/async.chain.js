@@ -194,7 +194,7 @@ const test = (opts) => {
 				expect(newIndex > lastIndex).is.true;
 				lastIndex = newIndex;
 			});
-			expect(__stack__.indexOf('test.async.chain.js:1') > 0).is.true;
+			expect(__stack__.indexOf('async.chain.js:1') > 0).is.true;
 
 		});
 
@@ -203,8 +203,9 @@ const test = (opts) => {
 			const {
 				stack
 			} = wrongSyncTypeErr;
-			expect(stack.indexOf(stackstart)).equal(0);
-			expect(stack.indexOf('test.async.chain.js:1') > 0).is.true;
+			debugger;
+			expect(stack.indexOf(stackstart)).equal(1);
+			expect(stack.indexOf('async.chain.js:1') > 0).is.true;
 			expect(wrongSyncTypeErr).instanceOf(Error);
 			expect(wrongSyncTypeErr).instanceOf(WrongSyncType);
 			expect(wrongSyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
@@ -220,8 +221,8 @@ const test = (opts) => {
 				stack
 			} = wrongAsyncTypeErr;
 			debugger;
-			expect(stack.indexOf(stackstart)).equal(0);
-			expect(stack.indexOf('test.async.chain.js:1') > 0).is.true;
+			expect(stack.indexOf(stackstart)).equal(1);
+			expect(stack.indexOf('async.chain.js:1') > 0).is.true;
 			expect(wrongAsyncTypeErr).instanceOf(Error);
 			expect(wrongAsyncTypeErr).instanceOf(WrongAsyncType);
 			expect(wrongAsyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);

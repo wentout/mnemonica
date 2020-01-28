@@ -250,31 +250,38 @@ const test = (opts) => {
 			}, {}, {
 				submitStack : true
 			});
-			BadType.define('ThrownBadType');
-			try {
-				new BadType({}).ThrownBadType();
-			} catch (error) {
-				it('should respect the rules', () => {
-					expect(error).instanceOf(Error);
-				});
-				it('should be instanceof BadType', () => {
-					expect(error).instanceOf(BadType);
-				});
-				it('thrown error instanceof WRONG_MODIFICATION_PATTERN', () => {
-					expect(error).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
-				});
-				it('thrown error should be ok with props', () => {
-					expect(error.message).exist.and.is.a('string');
-					assert.equal(error.message, 'wrong modification pattern : should inherit from mnemonica instance');
-				});
-				it('thrown error.stack should have seekable definition', () => {
-					const stackstart = '<-- creation of [ BadType ] traced -->';
-					expect(error.stack.indexOf(stackstart)).equal(0);
-					expect(error.stack
-						.indexOf('test.environment.js') > 0).is.true;
-						// .equal(96);
-				});
-			}
+			var hookInstance;
+			BadType.registerHook('creationError', (_hookInstance) => {
+				hookInstance = _hookInstance;
+				return true;
+			});
+			// try {
+			const errored = new BadType({});
+			// } catch (error) {
+			it('should respect the rules', () => {
+				expect(errored).instanceOf(Error);
+				expect(hookInstance.inheritedInstance).instanceOf(Error);
+			});
+			it('should be instanceof BadType', () => {
+				expect(errored).instanceOf(BadType);
+				expect(hookInstance.inheritedInstance).instanceOf(BadType);
+			});
+			it('thrown error instanceof WRONG_MODIFICATION_PATTERN', () => {
+				expect(errored).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+				expect(hookInstance.inheritedInstance).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			});
+			it('thrown error should be ok with props', () => {
+				expect(errored.message).exist.and.is.a('string');
+				assert.equal(errored.message, 'wrong modification pattern : should inherit from mnemonica instance');
+			});
+			it('thrown error.stack should have seekable definition', () => {
+				const stackstart = '<-- creation of [ BadType ] traced -->';
+				expect(errored.stack.indexOf(stackstart)).equal(1);
+				expect(errored.stack
+					.indexOf('environment.js') > 0).is.true;
+					// .equal(96);
+			});
+			// }
 		});
 		
 		describe('should not hack DFD', () => {
