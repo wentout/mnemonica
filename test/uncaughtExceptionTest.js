@@ -1,0 +1,41 @@
+'use strict';
+
+const { assert, expect } = require('chai');
+
+const test = (opts) => {
+	const {
+		evenMore,
+		ThrowTypeError
+	} = opts;
+	describe('uncaughtException test', () => {
+		it('should throw proper error', (passedCb) => {
+			const throwArgs = {
+				uncaughtException: true
+			};
+
+			setTimeout(() => {
+
+				process.removeAllListeners('uncaughtException');
+
+				const onUncaughtException = function (error) {
+					assert.equal(
+						error.__args__[0],
+						throwArgs
+					);
+					expect(error).instanceOf(Error);
+					expect(error).instanceOf(TypeError);
+					expect(error).instanceOf(ThrowTypeError);
+					// debugger;
+					console.log(error.stack);
+					passedCb();
+				};
+
+				process.on('uncaughtException', onUncaughtException);
+				new evenMore.ThrowTypeError(throwArgs);
+
+			}, 100);
+		});
+	});
+};
+
+module.exports = test;
