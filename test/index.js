@@ -412,6 +412,14 @@ describe('Main Test', () => {
 	// const userTC = new types.UserTypeConstructor(USER_DATA);
 	const userTC = new UserTypeConstructor(USER_DATA);
 	
+	debugger;
+	try {
+		const missing = userTC.UserTypeMissing();
+	} catch (err) {
+		debugger;
+		console.log(err);
+	}
+		
 	const FORK_CALL_DATA = {
 		email: 'forkmail@gmail.com',
 		password : '54321'

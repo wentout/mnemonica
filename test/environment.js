@@ -222,6 +222,15 @@ const test = (opts) => {
 					});
 				}
 			});
+			
+			try {
+				userTC.UserTypeMissing();
+			} catch (error) {
+				it('should fail on missing constructs', () => {
+					expect(error).instanceOf(Error);
+					expect(error).instanceOf(TypeError);
+				});
+			}
 
 		});
 		describe('base error shoud be defined', () => {
