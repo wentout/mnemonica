@@ -203,7 +203,7 @@ const test = (opts) => {
 			const {
 				stack
 			} = wrongSyncTypeErr;
-			debugger;
+			// debugger;
 			expect(stack.indexOf(stackstart)).equal(1);
 			expect(stack.indexOf('async.chain.js:1') > 0).is.true;
 			expect(wrongSyncTypeErr).instanceOf(Error);
@@ -220,7 +220,7 @@ const test = (opts) => {
 			const {
 				stack
 			} = wrongAsyncTypeErr;
-			debugger;
+			// debugger;
 			expect(stack.indexOf(stackstart)).equal(1);
 			expect(stack.indexOf('async.chain.js:1') > 0).is.true;
 			expect(wrongAsyncTypeErr).instanceOf(Error);
