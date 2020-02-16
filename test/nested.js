@@ -57,7 +57,9 @@ const test = (opts) => {
 		it('actually do construction', () => {
 			assert.instanceOf(userPL2, types.UserType.subtypes.get('UserTypePL2'));
 			assert.instanceOf(userPL2, user.UserTypePL2);
-			assert.notInstanceOf(userPL2, Shaper);
+			// assert.notInstanceOf(userPL2, Shaper);
+			const shouldNot = userPL2 instanceof Shaper;
+			assert.equal(shouldNot, false);
 		});
 		it('.constructor.name is correct', () => {
 			assert.equal(userPL2.constructor.name, 'UserTypePL2');
