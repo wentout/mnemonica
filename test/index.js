@@ -56,7 +56,7 @@ const UserType = define('UserType', function (userData) {
 	this.password = password;
 	return this;
 }, UserTypeProto, true);
-debugger;
+// debugger;
 
 const userTypeHooksInvocations = [];
 
