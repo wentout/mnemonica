@@ -63,11 +63,13 @@ module.exports = {
 	'parsedUserPL2': {
 		'name': 'UserTypePL2',
 		'props': {
-			'user_pl_2_sign': 'pl_2'
+			'user_pl_2_sign': 'pl_2',
+			'shape': 123
 		},
 		'joint': {},
 		'self': {
-			'user_pl_2_sign': 'pl_2'
+			'user_pl_2_sign': 'pl_2',
+			'shape': 123
 		},
 		'proto': {},
 		'parent': {

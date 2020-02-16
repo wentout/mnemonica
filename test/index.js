@@ -99,9 +99,22 @@ const pl2Proto = {
 	UserTypePL2: 'UserTypePL_2_AlwaysIncluded'
 };
 
+class Shaper {
+	constructor() {
+		// const zzz = new.target;
+		// Shaper;
+		// debugger;
+		this.shape = 123;
+	}
+}
+
 UserType.define(() => {
-	class UserTypePL2 {
+	class UserTypePL2 extends Shaper {
 		constructor() {
+			super();
+			// const zzz = new.target;
+			// Shaper;
+			// debugger;
 			this.user_pl_2_sign = 'pl_2';
 		}
 		get UserTypePL2() {
@@ -224,6 +237,7 @@ const oneElseCollectionInstance = new OneElseCollectionType();
 const user = new UserType(USER_DATA);
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
+debugger;
 
 const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
@@ -756,6 +770,7 @@ describe('Main Test', () => {
 			userPL_NoNew,
 			UserTypeProto,
 			USER_DATA,
+			Shaper
 		});
 
 		require('./nested.more')({
