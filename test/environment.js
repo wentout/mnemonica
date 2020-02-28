@@ -26,6 +26,7 @@ const {
 	},
 	errors,
 	ErrorMessages,
+	defineStackCleaner
 } = mnemonica;
 
 
@@ -71,6 +72,7 @@ const test = (opts) => {
 				'URANUS',
 				'TYPE_TITLE_PREFIX',
 				'ErrorMessages',
+				'defineStackCleaner',
 				'createNamespace',
 				'namespaces',
 				'defaultNamespace',
@@ -102,6 +104,22 @@ const test = (opts) => {
 				expect(missingKeys.length).equal(0);
 			});
 			
+		});
+		
+		describe('error defineStackCleaner test ', () => {
+			let madeError = null;
+			try {
+				defineStackCleaner(null);
+			} catch (error) {
+				madeError = error;
+			}
+			it('defineStackCleaner wrong definition should be instancof error', () => {
+				expect(madeError).instanceOf(Error);
+			});
+			
+			it('defineStackCleaner wrong definition should be instancof error', () => {
+				expect(madeError).instanceOf(errors.BASE_MNEMONICA_ERROR);
+			});
 		});
 		
 		describe('core env tests', () => {

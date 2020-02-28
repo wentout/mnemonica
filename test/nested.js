@@ -1,5 +1,7 @@
 'use strict';
 
+const ogp = Object.getPrototypeOf;
+
 const { assert, expect } = require('chai');
 
 const {
@@ -14,32 +16,19 @@ const test = (opts) => {
 		userPL2,
 		pl1Proto,
 		pl2Proto,
-		// userPL_1_2,
-		// userPL_NoNew,
+		userPL_1_2,
+		userPL_NoNew,
 		UserTypeProto,
 		USER_DATA,
+		Shaper
 	} = opts;
 
 	describe('nested type with old style check', () => {
 		it('actually do construction', () => {
 			assert.instanceOf(userPL1, types.UserType.subtypes.get('UserTypePL1'));
 			assert.instanceOf(userPL1, user.UserTypePL1);
-			assert.equal(
-				// Object.getPrototypeOf(
-				Object.getPrototypeOf(
-					Object.getPrototypeOf(
-						// Object.getPrototypeOf(userPL1)))),
-						Object.getPrototypeOf(userPL1))),
-				user
-			);
-			assert.equal(
-				// Object.getPrototypeOf(
-				Object.getPrototypeOf(
-					Object.getPrototypeOf(
-						// Object.getPrototypeOf(userPL2)))),
-						Object.getPrototypeOf(userPL2))),
-				user
-			);
+			assert.equal(ogp(ogp(ogp(userPL1))), user);
+			assert.equal(ogp(ogp(ogp(userPL2))), user);
 		});
 		it('.constructor.name is correct', () => {
 			assert.equal(userPL1.constructor.name, 'UserTypePL1');
@@ -68,23 +57,27 @@ const test = (opts) => {
 		it('actually do construction', () => {
 			assert.instanceOf(userPL2, types.UserType.subtypes.get('UserTypePL2'));
 			assert.instanceOf(userPL2, user.UserTypePL2);
+			// assert.notInstanceOf(userPL2, Shaper);
+			const shouldNot = userPL2 instanceof Shaper;
+			assert.equal(shouldNot, false);
 		});
 		it('.constructor.name is correct', () => {
 			assert.equal(userPL2.constructor.name, 'UserTypePL2');
 		});
-		// it('can construct without "new" keyword', () => {
-		// 	assert.instanceOf(userPL_NoNew, types.UserType);
-		// 	assert.instanceOf(userPL_NoNew, types.UserType.subtypes.UserTypePL2);
-		// });
-		// it('and insanceof stays ok', () => {
-		// 	assert.instanceOf(userPL_NoNew, user.UserTypePL2);
-		// });
-		// it('and even for sibling type', () => {
-		// 	assert.instanceOf(userPL_1_2, userPL1.UserTypePL2);
-		// });
-		// it('and for sibling type constructed without "new"', () => {
-		// 	assert.instanceOf(userPL_NoNew, userPL1.UserTypePL2);
-		// });
+		it('can construct without "new" keyword', () => {
+			assert.instanceOf(userPL_NoNew, types.UserType);
+			debugger;
+			assert.instanceOf(userPL_NoNew, types.UserType.subtypes.get('UserTypePL2'));
+		});
+		it('and insanceof stays ok', () => {
+			assert.instanceOf(userPL_NoNew, user.UserTypePL2);
+		});
+		it('and even for sibling type', () => {
+			assert.instanceOf(userPL_1_2, userPL1.UserTypePL2);
+		});
+		it('and for sibling type constructed without "new"', () => {
+			assert.instanceOf(userPL_NoNew, userPL1.UserTypePL2);
+		});
 		it('.prototype is correct', () => {
 			expect(userPL2.constructor.prototype)
 				.to.be.an('object')
