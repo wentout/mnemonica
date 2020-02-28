@@ -34,7 +34,12 @@ const {
 		parse
 	},
 	errors,
+	defineStackCleaner
 } = require('..');
+
+const dirname = require('path').resolve(__dirname, '../lib');
+const stackCleanerRegExp = new RegExp(dirname);
+defineStackCleaner(stackCleanerRegExp);
 
 const USER_DATA = {
 	email: 'went.out@gmail.com',
@@ -235,9 +240,9 @@ const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionTy
 const oneElseCollectionInstance = new OneElseCollectionType();
 
 const user = new UserType(USER_DATA);
+debugger;
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
-debugger;
 
 const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
