@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "0.9.7",
+  "version": "0.9.7.1",
   "description": "abstract technique that aids information retention : instance inheritance system",
   "exports": {
     "./module": {
@@ -21,9 +21,9 @@
   },
   "main": "lib/index.js",
   "contributors": [
-    "<laplandin.denis@gmail.com> @laplandin",
-    "<iam@petrgrishin.com> @petrgrishin",
-    "<Goodluckhf@yandex.ru> @Goodluckhf"
+    "laplandin <laplandin.denis@gmail.com>",
+    "petrgrishin <iam@petrgrishin.com>",
+    "Goodluckhf <Goodluckhf@yandex.ru>"
   ],
   "scripts": {
     "test": "mocha --allow-uncaught test/index.js",

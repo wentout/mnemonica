@@ -22,7 +22,8 @@ const {
 	createNamespace,
 	utils: {
 		toJSON,
-		merge
+		merge,
+		parse
 	},
 	errors,
 	ErrorMessages,
@@ -102,6 +103,65 @@ const test = (opts) => {
 					return !interface_keys.includes(key);
 				});
 				expect(missingKeys.length).equal(0);
+			});
+			
+		});
+		
+		describe('named constructor define', async () => {
+			
+			const NamedFunction = UserType.define(async function NamedFunction () {
+				this.type = 'function';
+				return this;
+			});
+			
+			it('named function definition exist', () => {
+				expect(user.__subtypes__.has('NamedFunction')).is.true;
+			});
+			
+			const NamedClass = UserType.define(class NamedClass {
+				constructor () {
+					this.type = 'class';
+				}
+			});
+			
+			const SubNamedClass = NamedClass.define(class SubNamedClass {
+				constructor () {
+					this.type = 'subclass';
+				}
+			});
+			
+			it('named class definition exist', () => {
+				expect(user.__subtypes__.has('NamedClass')).is.true;
+			});
+			
+			const nf = await new user.NamedFunction();
+			it('instance made through named function instanceof & props', () => {
+				expect(nf).instanceOf(NamedFunction);
+			});
+			it('instance made with named function props', () => {
+				expect(nf.type).is.equal('function');
+			});
+			
+			const nc = new user.NamedClass();
+			
+			it('instance made through named class instanceof', () => {
+				expect(nc).instanceOf(NamedClass);
+			});
+			it('instance made with named class props', () => {
+				expect(nc.type).is.equal('class');
+			});
+			
+			const snc = new nc.SubNamedClass();
+			
+			it('instance made through sub-named class instanceof', () => {
+				expect(snc).instanceOf(SubNamedClass);
+			});
+			it('instance made with sub-named class props', () => {
+				expect(snc.type).is.equal('subclass');
+				expect(snc.extract().email).is.equal('went.out@gmail.com');
+				const parsed = parse(snc);
+				expect(parsed.props.type).is.equal('subclass');
+				expect(parsed.name).is.equal('SubNamedClass');
 			});
 			
 		});
@@ -251,6 +311,7 @@ const test = (opts) => {
 			}
 
 		});
+		
 		describe('base error shoud be defined', () => {
 			it('BASE_MNEMONICA_ERROR exists', () => {
 				expect(errors.BASE_MNEMONICA_ERROR).to.exist;
