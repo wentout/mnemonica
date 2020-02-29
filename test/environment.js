@@ -119,8 +119,9 @@ const test = (opts) => {
 			});
 			
 			const NamedClass = UserType.define(class NamedClass {
-				constructor () {
+				constructor (snc) {
 					this.type = 'class';
+					this.snc = snc;
 				}
 			});
 			
@@ -142,7 +143,7 @@ const test = (opts) => {
 				expect(nf.type).is.equal('function');
 			});
 			
-			const nc = new user.NamedClass();
+			const nc = new user.NamedClass(1);
 			
 			it('instance made through named class instanceof', () => {
 				expect(nc).instanceOf(NamedClass);
@@ -151,17 +152,33 @@ const test = (opts) => {
 				expect(nc.type).is.equal('class');
 			});
 			
-			const snc = new nc.SubNamedClass();
+			const snc1 = new nc.SubNamedClass();
+			const snc2 = new user.NamedClass(2).SubNamedClass();
 			
 			it('instance made through sub-named class instanceof', () => {
-				expect(snc).instanceOf(SubNamedClass);
+				expect(snc1).instanceOf(NamedClass);
+				expect(snc1).instanceOf(SubNamedClass);
+				expect(snc2).instanceOf(NamedClass);
+				expect(snc2).instanceOf(SubNamedClass);
 			});
 			it('instance made with sub-named class props', () => {
-				expect(snc.type).is.equal('subclass');
-				expect(snc.extract().email).is.equal('went.out@gmail.com');
-				const parsed = parse(snc);
-				expect(parsed.props.type).is.equal('subclass');
-				expect(parsed.name).is.equal('SubNamedClass');
+				
+				expect(snc1.type).is.equal('subclass');
+				const extracted1 = snc1.extract();
+				expect(extracted1.email).is.equal('went.out@gmail.com');
+				expect(extracted1.snc).is.equal(1);
+				const parsed1 = parse(snc1);
+				expect(parsed1.props.type).is.equal('subclass');
+				expect(parsed1.name).is.equal('SubNamedClass');
+				
+				expect(snc2.type).is.equal('subclass');
+				const extracted2 = snc2.extract();
+				expect(extracted2.email).is.equal('went.out@gmail.com');
+				expect(extracted2.snc).is.equal(2);
+				const parsed2 = parse(snc2);
+				expect(parsed2.props.type).is.equal('subclass');
+				expect(parsed2.name).is.equal('SubNamedClass');
+				
 			});
 			
 		});
