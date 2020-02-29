@@ -22,7 +22,8 @@ const {
 	createNamespace,
 	utils: {
 		toJSON,
-		merge
+		merge,
+		parse
 	},
 	errors,
 	ErrorMessages,
@@ -102,6 +103,82 @@ const test = (opts) => {
 					return !interface_keys.includes(key);
 				});
 				expect(missingKeys.length).equal(0);
+			});
+			
+		});
+		
+		describe('named constructor define', async () => {
+			
+			const NamedFunction = UserType.define(async function NamedFunction () {
+				this.type = 'function';
+				return this;
+			});
+			
+			it('named function definition exist', () => {
+				expect(user.__subtypes__.has('NamedFunction')).is.true;
+			});
+			
+			const NamedClass = UserType.define(class NamedClass {
+				constructor (snc) {
+					this.type = 'class';
+					this.snc = snc;
+				}
+			});
+			
+			const SubNamedClass = NamedClass.define(class SubNamedClass {
+				constructor () {
+					this.type = 'subclass';
+				}
+			});
+			
+			it('named class definition exist', () => {
+				expect(user.__subtypes__.has('NamedClass')).is.true;
+			});
+			
+			const nf = await new user.NamedFunction();
+			it('instance made through named function instanceof & props', () => {
+				expect(nf).instanceOf(NamedFunction);
+			});
+			it('instance made with named function props', () => {
+				expect(nf.type).is.equal('function');
+			});
+			
+			const nc = new user.NamedClass(1);
+			
+			it('instance made through named class instanceof', () => {
+				expect(nc).instanceOf(NamedClass);
+			});
+			it('instance made with named class props', () => {
+				expect(nc.type).is.equal('class');
+			});
+			
+			const snc1 = new nc.SubNamedClass();
+			const snc2 = new user.NamedClass(2).SubNamedClass();
+			
+			it('instance made through sub-named class instanceof', () => {
+				expect(snc1).instanceOf(NamedClass);
+				expect(snc1).instanceOf(SubNamedClass);
+				expect(snc2).instanceOf(NamedClass);
+				expect(snc2).instanceOf(SubNamedClass);
+			});
+			it('instance made with sub-named class props', () => {
+				
+				expect(snc1.type).is.equal('subclass');
+				const extracted1 = snc1.extract();
+				expect(extracted1.email).is.equal('went.out@gmail.com');
+				expect(extracted1.snc).is.equal(1);
+				const parsed1 = parse(snc1);
+				expect(parsed1.props.type).is.equal('subclass');
+				expect(parsed1.name).is.equal('SubNamedClass');
+				
+				expect(snc2.type).is.equal('subclass');
+				const extracted2 = snc2.extract();
+				expect(extracted2.email).is.equal('went.out@gmail.com');
+				expect(extracted2.snc).is.equal(2);
+				const parsed2 = parse(snc2);
+				expect(parsed2.props.type).is.equal('subclass');
+				expect(parsed2.name).is.equal('SubNamedClass');
+				
 			});
 			
 		});
@@ -251,6 +328,7 @@ const test = (opts) => {
 			}
 
 		});
+		
 		describe('base error shoud be defined', () => {
 			it('BASE_MNEMONICA_ERROR exists', () => {
 				expect(errors.BASE_MNEMONICA_ERROR).to.exist;

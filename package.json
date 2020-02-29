@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "0.9.7",
+  "version": "0.9.71",
   "description": "abstract technique that aids information retention : instance inheritance system",
   "exports": {
     "./module": {
@@ -21,14 +21,15 @@
   },
   "main": "lib/index.js",
   "contributors": [
-    "<laplandin.denis@gmail.com> @laplandin",
-    "<iam@petrgrishin.com> @petrgrishin",
-    "<Goodluckhf@yandex.ru> @Goodluckhf"
+    "laplandin <laplandin.denis@gmail.com>",
+    "petrgrishin <iam@petrgrishin.com>",
+    "Goodluckhf <Goodluckhf@yandex.ru>"
   ],
   "scripts": {
     "test": "mocha --allow-uncaught test/index.js",
     "test:coverage:dev": "nyc --reporter=text mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
     "test:coverage": "nyc --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
+    "test:mjs": "node --experimental-modules ./test/test.mjs",
     "debug": "npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
     "report-coverage": "cat coverage/lcov.info | coveralls",
     "example": "node ./test/example.js"
