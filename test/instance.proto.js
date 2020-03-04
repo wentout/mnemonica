@@ -2,11 +2,6 @@
 
 const { assert, expect } = require('chai');
 
-const {
-	errors,
-} = require('..');
-
-
 const test = (opts) => {
 
 	const {
@@ -35,8 +30,6 @@ const test = (opts) => {
 		evenMoreForkCall,
 		overMoreCallEvenMoreNull,
 		overMoreCallEvenMoreProcess,
-		// userWithoutPassword,
-		userWPWithAdditionalSign,
 	} = opts;
 
 	describe('instance .proto props tests', () => {
@@ -45,7 +38,7 @@ const test = (opts) => {
 			assert.equal(user.__args__[0], USER_DATA);
 		});
 		it('should have proper prototype .__type__', () => {
-			assert.equal(user.__type__.TypeProxy, UserType.__type__);
+			assert.equal(user.__type__.TypeProxy, UserType.__type__); // undefined !
 			assert.equal(user.__type__.TypeName, UserType.TypeName);
 		});
 		it('should have proper prototype .__namespace__', () => {
