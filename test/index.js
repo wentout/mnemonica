@@ -65,6 +65,7 @@ const UserType = define('UserType', function (userData) {
 
 const userTypeHooksInvocations = [];
 
+debugger;
 UserType.registerHook('preCreation', function (opts) {
 	userTypeHooksInvocations.push({
 		kind: 'pre',
@@ -220,8 +221,8 @@ const {
 const SomeADTCType = adtcDefine('SomeADTCType', function () {
 	this.test = 123;
 });
+debugger;
 const someADTCInstance = new SomeADTCType();
-
 
 const anotherNamespace = createNamespace('anotherNamespace');
 const anotherTypesCollection = createTypesCollection(anotherNamespace, 'another types collection');
@@ -239,8 +240,8 @@ const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionTy
 });
 const oneElseCollectionInstance = new OneElseCollectionType();
 
-const user = new UserType(USER_DATA);
 debugger;
+const user = UserType(USER_DATA);
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
 
@@ -822,8 +823,6 @@ describe('Main Test', () => {
 			evenMoreFork,
 			evenMoreForkFork,
 			evenMoreForkCall,
-			userWithoutPassword,
-			userWPWithAdditionalSign,
 			overMoreCallEvenMoreNull,
 			overMoreCallEvenMoreProcess
 		});
