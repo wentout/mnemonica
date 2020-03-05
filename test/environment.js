@@ -7,6 +7,7 @@ const mnemonica = require('..');
 const {
 	define,
 	defaultTypes: types,
+	defaultCollection,
 	defaultNamespace,
 	namespaces,
 	SymbolDefaultNamespace,
@@ -79,6 +80,7 @@ const test = (opts) => {
 				'defaultNamespace',
 				'createTypesCollection',
 				'defaultTypes',
+				'defaultCollection',
 				'errors',
 				'utils',
 				'define',
@@ -271,6 +273,12 @@ const test = (opts) => {
 				});
 			}
 			
+			it('should refer defaultCollection from defaultTypes.subtypes', () => {
+				expect(types.subtypes).equal(defaultCollection);
+			});
+			it('should refer defaultCollection from defaultTypes.subtypes', () => {
+				expect(defaultCollection).instanceof(Map);
+			});
 			it('should refer defaultTypes from defaultNamespace', () => {
 				expect(defaultNamespace.typesCollections.has(types)).is.true;
 			});
