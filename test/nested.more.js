@@ -187,6 +187,9 @@ const test = (opts) => {
 			const extractedFromInstance = evenMore.extract();
 			const nativeExtractCall = extract.call(evenMore);
 			const nativeToJSONCall = JSON.parse(toJSON.call(evenMore));
+			it('toJSON should work', () => {
+				assert.equal(extractedJSON.length > 0, true);
+			});
 			it('should be equal objects', () => {
 				assert.deepOwnInclude(evenMoreNecessaryProps, extracted);
 				assert.deepOwnInclude(extracted, evenMoreNecessaryProps);
