@@ -34,12 +34,7 @@ const {
 		parse
 	},
 	errors,
-	defineStackCleaner
 } = require('..');
-
-const dirname = require('path').resolve(__dirname, '../lib');
-const stackCleanerRegExp = new RegExp(dirname);
-defineStackCleaner(stackCleanerRegExp);
 
 const USER_DATA = {
 	email: 'went.out@gmail.com',

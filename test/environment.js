@@ -24,12 +24,16 @@ const {
 	utils: {
 		toJSON,
 		merge,
-		parse
+		parse,
 	},
 	errors,
 	ErrorMessages,
 	defineStackCleaner
 } = mnemonica;
+
+const dirname = require('path').resolve(__dirname, '../lib');
+const stackCleanerRegExp = new RegExp(dirname);
+
 
 
 const test = (opts) => {
@@ -371,6 +375,7 @@ const test = (opts) => {
 			// try {
 			const errored = new BadType({});
 			// } catch (error) {
+			const stackstart = '<-- creation of [ BadType ] traced -->';
 			it('should respect the rules', () => {
 				expect(errored).instanceOf(Error);
 				expect(hookInstance.inheritedInstance).instanceOf(Error);
@@ -387,14 +392,19 @@ const test = (opts) => {
 				expect(errored.message).exist.and.is.a('string');
 				assert.equal(errored.message, 'wrong modification pattern : should inherit from mnemonica instance');
 			});
-			it('thrown error.stack should have seekable definition', () => {
-				const stackstart = '<-- creation of [ BadType ] traced -->';
+			it('thrown error.stack should have seekable definition without stack cleaner', () => {
 				expect(errored.stack.indexOf(stackstart)).equal(1);
 				expect(errored.stack
 					.indexOf('environment.js') > 0).is.true;
 					// .equal(96);
 			});
-			// }
+			it('thrown error.stack should have seekable definition with stack cleaner', () => {
+				defineStackCleaner(stackCleanerRegExp);
+				const errored2 = new BadType({});
+				expect(errored2.stack.indexOf(stackstart)).equal(1);
+				expect(errored2.stack
+					.indexOf('environment.js') > 0).is.true;
+			});
 		});
 		
 		describe('should not hack DFD', () => {
