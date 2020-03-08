@@ -398,6 +398,15 @@ const test = (opts) => {
 					.indexOf('environment.js') > 0).is.true;
 					// .equal(96);
 			});
+			it('thrown error.stack should have seekable definition without Error.captureStackTrace', () => {
+				const captureStackTrace = Error.captureStackTrace;
+				Error.captureStackTrace = null;
+				const errored1 = new BadType({});
+				Error.captureStackTrace = captureStackTrace;
+				expect(errored1.stack.indexOf(stackstart)).equal(1);
+				expect(errored1.stack
+					.indexOf('environment.js') > 0).is.true;
+			});
 			it('thrown error.stack should have seekable definition with stack cleaner', () => {
 				defineStackCleaner(stackCleanerRegExp);
 				const errored2 = new BadType({});
