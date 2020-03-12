@@ -1,6 +1,6 @@
 'use strict';
 
-const { assert, expect } = require('chai');
+const {assert, expect} = require('chai');
 
 const mnemonica = require('..');
 
@@ -58,17 +58,18 @@ const test = (opts) => {
 		derived,
 		rounded,
 		chained2,
-		merged,
+		merged
 	} = opts;
 
 	describe('Check Environment', () => {
 
 		describe('interface test', () => {
-			
+
 			const interface_keys = [
 				'SymbolSubtypeCollection',
 				'SymbolConstructorName',
 				'SymbolGaia',
+				'SymbolReplaceGaia',
 				'SymbolDefaultNamespace',
 				'SymbolDefaultTypesCollection',
 				'SymbolConfig',
@@ -90,57 +91,57 @@ const test = (opts) => {
 				'define',
 				'lookup'
 			];
-			
+
 			const mnemonica_keys = Object.keys(mnemonica);
-			
+
 			it('interface length', () => {
 				expect(mnemonica_keys.length).equal(interface_keys.length);
 			});
-			
+
 			it('interface keys', () => {
 				const missingKeys = interface_keys.filter(key => {
 					return !mnemonica_keys.includes(key);
 				});
 				expect(missingKeys.length).equal(0);
 			});
-			
+
 			it('mnemonica keys', () => {
 				const missingKeys = mnemonica_keys.filter(key => {
 					return !interface_keys.includes(key);
 				});
 				expect(missingKeys.length).equal(0);
 			});
-			
+
 		});
-		
+
 		describe('named constructor define', async () => {
-			
+
 			const NamedFunction = UserType.define(async function NamedFunction () {
 				this.type = 'function';
 				return this;
 			});
-			
+
 			it('named function definition exist', () => {
 				expect(user.__subtypes__.has('NamedFunction')).is.true;
 			});
-			
+
 			const NamedClass = UserType.define(class NamedClass {
-				constructor (snc) {
+				constructor(snc) {
 					this.type = 'class';
 					this.snc = snc;
 				}
 			});
-			
+
 			const SubNamedClass = NamedClass.define(class SubNamedClass {
-				constructor () {
+				constructor() {
 					this.type = 'subclass';
 				}
 			});
-			
+
 			it('named class definition exist', () => {
 				expect(user.__subtypes__.has('NamedClass')).is.true;
 			});
-			
+
 			const nf = await new user.NamedFunction();
 			it('instance made through named function instanceof & props', () => {
 				expect(nf).instanceOf(NamedFunction);
@@ -148,19 +149,19 @@ const test = (opts) => {
 			it('instance made with named function props', () => {
 				expect(nf.type).is.equal('function');
 			});
-			
+
 			const nc = new user.NamedClass(1);
-			
+
 			it('instance made through named class instanceof', () => {
 				expect(nc).instanceOf(NamedClass);
 			});
 			it('instance made with named class props', () => {
 				expect(nc.type).is.equal('class');
 			});
-			
+
 			const snc1 = new nc.SubNamedClass();
 			const snc2 = new user.NamedClass(2).SubNamedClass();
-			
+
 			it('instance made through sub-named class instanceof', () => {
 				expect(snc1).instanceOf(NamedClass);
 				expect(snc1).instanceOf(SubNamedClass);
@@ -168,7 +169,7 @@ const test = (opts) => {
 				expect(snc2).instanceOf(SubNamedClass);
 			});
 			it('instance made with sub-named class props', () => {
-				
+
 				expect(snc1.type).is.equal('subclass');
 				const extracted1 = snc1.extract();
 				expect(extracted1.email).is.equal('went.out@gmail.com');
@@ -176,7 +177,7 @@ const test = (opts) => {
 				const parsed1 = parse(snc1);
 				expect(parsed1.props.type).is.equal('subclass');
 				expect(parsed1.name).is.equal('SubNamedClass');
-				
+
 				expect(snc2.type).is.equal('subclass');
 				const extracted2 = snc2.extract();
 				expect(extracted2.email).is.equal('went.out@gmail.com');
@@ -184,11 +185,11 @@ const test = (opts) => {
 				const parsed2 = parse(snc2);
 				expect(parsed2.props.type).is.equal('subclass');
 				expect(parsed2.name).is.equal('SubNamedClass');
-				
+
 			});
-			
+
 		});
-		
+
 		describe('error defineStackCleaner test ', () => {
 			let madeError = null;
 			try {
@@ -199,12 +200,12 @@ const test = (opts) => {
 			it('defineStackCleaner wrong definition should be instancof error', () => {
 				expect(madeError).instanceOf(Error);
 			});
-			
+
 			it('defineStackCleaner wrong definition should be instancof error', () => {
 				expect(madeError).instanceOf(errors.BASE_MNEMONICA_ERROR);
 			});
 		});
-		
+
 		describe('core env tests', () => {
 
 			it('Symbol Gaia', () => {
@@ -268,7 +269,7 @@ const test = (opts) => {
 					expect(error.message).is.equal(ErrorMessages.NAMESPACE_DOES_NOT_EXIST);
 				});
 			}
-			
+
 			try {
 				createTypesCollection(anotherNamespace, 'another types collection');
 			} catch (error) {
@@ -276,7 +277,7 @@ const test = (opts) => {
 					expect(error.message).is.equal(ErrorMessages.ASSOCIATION_EXISTS);
 				});
 			}
-			
+
 			it('should refer defaultCollection from defaultTypes.subtypes', () => {
 				expect(types.subtypes).equal(defaultCollection);
 			});
@@ -315,7 +316,7 @@ const test = (opts) => {
 					});
 				}
 				try {
-					UserType[''] = function () { };
+					UserType[''] = function () {};
 				} catch (error) {
 					it('should respect the rules', () => {
 						expect(error).instanceOf(Error);
@@ -329,7 +330,7 @@ const test = (opts) => {
 					});
 				}
 			});
-			
+
 			try {
 				userTC.UserTypeMissing();
 			} catch (error) {
@@ -340,7 +341,7 @@ const test = (opts) => {
 			}
 
 		});
-		
+
 		describe('base error shoud be defined', () => {
 			it('BASE_MNEMONICA_ERROR exists', () => {
 				expect(errors.BASE_MNEMONICA_ERROR).to.exist;
@@ -359,13 +360,13 @@ const test = (opts) => {
 				});
 			}
 		});
-		
+
 		describe('should respect DFD', () => {
 			const BadType = define('BadType', function (NotThis) {
 				// returns not instanceof this
 				return NotThis;
 			}, {}, {
-				submitStack : true
+				submitStack: true
 			});
 			var hookInstance;
 			BadType.registerHook('creationError', (_hookInstance) => {
@@ -373,6 +374,7 @@ const test = (opts) => {
 				return true;
 			});
 			// try {
+			debugger;
 			const errored = new BadType({});
 			// } catch (error) {
 			const stackstart = '<-- creation of [ BadType ] traced -->';
@@ -396,7 +398,7 @@ const test = (opts) => {
 				expect(errored.stack.indexOf(stackstart)).equal(1);
 				expect(errored.stack
 					.indexOf('environment.js') > 0).is.true;
-					// .equal(96);
+				// .equal(96);
 			});
 			it('thrown error.stack should have seekable definition without Error.captureStackTrace', () => {
 				const captureStackTrace = Error.captureStackTrace;
@@ -415,7 +417,7 @@ const test = (opts) => {
 					.indexOf('environment.js') > 0).is.true;
 			});
 		});
-		
+
 		describe('should not hack DFD', () => {
 			const BadTypeReThis = define('BadTypeReThis', function () {
 				// removing constructor
@@ -444,9 +446,9 @@ const test = (opts) => {
 				});
 			}
 		});
-		
+
 		describe('subtype property inside type re-definition', () => {
-			const BadTypeReInConstruct = define('BadTypeReInConstruct', function () { });
+			const BadTypeReInConstruct = define('BadTypeReInConstruct', function () {});
 			BadTypeReInConstruct.define('ExistentConstructor', function () {
 				this.ExistentConstructor = undefined;
 			});
@@ -466,7 +468,7 @@ const test = (opts) => {
 		describe('should throw with wrong definition', () => {
 			[
 				['wrong type definition : expect prototype to be an object', () => {
-					define('Wrong', function () { }, true);
+					define('Wrong', function () {}, true);
 				}, errors.WRONG_TYPE_DEFINITION],
 				['wrong type definition : TypeName should start with Uppercase Letter', () => {
 					// next line same as 
@@ -491,17 +493,17 @@ const test = (opts) => {
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
 				['this type has already been declared', () => {
 					define('UserTypeConstructor', () => {
-						return function WithoutPassword() { };
+						return function WithoutPassword () {};
 					});
 				}, errors.ALREADY_DECLARED],
 				['typename must be a string', () => {
 					define('UserType.UserTypePL1', () => {
-						return function () { };
+						return function () {};
 					});
 				}, errors.TYPENAME_MUST_BE_A_STRING],
 			].forEach(entry => {
 				const [errorMessage, fn, err] = entry;
-				it(`check throw with : '${errorMessage}'`, () => {
+				it(`check throw with : '${ errorMessage }'`, () => {
 					expect(fn).throw();
 					try {
 						fn();
@@ -545,7 +547,7 @@ const test = (opts) => {
 			});
 			it('Instance circular .toJSON works', () => {
 				const circularExtracted = JSON.parse(toJSON(oneElseCollectionInstance));
-				const { description } = circularExtracted.self;
+				const {description} = circularExtracted.self;
 				expect(description).equal('This value type is not supported by JSON.stringify');
 			});
 			it('Instance circular .toJSON works', () => {
@@ -578,7 +580,7 @@ const test = (opts) => {
 				});
 			}
 			try {
-				defaultNamespace.registerFlowChecker(() => { });
+				defaultNamespace.registerFlowChecker(() => {});
 			} catch (error) {
 				it('Thrown with Re-Definition', () => {
 					expect(error).instanceOf(Error);
@@ -586,7 +588,7 @@ const test = (opts) => {
 				});
 			}
 			try {
-				defaultNamespace.registerHook('WrongHookType', () => { });
+				defaultNamespace.registerHook('WrongHookType', () => {});
 			} catch (error) {
 				it('Thrown with Re-Definition', () => {
 					expect(error).instanceOf(Error);
@@ -608,7 +610,7 @@ const test = (opts) => {
 				expect(userWithoutPassword.WithoutPassword).equal(undefined);
 			});
 		});
-		
+
 		describe('merge tests', () => {
 			const mergedSample = {
 				OverMoreSign: 'OverMoreSign',
@@ -641,7 +643,7 @@ const test = (opts) => {
 				}
 			});
 			describe('wrong A 2', () => {
-				const Cstr = function () { };
+				const Cstr = function () {};
 				Cstr.prototype.clone = Object.create({});
 				const d = new Cstr();
 				try {
@@ -690,11 +692,11 @@ const test = (opts) => {
 				assert.deepEqual(rounded.extract(), chained2.extract());
 			});
 		});
-		
+
 	});
-	
+
 	describe('wrong namespace creation', () => {
-		
+
 		try {
 			createNamespace('wrong config namespace', true);
 		} catch (error) {
@@ -708,17 +710,116 @@ const test = (opts) => {
 		it('namespace with string instead of config should have description', () => {
 			expect(goodNamespace[SymbolConfig].description).is.equal(goodNamespaceDescription);
 		});
-		
+
 		const goodNamespaceTC = goodNamespace.createTypesCollection('good namespace types collection', {
-			useOldStyle : true
+			useOldStyle: true
 		});
 		it('namespace types collection creation check', () => {
 			expect(goodNamespaceTC[SymbolConfig].useOldStyle).is.equal(true);
 			expect(goodNamespaceTC[SymbolConfig].strictChain).is.equal(true);
 		});
-		
+
 	});
 
+	describe('prepareException', () => {
+		let errorInstance = null;
+		let exceptionError = new Error('asdf');
+		try {
+			throw new someADTCInstance.exception(exceptionError, 1, 2, 3);
+		} catch (error) {
+			errorInstance = error;
+		}
+		it('.exception() shoud create instanceof Error', () => {
+			expect(errorInstance).instanceOf(Error);
+		});
+		it('.exception() shoud create instanceof CreationType', () => {
+			expect(errorInstance).instanceOf(someADTCInstance.__type__);
+		});
+		it('.exception() args should exists create instanceof CreationType', () => {
+			expect(errorInstance).instanceOf(someADTCInstance.__type__);
+		});
+		it('.exception() .instance should be existent instance', () => {
+			expect(errorInstance.instance).equal(someADTCInstance);
+		});
+		it('.exception() should have nice .args property', () => {
+			expect(errorInstance.args[0]).equal(1);
+			expect(errorInstance.args[1]).equal(2);
+			expect(errorInstance.args[2]).equal(3);
+		});
+		
+		it('.exception() .extract() works property', () => {
+			assert.deepOwnInclude(errorInstance.extract(), someADTCInstance.extract());
+			assert.deepOwnInclude(someADTCInstance.extract(), errorInstance.extract());
+		});
+		it('.exception() .extract() works property', () => {
+			assert.deepOwnInclude(errorInstance.parse(), parse(someADTCInstance));
+			assert.deepOwnInclude(parse(someADTCInstance), errorInstance.parse());
+		});
+		
+
+		let wrongErrorInstanceNoNew = null;
+		try {
+			throw someADTCInstance.exception(exceptionError, 1, 2, 3);
+		} catch (error) {
+			wrongErrorInstanceNoNew = error;
+		}
+		it('wrong .exception() creation instanceof Error', () => {
+			expect(wrongErrorInstanceNoNew).instanceOf(Error);
+		});
+		it('wrong .exception() creation instanceof WRONG_INSTANCE_INVOCATION', () => {
+			expect(wrongErrorInstanceNoNew).instanceOf(errors.WRONG_INSTANCE_INVOCATION);
+		});
+		it('wrong .exception() creation should have nice message', () => {
+			expect(wrongErrorInstanceNoNew.message.includes('exception should be made with new keyword')).is.true;
+		});
+
+
+
+		let wrongErrorInstanceIsNotAnError = null;
+		try {
+			throw new someADTCInstance.exception('asdf', 1, 2, 3);
+		} catch (error) {
+			wrongErrorInstanceIsNotAnError = error;
+		}
+		it('wrong .exception() creation instanceof Error', () => {
+			expect(wrongErrorInstanceIsNotAnError).instanceOf(Error);
+		});
+		it('wrong .exception() creation instanceof WRONG_ARGUMENTS_USED', () => {
+			expect(wrongErrorInstanceIsNotAnError).instanceOf(errors.WRONG_ARGUMENTS_USED);
+		});
+		it('wrong .exception() creation should have nice message', () => {
+			expect(wrongErrorInstanceIsNotAnError.message.includes('error must be instanceof Error')).is.true;
+		});
+		
+		it('wrong .exception() .instance should be existent instance', () => {
+			expect(wrongErrorInstanceIsNotAnError.instance).equal(someADTCInstance);
+		});
+		it('wrong .exception() .error should be given error', () => {
+			expect(wrongErrorInstanceIsNotAnError.error).equal('asdf');
+		});
+		it('wrong .exception() .args should be given args', () => {
+			expect(wrongErrorInstanceIsNotAnError.args[0]).equal(1);
+			expect(wrongErrorInstanceIsNotAnError.args[1]).equal(2);
+			expect(wrongErrorInstanceIsNotAnError.args[2]).equal(3);
+		});
+		
+		
+		let wrongErrorInstanceIsNotAConstructor = null;
+		try {
+			throw new someADTCInstance.exception.call(null, 'asdf', 1, 2, 3);
+		} catch (error) {
+			wrongErrorInstanceIsNotAConstructor = error;
+		}
+		it('wrong .exception() creation instanceof Error', () => {
+			expect(wrongErrorInstanceIsNotAConstructor).instanceOf(Error);
+		});
+		it('wrong .exception() creation instanceof TypeError', () => {
+			// is not a constructor
+			expect(wrongErrorInstanceIsNotAConstructor).instanceOf(TypeError);
+		});
+
+
+	});
 
 };
 

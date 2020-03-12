@@ -216,7 +216,7 @@ const {
 const SomeADTCType = adtcDefine('SomeADTCType', function () {
 	this.test = 123;
 });
-debugger;
+
 const someADTCInstance = new SomeADTCType();
 
 const anotherNamespace = createNamespace('anotherNamespace');
@@ -501,7 +501,7 @@ describe('Main Test', () => {
 		derived,
 		rounded,
 		chained2,
-		merged,
+		merged
 	});
 
 	require('./async.chain')({
