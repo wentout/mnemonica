@@ -16,10 +16,10 @@ var start = process.hrtime.bigint();
 
 var _define = define;
 for (let i = 0; i < HowMany; i++) {
-	const it = _define(`NestedType${i}`, function () {
+	const its = _define(`NestedType${i}`, function () {
 		this[`nestedProp${i}`] = `nestedProp${i}`;
 	});
-	_define = it.define.bind(it);
+	_define = its.define.bind(its);
 }
 
 var end = process.hrtime.bigint();
@@ -41,16 +41,16 @@ const diff2 = end - start;
 console.log('Diff 2:', diff2);
 
 
-const Creator = function (it) {
+const Creator = function (its) {
 	const Maker = function () {};
-	Maker.prototype = it;
+	Maker.prototype = its;
 	return new Maker;
 };
 
 start = process.hrtime.bigint();
 
 var obj = {
-	ObjType0 : {},
+	ObjType0    : {},
 	nestedProp0 : 'nestedProp0'
 };
 var current = obj.ObjType0;

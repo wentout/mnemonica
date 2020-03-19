@@ -1,209 +1,209 @@
 module.exports = {
-	'parsedUser': {
-		'name': 'UserType',
-		'props': {
-			'email': 'went.out@gmail.com',
-			'password': 321
+	'parsedUser' : {
+		'name'  : 'UserType',
+		'props' : {
+			'email'    : 'went.out@gmail.com',
+			'password' : 321
 		},
-		'joint': {
-			'email': '',
-			'password': '',
-			'description': 'UserType'
+		'joint' : {
+			'email'       : '',
+			'password'    : '',
+			'description' : 'UserType'
 		},
-		'self': {
-			'email': 'went.out@gmail.com',
-			'password': 321
+		'self' : {
+			'email'    : 'went.out@gmail.com',
+			'password' : 321
 		},
-		'proto': {
-			'email': '',
-			'password': '',
-			'description': 'UserType'
+		'proto' : {
+			'email'       : '',
+			'password'    : '',
+			'description' : 'UserType'
 		},
-		'parent': {}
+		'parent' : {}
 	},
-	'parsedUserPL1': {
-		'name': 'UserTypePL1',
-		'props': {
-			'user_pl_1_sign': 'pl_1'
+	'parsedUserPL1' : {
+		'name'  : 'UserTypePL1',
+		'props' : {
+			'user_pl_1_sign' : 'pl_1'
 		},
-		'joint': {
-			'UserTypePL1': 'UserTypePL_1',
-			'UserTypePL1Extra': 'UserTypePL_1_Extra'
+		'joint' : {
+			'UserTypePL1'      : 'UserTypePL_1',
+			'UserTypePL1Extra' : 'UserTypePL_1_Extra'
 		},
-		'self': {
-			'user_pl_1_sign': 'pl_1'
+		'self' : {
+			'user_pl_1_sign' : 'pl_1'
 		},
-		'proto': {
-			'UserTypePL1': 'UserTypePL_1',
-			'UserTypePL1Extra': 'UserTypePL_1_Extra'
+		'proto' : {
+			'UserTypePL1'      : 'UserTypePL_1',
+			'UserTypePL1Extra' : 'UserTypePL_1_Extra'
 		},
-		'parent': {
-			'name': 'UserType',
-			'props': {
-				'email': 'went.out@gmail.com',
-				'password': 321
+		'parent' : {
+			'name'  : 'UserType',
+			'props' : {
+				'email'    : 'went.out@gmail.com',
+				'password' : 321
 			},
-			'joint': {
-				'email': '',
-				'password': '',
-				'description': 'UserType'
+			'joint' : {
+				'email'       : '',
+				'password'    : '',
+				'description' : 'UserType'
 			},
-			'self': {
-				'email': 'went.out@gmail.com',
-				'password': 321
+			'self' : {
+				'email'    : 'went.out@gmail.com',
+				'password' : 321
 			},
-			'proto': {
-				'email': '',
-				'password': '',
-				'description': 'UserType'
+			'proto' : {
+				'email'       : '',
+				'password'    : '',
+				'description' : 'UserType'
 			},
-			'parent': {}
+			'parent' : {}
 		}
 	},
-	'parsedUserPL2': {
-		'name': 'UserTypePL2',
-		'props': {
-			'user_pl_2_sign': 'pl_2',
-			'shape': 123
+	'parsedUserPL2' : {
+		'name'  : 'UserTypePL2',
+		'props' : {
+			'user_pl_2_sign' : 'pl_2',
+			'shape'          : 123
 		},
-		'joint': {},
-		'self': {
-			'user_pl_2_sign': 'pl_2',
-			'shape': 123
+		'joint' : {},
+		'self'  : {
+			'user_pl_2_sign' : 'pl_2',
+			'shape'          : 123
 		},
-		'proto': {},
-		'parent': {
-			'name': 'UserType',
-			'props': {
-				'email': 'went.out@gmail.com',
-				'password': 321
+		'proto'  : {},
+		'parent' : {
+			'name'  : 'UserType',
+			'props' : {
+				'email'    : 'went.out@gmail.com',
+				'password' : 321
 			},
-			'joint': {
-				'email': '',
-				'password': '',
-				'description': 'UserType'
+			'joint' : {
+				'email'       : '',
+				'password'    : '',
+				'description' : 'UserType'
 			},
-			'self': {
-				'email': 'went.out@gmail.com',
-				'password': 321
+			'self' : {
+				'email'    : 'went.out@gmail.com',
+				'password' : 321
 			},
-			'proto': {
-				'email': '',
-				'password': '',
-				'description': 'UserType'
+			'proto' : {
+				'email'       : '',
+				'password'    : '',
+				'description' : 'UserType'
 			},
-			'parent': {}
+			'parent' : {}
 		}
 	},
-	'parsedUserTC': {
-		'name': 'UserTypeConstructor',
-		'props': {
-			'email': 'went.out@gmail.com',
-			'password': 321
+	'parsedUserTC' : {
+		'name'  : 'UserTypeConstructor',
+		'props' : {
+			'email'    : 'went.out@gmail.com',
+			'password' : 321
 		},
-		'joint': {
-			'email': '',
-			'password': '',
-			'description': 'UserTypeConstructor'
+		'joint' : {
+			'email'       : '',
+			'password'    : '',
+			'description' : 'UserTypeConstructor'
 		},
-		'self': {
-			'email': 'went.out@gmail.com',
-			'password': 321
+		'self' : {
+			'email'    : 'went.out@gmail.com',
+			'password' : 321
 		},
-		'proto': {
-			'email': '',
-			'password': '',
-			'description': 'UserTypeConstructor'
+		'proto' : {
+			'email'       : '',
+			'password'    : '',
+			'description' : 'UserTypeConstructor'
 		},
-		'parent': {}
+		'parent' : {}
 	},
-	'parsedEvenMore': {
-		'name': 'EvenMore',
-		'props': {
-			'str': 're-defined EvenMore str'
+	'parsedEvenMore' : {
+		'name'  : 'EvenMore',
+		'props' : {
+			'str' : 're-defined EvenMore str'
 		},
-		'joint': {
-			'EvenMoreSign': 'EvenMoreSign'
+		'joint' : {
+			'EvenMoreSign' : 'EvenMoreSign'
 		},
-		'self': {
-			'str': 're-defined EvenMore str'
+		'self' : {
+			'str' : 're-defined EvenMore str'
 		},
-		'proto': {
-			'EvenMoreSign': 'EvenMoreSign'
+		'proto' : {
+			'EvenMoreSign' : 'EvenMoreSign'
 		},
-		'parent': {
-			'name': 'OverMore',
-			'props': {
-				'str': 're-defined OverMore str'
+		'parent' : {
+			'name'  : 'OverMore',
+			'props' : {
+				'str' : 're-defined OverMore str'
 			},
-			'joint': {
-				'OverMoreSign': 'OverMoreSign'
+			'joint' : {
+				'OverMoreSign' : 'OverMoreSign'
 			},
-			'self': {
-				'str': 're-defined OverMore str'
+			'self' : {
+				'str' : 're-defined OverMore str'
 			},
-			'proto': {
-				'OverMoreSign': 'OverMoreSign'
+			'proto' : {
+				'OverMoreSign' : 'OverMoreSign'
 			},
-			'parent': {
-				'name': 'MoreOver',
-				'props': {
-					'str': 'moreOver str from test scope'
+			'parent' : {
+				'name'  : 'MoreOver',
+				'props' : {
+					'str' : 'moreOver str from test scope'
 				},
-				'joint': {},
-				'self': {
-					'str': 'moreOver str from test scope'
+				'joint' : {},
+				'self'  : {
+					'str' : 'moreOver str from test scope'
 				},
-				'proto': {},
-				'parent': {
-					'name': 'WithAdditionalSign',
-					'props': {
-						'sign': 'userWithoutPassword_2.WithAdditionalSign'
+				'proto'  : {},
+				'parent' : {
+					'name'  : 'WithAdditionalSign',
+					'props' : {
+						'sign' : 'userWithoutPassword_2.WithAdditionalSign'
 					},
-					'joint': {
-						'WithAdditionalSignSign': 'WithAdditionalSignSign'
+					'joint' : {
+						'WithAdditionalSignSign' : 'WithAdditionalSignSign'
 					},
-					'self': {
-						'sign': 'userWithoutPassword_2.WithAdditionalSign'
+					'self' : {
+						'sign' : 'userWithoutPassword_2.WithAdditionalSign'
 					},
-					'proto': {
-						'WithAdditionalSignSign': 'WithAdditionalSignSign'
+					'proto' : {
+						'WithAdditionalSignSign' : 'WithAdditionalSignSign'
 					},
-					'parent': {
-						'name': 'WithoutPassword',
-						'props': {
-							'password': undefined
+					'parent' : {
+						'name'  : 'WithoutPassword',
+						'props' : {
+							'password' : undefined
 						},
-						'joint': {
-							'WithoutPasswordSign': 'WithoutPasswordSign'
+						'joint' : {
+							'WithoutPasswordSign' : 'WithoutPasswordSign'
 						},
-						'self': {
-							'password': undefined
+						'self' : {
+							'password' : undefined
 						},
-						'proto': {
-							'WithoutPasswordSign': 'WithoutPasswordSign'
+						'proto' : {
+							'WithoutPasswordSign' : 'WithoutPasswordSign'
 						},
-						'parent': {
-							'name': 'UserTypeConstructor',
-							'props': {
-								'email': 'went.out@gmail.com',
-								'password': 321
+						'parent' : {
+							'name'  : 'UserTypeConstructor',
+							'props' : {
+								'email'    : 'went.out@gmail.com',
+								'password' : 321
 							},
-							'joint': {
-								'email': '',
-								'password': '',
-								'description': 'UserTypeConstructor'
+							'joint' : {
+								'email'       : '',
+								'password'    : '',
+								'description' : 'UserTypeConstructor'
 							},
-							'self': {
-								'email': 'went.out@gmail.com',
-								'password': 321
+							'self' : {
+								'email'    : 'went.out@gmail.com',
+								'password' : 321
 							},
-							'proto': {
-								'email': '',
-								'password': '',
-								'description': 'UserTypeConstructor'
+							'proto' : {
+								'email'       : '',
+								'password'    : '',
+								'description' : 'UserTypeConstructor'
 							},
-							'parent': {}
+							'parent' : {}
 						}
 					}
 				}

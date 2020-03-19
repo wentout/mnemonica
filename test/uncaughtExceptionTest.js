@@ -2,7 +2,7 @@
 
 const { assert, expect } = require('chai');
 
-const test = (opts) => {
+const tests = (opts) => {
 	const {
 		evenMore,
 		ThrowTypeError
@@ -10,7 +10,7 @@ const test = (opts) => {
 	describe('uncaughtException test', () => {
 		it('should throw proper error', (passedCb) => {
 			const throwArgs = {
-				uncaughtException: true
+				uncaughtException : true
 			};
 
 			setTimeout(() => {
@@ -38,4 +38,4 @@ const test = (opts) => {
 	});
 };
 
-module.exports = test;
+module.exports = tests;

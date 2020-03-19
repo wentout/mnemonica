@@ -26,6 +26,7 @@ module.exports = {
 		],
 		"no-unused-vars": "warn",
 		"no-console": "off",
-		"no-debugger": "off"
+		"no-debugger": "off",
+		"new-cap": "off"
 	}
 };

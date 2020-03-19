@@ -11,7 +11,7 @@ const {
 	errors,
 } = require('..');
 
-const test = (opts) => {
+const tests = (opts) => {
 
 	const {
 		user,
@@ -65,11 +65,11 @@ const test = (opts) => {
 		const parsedUserTC = parse(userTC);
 		const results = {
 			parsedUser,
-			parsedUserPL1: parse(userPL1),
-			parsedUserPL2: parse(userPL2),
+			parsedUserPL1 : parse(userPL1),
+			parsedUserPL2 : parse(userPL2),
 
 			parsedUserTC,
-			parsedEvenMore: parse(evenMore),
+			parsedEvenMore : parse(evenMore),
 		};
 
 		it('expect proper first instance in chain constructor', () => {
@@ -138,4 +138,4 @@ const test = (opts) => {
 
 };
 
-module.exports = test;
+module.exports = tests;

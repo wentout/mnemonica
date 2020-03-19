@@ -3,6 +3,7 @@
 const { assert, expect } = require('chai');
 
 const ogp = Object.getPrototypeOf;
+const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
 
 const {
 	inspect,
@@ -14,6 +15,8 @@ const hooksTest = true;
 const parseTest = true;
 const uncaughtExceptionTest = true;
 const asyncConstructionTest = true;
+
+const mnemonica = require('..');
 
 const {
 	define,
@@ -34,20 +37,20 @@ const {
 		parse
 	},
 	errors,
-} = require('..');
+} = mnemonica;
 
 const USER_DATA = {
-	email: 'went.out@gmail.com',
-	password: 321
+	email    : 'went.out@gmail.com',
+	password : 321
 };
 
 const UserTypeProto = {
-	email: '',
-	password: '',
-	description: 'UserType'
+	email       : '',
+	password    : '',
+	description : 'UserType'
 };
 
-const UserType = define('UserType', function (userData) {
+const UserType = mnemonica.define('UserType', function (userData) {
 	const {
 		email,
 		password
@@ -63,26 +66,26 @@ const userTypeHooksInvocations = [];
 debugger;
 UserType.registerHook('preCreation', function (opts) {
 	userTypeHooksInvocations.push({
-		kind: 'pre',
-		sort: 'type',
-		self: this,
+		kind : 'pre',
+		sort : 'type',
+		self : this,
 		opts
 	});
 });
 
 UserType.registerHook('postCreation', function (opts) {
 	userTypeHooksInvocations.push({
-		kind: 'post',
-		sort: 'type',
-		self: this,
+		kind : 'post',
+		sort : 'type',
+		self : this,
 		opts
 	});
 });
 
 
 const pl1Proto = {
-	UserTypePL1: 'UserTypePL_1',
-	UserTypePL1Extra: 'UserTypePL_1_Extra',
+	UserTypePL1      : 'UserTypePL_1',
+	UserTypePL1Extra : 'UserTypePL_1_Extra',
 };
 
 UserType.define(() => {
@@ -97,11 +100,11 @@ UserType.define(() => {
 });
 
 const pl2Proto = {
-	UserTypePL2: 'UserTypePL_2_AlwaysIncluded'
+	UserTypePL2 : 'UserTypePL_2_AlwaysIncluded'
 };
 
 class Shaper {
-	constructor() {
+	constructor () {
 		// const zzz = new.target;
 		// Shaper;
 		// debugger;
@@ -111,14 +114,14 @@ class Shaper {
 
 UserType.define(() => {
 	class UserTypePL2 extends Shaper {
-		constructor() {
+		constructor () {
 			super();
 			// const zzz = new.target;
 			// Shaper;
 			// debugger;
 			this.user_pl_2_sign = 'pl_2';
 		}
-		get UserTypePL2() {
+		get UserTypePL2 () {
 			return pl2Proto.UserTypePL2;
 		}
 	}
@@ -133,7 +136,7 @@ const ProxyTyped = function (str) {
 	this.str = str;
 };
 ProxyTyped.prototype = {
-	proxyTyped: true,
+	proxyTyped : true,
 	SaySomething () {
 		return `something : ${this.proxyTyped}`;
 	}
@@ -156,18 +159,18 @@ types.registerFlowChecker((opts) => {
 
 types.registerHook('preCreation', function (opts) {
 	typesPreCreationInvocations.push({
-		kind: 'pre',
-		sort: 'collection',
-		self: this,
+		kind : 'pre',
+		sort : 'collection',
+		self : this,
 		opts
 	});
 });
 
 types.registerHook('postCreation', function (opts) {
 	typesPostCreationInvocations.push({
-		kind: 'post',
-		sort: 'collection',
-		self: this,
+		kind : 'post',
+		sort : 'collection',
+		self : this,
 		opts
 	});
 });
@@ -179,29 +182,29 @@ defaultNamespace.registerFlowChecker((opts) => {
 
 defaultNamespace.registerHook('preCreation', function (opts) {
 	namespacePreCreationInvocations.push({
-		kind: 'pre',
-		sort: 'namespace',
-		self: this,
+		kind : 'pre',
+		sort : 'namespace',
+		self : this,
 		opts
 	});
 });
 
 defaultNamespace.registerHook('postCreation', function (opts) {
 	namespacePostCreationInvocations.push({
-		kind: 'pre',
-		sort: 'namespace',
-		self: this,
-		order: 'first',
+		kind  : 'pre',
+		sort  : 'namespace',
+		self  : this,
+		order : 'first',
 		opts
 	});
 });
 
 defaultNamespace.registerHook('postCreation', function (opts) {
 	namespacePostCreationInvocations.push({
-		kind: 'pre',
-		sort: 'namespace',
-		self: this,
-		order: 'second',
+		kind  : 'pre',
+		sort  : 'namespace',
+		self  : this,
+		order : 'second',
 		opts
 	});
 });
@@ -260,9 +263,9 @@ AsyncType.SubOfAsync.NestedAsyncType = async function (data) {
 	});
 };
 AsyncType.SubOfAsync.NestedAsyncType.prototype = {
-	description: 'nested async instance'
+	description : 'nested async instance'
 };
-const NestedAsyncType = AsyncType.SubOfAsync.NestedAsyncType;
+const {NestedAsyncType} = AsyncType.SubOfAsync;
 
 const SubOfNestedAsync = NestedAsyncType.define('SubOfNestedAsync', function (data) {
 	Object.assign(this, {
@@ -284,21 +287,21 @@ describe('Main Test', () => {
 	*/
 
 	const UserTypeConstructorProto = {
-		email: '',
-		password: '',
-		description: 'UserTypeConstructor'
+		email       : '',
+		password    : '',
+		description : 'UserTypeConstructor'
 	};
 
 	const evenMoreNecessaryProps = {
-		str: 're-defined EvenMore str',
-		EvenMoreSign: 'EvenMoreSign',
-		OverMoreSign: 'OverMoreSign',
-		sign: 'userWithoutPassword_2.WithAdditionalSign',
-		WithAdditionalSignSign: 'WithAdditionalSignSign',
-		WithoutPasswordSign: 'WithoutPasswordSign',
-		email: 'went.out@gmail.com',
-		description: 'UserTypeConstructor',
-		password: undefined
+		str                    : 're-defined EvenMore str',
+		EvenMoreSign           : 'EvenMoreSign',
+		OverMoreSign           : 'OverMoreSign',
+		sign                   : 'userWithoutPassword_2.WithAdditionalSign',
+		WithAdditionalSignSign : 'WithAdditionalSignSign',
+		WithoutPasswordSign    : 'WithoutPasswordSign',
+		email                  : 'went.out@gmail.com',
+		description            : 'UserTypeConstructor',
+		password               : undefined
 	};
 
 	const UserTypeConstructor = define('UserTypeConstructor', function (userData) {
@@ -317,7 +320,7 @@ describe('Main Test', () => {
 	});
 
 	const WithoutPasswordProto = {
-		WithoutPasswordSign: 'WithoutPasswordSign'
+		WithoutPasswordSign : 'WithoutPasswordSign'
 	};
 	
 	// debugger;
@@ -333,9 +336,9 @@ describe('Main Test', () => {
 	});
 
 	const WithAdditionalSignProto = {
-		WithAdditionalSignSign: 'WithAdditionalSignSign'
+		WithAdditionalSignSign : 'WithAdditionalSignSign'
 	};
-	const WithAdditionalSign = UserWithoutPassword.define(() => {
+	const WithAdditionalSignTypeDef = UserWithoutPassword.define(() => {
 		const WithAdditionalSign = function (sign) {
 			this.sign = sign;
 		};
@@ -346,14 +349,14 @@ describe('Main Test', () => {
 	});
 
 	const MoreOverProto = {
-		MoreOverSign: 'MoreOverSign'
+		MoreOverSign : 'MoreOverSign'
 	};
-	const MoreOver = WithAdditionalSign.define(() => {
+	const MoreOverTypeDef = WithAdditionalSignTypeDef.define(() => {
 		class MoreOver {
-			constructor(str) {
+			constructor (str) {
 				this.str = str || 'moreover str';
 			}
-			get MoreOverSign() {
+			get MoreOverSign () {
 				return MoreOverProto.MoreOverSign;
 			}
 		}
@@ -363,10 +366,10 @@ describe('Main Test', () => {
 	});
 
 	const OverMoreProto = {
-		OverMoreSign: 'OverMoreSign'
+		OverMoreSign : 'OverMoreSign'
 	};
 	// debugger;
-	const OverMore = WithAdditionalSign
+	const OverMore = WithAdditionalSignTypeDef
 		.define('MoreOver.OverMore',
 			function (str) {
 				this.str = str || 're-defined OverMore str';
@@ -375,10 +378,10 @@ describe('Main Test', () => {
 			});
 
 	const EvenMoreProto = {
-		EvenMoreSign: 'EvenMoreSign'
+		EvenMoreSign : 'EvenMoreSign'
 	};
 
-	const EvenMore = WithAdditionalSign.define(`
+	const EvenMoreTypeDef = WithAdditionalSignTypeDef.define(`
 		MoreOver . OverMore
 	`, function () {
 		const EvenMore = function (str) {
@@ -390,9 +393,9 @@ describe('Main Test', () => {
 		submitStack : true
 	});
 	
-	const ThrowTypeError = EvenMore.define('ThrowTypeError', require('./throw-type-error'));
+	const ThrowTypeError = EvenMoreTypeDef.define('ThrowTypeError', require('./throw-type-error'));
 
-	const AsyncChain1st = WithAdditionalSign.define('AsyncChain1st', async function (opts) {
+	const AsyncChain1st = WithAdditionalSignTypeDef.define('AsyncChain1st', async function (opts) {
 		return Object.assign(this, opts);
 	}, {}, {
 		submitStack : true
@@ -428,7 +431,7 @@ describe('Main Test', () => {
 	const userTC = new UserTypeConstructor(USER_DATA);
 	
 	const FORK_CALL_DATA = {
-		email: 'forkmail@gmail.com',
+		email    : 'forkmail@gmail.com',
 		password : '54321'
 	};
 	
@@ -470,11 +473,11 @@ describe('Main Test', () => {
 	const evenMoreFork = evenMore.fork(strFork);
 	const evenMoreForkFork = evenMoreFork.fork(strForkOfFork);
 
-	const chained = new UserTypeConstructor({ email: 'someother@gmail.com', password: 32123 });
+	const chained = new UserTypeConstructor({ email : 'someother@gmail.com', password : 32123 });
 	const derived = new chained.WithoutPassword();
 	const rounded = new derived.WithAdditionalSign(sign2add);
 
-	const chained2 = new UserTypeConstructor({ email: 'someother@gmail.com', password: 32123 })
+	const chained2 = new UserTypeConstructor({ email : 'someother@gmail.com', password : 32123 })
 		.WithoutPassword()
 		.WithAdditionalSign(sign2add);
 
@@ -523,11 +526,11 @@ describe('Main Test', () => {
 	}
 
 
-	const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
-		const parentType = types[SymbolSubtypeCollection];
+	const checkTypeDefinition = (_types, TypeName, proto, useOldStyle) => {
+		const parentType = _types[SymbolSubtypeCollection];
 		const isSubType = parentType ? true : false;
 		describe(`initial type declaration ${TypeName}`, () => {
-			const def = types.get(TypeName);
+			const def = _types.get(TypeName);
 			it('should exist', () => {
 				assert.isDefined(def);
 			});
@@ -563,12 +566,12 @@ describe('Main Test', () => {
 			[types.subtypes, 'UserTypeConstructor', UserTypeConstructorProto],
 			[types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto],
 			[UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto],
-			[WithAdditionalSign.subtypes, 'MoreOver'],
-			[MoreOver.subtypes, 'OverMore', OverMoreProto],
+			[WithAdditionalSignTypeDef.subtypes, 'MoreOver'],
+			[MoreOverTypeDef.subtypes, 'OverMore', OverMoreProto],
 			[OverMore.subtypes, 'EvenMore', EvenMoreProto],
 		].forEach(entry => {
-			const [types, def, proto, useOldStyle] = entry;
-			checkTypeDefinition(types, def, proto, useOldStyle || false);
+			const [_types, def, proto, useOldStyle] = entry;
+			checkTypeDefinition(_types, def, proto, useOldStyle || false);
 		});
 	});
 
@@ -591,15 +594,19 @@ describe('Main Test', () => {
 		});
 
 		it('.SubTypes definition is correct 20XX', () => {
-			expect(user.hasOwnProperty('UserTypePL1')).is.false;
-			expect(user.hasOwnProperty('UserTypePL2')).is.false;
+			expect(hop(user, 'UserTypePL1')).is.false;
+			expect(hop(user, 'UserTypePL2')).is.false;
 		});
 		it('.SubTypes definition is correct  20XX First Child', () => {
 			expect(user.__subtypes__.has('UserTypePL1')).is.true;
 			expect(user.__subtypes__.has('UserTypePL2')).is.true;
+			const oogpuser = ogp(ogp(user));
 			// 0.8.4 -- changed interface, no more methods inside of prototype chain
-			// expect(ogp(ogp(user)).hasOwnProperty('UserTypePL1')).is.true;
-			// expect(ogp(ogp(user)).hasOwnProperty('UserTypePL2')).is.true;
+			// expect(hop(oogpuser, 'UserTypePL1')).is.true;
+			// expect(hop(oogpuser, 'UserTypePL2')).is.true;
+			// but we still can check __subtypes__
+			expect(oogpuser.__subtypes__.has('UserTypePL2')).is.true;
+			expect(oogpuser.__subtypes__.has('UserTypePL2')).is.true;
 		});
 
 
@@ -613,14 +620,14 @@ describe('Main Test', () => {
 				assert.isObject(emptySub);
 			});
 			it('nested object of empty object rules are ok', () => {
-				assert.isTrue(emptySub.hasOwnProperty('emptySign'));
+				assert.isTrue(hop(emptySub, 'emptySign'));
 				assert.isDefined(emptySub.emptySign);
 				assert.isString(emptySub.emptySign);
 				assert.equal(emptySub.emptySign, filledEmptySign);
 			});
 			it('nested object of empty object .extract() ok', () => {
 				const sample = {
-					emptySign: filledEmptySign
+					emptySign : filledEmptySign
 				};
 				const extracted = emptySub.extract();
 				assert.deepOwnInclude(extracted, sample);
@@ -628,7 +635,7 @@ describe('Main Test', () => {
 			});
 			it('nested object of empty object .pick() ok', () => {
 				const sample = {
-					emptySign: filledEmptySign
+					emptySign : filledEmptySign
 				};
 				const pickedArg = emptySub.pick('emptySign');
 				const pickedArR = emptySub.pick(['emptySign']);
@@ -791,7 +798,7 @@ describe('Main Test', () => {
 			evenMoreNecessaryProps,
 			MoreOverProto,
 			UserWithoutPassword,
-			MoreOver
+			MoreOver : MoreOverTypeDef
 		});
 
 		require('./instance.proto')({
