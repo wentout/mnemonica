@@ -2,6 +2,8 @@
 
 const { assert, expect } = require('chai');
 
+const mnemonica = require('..');
+
 const {
 	errors,
 	define,
@@ -15,7 +17,7 @@ const {
 	defaultTypes: types,
 	SymbolConstructorName,
 	MNEMONICA
-} = require('..');
+} = mnemonica;
 
 
 const test = (opts) => {
@@ -83,14 +85,14 @@ const test = (opts) => {
 			});
 			it('siblings are nested include', () => {
 				assert.deepNestedInclude(userWithoutPassword, {
-					password: undefined
+					password : undefined
 				});
 				assert.notDeepOwnInclude(userWithoutPassword, userTC);
 				assert.deepOwnInclude(userWPWithAdditionalSign, {
-					sign: sign2add
+					sign : sign2add
 				});
 				assert.deepOwnInclude(moreOver, {
-					str: moreOverStr
+					str : moreOverStr
 				});
 
 			});
@@ -159,11 +161,9 @@ const test = (opts) => {
 						if (base && base[name]) {
 							iof = evenMore instanceof base[name];
 							base = base[name];
-						} else {
-							if (!base) {
+						} else if (!base) {
 								return { idx, name, iof };
 							}
-						}
 					}
 					return { idx, name, iof };
 				})
@@ -295,7 +295,7 @@ const test = (opts) => {
 				const om = lookup('UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore');
 				assert.equal(om.__type__, OverMore.__type__);
 				const emShort = MoreOver.lookup('OverMore.EvenMore');
-				const emFull = lookup('UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore.EvenMore');
+				const emFull = mnemonica.lookup('UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore.EvenMore');
 				assert.equal(emShort.__type__, emFull.__type__);
 			});
 

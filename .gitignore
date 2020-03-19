@@ -7,4 +7,4 @@ back.*
 coverage
 .nyc_output
 .idea
-test/example.js
+test/*.js
