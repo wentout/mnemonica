@@ -27,9 +27,11 @@ abstract technique that aids information retention : instance inheritance system
 
 # core concept
 
-This lib might help to create some sort of order or sequence or precedence of how we modify data inside of our code. It utilizes the concept of tree or [Trie](https://en.wikipedia.org/wiki/Trie) by combining both: Object Instances and Inheritance through the Prototype Chain, where we are able to create new instance inherited from existing one as much times as we need. It might look like obvious, but ... we tell about Instances, not about Classes, meaning Plain Objects, crafted from real Constructors before we start the process of inheriting them one from another. In an attempt to describe this approach let me suggest this article:
+This lib might help to create some sort of order or sequence or precedence of how we modify data inside of our code. It utilizes the concept of tree or [Trie](https://en.wikipedia.org/wiki/Trie) by combining both: Object Instances and Inheritance through the Prototype Chain, where we are able to create new instance inherited from existing one as much times as we need. It might look like obvious, but ... we tell about Instances, not about Classes, meaning Plain Objects, crafted from real Constructors before we start the process of inheriting them one from another. In an attempt to describe this approach let me suggest this articles:
 
-### [Inheritance in JavaScript : Factory of Constructors with Prototype Chain](https://github.com/mythographica/stash/blob/master/inheritance.md)
+* [Inheritance in JavaScript : Factory of Constructors with Prototype Chain](https://github.com/mythographica/stash/blob/master/inheritance.md)
+* [Architecture of Prototype Inheritance in JavaScript](https://dev.to/wentout/architecture-of-prototype-inheritance-in-javascript-ce6)
+* [Dead Simple type checker for JavaScript](https://dev.to/wentout/dead-simple-type-checker-for-javascript-4l40)
 
 
 ## Factory of Constructors
