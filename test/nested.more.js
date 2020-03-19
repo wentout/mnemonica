@@ -2,6 +2,8 @@
 
 const { assert, expect } = require('chai');
 
+const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
+
 const mnemonica = require('..');
 
 const {
@@ -20,7 +22,7 @@ const {
 } = mnemonica;
 
 
-const test = (opts) => {
+const tests = (opts) => {
 
 	const {
 		userTC,
@@ -53,7 +55,7 @@ const test = (opts) => {
 			it('definition is correct', () => {
 				const checker = Object.assign(UserTypeConstructorProto, USER_DATA);
 				Object.keys(USER_DATA).forEach(key => {
-					assert.isFalse(userTC[key].hasOwnProperty(key));
+					assert.isFalse(hop(userTC[key], key));
 				});
 				Object.entries(checker).forEach(entry => {
 					const [key, value] = entry;
@@ -148,7 +150,7 @@ const test = (opts) => {
 
 					if (name === 'Object') {
 						iof = evenMore instanceof Object;
-					} else {
+					} else if (base && base[name]) {
 						// name follows the sequence :
 						// 
 						// Mnemosyne
@@ -158,12 +160,11 @@ const test = (opts) => {
 						// 
 						// so the first call : Mnemosyne is checked
 						// with types[DEFAULT_NAMESPACE_NAME] instanceof
-						if (base && base[name]) {
-							iof = evenMore instanceof base[name];
-							base = base[name];
-						} else if (!base) {
-								return { idx, name, iof };
-							}
+						
+						iof = evenMore instanceof base[name];
+						base = base[name];
+					} else if (!base) {
+						return { idx, name, iof };
 					}
 					return { idx, name, iof };
 				})
@@ -183,7 +184,8 @@ const test = (opts) => {
 		describe('extraction works properly', () => {
 			const extracted = extract(evenMore);
 			const extractedJSON = toJSON(extracted);
-			const extractedFromJSON = JSON.parse(extractedJSON); // no password
+			// no password
+			const extractedFromJSON = JSON.parse(extractedJSON);
 			const extractedFromInstance = evenMore.extract();
 			const nativeExtractCall = extract.call(evenMore);
 			const nativeToJSONCall = JSON.parse(toJSON.call(evenMore));
@@ -198,9 +200,9 @@ const test = (opts) => {
 				assert.deepOwnInclude(extracted, extractedFromJSON);
 			});
 			it('should respect data flow', () => {
-				assert.isTrue(extracted.hasOwnProperty('password'));
+				assert.isTrue(hop(extracted, 'password'));
 				assert.equal(extracted.password, undefined);
-				assert.isFalse(extractedFromJSON.hasOwnProperty('password'));
+				assert.isFalse(hop(extractedFromJSON, 'password'));
 				assert.equal(extractedFromJSON.password, undefined);
 			});
 			it('should work the same for all the ways of extraction', () => {
@@ -344,4 +346,4 @@ const test = (opts) => {
 
 };
 
-module.exports = test;
+module.exports = tests;

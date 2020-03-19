@@ -24,7 +24,7 @@ const TypeModificationProcedure = function (opts) {
 };
 
 const TypeModificationPrototype = {
-	description: 'SomeType Constructor'
+	description : 'SomeType Constructor'
 };
 
 const SomeType = define('SomeTypeConstructor',
@@ -35,7 +35,8 @@ const SomeType = define('SomeTypeConstructor',
 const SomeSubType = SomeType.define('SomeSubType', function (opts) {
 	const {
 		other,
-		inside // again
+		// again
+		inside
 	} = opts;
 	this.other = other;
 	// here we will re-define
@@ -43,13 +44,13 @@ const SomeSubType = SomeType.define('SomeSubType', function (opts) {
 	// with the new value
 	this.inside = inside;
 }, {
-	description: 'SomeSubType Constructor'
+	description : 'SomeSubType Constructor'
 });
 
 const someTypeInstance = new SomeType({
-	some: 'arguments',
-	data: 'necessary',
-	inside: 'of SomeType definition'
+	some   : 'arguments',
+	data   : 'necessary',
+	inside : 'of SomeType definition'
 });
 
 const someSubTypeInstance =
@@ -65,11 +66,11 @@ const someSubTypeInstance =
 		// utilising  instance
 		// crafted from it's parent
 		.SomeSubType({
-			other: 'data needed',
+			other  : 'data needed',
 			// and this is -re-definition
 			// of "inside" property
 			// as we promised before
-			inside: ' of ... etc ...'
+			inside : ' of ... etc ...'
 		});
 
 
@@ -81,9 +82,12 @@ console.log(extracted);
 
 console.log(extract(someTypeInstance));
 
-console.log(someTypeInstance instanceof SomeType); // true
-console.log(someSubTypeInstance instanceof SomeType); // true
-console.log(someSubTypeInstance instanceof SomeSubType); // true
+// true
+console.log(someTypeInstance instanceof SomeType);
+// true
+console.log(someSubTypeInstance instanceof SomeType);
+// true
+console.log(someSubTypeInstance instanceof SomeSubType);
 // who there can care... but, yes, it is: true
 console.log(someSubTypeInstance instanceof someTypeInstance);
 // and also this is true again:

@@ -2,13 +2,15 @@
 
 const ogp = Object.getPrototypeOf;
 
+const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
+
 const { assert, expect } = require('chai');
 
 const {
 	defaultTypes: types,
 } = require('..');
 
-const test = (opts) => {
+const tests = (opts) => {
 
 	const {
 		user,
@@ -43,11 +45,11 @@ const test = (opts) => {
 		});
 		it('definition is correct', () => {
 			const checker = {
-				user_pl_1_sign: 'pl_1',
+				user_pl_1_sign : 'pl_1',
 			};
 			Object.entries(checker).forEach(entry => {
 				const [key, value] = entry;
-				assert.isTrue(userPL1.hasOwnProperty(key));
+				assert.isTrue(hop(userPL1, key));
 				assert.equal(userPL1[key], value);
 			});
 		});
@@ -66,7 +68,7 @@ const test = (opts) => {
 		});
 		it('can construct without "new" keyword', () => {
 			assert.instanceOf(userPL_NoNew, types.UserType);
-			debugger;
+			// debugger;
 			assert.instanceOf(userPL_NoNew, types.UserType.subtypes.get('UserTypePL2'));
 		});
 		it('and insanceof stays ok', () => {
@@ -85,11 +87,11 @@ const test = (opts) => {
 		});
 		it('definitions are correct 4 class instances', () => {
 			const checker = Object.assign({
-				user_pl_2_sign: 'pl_2',
-				description: UserTypeProto.description
+				user_pl_2_sign : 'pl_2',
+				description    : UserTypeProto.description
 			}, USER_DATA, pl2Proto);
 			Object.keys(USER_DATA).forEach(key => {
-				assert.isFalse(userPL2[key].hasOwnProperty(key));
+				assert.isFalse(hop(userPL2[key], key));
 				assert.equal(userPL2[key], USER_DATA[key]);
 			});
 
@@ -100,11 +102,11 @@ const test = (opts) => {
 		});
 		it('definitions are correct for general', () => {
 			const checker = Object.assign({
-				user_pl_1_sign: 'pl_1',
-				description: UserTypeProto.description
+				user_pl_1_sign : 'pl_1',
+				description    : UserTypeProto.description
 			}, USER_DATA, pl1Proto);
 			Object.keys(USER_DATA).forEach(key => {
-				assert.isFalse(userPL1[key].hasOwnProperty(key));
+				assert.isFalse(hop(userPL1[key], key));
 			});
 			Object.entries(checker).forEach(entry => {
 				const [key, value] = entry;
@@ -114,4 +116,4 @@ const test = (opts) => {
 	});
 };
 
-module.exports = test;
+module.exports = tests;

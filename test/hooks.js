@@ -7,7 +7,7 @@ const {
 	defaultNamespace,
 } = require('..');
 
-const test = (opts) => {
+const tests = (opts) => {
 
 	const {
 		userTypeHooksInvocations,
@@ -24,16 +24,22 @@ const test = (opts) => {
 		it('check invocations count', () => {
 			assert.equal(8, userTypeHooksInvocations.length);
 			// debugger;
-			assert.equal(145, namespaceFlowCheckerInvocations.length); // +2
-			assert.equal(143, typesFlowCheckerInvocations.length); // +2
-			assert.equal(77, typesPreCreationInvocations.length); // +1
+			// +2
+			assert.equal(145, namespaceFlowCheckerInvocations.length);
+			// +2
+			assert.equal(143, typesFlowCheckerInvocations.length);
+			// +1
+			assert.equal(77, typesPreCreationInvocations.length);
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
-			assert.equal(66, typesPostCreationInvocations.length); // +1
-			assert.equal(78, namespacePreCreationInvocations.length); // +1
+			// +1
+			assert.equal(66, typesPostCreationInvocations.length);
+			// +1
+			assert.equal(78, namespacePreCreationInvocations.length);
 			// there are two registered Hooks, that is why
-			assert.equal(134, namespacePostCreationInvocations.length); // +2
+			// +2
+			assert.equal(134, namespacePostCreationInvocations.length);
 		});
 	});
 
@@ -95,4 +101,4 @@ const test = (opts) => {
 	
 };
 
-module.exports = test;
+module.exports = tests;

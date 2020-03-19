@@ -4,6 +4,8 @@ const {assert, expect} = require('chai');
 
 const mnemonica = require('..');
 
+const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
+
 const {
 	define,
 	defaultTypes: types,
@@ -36,7 +38,7 @@ const stackCleanerRegExp = new RegExp(dirname);
 
 
 
-const test = (opts) => {
+const tests = (opts) => {
 
 	const {
 		user,
@@ -126,14 +128,14 @@ const test = (opts) => {
 			});
 
 			const NamedClass = UserType.define(class NamedClass {
-				constructor(snc) {
+				constructor (snc) {
 					this.type = 'class';
 					this.snc = snc;
 				}
 			});
 
 			const SubNamedClass = NamedClass.define(class SubNamedClass {
-				constructor() {
+				constructor () {
 					this.type = 'subclass';
 				}
 			});
@@ -212,7 +214,7 @@ const test = (opts) => {
 				expect(userTC[SymbolGaia][MNEMONICA] === GAIA).is.true;
 			});
 			it('.SubTypes definition is correct Regular', () => {
-				expect(userTC.hasOwnProperty('WithoutPassword')).is.false;
+				expect(hop(userTC, 'WithoutPassword')).is.false;
 			});
 			it('.SubTypes definition is correct Regular FirstChild', () => {
 				// 0.8.4 -- changed interface, no more methods inside of prototype chain
@@ -366,7 +368,7 @@ const test = (opts) => {
 				// returns not instanceof this
 				return NotThis;
 			}, {}, {
-				submitStack: true
+				submitStack : true
 			});
 			var hookInstance;
 			BadType.registerHook('creationError', (_hookInstance) => {
@@ -374,7 +376,7 @@ const test = (opts) => {
 				return true;
 			});
 			// try {
-			debugger;
+			// debugger;
 			const errored = new BadType({});
 			// } catch (error) {
 			const stackstart = '<-- creation of [ BadType ] traced -->';
@@ -401,7 +403,7 @@ const test = (opts) => {
 				// .equal(96);
 			});
 			it('thrown error.stack should have seekable definition without Error.captureStackTrace', () => {
-				const captureStackTrace = Error.captureStackTrace;
+				const {captureStackTrace} = Error;
 				Error.captureStackTrace = null;
 				const errored1 = new BadType({});
 				Error.captureStackTrace = captureStackTrace;
@@ -487,7 +489,7 @@ const test = (opts) => {
 				['handler must be a function', () => {
 					define(() => {
 						return {
-							name: null
+							name : null
 						};
 					});
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
@@ -524,8 +526,12 @@ const test = (opts) => {
 				expect(anotherNamespace.typesCollections.has(oneElseTypesCollection)).is.true;
 			});
 			it('Another Nnamespace typesCollections gather types', () => {
-				expect(anotherTypesCollection).hasOwnProperty('AnotherCollectionType');
-				expect(oneElseTypesCollection).hasOwnProperty('OneElseCollectionType');
+				// expect(anotherTypesCollection).hasOwnProperty('AnotherCollectionType');
+				expect(hop(anotherTypesCollection, 'AnotherCollectionType')).is.true;
+				// expect(oneElseTypesCollection).hasOwnProperty('OneElseCollectionType');
+				expect(hop(anotherTypesCollection, 'SomethingThatDoesNotExist')).is.false;
+				expect(hop(oneElseTypesCollection, 'OneElseCollectionType')).is.true;
+				expect(hop(oneElseTypesCollection, 'SomethingThatDoesNotExist')).is.false;
 			});
 
 			it('Instance Of Another Nnamespace and AnotherCollectionType', () => {
@@ -613,14 +619,14 @@ const test = (opts) => {
 
 		describe('merge tests', () => {
 			const mergedSample = {
-				OverMoreSign: 'OverMoreSign',
-				WithAdditionalSignSign: 'WithAdditionalSignSign',
-				WithoutPasswordSign: 'WithoutPasswordSign',
-				description: 'UserType',
-				email: 'forkmail@gmail.com',
-				password: '54321',
-				sign: 'userWithoutPassword_2.WithAdditionalSign',
-				str: 're-defined OverMore str',
+				OverMoreSign           : 'OverMoreSign',
+				WithAdditionalSignSign : 'WithAdditionalSignSign',
+				WithoutPasswordSign    : 'WithoutPasswordSign',
+				description            : 'UserType',
+				email                  : 'forkmail@gmail.com',
+				password               : '54321',
+				sign                   : 'userWithoutPassword_2.WithAdditionalSign',
+				str                    : 're-defined OverMore str',
 			};
 			it('merge works correctly', () => {
 				assert.deepEqual(merged.extract(), mergedSample);
@@ -712,7 +718,7 @@ const test = (opts) => {
 		});
 
 		const goodNamespaceTC = goodNamespace.createTypesCollection('good namespace types collection', {
-			useOldStyle: true
+			useOldStyle : true
 		});
 		it('namespace types collection creation check', () => {
 			expect(goodNamespaceTC[SymbolConfig].useOldStyle).is.equal(true);
@@ -746,7 +752,7 @@ const test = (opts) => {
 			expect(errorInstance.args[1]).equal(2);
 			expect(errorInstance.args[2]).equal(3);
 		});
-		
+
 		it('.exception() .extract() works property', () => {
 			assert.deepOwnInclude(errorInstance.extract(), someADTCInstance.extract());
 			assert.deepOwnInclude(someADTCInstance.extract(), errorInstance.extract());
@@ -755,7 +761,7 @@ const test = (opts) => {
 			assert.deepOwnInclude(errorInstance.parse(), parse(someADTCInstance));
 			assert.deepOwnInclude(parse(someADTCInstance), errorInstance.parse());
 		});
-		
+
 
 		let wrongErrorInstanceNoNew = null;
 		try {
@@ -790,7 +796,7 @@ const test = (opts) => {
 		it('wrong .exception() creation should have nice message', () => {
 			expect(wrongErrorInstanceIsNotAnError.message.includes('error must be instanceof Error')).is.true;
 		});
-		
+
 		it('wrong .exception() .instance should be existent instance', () => {
 			expect(wrongErrorInstanceIsNotAnError.instance).equal(someADTCInstance);
 		});
@@ -802,8 +808,8 @@ const test = (opts) => {
 			expect(wrongErrorInstanceIsNotAnError.args[1]).equal(2);
 			expect(wrongErrorInstanceIsNotAnError.args[2]).equal(3);
 		});
-		
-		
+
+
 		let wrongErrorInstanceIsNotAConstructor = null;
 		try {
 			throw new someADTCInstance.exception.call(null, 'asdf', 1, 2, 3);
@@ -823,4 +829,4 @@ const test = (opts) => {
 
 };
 
-module.exports = test;
+module.exports = tests;

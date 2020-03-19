@@ -2,7 +2,7 @@
 
 const { assert, expect } = require('chai');
 
-const test = (opts) => {
+const tests = (opts) => {
 
 	const {
 		user,
@@ -38,7 +38,8 @@ const test = (opts) => {
 			assert.equal(user.__args__[0], USER_DATA);
 		});
 		it('should have proper prototype .__type__', () => {
-			assert.equal(user.__type__.TypeProxy, UserType.__type__); // undefined !
+			// undefined !
+			assert.equal(user.__type__.TypeProxy, UserType.__type__);
 			assert.equal(user.__type__.TypeName, UserType.TypeName);
 		});
 		it('should have proper prototype .__namespace__', () => {
@@ -78,8 +79,8 @@ const test = (opts) => {
 		it('should have proper first .fork() old style', () => {
 
 			const forkData = {
-				email: 'went.out@gmail.com',
-				password: 'fork old style password'
+				email    : 'went.out@gmail.com',
+				password : 'fork old style password'
 			};
 			const userArgs = user.__args__;
 
@@ -104,8 +105,8 @@ const test = (opts) => {
 		it('should have proper first .fork() regular style', () => {
 
 			const forkData = {
-				email: 'went.out@gmail.com',
-				password: 'fork regular style password'
+				email    : 'went.out@gmail.com',
+				password : 'fork regular style password'
 			};
 			const userTCArgs = userTC.__args__;
 			const userTCFork = userTC.fork(forkData);
@@ -200,7 +201,7 @@ const test = (opts) => {
 			assert.deepEqual(evenMore.__args__, evenMoreArgs);
 			assert.notDeepEqual(evenMore.__args__, evenMoreFork.__args__);
 
-			const nativeFork = overMore.EvenMore(strFork);
+			const nativeFork = new overMore.EvenMore(strFork);
 
 			assert.notEqual(nativeFork, evenMoreFork);
 			assert.deepInclude(nativeFork, evenMoreFork);
@@ -239,7 +240,7 @@ const test = (opts) => {
 			assert.deepInclude(userTCForkBind, FORK_CALL_DATA);
 			expect(utcfcwp.password).equal(undefined);
 			// debugger;
-			const EvenMore = OverMore.EvenMore;
+			const {EvenMore} = OverMore;
 			expect(overMore).instanceof(OverMore);
 			expect(overMore).instanceof(moreOver);
 			expect(evenMore).instanceof(EvenMore);
@@ -254,4 +255,4 @@ const test = (opts) => {
 
 };
 
-module.exports = test;
+module.exports = tests;

@@ -3,6 +3,7 @@
 const { assert, expect } = require('chai');
 
 const ogp = Object.getPrototypeOf;
+const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
 
 const {
 	inspect,
@@ -337,7 +338,7 @@ describe('Main Test', () => {
 	const WithAdditionalSignProto = {
 		WithAdditionalSignSign : 'WithAdditionalSignSign'
 	};
-	const WithAdditionalSign = UserWithoutPassword.define(() => {
+	const WithAdditionalSignTypeDef = UserWithoutPassword.define(() => {
 		const WithAdditionalSign = function (sign) {
 			this.sign = sign;
 		};
@@ -350,7 +351,7 @@ describe('Main Test', () => {
 	const MoreOverProto = {
 		MoreOverSign : 'MoreOverSign'
 	};
-	const MoreOver = WithAdditionalSign.define(() => {
+	const MoreOverTypeDef = WithAdditionalSignTypeDef.define(() => {
 		class MoreOver {
 			constructor (str) {
 				this.str = str || 'moreover str';
@@ -368,7 +369,7 @@ describe('Main Test', () => {
 		OverMoreSign : 'OverMoreSign'
 	};
 	// debugger;
-	const OverMore = WithAdditionalSign
+	const OverMore = WithAdditionalSignTypeDef
 		.define('MoreOver.OverMore',
 			function (str) {
 				this.str = str || 're-defined OverMore str';
@@ -380,7 +381,7 @@ describe('Main Test', () => {
 		EvenMoreSign : 'EvenMoreSign'
 	};
 
-	const EvenMore = WithAdditionalSign.define(`
+	const EvenMoreTypeDef = WithAdditionalSignTypeDef.define(`
 		MoreOver . OverMore
 	`, function () {
 		const EvenMore = function (str) {
@@ -392,9 +393,9 @@ describe('Main Test', () => {
 		submitStack : true
 	});
 	
-	const ThrowTypeError = EvenMore.define('ThrowTypeError', require('./throw-type-error'));
+	const ThrowTypeError = EvenMoreTypeDef.define('ThrowTypeError', require('./throw-type-error'));
 
-	const AsyncChain1st = WithAdditionalSign.define('AsyncChain1st', async function (opts) {
+	const AsyncChain1st = WithAdditionalSignTypeDef.define('AsyncChain1st', async function (opts) {
 		return Object.assign(this, opts);
 	}, {}, {
 		submitStack : true
@@ -525,11 +526,11 @@ describe('Main Test', () => {
 	}
 
 
-	const checkTypeDefinition = (types, TypeName, proto, useOldStyle) => {
-		const parentType = types[SymbolSubtypeCollection];
+	const checkTypeDefinition = (_types, TypeName, proto, useOldStyle) => {
+		const parentType = _types[SymbolSubtypeCollection];
 		const isSubType = parentType ? true : false;
 		describe(`initial type declaration ${TypeName}`, () => {
-			const def = types.get(TypeName);
+			const def = _types.get(TypeName);
 			it('should exist', () => {
 				assert.isDefined(def);
 			});
@@ -565,12 +566,12 @@ describe('Main Test', () => {
 			[types.subtypes, 'UserTypeConstructor', UserTypeConstructorProto],
 			[types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto],
 			[UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto],
-			[WithAdditionalSign.subtypes, 'MoreOver'],
-			[MoreOver.subtypes, 'OverMore', OverMoreProto],
+			[WithAdditionalSignTypeDef.subtypes, 'MoreOver'],
+			[MoreOverTypeDef.subtypes, 'OverMore', OverMoreProto],
 			[OverMore.subtypes, 'EvenMore', EvenMoreProto],
 		].forEach(entry => {
-			const [types, def, proto, useOldStyle] = entry;
-			checkTypeDefinition(types, def, proto, useOldStyle || false);
+			const [_types, def, proto, useOldStyle] = entry;
+			checkTypeDefinition(_types, def, proto, useOldStyle || false);
 		});
 	});
 
@@ -593,15 +594,19 @@ describe('Main Test', () => {
 		});
 
 		it('.SubTypes definition is correct 20XX', () => {
-			expect(user.hasOwnProperty('UserTypePL1')).is.false;
-			expect(user.hasOwnProperty('UserTypePL2')).is.false;
+			expect(hop(user, 'UserTypePL1')).is.false;
+			expect(hop(user, 'UserTypePL2')).is.false;
 		});
 		it('.SubTypes definition is correct  20XX First Child', () => {
 			expect(user.__subtypes__.has('UserTypePL1')).is.true;
 			expect(user.__subtypes__.has('UserTypePL2')).is.true;
+			const oogpuser = ogp(ogp(user));
 			// 0.8.4 -- changed interface, no more methods inside of prototype chain
-			// expect(ogp(ogp(user)).hasOwnProperty('UserTypePL1')).is.true;
-			// expect(ogp(ogp(user)).hasOwnProperty('UserTypePL2')).is.true;
+			// expect(hop(oogpuser, 'UserTypePL1')).is.true;
+			// expect(hop(oogpuser, 'UserTypePL2')).is.true;
+			// but we still can check __subtypes__
+			expect(oogpuser.__subtypes__.has('UserTypePL2')).is.true;
+			expect(oogpuser.__subtypes__.has('UserTypePL2')).is.true;
 		});
 
 
@@ -615,7 +620,7 @@ describe('Main Test', () => {
 				assert.isObject(emptySub);
 			});
 			it('nested object of empty object rules are ok', () => {
-				assert.isTrue(emptySub.hasOwnProperty('emptySign'));
+				assert.isTrue(hop(emptySub, 'emptySign'));
 				assert.isDefined(emptySub.emptySign);
 				assert.isString(emptySub.emptySign);
 				assert.equal(emptySub.emptySign, filledEmptySign);
@@ -793,7 +798,7 @@ describe('Main Test', () => {
 			evenMoreNecessaryProps,
 			MoreOverProto,
 			UserWithoutPassword,
-			MoreOver
+			MoreOver : MoreOverTypeDef
 		});
 
 		require('./instance.proto')({
