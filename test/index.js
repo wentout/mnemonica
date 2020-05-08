@@ -1,6 +1,6 @@
 'use strict';
 
-const { assert, expect } = require('chai');
+const {assert, expect} = require('chai');
 
 const ogp = Object.getPrototypeOf;
 const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
@@ -138,7 +138,7 @@ const ProxyTyped = function (str) {
 ProxyTyped.prototype = {
 	proxyTyped : true,
 	SaySomething () {
-		return `something : ${this.proxyTyped}`;
+		return `something : ${ this.proxyTyped }`;
 	}
 };
 Object.assign(UserType, {
@@ -227,7 +227,7 @@ const anotherTypesCollection = createTypesCollection(anotherNamespace, 'another 
 const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 
 const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType', function (check) {
-	Object.assign(this, { check });
+	Object.assign(this, {check});
 });
 
 process.TestForAddition = 'passed';
@@ -322,9 +322,9 @@ describe('Main Test', () => {
 	const WithoutPasswordProto = {
 		WithoutPasswordSign : 'WithoutPasswordSign'
 	};
-	
+
 	// debugger;
-	
+
 	const UserWithoutPassword = types.UserTypeConstructor.define(() => {
 		const WithoutPassword = function () {
 			this.password = undefined;
@@ -374,8 +374,8 @@ describe('Main Test', () => {
 			function (str) {
 				this.str = str || 're-defined OverMore str';
 			}, OverMoreProto, {
-				submitStack : true
-			});
+			submitStack : true
+		});
 
 	const EvenMoreProto = {
 		EvenMoreSign : 'EvenMoreSign'
@@ -392,7 +392,7 @@ describe('Main Test', () => {
 	}, {}, {
 		submitStack : true
 	});
-	
+
 	const ThrowTypeError = EvenMoreTypeDef.define('ThrowTypeError', require('./throw-type-error'));
 
 	const AsyncChain1st = WithAdditionalSignTypeDef.define('AsyncChain1st', async function (opts) {
@@ -429,19 +429,19 @@ describe('Main Test', () => {
 
 	// const userTC = new types.UserTypeConstructor(USER_DATA);
 	const userTC = new UserTypeConstructor(USER_DATA);
-	
+
 	const FORK_CALL_DATA = {
 		email    : 'forkmail@gmail.com',
 		password : '54321'
 	};
-	
+
 	const userTCForkCall = userTC.fork.call(user, FORK_CALL_DATA);
 	const userTCForkApply = userTC.fork.apply(user, [
 		FORK_CALL_DATA
 	]);
 	const userTCForkBind = userTC.fork.bind(user)(FORK_CALL_DATA);
 	const utcfcwp = userTCForkCall.WithoutPassword();
-	
+
 
 	const userWithoutPassword = new userTC.WithoutPassword();
 	const userWithoutPassword_2 = new userTC.WithoutPassword();
@@ -465,7 +465,7 @@ describe('Main Test', () => {
 	const strForkOfFork = 'fork of fork of evenMore';
 
 	const overMoreFork = overMore.fork();
-	
+
 	const overMoreCallEvenMoreNull = overMore.EvenMore.call(null);
 	const overMoreCallEvenMoreProcess = overMore.EvenMore.call(process);
 
@@ -473,11 +473,11 @@ describe('Main Test', () => {
 	const evenMoreFork = evenMore.fork(strFork);
 	const evenMoreForkFork = evenMoreFork.fork(strForkOfFork);
 
-	const chained = new UserTypeConstructor({ email : 'someother@gmail.com', password : 32123 });
+	const chained = new UserTypeConstructor({email : 'someother@gmail.com', password : 32123});
 	const derived = new chained.WithoutPassword();
 	const rounded = new derived.WithAdditionalSign(sign2add);
 
-	const chained2 = new UserTypeConstructor({ email : 'someother@gmail.com', password : 32123 })
+	const chained2 = new UserTypeConstructor({email : 'someother@gmail.com', password : 32123})
 		.WithoutPassword()
 		.WithAdditionalSign(sign2add);
 
@@ -511,8 +511,8 @@ describe('Main Test', () => {
 		UserType,
 		UserTypeConstructor,
 	});
-	
-	
+
+
 	if (hooksTest) {
 		require('./hooks')({
 			userTypeHooksInvocations,
@@ -529,7 +529,7 @@ describe('Main Test', () => {
 	const checkTypeDefinition = (_types, TypeName, proto, useOldStyle) => {
 		const parentType = _types[SymbolSubtypeCollection];
 		const isSubType = parentType ? true : false;
-		describe(`initial type declaration ${TypeName}`, () => {
+		describe(`initial type declaration ${ TypeName }`, () => {
 			const def = _types.get(TypeName);
 			it('should exist', () => {
 				assert.isDefined(def);
@@ -546,10 +546,10 @@ describe('Main Test', () => {
 					assert.deepEqual(proto, def.proto);
 				});
 			}
-			it(`and declared as proper SubType : ${def.isSubType} `, () => {
+			it(`and declared as proper SubType : ${ def.isSubType } `, () => {
 				assert.equal(def.isSubType, isSubType);
 			});
-			it(`will force use of proper style contructor for ${TypeName} as: ${useOldStyle}`, () => {
+			it(`will force use of proper style contructor for ${ TypeName } as: ${ useOldStyle }`, () => {
 				assert.equal(def.config.useOldStyle, useOldStyle);
 			});
 			it('contructor exists', () => {
@@ -712,7 +712,7 @@ describe('Main Test', () => {
 					expect(error.BaseStack).exist.and.is.a('string');
 					expect(error.constructor[SymbolConstructorName])
 						.exist.and.is.a('string')
-						.and.equal(`base of : ${MNEMONICA} : errors`);
+						.and.equal(`base of : ${ MNEMONICA } : errors`);
 				});
 			}
 
@@ -735,26 +735,41 @@ describe('Main Test', () => {
 					expect(error.BaseStack).exist.and.is.a('string');
 					expect(error.constructor[SymbolConstructorName])
 						.exist.and.is.a('string')
-						.and.equal(`base of : ${MNEMONICA} : errors`);
+						.and.equal(`base of : ${ MNEMONICA } : errors`);
 				});
 			}
-			it('should throw on wrong instance 4 .collectConstructors()', () => {
-				expect(() => {
-					collectConstructors(null);
-				}).to.throw();
+			[
+				undefined,
+				null,
+				true,
+				false,
+				NaN,
+				+0,
+				-0,
+				// eslint-disable-next-line no-undef
+				BigInt(0),
+				Symbol('azaza'),
+				new Proxy({}, {}),
+				new Date(),
+				new Set(),
+				new Map(),
+				new WeakMap(),
+				new WeakSet(),
+				[],
+				{}
+			].forEach((value, idx) => {
+				it(`should not throw on wrong instance 4 .collectConstructors() ${ typeof value }`, () => {
+					let collected;
+					expect(() => {
+						collected = collectConstructors(value, true);
+					}).to.not.throw();
+					expect(Array.isArray(collected)).is.true;
+					// ! typeof object
+					if (idx < 9) {
+						expect(collected.length === 0).is.true;
+					}
+				});
 			});
-			try {
-				collectConstructors(null);
-			} catch (error) {
-				it('thrown by collectConstructors(null) should be ok with instanceof', () => {
-					expect(error).to.be.an
-						.instanceof(errors
-							.WRONG_MODIFICATION_PATTERN);
-					expect(error).to.be.an
-						.instanceof(Error);
-				});
-			}
-
 		});
 
 		if (parseTest) {
@@ -856,7 +871,7 @@ describe('Main Test', () => {
 
 						asyncInstanceClone = await asyncInstance.clone;
 						asyncInstanceFork = await asyncInstance.fork('dada');
-						
+
 						await (promisify((cb) => {
 							const cbfork = callbackify(asyncInstance.fork);
 							cbfork.call(asyncInstance, 'cb forked data', (err, result) => {
@@ -864,7 +879,7 @@ describe('Main Test', () => {
 								cb();
 							});
 						}))();
-						
+
 						done();
 					};
 					wait();
@@ -886,14 +901,14 @@ describe('Main Test', () => {
 					expect(asyncInstanceClone).instanceof(AsyncType);
 					expect(asyncInstanceFork).instanceof(AsyncType);
 					expect(asyncInstanceFork).instanceof(AsyncType);
-					
+
 					expect(typeof asyncInstanceDirect.on === 'function').is.true;
 					expect(ogp(ogp(asyncInstanceDirect[SymbolGaia])) === process).is.true;
 					expect(asyncInstanceDirect[SymbolGaia][MNEMONICA] === URANUS).is.true;
 					expect(typeof asyncInstanceDirectApply.on === 'function').is.true;
 					expect(ogp(ogp(asyncInstanceDirectApply[SymbolGaia])) === process).is.true;
 					expect(asyncInstanceDirectApply[SymbolGaia][MNEMONICA] === URANUS).is.true;
-					
+
 					expect(nestedAsyncInstance).instanceof(AsyncType);
 					expect(nestedAsyncInstance).instanceof(NestedAsyncType);
 					expect(nestedAsyncSub).instanceof(AsyncType);
