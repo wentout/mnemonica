@@ -8,7 +8,6 @@ module.exports = {
 	parserOptions: {
 		ecmaVersion: 2018,
 	},
-	// plugins: ['mocha', 'plugin:prettier/recommended', 'eslint-plugin-no-arrow-this'],
 	plugins: ['mocha', 'eslint-plugin-no-arrow-this'],
 	rules: {
 		'key-spacing': [
@@ -31,7 +30,7 @@ module.exports = {
 				allow: [],
 			},
 		],
-		'space-before-function-paren' : [
+		'space-before-function-paren': [
 			'warn', {
 				'anonymous': 'always',
 				'named': 'always',
