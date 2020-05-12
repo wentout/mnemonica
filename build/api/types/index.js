@@ -1,21 +1,21 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 exports.lookup = exports.define = void 0;
 const odp = Object.defineProperty;
-const hop_1 = require("../../utils/hop");
-const constants_1 = require("../../constants");
+const hop_1 = require('../../utils/hop');
+const constants_1 = require('../../constants');
 const { SymbolSubtypeCollection, SymbolConstructorName, SymbolConfig, TYPE_TITLE_PREFIX, MNEMOSYNE, } = constants_1.constants;
-const errors_1 = require("../../descriptors/errors");
+const errors_1 = require('../../descriptors/errors');
 const { ALREADY_DECLARED, WRONG_TYPE_DEFINITION, TYPENAME_MUST_BE_A_STRING, HANDLER_MUST_BE_A_FUNCTION, } = errors_1.ErrorsTypes;
 // invokeHook
 // registerHook
 // registerFlowChecker
-const hooksApi = require("../hooks");
-const TypeProxy_1 = require("./TypeProxy");
-const compileNewModificatorFunctionBody_1 = require("./compileNewModificatorFunctionBody");
-const utils_1 = require("./utils");
+const hooksApi = require('../hooks');
+const TypeProxy_1 = require('./TypeProxy');
+const compileNewModificatorFunctionBody_1 = require('./compileNewModificatorFunctionBody');
+const utils_1 = require('./utils');
 const { checkProto, getTypeChecker, CreationHandler, getTypeSplitPath, checkTypeName, isClass, } = utils_1.default;
-const errors_2 = require("../errors");
+const errors_2 = require('../errors');
 const { getStack, } = errors_2.default;
 const TypeDescriptor = function (defineOrigin, types, TypeName, constructHandler, proto, config) {
     // here "types" refers to types collection object {}
@@ -31,7 +31,7 @@ const TypeDescriptor = function (defineOrigin, types, TypeName, constructHandler
     const title = `${TYPE_TITLE_PREFIX}${TypeName}`;
     config = Object.assign({}, collection[SymbolConfig], config);
     const type = Object.assign(this, {
-        get constructHandler() {
+        get constructHandler () {
             return constructHandler;
         },
         TypeName,
@@ -43,11 +43,11 @@ const TypeDescriptor = function (defineOrigin, types, TypeName, constructHandler
         collection,
         title,
         config,
-        hooks: Object.create(null)
+        hooks : Object.create(null)
     });
     getStack.call(this, `Definition of [ ${TypeName} ] made at:`, [], defineOrigin);
     odp(subtypes, SymbolSubtypeCollection, {
-        get() {
+        get () {
             return type;
         }
     });
@@ -62,7 +62,7 @@ TypeDescriptor.prototype.lookup = function (...args) {
     return exports.lookup.call(this.subtypes, ...args);
 };
 odp(TypeDescriptor.prototype, Symbol.hasInstance, {
-    get() {
+    get () {
         return getTypeChecker(this.TypeName);
     }
 });
@@ -81,7 +81,7 @@ const defineFromType = function (subtypes, constructHandlerGetter, config) {
         const constructHandler = constructHandlerGetter();
         // constructHandler[SymbolConstructorName] = TypeName;
         odp(constructHandler, SymbolConstructorName, {
-            get() {
+            get () {
                 return TypeName;
             }
         });
@@ -122,7 +122,7 @@ const defineFromFunction = function (subtypes, TypeName, constructHandler = func
     }
     if (typeof config === 'boolean') {
         config = {
-            useOldStyle: config
+            useOldStyle : config
         };
     }
     config.asClass = asClass;
@@ -175,6 +175,6 @@ exports.lookup = function (TypeNestedPath) {
     return exports.lookup.call(type.subtypes, NextNestedPath);
 };
 exports.default = {
-    define: exports.define,
-    lookup: exports.lookup
+    define : exports.define,
+    lookup : exports.lookup
 };

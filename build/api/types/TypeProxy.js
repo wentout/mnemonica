@@ -1,14 +1,14 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 exports.TypeProxy = void 0;
-const hop_1 = require("../../utils/hop");
-const errors_1 = require("../../descriptors/errors");
+const hop_1 = require('../../utils/hop');
+const errors_1 = require('../../descriptors/errors');
 const { WRONG_TYPE_DEFINITION, } = errors_1.ErrorsTypes;
-const utils_1 = require("./utils");
+const utils_1 = require('./utils');
 const { checkProto, getTypeChecker, findParentSubType, } = utils_1.default;
-const Mnemosyne_1 = require("./Mnemosyne");
+const Mnemosyne_1 = require('./Mnemosyne');
 const { Gaia, Mnemosyne, MnemosynePrototypeKeys } = Mnemosyne_1.default;
-const InstanceCreator_1 = require("./InstanceCreator");
+const InstanceCreator_1 = require('./InstanceCreator');
 exports.TypeProxy = function (__type__, Uranus) {
     Object.assign(this, {
         __type__,
@@ -72,16 +72,16 @@ exports.TypeProxy.prototype.apply = function (__, Uranus, args) {
 };
 const makeSubTypeProxy = function (subtype, inheritedInstance) {
     const subtypeProxy = new Proxy(InstanceCreator_1.InstanceCreator, {
-        get(Target, _prop) {
+        get (Target, _prop) {
             if (_prop === Symbol.hasInstance) {
                 return getTypeChecker(subtype.TypeName);
             }
             return Reflect.get(Target, _prop);
         },
-        construct(Target, _args) {
+        construct (Target, _args) {
             return new Target(subtype, inheritedInstance, _args);
         },
-        apply(Target, thisArg, _args) {
+        apply (Target, thisArg, _args) {
             // if we would make new keyword obligatory
             // then we should avoid it here, with throw Error
             const existentInstance = thisArg || inheritedInstance;
@@ -155,7 +155,7 @@ exports.TypeProxy.prototype.construct = function (__, args) {
     // 2 build the first instance in chain
     const gaia = new Mnemosyne(type.namespace, new Gaia(Uranus));
     const gaiaProxy = new Proxy(gaia, {
-        get: gaiaProxyHandlerGet
+        get : gaiaProxyHandlerGet
     });
     const instance = new InstanceCreator_1.InstanceCreator(type, gaiaProxy, args);
     return instance;

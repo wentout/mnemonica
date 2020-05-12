@@ -1,6 +1,6 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
-function default_1() {
+Object.defineProperty(exports, '__esModule', { value : true });
+function default_1 () {
     const CreateInstanceModificatorAncient200XthWay = function (ModificatorType, ModificatorTypePrototype, addProps) {
         const existentInstance = this;
         // const PreTripleSchemeClosure = function () {
@@ -23,7 +23,7 @@ function default_1() {
                 //    to make "constructor" property non enumerable
                 //    cause we did it enumerable at "1." below
                 Object.defineProperty(ModificatorType.prototype, 'constructor', {
-                    get() {
+                    get () {
                         return ModificatorType;
                     }
                 });
@@ -51,4 +51,4 @@ function default_1() {
     return CreateInstanceModificatorAncient200XthWay;
 }
 exports.default = default_1;
-;
+

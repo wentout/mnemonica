@@ -1,8 +1,8 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
-const constants_1 = require("../../constants");
-const errors_1 = require("../../descriptors/errors");
-const utils_1 = require("../../utils");
+Object.defineProperty(exports, '__esModule', { value : true });
+const constants_1 = require('../../constants');
+const errors_1 = require('../../descriptors/errors');
+const utils_1 = require('../../utils');
 const { SymbolConstructorName, MNEMONICA, MNEMOSYNE, GAIA, URANUS } = constants_1.constants;
 const { WRONG_TYPE_DEFINITION, } = errors_1.ErrorsTypes;
 const { collectConstructors } = utils_1.utils;
@@ -20,9 +20,9 @@ const CreationHandler = function (constructionAnswer) {
     }
     return this;
 };
-const compileNewModificatorFunctionBody_1 = require("./compileNewModificatorFunctionBody");
-const createInstanceModificator200XthWay_1 = require("./createInstanceModificator200XthWay");
-const createInstanceModificator_1 = require("./createInstanceModificator");
+const compileNewModificatorFunctionBody_1 = require('./compileNewModificatorFunctionBody');
+const createInstanceModificator200XthWay_1 = require('./createInstanceModificator200XthWay');
+const createInstanceModificator_1 = require('./createInstanceModificator');
 const getModificationConstructor = (useOldStyle) => {
     return (useOldStyle ? createInstanceModificator200XthWay_1.default : createInstanceModificator_1.default)();
 };

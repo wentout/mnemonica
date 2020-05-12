@@ -1,7 +1,7 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 exports.registerFlowChecker = exports.flowCheckers = void 0;
-const errors_1 = require("../../descriptors/errors");
+const errors_1 = require('../../descriptors/errors');
 const { MISSING_CALLBACK_ARGUMENT, FLOW_CHECKER_REDEFINITION, } = errors_1.ErrorsTypes;
 exports.flowCheckers = new WeakMap();
 exports.registerFlowChecker = function (cb) {

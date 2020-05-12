@@ -1,7 +1,7 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 exports.merge = void 0;
-const errors_1 = require("../descriptors/errors");
+const errors_1 = require('../descriptors/errors');
 const { WRONG_ARGUMENTS_USED } = errors_1.ErrorsTypes;
 exports.merge = (a, b, ...args) => {
     // at this situation this check is enough

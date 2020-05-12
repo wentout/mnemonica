@@ -1,9 +1,9 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 exports.extract = void 0;
-const errors_1 = require("../descriptors/errors");
+const errors_1 = require('../descriptors/errors');
 const { WRONG_INSTANCE_INVOCATION } = errors_1.ErrorsTypes;
-const hop_1 = require("./hop");
+const hop_1 = require('./hop');
 exports.extract = (instance) => {
     // at this situation this check is enough
     if (instance !== Object(instance)) {

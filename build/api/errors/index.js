@@ -1,6 +1,6 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
-const constants_1 = require("../../constants");
+Object.defineProperty(exports, '__esModule', { value : true });
+const constants_1 = require('../../constants');
 const { SymbolConstructorName, MNEMONICA, ErrorMessages: { BASE_ERROR_MESSAGE, }, } = constants_1.constants;
 const stackCleaners = [];
 const defineStackCleaner = (regexp) => {
@@ -36,11 +36,11 @@ const getStack = function (title, stackAddition, tillFunction) {
     return this.stack;
 };
 class BASE_MNEMONICA_ERROR extends Error {
-    constructor(message = BASE_ERROR_MESSAGE, additionalStack) {
+    constructor (message = BASE_ERROR_MESSAGE, additionalStack) {
         super(message);
         const BaseStack = this.stack;
         Object.defineProperty(this, 'BaseStack', {
-            get() {
+            get () {
                 return BaseStack;
             }
         });
@@ -50,7 +50,7 @@ class BASE_MNEMONICA_ERROR extends Error {
         }
         this.stack = stack.join('\n');
     }
-    static get [SymbolConstructorName]() {
+    static get [SymbolConstructorName] () {
         return `base of : ${MNEMONICA} : errors`;
     }
 }

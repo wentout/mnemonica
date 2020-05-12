@@ -1,16 +1,16 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 const wrapThis = (method) => {
     return function (instance, ...args) {
         return method(instance !== undefined ? instance : this, ...args);
     };
 };
-const constants_1 = require("./constants");
-const descriptors_1 = require("./descriptors");
+const constants_1 = require('./constants');
+const descriptors_1 = require('./descriptors');
 const { defaultTypes } = descriptors_1.default;
-const errors_1 = require("./api/errors");
+const errors_1 = require('./api/errors');
 const { defineStackCleaner } = errors_1.default;
-const utils_1 = require("./utils");
+const utils_1 = require('./utils');
 const utilsWrapped = Object.assign({}, Object.entries(Object.assign({}, utils_1.utils)).reduce((methods, util) => {
     const [name, fn] = util;
     methods[name] = wrapThis(fn);
@@ -25,14 +25,14 @@ const lookup = function (...args) {
     return types.lookup(...args);
 };
 const fascade = {};
-Object.entries(Object.assign(Object.assign(Object.assign({}, constants_1.constants), descriptors_1.default), { defaultCollection: defaultTypes.subtypes, defineStackCleaner, utils: utilsWrapped, define,
+Object.entries(Object.assign(Object.assign(Object.assign({}, constants_1.constants), descriptors_1.default), { defaultCollection : defaultTypes.subtypes, defineStackCleaner, utils : utilsWrapped, define,
     lookup })).forEach((entry) => {
     const [name, code] = entry;
     Object.defineProperty(fascade, name, {
-        get() {
+        get () {
             return code;
         },
-        enumerable: true
+        enumerable : true
     });
 });
 // console.log(Object.keys(fascade));

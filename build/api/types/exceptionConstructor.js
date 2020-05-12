@@ -1,15 +1,15 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 const odp = Object.defineProperty;
-const errors_1 = require("../../descriptors/errors");
+const errors_1 = require('../../descriptors/errors');
 const { WRONG_ARGUMENTS_USED, WRONG_INSTANCE_INVOCATION } = errors_1.ErrorsTypes;
-const errors_2 = require("../errors");
+const errors_2 = require('../errors');
 const { cleanupStack, getStack, } = errors_2.default;
-const utils_1 = require("../../utils");
+const utils_1 = require('../../utils');
 const { parse } = utils_1.utils;
-const utils_2 = require("./utils");
+const utils_2 = require('./utils');
 const { makeFakeModificatorType } = utils_2.default;
-const InstanceCreator_1 = require("./InstanceCreator");
+const InstanceCreator_1 = require('./InstanceCreator');
 const checkThrowArgs = (instance, target, error, args) => {
     let wrongThrow;
     /* unreacheble, cus instance binded inside of Mnemosyne
@@ -30,17 +30,17 @@ const checkThrowArgs = (instance, target, error, args) => {
         return;
     }
     odp(wrongThrow, 'instance', {
-        get() {
+        get () {
             return instance;
         }
     });
     odp(wrongThrow, 'error', {
-        get() {
+        get () {
             return error;
         }
     });
     odp(wrongThrow, 'args', {
-        get() {
+        get () {
             return args;
         }
     });
@@ -50,24 +50,24 @@ const exceptionConsctructHandler = function (opts) {
     const { instance, TypeName, typeStack, args } = opts;
     const exception = this;
     odp(exception, 'args', {
-        get() {
+        get () {
             return args;
         }
     });
     odp(exception, 'instance', {
-        get() {
+        get () {
             return instance;
         }
     });
     odp(exception, 'extract', {
-        get() {
+        get () {
             return function () {
                 return instance.extract();
             };
         }
     });
     odp(exception, 'parse', {
-        get() {
+        get () {
             return function () {
                 return parse(instance);
             };

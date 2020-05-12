@@ -1,10 +1,10 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 exports.invokeHook = void 0;
-const constants_1 = require("../../constants");
+const constants_1 = require('../../constants');
 const { MNEMONICA, } = constants_1.constants;
-const flowCheckers_1 = require("./flowCheckers");
-const hop_1 = require("../../utils/hop");
+const flowCheckers_1 = require('./flowCheckers');
+const hop_1 = require('../../utils/hop');
 exports.invokeHook = function (hookType, opts) {
     const { type, existentInstance, inheritedInstance, args } = opts;
     const invocationResults = new Set();
@@ -17,7 +17,7 @@ exports.invokeHook = function (hookType, opts) {
         const hookArgs = {
             type,
             TypeName,
-            existentInstance: existentInstance.constructor.name === MNEMONICA ?
+            existentInstance : existentInstance.constructor.name === MNEMONICA ?
                 null : existentInstance,
             args,
         };

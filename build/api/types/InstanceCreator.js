@@ -1,14 +1,14 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 exports.InstanceCreator = exports.makeInstanceModificator = void 0;
 const odp = Object.defineProperty;
-const constants_1 = require("../../constants");
+const constants_1 = require('../../constants');
 const { SymbolReplaceGaia, SymbolConstructorName, } = constants_1.constants;
-const errors_1 = require("../../descriptors/errors");
+const errors_1 = require('../../descriptors/errors');
 const { WRONG_MODIFICATION_PATTERN, BASE_MNEMONICA_ERROR } = errors_1.ErrorsTypes;
-const utils_1 = require("./utils");
+const utils_1 = require('./utils');
 const { getModificationConstructor, getExistentAsyncStack, makeFakeModificatorType } = utils_1.default;
-const errors_2 = require("../errors");
+const errors_2 = require('../errors');
 const { cleanupStack, getStack, } = errors_2.default;
 exports.makeInstanceModificator = (self) => {
     const { ModificationConstructor, existentInstance, ModificatorType, proto, } = self;
@@ -57,56 +57,56 @@ const addProps = function () {
     const { type, existentInstance, args, config: { submitStack }, __proto_proto__: proto } = self;
     const { namespace, collection, subtypes, } = type;
     odp(proto, '__proto_proto__', {
-        get() {
+        get () {
             return proto;
         }
     });
     odp(proto, '__args__', {
-        get() {
+        get () {
             return args;
         }
     });
     odp(proto, '__collection__', {
-        get() {
+        get () {
             return collection;
         }
     });
     odp(proto, '__namespace__', {
-        get() {
+        get () {
             return namespace;
         }
     });
     odp(proto, '__subtypes__', {
-        get() {
+        get () {
             return subtypes;
         }
     });
     odp(proto, '__type__', {
-        get() {
+        get () {
             return type;
         }
     });
     odp(proto, '__parent__', {
-        get() {
+        get () {
             return existentInstance;
         }
     });
     if (submitStack) {
         const { stack } = this;
         odp(proto, '__stack__', {
-            get() {
+            get () {
                 return stack.join('\n');
             }
         });
     }
     odp(proto, '__creator__', {
-        get() {
+        get () {
             return self;
         }
     });
     const timestamp = Date.now();
     Object.defineProperty(proto, '__timestamp__', {
-        get() {
+        get () {
             return timestamp;
         }
     });
@@ -120,7 +120,7 @@ const undefineParentSubTypes = function () {
     const unscopables = {};
     [...subtypes.keys()].forEach((name) => {
         odp(proto, name, {
-            get() {
+            get () {
                 return undefined;
             }
         });
@@ -162,19 +162,19 @@ const invokePostHooks = function () {
     const hookType = inheritedInstance instanceof Error ?
         'creationError' : 'postCreation';
     return {
-        type: type.invokeHook(hookType, {
+        type : type.invokeHook(hookType, {
             type,
             existentInstance,
             inheritedInstance,
             args
         }),
-        collection: collection.invokeHook(hookType, {
+        collection : collection.invokeHook(hookType, {
             type,
             existentInstance,
             inheritedInstance,
             args
         }),
-        namespace: namespace.invokeHook(hookType, {
+        namespace : namespace.invokeHook(hookType, {
             type,
             existentInstance,
             inheritedInstance,
@@ -200,7 +200,7 @@ const postProcessing = function (continuationOf) {
         // throw new WRONG_MODIFICATION_PATTERN(msg, self.stack);
     }
     odp(self.inheritedInstance, '__self__', {
-        get() {
+        get () {
             return self.inheritedInstance;
         }
     });
@@ -272,7 +272,7 @@ exports.InstanceCreator = function (type, existentInstance, args, chained) {
         type,
         TypeName,
         existentInstance,
-        get args() {
+        get args () {
             return args;
         },
         ModificationConstructor,
@@ -311,7 +311,7 @@ exports.InstanceCreator = function (type, existentInstance, args, chained) {
     if (self.inheritedInstance instanceof Promise) {
         const waiter = self.makeWaiter(type);
         odp(waiter, SymbolConstructorName, {
-            get() {
+            get () {
                 return TypeName;
             }
         });

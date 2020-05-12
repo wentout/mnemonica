@@ -1,6 +1,6 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
-function default_1() {
+Object.defineProperty(exports, '__esModule', { value : true });
+function default_1 () {
     const CreateInstanceModificator = function (ModificatorType, ModificatorTypePrototype, addProps) {
         const existentInstance = this;
         // const TripleSchemeClosure = function () {
@@ -10,7 +10,7 @@ function default_1() {
         // about to setup constructor property for new instance
         // Object.defineProperty(inherited, 'constructor', {
         Object.defineProperty(Mnemosyne, 'constructor', {
-            get() {
+            get () {
                 return ModificatorType;
             }
         });
@@ -42,4 +42,4 @@ function default_1() {
     return CreateInstanceModificator;
 }
 exports.default = default_1;
-;
+

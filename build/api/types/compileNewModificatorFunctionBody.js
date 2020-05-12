@@ -1,5 +1,5 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 const compileNewModificatorFunctionBody = function (FunctionName, asClass = false) {
     const modString = asClass ?
         `class ${FunctionName} extends ConstructHandler {

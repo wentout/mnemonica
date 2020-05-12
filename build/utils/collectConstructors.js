@@ -1,7 +1,7 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 exports.collectConstructors = void 0;
-const constants_1 = require("../constants");
+const constants_1 = require('../constants');
 const { SymbolConstructorName, MNEMOSYNE, MNEMONICA, GAIA, } = constants_1.constants;
 const getAdditor = (constructors) => {
     return Array.isArray(constructors) ?

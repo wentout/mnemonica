@@ -1,7 +1,7 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 exports.parent = void 0;
-const errors_1 = require("../descriptors/errors");
+const errors_1 = require('../descriptors/errors');
 const { WRONG_INSTANCE_INVOCATION } = errors_1.ErrorsTypes;
 // seek for firts parent instance
 // of instance prototype chain

@@ -1,7 +1,7 @@
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, '__esModule', { value : true });
 exports.registerHook = void 0;
-const errors_1 = require("../../descriptors/errors");
+const errors_1 = require('../../descriptors/errors');
 const { WRONG_HOOK_TYPE, MISSING_HOOK_CALLBACK, } = errors_1.ErrorsTypes;
 const hooksTypes = [
     'preCreation',
