@@ -1,5 +1,5 @@
 
-import mnemonica from '../lib/index.js';
+import mnemonica from '../build/index.js';
 
 export default mnemonica;
 

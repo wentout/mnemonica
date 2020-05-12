@@ -33,10 +33,8 @@ const {
 	defineStackCleaner
 } = mnemonica;
 
-const dirname = require('path').resolve(__dirname, '../lib');
+const dirname = require('path').resolve(__dirname, '../build');
 const stackCleanerRegExp = new RegExp(dirname);
-
-
 
 const tests = (opts) => {
 
@@ -414,6 +412,7 @@ const tests = (opts) => {
 			it('thrown error.stack should have seekable definition with stack cleaner', () => {
 				defineStackCleaner(stackCleanerRegExp);
 				const errored2 = new BadType({});
+				debugger;
 				expect(errored2.stack.indexOf(stackstart)).equal(1);
 				expect(errored2.stack
 					.indexOf('environment.js') > 0).is.true;

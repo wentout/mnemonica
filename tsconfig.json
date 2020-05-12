@@ -1,0 +1,31 @@
+{
+	"compilerOptions": {
+		"module": "CommonJS",
+		"target": "ES6",
+		"lib": [
+			"ES2015",
+			"DOM"
+		],
+		"strict": true,
+		"noImplicitThis": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"declaration": true,
+		"sourceMap": false,
+		"outDir": "build",
+		"forceConsistentCasingInFileNames": true,
+		"types": ["node"]
+	},
+	"include": [
+		"./src/**/*"
+	],
+	"exclude": [
+		"./build/**/*",
+		"./lib/**/*",
+		"./coverage/**/*",
+		"./module/**/*",
+		"./test/**/*"
+	]
+}
