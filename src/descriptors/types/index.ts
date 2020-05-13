@@ -228,7 +228,7 @@ const createTypesCollection = ( namespace = defaultNamespace, association: any, 
 
 };
 
-const DEFAULT_TYPES = createTypesCollection( defaultNamespace, SymbolDefaultTypesCollection );
+const DEFAULT_TYPES:object = createTypesCollection( defaultNamespace, SymbolDefaultTypesCollection );
 odp( DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 	get () {
 		return true;
@@ -241,7 +241,7 @@ export const types = {
 			return createTypesCollection( namespace, association, config );
 		};
 	},
-	get defaultTypes () {
+	get defaultTypes ():typeof DEFAULT_TYPES {
 		return DEFAULT_TYPES;
 	}
 	

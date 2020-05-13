@@ -20,15 +20,23 @@ const checkThis = function ( pointer: any ): boolean {
 	return false;
 };
 
-export const define = function ( this: object, ...args: any[] ) {
+// define: any = function ( subtypes: any, TypeOrTypeName: string | any, constructHandlerOrConfig: any, proto: object, config: object ) {
+function definer ( this: object, TypeModificatorClass: Function, config: object ): any;
+function definer ( this: object, TypeModificatorFunction: Function, proto: object, config: object ): any;
+function definer ( this: object, TypeName: string, TypeModificatortHandler: Function, proto: object, config: object ): any;
+function definer ( this: object, TypeName: string, TypeModificatortHandler: Function, proto: object, config: object ): any;
+function definer ( this: object, TypeOrTypeName: string | Function, constructHandlerOrConfig: object | Function, proto?: object, config?: object ): any {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
-	return types.define( ...args );
+	return types.define( TypeOrTypeName, constructHandlerOrConfig, proto, config );
 };
 
-export const lookup = function ( this: object, ...args: any[] ) {
+function lookuper ( this: typeof defaultTypes, TypeNestedPath: string ) {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
-	return types.lookup( ...args );
+	return types.lookup( TypeNestedPath );
 };
+
+export const define = definer;
+export const lookup = lookuper;
 
 export const mnemonica = Object.entries( {
 

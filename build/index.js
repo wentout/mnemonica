@@ -12,14 +12,18 @@ const checkThis = function (pointer) {
     }
     return false;
 };
-exports.define = function (...args) {
+function definer (TypeOrTypeName, constructHandlerOrConfig, proto, config) {
     const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
-    return types.define(...args);
-};
-exports.lookup = function (...args) {
+    return types.define(TypeOrTypeName, constructHandlerOrConfig, proto, config);
+}
+
+function lookuper (TypeNestedPath) {
     const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
-    return types.lookup(...args);
-};
+    return types.lookup(TypeNestedPath);
+}
+
+exports.define = definer;
+exports.lookup = lookuper;
 exports.mnemonica = Object.entries(Object.assign(Object.assign(Object.assign({ define : exports.define,
     lookup : exports.lookup }, descriptors_1.descriptors), errorsApi), constants_1.constants)).reduce((acc, entry) => {
     const [name, code] = entry;
