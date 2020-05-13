@@ -164,7 +164,3 @@ exports.lookup = function (TypeNestedPath) {
     const NextNestedPath = split.slice(1).join('.');
     return exports.lookup.call(type.subtypes, NextNestedPath);
 };
-exports.default = {
-    define : exports.define,
-    lookup : exports.lookup
-};

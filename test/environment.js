@@ -89,10 +89,12 @@ const tests = (opts) => {
 				'errors',
 				'utils',
 				'define',
-				'lookup'
+				'lookup',
+				'mnemonica',
 			];
 
 			const mnemonica_keys = Object.keys(mnemonica);
+			debugger;
 
 			it('interface length', () => {
 				expect(mnemonica_keys.length).equal(interface_keys.length);
@@ -203,6 +205,7 @@ const tests = (opts) => {
 
 			it('defineStackCleaner wrong definition should be instancof error', () => {
 				expect(madeError).instanceOf(errors.BASE_MNEMONICA_ERROR);
+				expect(madeError).instanceOf(errors.WRONG_STACK_CLEANER);
 			});
 		});
 

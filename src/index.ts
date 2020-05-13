@@ -1,76 +1,81 @@
 'use strict';
 
-const wrapThis = ( method: Function ) => {
-	return function ( this: any, instance: any, ...args: any[] ) {
-		return method( instance !== undefined ? instance : this, ...args );
-	};
-};
 
 import { constants } from './constants';
-import descriptors from './descriptors';
 
-const {
-	defaultTypes
+import * as errorsApi from './api/errors';
+import { descriptors } from './descriptors';
+
+export const {
+	defaultTypes,
 } = descriptors;
 
-import * as errors from './api/errors';
-
-import { utils } from './utils';
-
-const utilsWrapped: { [ index: string ]: any } = {
-
-	...Object.entries( {
-
-		...utils
-
-	} ).reduce( ( methods: { [ index: string ]: any }, util ) => {
-		const [ name, fn ] = util;
-		methods[ name ] = wrapThis( fn );
-		return methods;
-	}, {} ),
-
+const checkThis = function ( pointer: any ): boolean {
+	if (
+		pointer === mnemonica ||
+		pointer === exports
+	) {
+		return true;
+	}
+	return false;
 };
 
 export const define = function ( this: object, ...args: any[] ) {
-	const types = ( this === mnemonica ) ? defaultTypes : this || defaultTypes;
+	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
 	return types.define( ...args );
 };
 
 export const lookup = function ( this: object, ...args: any[] ) {
-	const types = ( this === mnemonica ) ? defaultTypes : this || defaultTypes;
+	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
 	return types.lookup( ...args );
 };
 
-export const defaultCollection = defaultTypes.subtypes;
-export const defineStackCleaner = errors.defineStackCleaner;
+export const mnemonica = Object.entries( {
 
-const mnemonica = {};
-
-Object.entries( {
 	define,
 	lookup,
-	
-	defaultCollection,
-
-	...constants,
 
 	...descriptors,
 
-	utils: utilsWrapped,
-	
-	defineStackCleaner,
+	...errorsApi,
+	...constants,
 
-
-} ).forEach( ( entry ) => {
+} ).reduce( ( acc: { [ index: string ]: any }, entry: any ) => {
 	const [ name, code ] = entry;
-	Object.defineProperty( mnemonica, name, {
+	Object.defineProperty( acc, name, {
 		get () {
 			return code;
 		},
 		enumerable: true
 	} );
-} );
+	return acc;
+}, {} );
 
-// console.log(Object.keys(fascade));
-export default mnemonica;
-module.exports = mnemonica;
+export const {
+
+	SymbolSubtypeCollection,
+	SymbolConstructorName,
+	SymbolGaia,
+	SymbolReplaceGaia,
+	SymbolDefaultNamespace,
+	SymbolDefaultTypesCollection,
+	SymbolConfig,
+	MNEMONICA,
+	MNEMOSYNE,
+	GAIA,
+	URANUS,
+	TYPE_TITLE_PREFIX,
+	ErrorMessages,
+	createNamespace,
+	namespaces,
+	defaultNamespace,
+	createTypesCollection,
+
+} = mnemonica;
+
+
+export const defaultCollection = defaultTypes.subtypes;
+export const errors = descriptors.ErrorsTypes;
+
+export { utils } from './utils';
+export { defineStackCleaner } from './utils';

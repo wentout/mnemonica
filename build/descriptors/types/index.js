@@ -159,18 +159,13 @@ odp(DEFAULT_TYPES, SymbolDefaultTypesCollection, {
         return true;
     }
 });
-exports.types = {};
-odp(exports.types, 'createTypesCollection', {
-    get () {
+exports.types = {
+    get createTypesCollection () {
         return function (namespace, association, config = {}) {
             return createTypesCollection(namespace, association, config);
         };
     },
-    enumerable : true
-});
-odp(exports.types, 'defaultTypes', {
-    get () {
+    get defaultTypes () {
         return DEFAULT_TYPES;
-    },
-    enumerable : true
-});
+    }
+};

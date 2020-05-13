@@ -1,6 +1,8 @@
 'use strict';
 
 import { constants } from '../constants';
+import { descriptors } from '../descriptors';
+
 const {
 	SymbolConstructorName,
 	MNEMOSYNE,
@@ -18,12 +20,11 @@ const getAdditor = ( constructors: Array<string> | { [ index: string ]: boolean 
 
 };
 
-const getAccumulator = ( asSequence:boolean ) => {
+const getAccumulator = ( asSequence: boolean ) => {
 	return asSequence ? [] : {}
 };
 
 export const collectConstructors = ( self: object, asSequence = false ) => {
-	const descriptors = require( '../descriptors' ).default;
 
 	const constructors = getAccumulator( asSequence );
 	const addToSequence = getAdditor( constructors );

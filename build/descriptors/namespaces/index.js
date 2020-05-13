@@ -7,6 +7,7 @@ const { MNEMONICA, SymbolDefaultNamespace, SymbolConfig, } = constants_1.constan
 const errors_1 = require('../../descriptors/errors');
 const { OPTIONS_ERROR, } = errors_1.ErrorsTypes;
 const hooksAPI = require('../../api/hooks');
+const __1 = require('../');
 const defaultOptions = {
     useOldStyle : false,
     strictChain : true,
@@ -51,7 +52,7 @@ const Namespace = function (name, config) {
     namespaceStorage.set(name, this);
 };
 Namespace.prototype = Object.assign({ createTypesCollection (association, config) {
-        const { types: { createTypesCollection } } = require('../types');
+        const { createTypesCollection } = __1.descriptors;
         return createTypesCollection(this, association, config);
     } }, hooksAPI);
 const DEFAULT_NAMESPACE = new Namespace(SymbolDefaultNamespace, {

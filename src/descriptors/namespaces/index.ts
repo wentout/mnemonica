@@ -19,6 +19,8 @@ const {
 
 import * as hooksAPI from '../../api/hooks';
 
+import { descriptors } from '../';
+
 const defaultOptions = {
 
 	// explicit declaration we wish use
@@ -104,10 +106,8 @@ const Namespace: any = function ( this: any, name: string | symbol, config: obje
 Namespace.prototype = {
 	createTypesCollection ( association: any, config: object ) {
 		const {
-			types: {
-				createTypesCollection
-			}
-		} = require( '../types' );
+			createTypesCollection
+		} = descriptors;
 		return createTypesCollection( this, association, config );
 	},
 	...hooksAPI

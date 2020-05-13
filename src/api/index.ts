@@ -8,14 +8,25 @@
 // loaders
 // transforms
 
-import * as hooks from './hooks';
-import types from './types';
-import * as errors from './errors';
+import {
+	invokeHook,
+	registerHook,
+	registerFlowChecker,
+} from './hooks';
+import {
+	define,
+	lookup,
+} from './types';
 
-module.exports = {
+export * as errors from './errors';
 
-	hooks,
-	types,
-	errors,
-	
+export const hooks = {
+	invokeHook,
+	registerHook,
+	registerFlowChecker,
+};
+
+export const types = {
+	define,
+	lookup,
 };

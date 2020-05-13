@@ -8,18 +8,39 @@ import { toJSON } from './toJSON';
 import { parse } from './parse';
 import { merge } from './merge';
 
-export const utils = {
+const utilsUnWrapped = {
 
 	extract,
-	parent,
 	pick,
-	toJSON,
+	
+	parent,
 
+	toJSON,
+	
 	parse,
 	merge,
 
 	get collectConstructors () {
 		return collectConstructors;
-	}
+	},
 
 };
+
+const wrapThis = ( method: Function ) => {
+	return function ( this: any, instance: any, ...args: any[] ) {
+		return method( instance !== undefined ? instance : this, ...args );
+	};
+};
+
+export const utils: { [ index: string ]: any } = {
+
+	...Object.entries( utilsUnWrapped )
+		.reduce( ( methods: { [ index: string ]: any }, util ) => {
+			const [ name, fn ] = util;
+			methods[ name ] = wrapThis( fn );
+			return methods;
+		}, {} ),
+
+};
+
+export { defineStackCleaner } from './defineStackCleaner';

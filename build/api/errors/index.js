@@ -1,21 +1,13 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
-exports.constructError = exports.BASE_MNEMONICA_ERROR = exports.getStack = exports.cleanupStack = exports.defineStackCleaner = void 0;
+exports.constructError = exports.BASE_MNEMONICA_ERROR = exports.getStack = exports.cleanupStack = exports.stackCleaners = void 0;
 const constants_1 = require('../../constants');
-const { SymbolConstructorName, MNEMONICA, ErrorMessages: { BASE_ERROR_MESSAGE, }, } = constants_1.constants;
-const stackCleaners = [];
-exports.defineStackCleaner = (regexp) => {
-    if (regexp instanceof RegExp) {
-        stackCleaners.push(regexp);
-    }
-    else {
-        const { ErrorsTypes: { WRONG_STACK_CLEANER } } = require('../../descriptors/errors');
-        throw new WRONG_STACK_CLEANER;
-    }
-};
+const { SymbolConstructorName, MNEMONICA, ErrorMessages, } = constants_1.constants;
+const { BASE_ERROR_MESSAGE } = ErrorMessages;
+exports.stackCleaners = [];
 exports.cleanupStack = (stack) => {
     const cleaned = stack.reduce((arr, line) => {
-        stackCleaners.forEach(cleanerRegExp => {
+        exports.stackCleaners.forEach(cleanerRegExp => {
             (!cleanerRegExp.test(line)) && arr.push(line);
         });
         return arr;

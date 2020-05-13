@@ -5,28 +5,17 @@ import { constants } from '../../constants';
 const {
 	SymbolConstructorName,
 	MNEMONICA,
-	ErrorMessages: {
-		BASE_ERROR_MESSAGE,
-	},
+	ErrorMessages,
 } = constants;
 
-const stackCleaners: Array<RegExp> = [];
+const {
+	BASE_ERROR_MESSAGE
+} = ErrorMessages;
 
-export const defineStackCleaner = ( regexp: RegExp ) => {
-	if ( regexp instanceof RegExp ) {
-		stackCleaners.push( regexp );
-	} else {
-		const {
-			ErrorsTypes: {
-				WRONG_STACK_CLEANER
-			}
-		} = require( '../../descriptors/errors' );
-		throw new WRONG_STACK_CLEANER;
-	}
-};
+export const stackCleaners: Array<RegExp> = [];
 
 export const cleanupStack = ( stack: Array<string> ) => {
-	const cleaned: Array<string> = stack.reduce( ( arr: Array<string>, line ) => {
+	const cleaned: Array<string> = stack.reduce( ( arr: Array<string>, line: string ) => {
 		stackCleaners.forEach( cleanerRegExp => {
 			( !cleanerRegExp.test( line ) ) && arr.push( line );
 		} );
@@ -35,20 +24,20 @@ export const cleanupStack = ( stack: Array<string> ) => {
 	return cleaned.length ? cleaned : stack;
 };
 
-export const getStack = function (this:any, title:string, stackAddition:string[], tillFunction?:Function) {
-	
-	if (Error.captureStackTrace) {
-		Error.captureStackTrace(this, tillFunction || getStack);
+export const getStack = function ( this: any, title: string, stackAddition: string[], tillFunction?: Function ) {
+
+	if ( Error.captureStackTrace ) {
+		Error.captureStackTrace( this, tillFunction || getStack );
 	} else {
-		this.stack = (new Error()).stack;
+		this.stack = ( new Error() ).stack;
 	}
-	
-	this.stack = this.stack.split('\n').slice(1);
-	this.stack = cleanupStack(this.stack);
-	
-	this.stack.unshift(title);
-	stackAddition && this.stack.push(...stackAddition);
-	this.stack.push('\n');
+
+	this.stack = this.stack.split( '\n' ).slice( 1 );
+	this.stack = cleanupStack( this.stack );
+
+	this.stack.unshift( title );
+	stackAddition && this.stack.push( ...stackAddition );
+	this.stack.push( '\n' );
 
 	return this.stack;
 

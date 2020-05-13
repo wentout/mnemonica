@@ -301,9 +301,3 @@ export const lookup: any = function ( this: any, TypeNestedPath: string ) {
 	return lookup.call( type.subtypes, NextNestedPath );
 
 };
-
-export default {
-	define,
-	lookup
-};
-

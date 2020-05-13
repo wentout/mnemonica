@@ -24,6 +24,7 @@ const {
 } = ErrorsTypes;
 
 import { namespaces } from '../namespaces';
+
 const {
 	[ SymbolDefaultNamespace ]: defaultNamespace,
 	defaultOptionsKeys
@@ -41,7 +42,7 @@ const proto = {
 };
 
 
-const TypesCollection: any = function ( this: any, namespace: any, config:{[index:string]:any} ) {
+const TypesCollection: any = function ( this: any, namespace: any, config: { [ index: string ]: any } ) {
 
 	const self = this;
 
@@ -234,21 +235,14 @@ odp( DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 	}
 } );
 
-export const types = {};
-
-odp( types, 'createTypesCollection', {
-	get () {
+export const types = {
+	get createTypesCollection () {
 		return function ( namespace: any, association: any, config = {} ) {
 			return createTypesCollection( namespace, association, config );
 		};
 	},
-	enumerable: true
-} );
-
-odp( types, 'defaultTypes', {
-	get () {
+	get defaultTypes () {
 		return DEFAULT_TYPES;
-	},
-	enumerable: true
-} );
-
+	}
+	
+};
