@@ -29,12 +29,12 @@
     "Goodluckhf <Goodluckhf@yandex.ru>"
   ],
   "scripts": {
-    "build": "npx tsc --pretty && npm run lint",
+    "build": "rm -rf ./build && npx tsc --pretty && npm run lint",
     "test": "npm run build && mocha --allow-uncaught test/index.js",
     "test:coverage:dev": "npm run build && nyc --reporter=text mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
     "test:coverage": "npm run build && nyc --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
     "test:mjs": "npm run build && node --experimental-modules ./test/test.mjs",
-    "debug": "npm run build && npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
+    "debug": "npx tsc --pretty --sourceMap && npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
     "report-coverage": "cat coverage/lcov.info | coveralls",
     "example": "npm run build && node ./test/example.js",
     "lint": "npx eslint --fix --ignore-path .gitignore ./build"
@@ -59,11 +59,14 @@
   },
   "homepage": "https://github.com/wentout/mnemonica#readme",
   "devDependencies": {
-    "@types/node": "^13.13.5",
+    "@types/node": "^13.13.6",
+    "@typescript-eslint/eslint-plugin": "^2.33.0",
+    "@typescript-eslint/parser": "^2.33.0",
     "chai": "^4.2.0",
     "coveralls": "^3.1.0",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-import": "^2.20.2",
     "eslint-plugin-mocha": "^5.2.0",
     "eslint-plugin-no-arrow-this": "^1.2.0",
     "eslint-plugin-prettier": "^3.1.3",

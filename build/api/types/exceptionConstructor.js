@@ -4,7 +4,6 @@ const odp = Object.defineProperty;
 const errors_1 = require('../../descriptors/errors');
 const { WRONG_ARGUMENTS_USED, WRONG_INSTANCE_INVOCATION } = errors_1.ErrorsTypes;
 const errors_2 = require('../errors');
-const { cleanupStack, getStack, } = errors_2.default;
 const utils_1 = require('../../utils');
 const { parse } = utils_1.utils;
 const utils_2 = require('./utils');
@@ -12,14 +11,6 @@ const { makeFakeModificatorType } = utils_2.default;
 const InstanceCreator_1 = require('./InstanceCreator');
 const checkThrowArgs = (instance, target, error, args) => {
     let wrongThrow;
-    /* unreacheble, cus instance binded inside of Mnemosyne
-    if (instance !== Object(instance)) {
-        wrongThrow = new WRONG_ARGUMENTS_USED('"this" must be an object');
-    }
-    if (instance.constructor[SymbolConstructorName] !== instance.constructor.name) {
-        wrongThrow = new WRONG_ARGUMENTS_USED('"this" must be an object');
-    }
-    */
     if (!target) {
         throw new WRONG_INSTANCE_INVOCATION('exception should be made with new keyword');
     }
@@ -73,11 +64,10 @@ const exceptionConsctructHandler = function (opts) {
             };
         }
     });
-    // real error stack
     const errorStack = exception.stack.split('\n');
     const stack = [];
     const title = `\n<-- lifecycle of [ ${TypeName} ] traced -->`;
-    getStack.call(exception, title, [], prepareException);
+    errors_2.getStack.call(exception, title, [], prepareException);
     stack.push(...exception.stack);
     stack.push('<-- with the following error -->');
     errorStack.forEach((line) => {
@@ -87,7 +77,7 @@ const exceptionConsctructHandler = function (opts) {
     });
     stack.push('\n<-- of constructor definitions stack -->');
     stack.push(...typeStack);
-    exception.stack = cleanupStack(stack).join('\n');
+    exception.stack = errors_2.cleanupStack(stack).join('\n');
     return exception;
 };
 const prepareException = function (target, error, ...args) {
@@ -95,13 +85,6 @@ const prepareException = function (target, error, ...args) {
     checkThrowArgs(instance, target, error, args);
     const { __type__, __creator__ } = instance;
     const { stack: typeStack, TypeName } = __type__;
-    /* short way, makes hooks calls, will not use
-
-    const type = Object.create(__type__);
-    type.config.blockErrors = false;
-    
-    let errored = new InstanceCreator(type, error, args);
-    */
     const ExceptionCreator = Object.create(__creator__);
     ExceptionCreator.config = Object.assign({}, __creator__.config);
     ExceptionCreator.config.blockErrors = false;

@@ -1,9 +1,10 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
+exports.constructError = exports.BASE_MNEMONICA_ERROR = exports.getStack = exports.cleanupStack = exports.defineStackCleaner = void 0;
 const constants_1 = require('../../constants');
 const { SymbolConstructorName, MNEMONICA, ErrorMessages: { BASE_ERROR_MESSAGE, }, } = constants_1.constants;
 const stackCleaners = [];
-const defineStackCleaner = (regexp) => {
+exports.defineStackCleaner = (regexp) => {
     if (regexp instanceof RegExp) {
         stackCleaners.push(regexp);
     }
@@ -12,7 +13,7 @@ const defineStackCleaner = (regexp) => {
         throw new WRONG_STACK_CLEANER;
     }
 };
-const cleanupStack = (stack) => {
+exports.cleanupStack = (stack) => {
     const cleaned = stack.reduce((arr, line) => {
         stackCleaners.forEach(cleanerRegExp => {
             (!cleanerRegExp.test(line)) && arr.push(line);
@@ -21,15 +22,15 @@ const cleanupStack = (stack) => {
     }, []);
     return cleaned.length ? cleaned : stack;
 };
-const getStack = function (title, stackAddition, tillFunction) {
+exports.getStack = function (title, stackAddition, tillFunction) {
     if (Error.captureStackTrace) {
-        Error.captureStackTrace(this, tillFunction || getStack);
+        Error.captureStackTrace(this, tillFunction || exports.getStack);
     }
     else {
         this.stack = (new Error()).stack;
     }
     this.stack = this.stack.split('\n').slice(1);
-    this.stack = cleanupStack(this.stack);
+    this.stack = exports.cleanupStack(this.stack);
     this.stack.unshift(title);
     stackAddition && this.stack.push(...stackAddition);
     this.stack.push('\n');
@@ -44,7 +45,7 @@ class BASE_MNEMONICA_ERROR extends Error {
                 return BaseStack;
             }
         });
-        const stack = cleanupStack(BaseStack.split('\n'));
+        const stack = exports.cleanupStack(BaseStack.split('\n'));
         if (additionalStack) {
             stack.unshift(...additionalStack);
         }
@@ -54,7 +55,8 @@ class BASE_MNEMONICA_ERROR extends Error {
         return `base of : ${MNEMONICA} : errors`;
     }
 }
-const constructError = (name, message) => {
+exports.BASE_MNEMONICA_ERROR = BASE_MNEMONICA_ERROR;
+exports.constructError = (name, message) => {
     const body = `
 		class ${name} extends base {
 			constructor (addition, stack) {
@@ -69,11 +71,4 @@ const constructError = (name, message) => {
 	`;
     const ErrorConstructor = (new Function('base', body))(BASE_MNEMONICA_ERROR);
     return ErrorConstructor;
-};
-exports.default = {
-    BASE_MNEMONICA_ERROR,
-    constructError,
-    cleanupStack,
-    getStack,
-    defineStackCleaner,
 };

@@ -10,6 +10,8 @@ abstract technique that aids information retention : instance inheritance system
 * ?. : state : **mad science**
 * ?. : type : **asynchronous monad descriptor** => this
 * ?. : prod ready : **we wonder about**
+* ?. : typescript : **yes, some, starting from 0.9.753**
+* ?. : example : **git clone && npm run example**
 
 ---
 

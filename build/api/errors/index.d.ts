@@ -1,11 +1,7 @@
-declare class BASE_MNEMONICA_ERROR extends Error {
+export declare const defineStackCleaner: (regexp: RegExp) => void;
+export declare const cleanupStack: (stack: Array<string>) => string[];
+export declare const getStack: (this: any, title: string, stackAddition: string[], tillFunction?: Function | undefined) => any;
+export declare class BASE_MNEMONICA_ERROR extends Error {
     constructor(message: string | undefined, additionalStack: Array<string>);
 }
-declare const _default: {
-    BASE_MNEMONICA_ERROR: typeof BASE_MNEMONICA_ERROR;
-    constructError: (name: string, message: string) => any;
-    cleanupStack: (stack: string[]) => string[];
-    getStack: (this: any, title: string, stackAddition: string[], tillFunction?: Function | undefined) => any;
-    defineStackCleaner: (regexp: RegExp) => void;
-};
-export default _default;
+export declare const constructError: (name: string, message: string) => any;

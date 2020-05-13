@@ -1,17 +1,10 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.constants = void 0;
-// names
 const MNEMONICA = 'Mnemonica';
-// O Great Mnemosyne! Please!
-// Save us from Oblivion...
-// https://en.wikipedia.org/wiki/Mnemosyne
 const MNEMOSYNE = 'Mnemosyne';
-// Gaia - Wikipedia
-// https://en.wikipedia.org/wiki/Gaia
 const GAIA = 'Gaia';
 const URANUS = 'Uranus';
-// symbols
 const SymbolDefaultNamespace = Symbol(`default ${MNEMONICA} namespace`);
 const SymbolDefaultTypesCollection = Symbol(`default ${MNEMONICA} types collection`);
 const SymbolSubtypeCollection = Symbol('SubType Collection');
@@ -19,9 +12,7 @@ const SymbolConstructorName = Symbol('Defined Constructor Name');
 const SymbolGaia = Symbol('Defined Gaia Constructor');
 const SymbolReplaceGaia = Symbol('Defined Method Name to Replace Gaia');
 const SymbolConfig = Symbol('Mnemonica Config Data');
-// etc...
 const TYPE_TITLE_PREFIX = 'modificator of : ';
-// errors
 const ErrorMessages = {
     BASE_ERROR_MESSAGE         : 'UNPREDICTABLE BEHAVIOUR',
     TYPENAME_MUST_BE_A_STRING  : 'typename must be a string',
@@ -30,7 +21,6 @@ const ErrorMessages = {
     WRONG_INSTANCE_INVOCATION  : 'wrong instance invocation',
     WRONG_MODIFICATION_PATTERN : 'wrong modification pattern',
     ALREADY_DECLARED           : 'this type has already been declared',
-    // EXISTENT_PROPERTY_REDEFINITION : 'attempt to re-define type constructor',
     WRONG_ARGUMENTS_USED       : 'wrong arguments : should use proper invocation',
     WRONG_HOOK_TYPE            : 'this hook type does not exist',
     MISSING_HOOK_CALLBACK      : 'hook definition requires callback',
@@ -63,7 +53,6 @@ exports.constants = {
     get 'SymbolConfig' () {
         return SymbolConfig;
     },
-    // constants
     get 'MNEMONICA' () {
         return MNEMONICA;
     },

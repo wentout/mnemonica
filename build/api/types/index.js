@@ -7,18 +7,13 @@ const constants_1 = require('../../constants');
 const { SymbolSubtypeCollection, SymbolConstructorName, SymbolConfig, TYPE_TITLE_PREFIX, MNEMOSYNE, } = constants_1.constants;
 const errors_1 = require('../../descriptors/errors');
 const { ALREADY_DECLARED, WRONG_TYPE_DEFINITION, TYPENAME_MUST_BE_A_STRING, HANDLER_MUST_BE_A_FUNCTION, } = errors_1.ErrorsTypes;
-// invokeHook
-// registerHook
-// registerFlowChecker
 const hooksApi = require('../hooks');
 const TypeProxy_1 = require('./TypeProxy');
 const compileNewModificatorFunctionBody_1 = require('./compileNewModificatorFunctionBody');
 const utils_1 = require('./utils');
 const { checkProto, getTypeChecker, CreationHandler, getTypeSplitPath, checkTypeName, isClass, } = utils_1.default;
 const errors_2 = require('../errors');
-const { getStack, } = errors_2.default;
 const TypeDescriptor = function (defineOrigin, types, TypeName, constructHandler, proto, config) {
-    // here "types" refers to types collection object {}
     const parentType = types[SymbolSubtypeCollection] || null;
     const isSubType = parentType ? true : false;
     const namespace = isSubType ? parentType.namespace : types.namespace;
@@ -45,7 +40,7 @@ const TypeDescriptor = function (defineOrigin, types, TypeName, constructHandler
         config,
         hooks : Object.create(null)
     });
-    getStack.call(this, `Definition of [ ${TypeName} ] made at:`, [], defineOrigin);
+    errors_2.getStack.call(this, `Definition of [ ${TypeName} ] made at:`, [], defineOrigin);
     odp(subtypes, SymbolSubtypeCollection, {
         get () {
             return type;
@@ -67,7 +62,6 @@ odp(TypeDescriptor.prototype, Symbol.hasInstance, {
     }
 });
 const defineFromType = function (subtypes, constructHandlerGetter, config) {
-    // we need this to extract TypeName
     const type = constructHandlerGetter();
     if (typeof type !== 'function') {
         throw new HANDLER_MUST_BE_A_FUNCTION;
@@ -79,7 +73,6 @@ const defineFromType = function (subtypes, constructHandlerGetter, config) {
     const asClass = isClass(type);
     const makeConstructHandler = function () {
         const constructHandler = constructHandlerGetter();
-        // constructHandler[SymbolConstructorName] = TypeName;
         odp(constructHandler, SymbolConstructorName, {
             get () {
                 return TypeName;
@@ -151,9 +144,6 @@ exports.define = function (subtypes, TypeOrTypeName, constructHandlerOrConfig, p
         if (split.length > 1) {
             return exports.define.call(this, Type.subtypes, TypeName, constructHandlerOrConfig, proto, config);
         }
-        // so, here we go with
-        // defineFromType.call
-        // from the next step
         return exports.define.call(this, Type.subtypes, constructHandlerOrConfig, proto, config);
     }
     throw new WRONG_TYPE_DEFINITION('definition is not provided');

@@ -4,7 +4,6 @@ exports.pick = void 0;
 const errors_1 = require('../descriptors/errors');
 const { WRONG_INSTANCE_INVOCATION } = errors_1.ErrorsTypes;
 exports.pick = (instance, ...args) => {
-    // at this situation this check is enough
     if (instance !== Object(instance)) {
         throw new WRONG_INSTANCE_INVOCATION;
     }

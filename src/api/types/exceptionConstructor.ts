@@ -8,11 +8,7 @@ const {
 	WRONG_INSTANCE_INVOCATION
 } = ErrorsTypes;
 
-import errors from '../errors';
-const {
-	cleanupStack,
-	getStack,
-} = errors;
+import { cleanupStack, getStack } from '../errors';
 
 import { utils } from '../../utils';
 const {

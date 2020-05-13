@@ -1,7 +1,5 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
-// 1. init default namespace
-// 2. create default namespace in types
 const errors_1 = require('./errors');
 const namespaces_1 = require('./namespaces');
 const types_1 = require('./types');

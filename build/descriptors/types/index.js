@@ -1,8 +1,6 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.types = void 0;
-// 1. init default namespace
-// 2. create default namespace in types
 const odp = Object.defineProperty;
 const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
 const constants_1 = require('../../constants');
@@ -11,7 +9,6 @@ const errors_1 = require('../../descriptors/errors');
 const { NAMESPACE_DOES_NOT_EXIST, ASSOCIATION_EXISTS, } = errors_1.ErrorsTypes;
 const namespaces_1 = require('../namespaces');
 const { [SymbolDefaultNamespace]: defaultNamespace, defaultOptionsKeys } = namespaces_1.namespaces;
-// here is TypesCollection.define() method
 const types_1 = require('../../api/types');
 const hooksAPI = require('../../api/hooks');
 const proto = Object.assign({ define : types_1.define,
@@ -19,7 +16,6 @@ const proto = Object.assign({ define : types_1.define,
 const TypesCollection = function (namespace, config) {
     const self = this;
     const subtypes = new Map();
-    // namespace config is less important than types collection config
     config = defaultOptionsKeys.reduce((o, key) => {
         if (typeof config[key] === 'boolean') {
             o[key] = config[key];
@@ -46,17 +42,13 @@ const TypesCollection = function (namespace, config) {
             return subtypes;
         }
     });
-    // For instanceof MNEMOSYNE
     odp(subtypes, MNEMOSYNE, {
         get () {
-            // returning proxy
             return namespace.typesCollections.get(self);
         }
     });
-    // For instanceof MNEMOSYNE
     odp(this, MNEMOSYNE, {
         get () {
-            // returning proxy
             return namespace.typesCollections.get(self);
         }
     });
@@ -79,16 +71,13 @@ const TypesCollection = function (namespace, config) {
 };
 odp(TypesCollection.prototype, MNEMONICA, {
     get () {
-        // returning proxy
         return this.namespace.typesCollections.get(this);
-        // return this;
     }
 });
 odp(TypesCollection.prototype, 'define', {
     get () {
         const { subtypes } = this;
         return function (...args) {
-            // this - define function of mnemonica interface
             return proto.define.call(this, subtypes, ...args);
         };
     },
@@ -137,10 +126,6 @@ const typesCollectionProxyHandler = {
     set (target, TypeName, Constructor) {
         return target.define(TypeName, Constructor);
     },
-    // has (target, prop) {
-    // 	debugger;
-    // },
-    // Object.prototype.hasOwnProperty.call
     getOwnPropertyDescriptor (target, prop) {
         return target.subtypes.has(prop) ? {
             configurable : true,

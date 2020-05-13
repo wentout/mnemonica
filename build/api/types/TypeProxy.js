@@ -19,8 +19,6 @@ exports.TypeProxy = function (__type__, Uranus) {
 };
 exports.TypeProxy.prototype.get = function (target, prop) {
     const { __type__: type } = this;
-    // prototype of proxy
-    // const instance = Reflect.getPrototypeOf(receiver);
     if (prop === 'prototype') {
         return type.proto;
     }
@@ -28,12 +26,9 @@ exports.TypeProxy.prototype.get = function (target, prop) {
     if (propDeclaration) {
         return propDeclaration;
     }
-    // used for existent props with value
-    // undefined || null || false 
     if (hop_1.hop(type, prop)) {
         return propDeclaration;
     }
-    // SomeType.SomeSubType
     if (type.subtypes.has(prop)) {
         return type.subtypes.get(prop);
     }
@@ -41,7 +36,6 @@ exports.TypeProxy.prototype.get = function (target, prop) {
 };
 exports.TypeProxy.prototype.set = function (__, name, value) {
     const { __type__: type } = this;
-    // is about setting a prototype to Type
     if (name === 'prototype') {
         checkProto(value);
         type.proto = value;
@@ -82,8 +76,6 @@ const makeSubTypeProxy = function (subtype, inheritedInstance) {
             return new Target(subtype, inheritedInstance, _args);
         },
         apply (Target, thisArg, _args) {
-            // if we would make new keyword obligatory
-            // then we should avoid it here, with throw Error
             const existentInstance = thisArg || inheritedInstance;
             return new Target(subtype, existentInstance, _args);
         },
@@ -104,19 +96,15 @@ const MnemonicaInstanceProps = [
     '__creator__'
 ].concat(MnemosynePrototypeKeys);
 const staticProps = [
-    // builtins: functions + Promises
     'constructor',
     'prototype',
     'then',
-    // builtins: errors
     'stack',
     'message',
     'domain',
-    // builtins: EventEmitter
     'on',
     'once',
     'off',
-    // mocha + chai => bug: ./utils.js .findParentSubType 'inspect'
     'inspect',
     'showDiff',
 ]
@@ -138,7 +126,6 @@ const gaiaProxyHandlerGet = (target, prop, receiver) => {
     if (staticProps[prop]) {
         return result;
     }
-    // prototype of proxy
     const instance = Reflect.getPrototypeOf(receiver);
     const { __type__: { config: { strictChain }, subtypes }, } = instance;
     let subtype = subtypes.has(prop) ?
@@ -149,10 +136,7 @@ const gaiaProxyHandlerGet = (target, prop, receiver) => {
     return subtype ? makeSubTypeProxy(subtype, receiver) : result;
 };
 exports.TypeProxy.prototype.construct = function (__, args) {
-    // new.target id equal with target here
     const { __type__: type, Uranus } = this;
-    // constructs new Gaia -> new Mnemosyne
-    // 2 build the first instance in chain
     const gaia = new Mnemosyne(type.namespace, new Gaia(Uranus));
     const gaiaProxy = new Proxy(gaia, {
         get : gaiaProxyHandlerGet

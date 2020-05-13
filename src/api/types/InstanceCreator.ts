@@ -21,11 +21,7 @@ const {
 	makeFakeModificatorType
 } = TypesUtils;
 
-import errors from '../errors';
-const {
-	cleanupStack,
-	getStack,
-} = errors;
+import { cleanupStack, getStack } from '../errors';
 
 export const makeInstanceModificator = ( self: any ) => {
 

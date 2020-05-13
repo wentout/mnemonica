@@ -42,10 +42,7 @@ const {
 	isClass,
 } = TypesUtils;
 
-import errors from '../errors';
-const {
-	getStack,
-} = errors;
+import { getStack } from '../errors';
 
 const TypeDescriptor: any = function (
 	this: any,

@@ -1,8 +1,6 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.namespaces = void 0;
-// 1. init default namespace
-// 2. create default namespace in types
 const odp = Object.defineProperty;
 const constants_1 = require('../../constants');
 const { MNEMONICA, SymbolDefaultNamespace, SymbolConfig, } = constants_1.constants;
@@ -10,32 +8,11 @@ const errors_1 = require('../../descriptors/errors');
 const { OPTIONS_ERROR, } = errors_1.ErrorsTypes;
 const hooksAPI = require('../../api/hooks');
 const defaultOptions = {
-    // explicit declaration we wish use
-    // an old style based constructors
-    // e.g. with prototype described with:
-    //    createInstanceModificator200XthWay
-    // or more general with: createInstanceModificator
     useOldStyle : false,
-    // shall or not we use strict checking
-    // for creation sub-instances Only from current type
-    // or we might use up-nested sub-instances from chain
     strictChain : true,
-    // should we use forced errors checking
-    // to make all inherited types errored
-    // if there is an error somewhere in chain
-    // disallow instance construction 
-    // if there is an error in prototype chain
     blockErrors : true,
-    // if it is necessary to collect stack
-    // as a __stack__ prototype property
-    // during the process of instance creation
     submitStack : false
 };
-// namespace storage
-// name + namespace config
-// future feature : path of namespace
-// shortcut for ns of module exports
-// inter-mediator
 const namespaceStorage = new Map();
 const Namespace = function (name, config) {
     if (typeof config === 'string') {

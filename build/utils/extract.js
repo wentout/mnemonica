@@ -5,7 +5,6 @@ const errors_1 = require('../descriptors/errors');
 const { WRONG_INSTANCE_INVOCATION } = errors_1.ErrorsTypes;
 const hop_1 = require('./hop');
 exports.extract = (instance) => {
-    // at this situation this check is enough
     if (instance !== Object(instance)) {
         throw new WRONG_INSTANCE_INVOCATION;
     }
@@ -14,9 +13,6 @@ exports.extract = (instance) => {
         if (name === 'constructor' && !hop_1.hop(instance, name)) {
             continue;
         }
-        // if (name === 'timestamp') {
-        // 	continue;
-        // }
         extracted[name] = instance[name];
     }
     return extracted;

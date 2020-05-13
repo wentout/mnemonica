@@ -9,7 +9,6 @@ const { WRONG_MODIFICATION_PATTERN, BASE_MNEMONICA_ERROR } = errors_1.ErrorsType
 const utils_1 = require('./utils');
 const { getModificationConstructor, getExistentAsyncStack, makeFakeModificatorType } = utils_1.default;
 const errors_2 = require('../errors');
-const { cleanupStack, getStack, } = errors_2.default;
 exports.makeInstanceModificator = (self) => {
     const { ModificationConstructor, existentInstance, ModificatorType, proto, } = self;
     return ModificationConstructor.call(existentInstance, ModificatorType, Object.assign({}, proto), function (__proto_proto__) {
@@ -18,7 +17,6 @@ exports.makeInstanceModificator = (self) => {
     });
 };
 const throwModificationError = function (error) {
-    // InstanceCreator
     const self = this;
     const { TypeName, type: { stack: typeStack } } = self;
     self.ModificatorType = makeFakeModificatorType(TypeName);
@@ -31,7 +29,7 @@ const throwModificationError = function (error) {
     }
     else {
         const title = `\n<-- creation of [ ${TypeName} ] traced -->`;
-        getStack.call(erroredInstance, title, [], throwModificationError);
+        errors_2.getStack.call(erroredInstance, title, [], throwModificationError);
         stack.push(...erroredInstance.stack);
         const errorStack = error.stack.split('\n');
         stack.push('<-- with the following error -->');
@@ -43,7 +41,7 @@ const throwModificationError = function (error) {
         stack.push('\n<-- of constructor definitions stack -->');
         stack.push(...typeStack);
     }
-    erroredInstance.stack = cleanupStack(stack).join('\n');
+    erroredInstance.stack = errors_2.cleanupStack(stack).join('\n');
     self.inheritedInstance = erroredInstance;
     const results = self.invokePostHooks();
     const { type, collection, namespace } = results;
@@ -197,7 +195,6 @@ const postProcessing = function (continuationOf) {
         const icn = self.inheritedInstance.constructor.name;
         const msg = `should inherit from ${continuationOf.TypeName} but got ${icn}`;
         self.throwModificationError(new WRONG_MODIFICATION_PATTERN(msg, stack));
-        // throw new WRONG_MODIFICATION_PATTERN(msg, self.stack);
     }
     odp(self.inheritedInstance, '__self__', {
         get () {
@@ -212,11 +209,7 @@ const addThen = function (then) {
         .then((instance) => {
         self.inheritedInstance = instance;
         self.inheritedInstance =
-            new exports.InstanceCreator(then.subtype, self.inheritedInstance, then.args, 
-            // was chained :
-            true
-            // self.existentInstance
-            );
+            new exports.InstanceCreator(then.subtype, self.inheritedInstance, then.args, true);
         return self.inheritedInstance;
     });
 };
@@ -227,14 +220,10 @@ const makeWaiter = function (type, then) {
         if (!(instance instanceof self.type)) {
             const icn = instance.constructor.name;
             const msg = `should inherit from ${type.TypeName} but got ${icn}`;
-            // self.throwModificationError(new WRONG_MODIFICATION_PATTERN(msg, self.stack));
             throw new WRONG_MODIFICATION_PATTERN(msg, self.stack);
         }
         self.inheritedInstance = instance;
         if (self.inheritedInstance.__self__ !== self.inheritedInstance) {
-            // it was async instance,
-            // so we have to add all the stuff
-            // for sync instances it was done already
             self.postProcessing(type);
         }
         return self.inheritedInstance;
@@ -284,7 +273,7 @@ exports.InstanceCreator = function (type, existentInstance, args, chained) {
         const stackAddition = chained ? self.getExistentAsyncStack(existentInstance) : [];
         const title = `\n<-- creation of [ ${TypeName} ] traced -->`;
         if (submitStack) {
-            getStack.call(self, title, stackAddition);
+            errors_2.getStack.call(self, title, stackAddition);
         }
         else {
             self.stack = title;

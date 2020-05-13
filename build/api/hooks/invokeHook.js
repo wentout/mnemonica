@@ -10,9 +10,6 @@ exports.invokeHook = function (hookType, opts) {
     const invocationResults = new Set();
     const self = this;
     if (hop_1.hop(self.hooks, hookType)) {
-        // "this" referes to
-        // namespace, if called from namespaces
-        // type, if called from types
         const { TypeName, } = type;
         const hookArgs = {
             type,

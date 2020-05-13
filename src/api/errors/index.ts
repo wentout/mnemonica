@@ -12,7 +12,7 @@ const {
 
 const stackCleaners: Array<RegExp> = [];
 
-const defineStackCleaner = ( regexp: RegExp ) => {
+export const defineStackCleaner = ( regexp: RegExp ) => {
 	if ( regexp instanceof RegExp ) {
 		stackCleaners.push( regexp );
 	} else {
@@ -25,7 +25,7 @@ const defineStackCleaner = ( regexp: RegExp ) => {
 	}
 };
 
-const cleanupStack = ( stack: Array<string> ) => {
+export const cleanupStack = ( stack: Array<string> ) => {
 	const cleaned: Array<string> = stack.reduce( ( arr: Array<string>, line ) => {
 		stackCleaners.forEach( cleanerRegExp => {
 			( !cleanerRegExp.test( line ) ) && arr.push( line );
@@ -35,7 +35,7 @@ const cleanupStack = ( stack: Array<string> ) => {
 	return cleaned.length ? cleaned : stack;
 };
 
-const getStack = function (this:any, title:string, stackAddition:string[], tillFunction?:Function) {
+export const getStack = function (this:any, title:string, stackAddition:string[], tillFunction?:Function) {
 	
 	if (Error.captureStackTrace) {
 		Error.captureStackTrace(this, tillFunction || getStack);
@@ -54,7 +54,7 @@ const getStack = function (this:any, title:string, stackAddition:string[], tillF
 
 };
 
-class BASE_MNEMONICA_ERROR extends Error {
+export class BASE_MNEMONICA_ERROR extends Error {
 
 	constructor ( message = BASE_ERROR_MESSAGE, additionalStack: Array<string> ) {
 
@@ -82,7 +82,7 @@ class BASE_MNEMONICA_ERROR extends Error {
 
 }
 
-const constructError = ( name: string, message: string ) => {
+export const constructError = ( name: string, message: string ) => {
 	const body = `
 		class ${name} extends base {
 			constructor (addition, stack) {
@@ -102,12 +102,3 @@ const constructError = ( name: string, message: string ) => {
 
 	return ErrorConstructor;
 };
-
-export default {
-	BASE_MNEMONICA_ERROR,
-	constructError,
-	cleanupStack,
-	getStack,
-	defineStackCleaner,
-};
-

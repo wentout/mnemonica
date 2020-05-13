@@ -7,14 +7,6 @@ const { SymbolConstructorName, MNEMONICA, MNEMOSYNE, GAIA, URANUS } = constants_
 const { WRONG_TYPE_DEFINITION, } = errors_1.ErrorsTypes;
 const { collectConstructors } = utils_1.utils;
 const CreationHandler = function (constructionAnswer) {
-    // standard says : 
-    // if constructor returns something
-    // then this is a toy
-    // we have to play with
-    // respectively
-    // so we will not follow the rule
-    // if (constructionAnswer instanceof types[TypeName]) {
-    // and instead follow the line below
     if (constructionAnswer instanceof Object) {
         return constructionAnswer;
     }
@@ -40,7 +32,6 @@ const getTypeChecker = (TypeName) => {
             return false;
         }
         if (Reflect.getPrototypeOf(instance).constructor.name === 'Promise') {
-            // if ( instance instanceof Promise ) {
             return instance[SymbolConstructorName] === TypeName;
         }
         const constructors = collectConstructors(instance);
@@ -50,7 +41,6 @@ const getTypeChecker = (TypeName) => {
 };
 const getTypeSplitPath = (path) => {
     const split = path
-        // beautifull names
         .replace(/\n|\t| /g, '')
         .replace(/\[(\w+)\]/g, '.$1')
         .replace(/^\./, '')
@@ -103,13 +93,6 @@ const checkTypeName = (name) => {
 };
 const findParentSubType = (instance, prop) => {
     let subtype = null;
-    // if (!instance.__subtypes__) {
-    // if (!instance.__type__) {
-    // mocha + chai makes .inspect 4 Shaper class
-    // or .showDiff if something wrong with constructor
-    // 	debugger;
-    // 	return null;
-    // }
     if (instance.__type__.subtypes.has(prop)) {
         subtype = instance.__type__.subtypes.get(prop);
         return subtype;

@@ -19,11 +19,8 @@ exports.parse = (self) => {
     if (protoProto && proto.constructor.name !== protoProto.constructor.name) {
         throw new WRONG_ARGUMENTS_USED('have to use "instance" itself');
     }
-    // const args = self[SymbolConstructorName] ?
-    // self[SymbolConstructorName].args : [];
     const { name } = proto.constructor;
     const props = extract_1.extract(Object.assign({}, self));
-    // props.constructor = undefined;
     delete props.constructor;
     const joint = extract_1.extract(Object.assign({}, proto));
     delete joint.constructor;
@@ -34,17 +31,14 @@ exports.parse = (self) => {
     }
     else {
         parent = exports.parse(Reflect.getPrototypeOf(protoProto));
-        // eslint-disable-next-line prefer-destructuring
         gaia = parent.gaia;
     }
     return {
         name,
         props,
-        // the line below copy symbols also
         self,
         proto,
         joint,
-        // args,
         parent,
         gaia
     };

@@ -1,6 +1,6 @@
 'use strict';
 
-const wrapThis = ( method: any ) => {
+const wrapThis = ( method: Function ) => {
 	return function ( this: any, instance: any, ...args: any[] ) {
 		return method( instance !== undefined ? instance : this, ...args );
 	};
@@ -13,10 +13,7 @@ const {
 	defaultTypes
 } = descriptors;
 
-import errors from './api/errors';
-const {
-	defineStackCleaner
-} = errors;
+import * as errors from './api/errors';
 
 import { utils } from './utils';
 
@@ -34,36 +31,39 @@ const utilsWrapped: { [ index: string ]: any } = {
 
 };
 
-const define = function ( this: any, ...args: any[] ) {
-	const types = ( this === fascade ) ? defaultTypes : this || defaultTypes;
+export const define = function ( this: object, ...args: any[] ) {
+	const types = ( this === mnemonica ) ? defaultTypes : this || defaultTypes;
 	return types.define( ...args );
 };
 
-const lookup = function ( this: any, ...args: any ) {
-	const types = ( this === fascade ) ? defaultTypes : this || defaultTypes;
+export const lookup = function ( this: object, ...args: any[] ) {
+	const types = ( this === mnemonica ) ? defaultTypes : this || defaultTypes;
 	return types.lookup( ...args );
 };
 
-const fascade = {};
+export const defaultCollection = defaultTypes.subtypes;
+export const defineStackCleaner = errors.defineStackCleaner;
+
+const mnemonica = {};
 
 Object.entries( {
+	define,
+	lookup,
+	
+	defaultCollection,
 
 	...constants,
 
 	...descriptors,
 
-	defaultCollection: defaultTypes.subtypes,
-
+	utils: utilsWrapped,
+	
 	defineStackCleaner,
 
-	utils: utilsWrapped,
-
-	define,
-	lookup
 
 } ).forEach( ( entry ) => {
 	const [ name, code ] = entry;
-	Object.defineProperty( fascade, name, {
+	Object.defineProperty( mnemonica, name, {
 		get () {
 			return code;
 		},
@@ -72,4 +72,5 @@ Object.entries( {
 } );
 
 // console.log(Object.keys(fascade));
-module.exports = fascade;
+export default mnemonica;
+module.exports = mnemonica;

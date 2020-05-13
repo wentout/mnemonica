@@ -1,13 +1,16 @@
 {
 	"compilerOptions": {
-		"module": "CommonJS",
+		"module": "commonjs",
 		"target": "ES6",
 		"lib": [
 			"ES2015",
 			"DOM"
 		],
 		"strict": true,
+		"alwaysStrict": true,
+		"diagnostics": true,
 		"noImplicitThis": true,
+		"extendedDiagnostics": true,
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
 		"noUnusedLocals": true,
@@ -15,6 +18,9 @@
 		"declaration": true,
 		"sourceMap": false,
 		"outDir": "build",
+		"traceResolution": false,
+		"isolatedModules": true,
+		"removeComments": true,
 		"forceConsistentCasingInFileNames": true,
 		"types": ["node"]
 	},

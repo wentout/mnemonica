@@ -10,7 +10,7 @@
 
 import * as hooks from './hooks';
 import types from './types';
-import errors from './errors';
+import * as errors from './errors';
 
 module.exports = {
 

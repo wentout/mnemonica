@@ -44,7 +44,6 @@ const MnemonicaProtoProps = {
     fork () {
         const { __type__: type, __collection__: collection, __parent__: existentInstance, __args__, __self__ } = this;
         const { isSubType, TypeName } = type;
-        // 'function', cause might be called with 'new'
         return function (...forkArgs) {
             var forked;
             const Constructor = isSubType ?
@@ -55,7 +54,6 @@ const MnemonicaProtoProps = {
                 forked = new (Constructor[TypeName])(...args);
             }
             else {
-                // fork.call ? let's do it !
                 forked = new InstanceCreator_1.InstanceCreator(type, this, args);
             }
             return forked;
@@ -102,7 +100,6 @@ const Mnemosyne = function (namespace, gaia) {
             }
         });
     });
-    // instance of self Constructor type
     odp(Mnemonica.prototype, Symbol.hasInstance, {
         get () {
             return getTypeChecker(this.constructor.name);

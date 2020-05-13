@@ -5,11 +5,7 @@ const {
 	ErrorMessages,
 } = constants;
 
-import errors from '../../api/errors';
-const {
-	BASE_MNEMONICA_ERROR,
-	constructError,
-} = errors;
+import { BASE_MNEMONICA_ERROR, constructError } from '../../api/errors';
 
 export const ErrorsTypes: { [ index: string ]: any } = {};
 ErrorsTypes[ 'BASE_MNEMONICA_ERROR' ] = BASE_MNEMONICA_ERROR;
