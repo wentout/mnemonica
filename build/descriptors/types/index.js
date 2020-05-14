@@ -1,10 +1,9 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.types = void 0;
-const odp = Object.defineProperty;
-const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
+const hop_1 = require('../../utils/hop');
 const constants_1 = require('../../constants');
-const { SymbolConstructorName, SymbolDefaultNamespace, SymbolDefaultTypesCollection, SymbolConfig, MNEMONICA, MNEMOSYNE, } = constants_1.constants;
+const { odp, SymbolConstructorName, SymbolDefaultNamespace, SymbolDefaultTypesCollection, SymbolConfig, MNEMONICA, MNEMOSYNE, } = constants_1.constants;
 const errors_1 = require('../../descriptors/errors');
 const { NAMESPACE_DOES_NOT_EXIST, ASSOCIATION_EXISTS, } = errors_1.ErrorsTypes;
 const namespaces_1 = require('../namespaces');
@@ -137,7 +136,7 @@ const typesCollectionProxyHandler = {
 };
 const createTypesCollection = (namespace = defaultNamespace, association, config = {}) => {
     if (!(namespace instanceof Object) ||
-        !hop(namespace, 'name') ||
+        !hop_1.hop(namespace, 'name') ||
         !namespaces_1.namespaces.namespaces.has(namespace.name)) {
         throw new NAMESPACE_DOES_NOT_EXIST;
     }

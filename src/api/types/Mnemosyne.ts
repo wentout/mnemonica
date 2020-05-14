@@ -1,10 +1,9 @@
 'use strict';
 
-const odp = Object.defineProperty;
-
+import { ConstructorFunction } from '../../types';
 import { constants } from '../../constants';
 const {
-
+	odp,
 	SymbolConstructorName,
 	SymbolGaia,
 	SymbolReplaceGaia,
@@ -28,11 +27,12 @@ import exceptionConstructor from './exceptionConstructor';
 
 import { InstanceCreator } from './InstanceCreator';
 
-const Gaia: any = function ( this: any, Uranus: any ) {
+const Gaia = function ( Uranus: any ) {
 
 	const gaiaProto = Uranus ? Uranus : this;
 
-	const GaiaConstructor: any = function () { };
+	// tslint:disable-next-line: only-arrow-functions no-empty
+	const GaiaConstructor = function () {} as ConstructorFunction<{}>;
 	GaiaConstructor.prototype = Object.create( gaiaProto );
 
 	const gaia = new GaiaConstructor;
@@ -44,10 +44,10 @@ const Gaia: any = function ( this: any, Uranus: any ) {
 	} );
 
 	return gaia;
-};
+} as ConstructorFunction<{}>;
 
 
-const MnemonicaProtoProps: any = {
+const MnemonicaProtoProps = {
 
 	extract () {
 		return function ( this: any ) {
@@ -89,7 +89,7 @@ const MnemonicaProtoProps: any = {
 		// 'function', cause might be called with 'new'
 		return function ( this: any, ...forkArgs: any[] ) {
 
-			var forked;
+			let forked;
 			const Constructor = isSubType ?
 				existentInstance :
 				collection;
@@ -121,6 +121,7 @@ const MnemonicaProtoProps: any = {
 
 	exception () {
 		const me = this;
+		// tslint:disable-next-line: only-arrow-functions
 		return function ( error: Error, ...args: any[] ) {
 			const target = new.target;
 			return exceptionConstructor.call( me, target, error, ...args );
@@ -129,7 +130,7 @@ const MnemonicaProtoProps: any = {
 
 };
 
-const Mnemosyne: any = function ( this: any, namespace: any, gaia: any ) {
+const Mnemosyne = function ( namespace: any, gaia: any ) {
 
 	const Mnemonica: any = function ( this: any ) {
 		odp( this, SymbolConstructorName, {
@@ -155,7 +156,8 @@ const Mnemosyne: any = function ( this: any, namespace: any, gaia: any ) {
 	Object.getOwnPropertySymbols( MnemonicaProtoProps ).forEach( ( symbol: symbol ) => {
 		odp( Mnemonica.prototype, symbol, {
 			get () {
-				return MnemonicaProtoProps[ symbol ].call( this );
+				const symbolMethod = Reflect.get(MnemonicaProtoProps, symbol);
+				return symbolMethod.call( this );
 			}
 		} );
 	} );
@@ -177,7 +179,7 @@ const Mnemosyne: any = function ( this: any, namespace: any, gaia: any ) {
 
 	Reflect.setPrototypeOf( this, proto );
 
-};
+} as ConstructorFunction<typeof MnemonicaProtoProps>;
 
 
 export default {

@@ -10,6 +10,7 @@ export declare const constants: {
     readonly MNEMOSYNE: string;
     readonly GAIA: string;
     readonly URANUS: string;
+    readonly odp: (o: any, p: PropertyKey, attributes: PropertyDescriptor & ThisType<any>) => any;
     TYPE_TITLE_PREFIX: string;
     ErrorMessages: {
         BASE_ERROR_MESSAGE: string;

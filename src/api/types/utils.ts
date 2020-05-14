@@ -22,7 +22,7 @@ const {
 
 
 const CreationHandler = function ( this: any, constructionAnswer: any ) {
-	// standard says : 
+	// standard says :
 	// if constructor returns something
 	// then this is a toy
 	// we have to play with
@@ -159,14 +159,18 @@ const findParentSubType: any = ( instance: any, prop: string ) => {
 	return findParentSubType( instance.__parent__, prop );
 };
 
-const isClass = ( functionPointer: Function ) => {
+const isClass = ( functionPointer: CallableFunction ) => {
 	const value = Function.prototype.toString.call( functionPointer );
 	return /^\s*class\s+/.test( value.trim() );
 };
 
+import { TypeModificator } from '../../types';
 
-
-const makeFakeModificatorType = ( TypeName: string, fakeModificator = function () { } ) => {
+const makeFakeModificatorType = (
+	TypeName: string,
+	// tslint:disable-next-line: only-arrow-functions no-empty
+	fakeModificator = function () {} as TypeModificator<{}>
+) => {
 
 	const modificatorBody = compileNewModificatorFunctionBody( TypeName );
 

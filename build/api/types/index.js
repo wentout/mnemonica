@@ -1,10 +1,9 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.lookup = exports.define = void 0;
-const odp = Object.defineProperty;
 const hop_1 = require('../../utils/hop');
 const constants_1 = require('../../constants');
-const { SymbolSubtypeCollection, SymbolConstructorName, SymbolConfig, TYPE_TITLE_PREFIX, MNEMOSYNE, } = constants_1.constants;
+const { odp, SymbolSubtypeCollection, SymbolConstructorName, SymbolConfig, TYPE_TITLE_PREFIX, MNEMOSYNE, } = constants_1.constants;
 const errors_1 = require('../../descriptors/errors');
 const { ALREADY_DECLARED, WRONG_TYPE_DEFINITION, TYPENAME_MUST_BE_A_STRING, HANDLER_MUST_BE_A_FUNCTION, } = errors_1.ErrorsTypes;
 const hooksApi = require('../hooks');
@@ -71,7 +70,7 @@ const defineFromType = function (subtypes, constructHandlerGetter, config) {
         throw new TYPENAME_MUST_BE_A_STRING;
     }
     const asClass = isClass(type);
-    const makeConstructHandler = function () {
+    const makeConstructHandler = () => {
         const constructHandler = constructHandlerGetter();
         odp(constructHandler, SymbolConstructorName, {
             get () {
@@ -158,7 +157,7 @@ exports.lookup = function (TypeNestedPath) {
     const split = getTypeSplitPath(TypeNestedPath);
     const [name] = split;
     const type = this.get(name);
-    if (split.length == 1) {
+    if (split.length === 1) {
         return type;
     }
     const NextNestedPath = split.slice(1).join('.');

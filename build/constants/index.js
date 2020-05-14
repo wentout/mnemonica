@@ -65,6 +65,11 @@ exports.constants = {
     get 'URANUS' () {
         return URANUS;
     },
+    get 'odp' () {
+        return (o, p, attributes) => {
+            return Object.defineProperty(o, p, attributes);
+        };
+    },
     TYPE_TITLE_PREFIX,
     ErrorMessages,
 };

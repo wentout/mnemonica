@@ -12,11 +12,11 @@ const utilsUnWrapped = {
 
 	extract,
 	pick,
-	
+
 	parent,
 
 	toJSON,
-	
+
 	parse,
 	merge,
 
@@ -26,7 +26,7 @@ const utilsUnWrapped = {
 
 };
 
-const wrapThis = ( method: Function ) => {
+const wrapThis = ( method: CallableFunction ) => {
 	return function ( this: any, instance: any, ...args: any[] ) {
 		return method( instance !== undefined ? instance : this, ...args );
 	};

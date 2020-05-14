@@ -15,11 +15,11 @@ export const descriptors = {
 	// namespaces.defaultOptionsKeys,
 	// namespaces.namespaces,
 	...namespaces,
-	
+
 	// types.defaultTypes,
 	// types.createTypesCollection,
 	...types,
 
 	ErrorsTypes
-	
+
 };

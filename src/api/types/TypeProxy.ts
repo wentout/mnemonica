@@ -1,5 +1,7 @@
 'use strict';
 
+import { ConstructorFunction } from '../../types';
+
 import { hop } from '../../utils/hop';
 
 import { ErrorsTypes } from '../../descriptors/errors';
@@ -23,14 +25,15 @@ const {
 
 import { InstanceCreator } from './InstanceCreator';
 
-export const TypeProxy: any = function ( this: any, __type__: any, Uranus: any ) {
+// tslint:disable-next-line: variable-name
+export const TypeProxy = function ( __type__: any, Uranus: any ) {
 	Object.assign( this, {
 		__type__,
 		Uranus
 	} );
 	const typeProxy = new Proxy( InstanceCreator, this );
 	return typeProxy;
-};
+} as ConstructorFunction<any>;
 
 TypeProxy.prototype.get = function ( target: any, prop: string ) {
 
@@ -51,7 +54,7 @@ TypeProxy.prototype.get = function ( target: any, prop: string ) {
 	}
 
 	// used for existent props with value
-	// undefined || null || false 
+	// undefined || null || false
 	if ( hop( type, prop ) ) {
 		return propDeclaration;
 	}
@@ -107,6 +110,7 @@ TypeProxy.prototype.apply = function ( __: any, Uranus: any, args: any[] ) {
 	return instance;
 };
 
+// tslint:disable-next-line: only-arrow-functions
 const makeSubTypeProxy = function ( subtype: any, inheritedInstance: any ) {
 
 	const subtypeProxy = new Proxy( InstanceCreator, {
@@ -219,7 +223,7 @@ const gaiaProxyHandlerGet = ( target: any, prop: string, receiver: any ) => {
 		},
 	} = instance;
 
-	let subtype = subtypes.has( prop ) ?
+	const subtype = subtypes.has( prop ) ?
 		subtypes.get( prop ) :
 		strictChain ?
 			undefined :

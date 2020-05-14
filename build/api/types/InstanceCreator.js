@@ -1,9 +1,8 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.InstanceCreator = exports.makeInstanceModificator = void 0;
-const odp = Object.defineProperty;
 const constants_1 = require('../../constants');
-const { SymbolReplaceGaia, SymbolConstructorName, } = constants_1.constants;
+const { odp, SymbolReplaceGaia, SymbolConstructorName, } = constants_1.constants;
 const errors_1 = require('../../descriptors/errors');
 const { WRONG_MODIFICATION_PATTERN, BASE_MNEMONICA_ERROR } = errors_1.ErrorsTypes;
 const utils_1 = require('./utils');
@@ -11,7 +10,7 @@ const { getModificationConstructor, getExistentAsyncStack, makeFakeModificatorTy
 const errors_2 = require('../errors');
 exports.makeInstanceModificator = (self) => {
     const { ModificationConstructor, existentInstance, ModificatorType, proto, } = self;
-    return ModificationConstructor.call(existentInstance, ModificatorType, Object.assign({}, proto), function (__proto_proto__) {
+    return ModificationConstructor.call(existentInstance, ModificatorType, Object.assign({}, proto), (__proto_proto__) => {
         self.__proto_proto__ = __proto_proto__;
         proceedProto.call(self);
     });
@@ -103,7 +102,7 @@ const addProps = function () {
         }
     });
     const timestamp = Date.now();
-    Object.defineProperty(proto, '__timestamp__', {
+    odp(proto, '__timestamp__', {
         get () {
             return timestamp;
         }
@@ -129,7 +128,9 @@ const undefineParentSubTypes = function () {
 const proceedProto = function () {
     const self = this;
     self.addProps();
-    self.config.strictChain && self.undefineParentSubTypes();
+    if (self.config.strictChain) {
+        self.undefineParentSubTypes();
+    }
 };
 const invokePreHooks = function () {
     const { type, existentInstance, args, InstanceModificator } = this;
@@ -251,6 +252,18 @@ const makeWaiter = function (type, then) {
     });
     return self.inheritedInstance;
 };
+const InstanceCreatorPrototype = {
+    getExistentAsyncStack,
+    postProcessing,
+    makeWaiter,
+    proceedProto,
+    addProps,
+    addThen,
+    undefineParentSubTypes,
+    invokePreHooks,
+    invokePostHooks,
+    throwModificationError
+};
 exports.InstanceCreator = function (type, existentInstance, args, chained) {
     const { constructHandler, proto, config, TypeName } = type;
     const { useOldStyle, blockErrors, submitStack } = config;
@@ -309,15 +322,4 @@ exports.InstanceCreator = function (type, existentInstance, args, chained) {
     self.postProcessing(type);
     return self.inheritedInstance;
 };
-Object.assign(exports.InstanceCreator.prototype, {
-    getExistentAsyncStack,
-    postProcessing,
-    makeWaiter,
-    proceedProto,
-    addProps,
-    addThen,
-    undefineParentSubTypes,
-    invokePreHooks,
-    invokePostHooks,
-    throwModificationError
-});
+Object.assign(exports.InstanceCreator.prototype, InstanceCreatorPrototype);

@@ -1,6 +1,7 @@
 'use strict';
 
-const odp = Object.defineProperty;
+import { constants } from '../../constants';
+const { odp } = constants;
 
 import { ErrorsTypes } from '../../descriptors/errors';
 const {
@@ -95,7 +96,7 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 
 	odp( exception, 'extract', {
 		get () {
-			return function () {
+			return () => {
 				return instance.extract();
 			};
 		}
@@ -103,7 +104,7 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 
 	odp( exception, 'parse', {
 		get () {
-			return function () {
+			return () => {
 				return parse( instance );
 			};
 		}
@@ -159,7 +160,7 @@ const prepareException = function ( this: any, target: any, error: Error, ...arg
 
 	const type = Object.create(__type__);
 	type.config.blockErrors = false;
-	
+
 	let errored = new InstanceCreator(type, error, args);
 	*/
 
@@ -168,7 +169,7 @@ const prepareException = function ( this: any, target: any, error: Error, ...arg
 	ExceptionCreator.config.blockErrors = false;
 
 	ExceptionCreator.existentInstance = error;
-	ExceptionCreator.ModificatorType = makeFakeModificatorType( TypeName, function ( this: any ) {
+	ExceptionCreator.ModificatorType = makeFakeModificatorType( TypeName, function (this:any) {
 		return exceptionConsctructHandler.call( this, {
 			instance,
 			TypeName,
@@ -178,7 +179,7 @@ const prepareException = function ( this: any, target: any, error: Error, ...arg
 	} );
 	ExceptionCreator.InstanceModificator = makeInstanceModificator( ExceptionCreator );
 
-	return new ExceptionCreator.InstanceModificator;
+	return new ExceptionCreator.InstanceModificator();
 };
 
 export default prepareException;

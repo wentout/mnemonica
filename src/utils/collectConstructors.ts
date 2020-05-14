@@ -1,16 +1,14 @@
 'use strict';
 
 import { constants } from '../constants';
-import { descriptors } from '../descriptors';
 
 const {
-	SymbolConstructorName,
 	MNEMOSYNE,
 	MNEMONICA,
 	GAIA,
 } = constants;
 
-const getAdditor = ( constructors: Array<string> | { [ index: string ]: boolean } ) => {
+const getAdditor = ( constructors: string[] | { [ index: string ]: boolean } ) => {
 	return Array.isArray( constructors ) ?
 		( name: string ) => {
 			constructors.push( name );
@@ -49,8 +47,7 @@ export const collectConstructors = ( self: object, asSequence = false ) => {
 		if ( constructorName === MNEMONICA ) {
 			if ( !mnemonicaReached ) {
 				addToSequence( constructorName );
-				const baseName: object = proto[ SymbolConstructorName ];
-				descriptors.namespaces.get( baseName ) && addToSequence( MNEMOSYNE );
+				addToSequence( MNEMOSYNE );
 				mnemonicaReached = true;
 			}
 		} else if ( constructorName === 'Object' ) {

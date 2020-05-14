@@ -1,9 +1,8 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.namespaces = void 0;
-const odp = Object.defineProperty;
 const constants_1 = require('../../constants');
-const { MNEMONICA, SymbolDefaultNamespace, SymbolConfig, } = constants_1.constants;
+const { odp, MNEMONICA, SymbolDefaultNamespace, SymbolConfig, } = constants_1.constants;
 const errors_1 = require('../../descriptors/errors');
 const { OPTIONS_ERROR, } = errors_1.ErrorsTypes;
 const hooksAPI = require('../../api/hooks');

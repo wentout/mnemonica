@@ -128,7 +128,7 @@ const gaiaProxyHandlerGet = (target, prop, receiver) => {
     }
     const instance = Reflect.getPrototypeOf(receiver);
     const { __type__: { config: { strictChain }, subtypes }, } = instance;
-    let subtype = subtypes.has(prop) ?
+    const subtype = subtypes.has(prop) ?
         subtypes.get(prop) :
         strictChain ?
             undefined :

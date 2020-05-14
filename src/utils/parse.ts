@@ -45,7 +45,8 @@ export const parse = ( self: any ): any => {
 	delete joint.constructor;
 
 
-	let parent, gaia;
+	let parent;
+	let gaia;
 	if ( hop( protoProto, SymbolGaia ) ) {
 		parent = protoProto;
 		gaia = self[ SymbolGaia ];

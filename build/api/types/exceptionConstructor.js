@@ -1,6 +1,7 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
-const odp = Object.defineProperty;
+const constants_1 = require('../../constants');
+const { odp } = constants_1.constants;
 const errors_1 = require('../../descriptors/errors');
 const { WRONG_ARGUMENTS_USED, WRONG_INSTANCE_INVOCATION } = errors_1.ErrorsTypes;
 const errors_2 = require('../errors');
@@ -52,14 +53,14 @@ const exceptionConsctructHandler = function (opts) {
     });
     odp(exception, 'extract', {
         get () {
-            return function () {
+            return () => {
                 return instance.extract();
             };
         }
     });
     odp(exception, 'parse', {
         get () {
-            return function () {
+            return () => {
                 return parse(instance);
             };
         }
@@ -98,6 +99,6 @@ const prepareException = function (target, error, ...args) {
         });
     });
     ExceptionCreator.InstanceModificator = InstanceCreator_1.makeInstanceModificator(ExceptionCreator);
-    return new ExceptionCreator.InstanceModificator;
+    return new ExceptionCreator.InstanceModificator();
 };
 exports.default = prepareException;

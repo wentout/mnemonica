@@ -3,6 +3,7 @@
 import { constants } from '../../constants';
 
 const {
+	odp,
 	SymbolConstructorName,
 	MNEMONICA,
 	ErrorMessages,
@@ -12,19 +13,21 @@ const {
 	BASE_ERROR_MESSAGE
 } = ErrorMessages;
 
-export const stackCleaners: Array<RegExp> = [];
+export const stackCleaners: RegExp[] = [];
 
-export const cleanupStack = ( stack: Array<string> ) => {
-	const cleaned: Array<string> = stack.reduce( ( arr: Array<string>, line: string ) => {
+export const cleanupStack = ( stack: string[] ) => {
+	const cleaned: string[] = stack.reduce( ( arr: string[], line: string ) => {
 		stackCleaners.forEach( cleanerRegExp => {
-			( !cleanerRegExp.test( line ) ) && arr.push( line );
+			if ( !cleanerRegExp.test( line ) ) {
+				arr.push( line );
+			}
 		} );
 		return arr;
 	}, [] );
 	return cleaned.length ? cleaned : stack;
 };
 
-export const getStack = function ( this: any, title: string, stackAddition: string[], tillFunction?: Function ) {
+export const getStack = function ( this: any, title: string, stackAddition: string[], tillFunction?: CallableFunction ) {
 
 	if ( Error.captureStackTrace ) {
 		Error.captureStackTrace( this, tillFunction || getStack );
@@ -36,20 +39,23 @@ export const getStack = function ( this: any, title: string, stackAddition: stri
 	this.stack = cleanupStack( this.stack );
 
 	this.stack.unshift( title );
-	stackAddition && this.stack.push( ...stackAddition );
+	if ( Array.isArray(stackAddition) && stackAddition.length ) {
+		this.stack.push( ...stackAddition );
+	}
 	this.stack.push( '\n' );
 
 	return this.stack;
 
 };
 
+// tslint:disable-next-line: class-name
 export class BASE_MNEMONICA_ERROR extends Error {
 
-	constructor ( message = BASE_ERROR_MESSAGE, additionalStack: Array<string> ) {
+	constructor ( message = BASE_ERROR_MESSAGE, additionalStack: string[] ) {
 
 		super( message );
 		const BaseStack: any = this.stack;
-		Object.defineProperty( this, 'BaseStack', {
+		odp( this, 'BaseStack', {
 			get () {
 				return BaseStack;
 			}

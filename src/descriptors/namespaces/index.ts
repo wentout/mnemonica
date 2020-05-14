@@ -3,10 +3,11 @@
 // 1. init default namespace
 // 2. create default namespace in types
 
-const odp = Object.defineProperty;
+import { ConstructorFunction } from '../../types';
 
 import { constants } from '../../constants';
 const {
+	odp,
 	MNEMONICA,
 	SymbolDefaultNamespace,
 	SymbolConfig,
@@ -38,7 +39,7 @@ const defaultOptions = {
 	// should we use forced errors checking
 	// to make all inherited types errored
 	// if there is an error somewhere in chain
-	// disallow instance construction 
+	// disallow instance construction
 	// if there is an error in prototype chain
 	blockErrors: true,
 
@@ -56,7 +57,7 @@ const defaultOptions = {
 // inter-mediator
 const namespaceStorage = new Map();
 
-const Namespace: any = function ( this: any, name: string | symbol, config: object ) {
+const Namespace = function ( name: string | symbol, config: object ) {
 
 	if ( typeof config === 'string' ) {
 		config = {
@@ -101,7 +102,7 @@ const Namespace: any = function ( this: any, name: string | symbol, config: obje
 
 	namespaceStorage.set( name, this );
 
-};
+} as ConstructorFunction<{}>;
 
 Namespace.prototype = {
 	createTypesCollection ( association: any, config: object ) {

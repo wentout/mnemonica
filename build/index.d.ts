@@ -1,10 +1,15 @@
+import { ConstructorFunction } from './types';
+export { ConstructorFunction } from './types';
 export declare const defaultTypes: any;
-declare function definer(this: object, TypeModificatorClass: Function, config: object): any;
-declare function definer(this: object, TypeModificatorFunction: Function, proto: object, config: object): any;
-declare function definer(this: object, TypeName: string, TypeModificatortHandler: Function, proto: object, config: object): any;
-declare function lookuper(this: typeof defaultTypes, TypeNestedPath: string): any;
-export declare const define: typeof definer;
-export declare const lookup: typeof lookuper;
+interface SubType<T extends object> extends ConstructorFunction<T> {
+    new (...args: any[]): T;
+    (this: T, ...args: any[]): ConstructorFunction<T>;
+    prototype: T;
+    define: typeof define;
+    lookup: typeof lookup;
+}
+export declare const define: <T extends object, S extends ConstructorFunction<T>>(this: any, TypeName: string, constructHandler: S, proto?: object | undefined, config?: object | undefined) => SubType<InstanceType<S>>;
+export declare const lookup: (this: typeof defaultTypes, TypeNestedPath: string) => any;
 export declare const mnemonica: {
     [index: string]: any;
 };

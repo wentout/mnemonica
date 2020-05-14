@@ -1,9 +1,9 @@
 'use strict';
 
-const odp = Object.defineProperty;
-
+import { ConstructorFunction } from '../../types';
 import { constants } from '../../constants';
 const {
+	odp,
 	SymbolReplaceGaia,
 	SymbolConstructorName,
 } = constants;
@@ -36,7 +36,8 @@ export const makeInstanceModificator = ( self: any ) => {
 		existentInstance,
 		ModificatorType,
 		Object.assign( {}, proto ),
-		function ( __proto_proto__: any ) {
+		// tslint:disable-next-line: variable-name
+		( __proto_proto__: any ) => {
 			self.__proto_proto__ = __proto_proto__;
 			proceedProto.call( self );
 		}
@@ -192,7 +193,7 @@ const addProps = function ( this: any ) {
 	} );
 
 	const timestamp = Date.now();
-	Object.defineProperty( proto, '__timestamp__', {
+	odp( proto, '__timestamp__', {
 		get () {
 			return timestamp;
 		}
@@ -236,7 +237,9 @@ const proceedProto = function ( this: any ) {
 
 	const self = this;
 	self.addProps();
-	self.config.strictChain && self.undefineParentSubTypes();
+	if ( self.config.strictChain ) {
+		self.undefineParentSubTypes();
+	}
 
 };
 
@@ -436,8 +439,20 @@ const makeWaiter = function ( this: any, type: any, then: any ) {
 
 };
 
+const InstanceCreatorPrototype = {
+	getExistentAsyncStack,
+	postProcessing,
+	makeWaiter,
+	proceedProto,
+	addProps,
+	addThen,
+	undefineParentSubTypes,
+	invokePreHooks,
+	invokePostHooks,
+	throwModificationError
+};
 
-export const InstanceCreator: any = function ( this: any, type: any, existentInstance: any, args: any[], chained: boolean ) {
+export const InstanceCreator = function ( this: any, type: any, existentInstance: any, args: any[], chained: boolean ) {
 
 	const {
 		constructHandler,
@@ -541,17 +556,6 @@ export const InstanceCreator: any = function ( this: any, type: any, existentIns
 
 	return self.inheritedInstance;
 
-};
+} as ConstructorFunction<typeof InstanceCreatorPrototype>;
 
-Object.assign( InstanceCreator.prototype, {
-	getExistentAsyncStack,
-	postProcessing,
-	makeWaiter,
-	proceedProto,
-	addProps,
-	addThen,
-	undefineParentSubTypes,
-	invokePreHooks,
-	invokePostHooks,
-	throwModificationError
-} );
+Object.assign( InstanceCreator.prototype, InstanceCreatorPrototype );

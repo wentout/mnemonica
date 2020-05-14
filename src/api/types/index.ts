@@ -1,12 +1,12 @@
 'use strict';
 
+import { ConstructorFunction } from '../../types';
 
-const odp = Object.defineProperty;
 import { hop } from '../../utils/hop';
 
 import { constants } from '../../constants';
 const {
-
+	odp,
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
 	SymbolConfig,
@@ -44,12 +44,18 @@ const {
 
 import { getStack } from '../errors';
 
-const TypeDescriptor: any = function (
+type TypeDescriptorInstance = {
+	define: CallableFunction;
+	lookup: CallableFunction;
+	subtypes: object;
+};
+
+const TypeDescriptor = function (
 	this: any,
-	defineOrigin: Function,
+	defineOrigin: CallableFunction,
 	types: any,
 	TypeName: string,
-	constructHandler: Function,
+	constructHandler: CallableFunction,
 	proto: { [ index: string ]: any },
 	config: { [ index: string ]: any },
 ) {
@@ -112,7 +118,7 @@ const TypeDescriptor: any = function (
 
 	return types.get( TypeName );
 
-};
+} as ConstructorFunction<TypeDescriptorInstance>;
 
 Object.assign( TypeDescriptor.prototype, hooksApi );
 
@@ -130,7 +136,7 @@ odp( TypeDescriptor.prototype, Symbol.hasInstance, {
 	}
 } );
 
-const defineFromType = function ( this: any, subtypes: any, constructHandlerGetter: Function, config: any ) {
+const defineFromType = function ( this: any, subtypes: any, constructHandlerGetter: CallableFunction, config: any ) {
 	// we need this to extract TypeName
 	const type = constructHandlerGetter();
 
@@ -146,7 +152,7 @@ const defineFromType = function ( this: any, subtypes: any, constructHandlerGett
 
 	const asClass = isClass( type );
 
-	const makeConstructHandler = function () {
+	const makeConstructHandler = () => {
 		const constructHandler = constructHandlerGetter();
 		// constructHandler[SymbolConstructorName] = TypeName;
 		odp( constructHandler, SymbolConstructorName, {
@@ -185,7 +191,8 @@ const defineFromFunction = function (
 	this: any,
 	subtypes: any,
 	TypeName: string,
-	constructHandler = function () { },
+	// tslint:disable-next-line: only-arrow-functions no-empty
+	constructHandler = function () {},
 	proto: any,
 	config: any = {}
 ) {
@@ -293,7 +300,7 @@ export const lookup: any = function ( this: any, TypeNestedPath: string ) {
 
 	const [ name ] = split;
 	const type = this.get( name );
-	if ( split.length == 1 ) {
+	if ( split.length === 1 ) {
 		return type;
 	}
 

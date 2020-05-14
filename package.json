@@ -37,7 +37,8 @@
     "debug": "npx tsc --pretty --sourceMap && npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
     "report-coverage": "cat coverage/lcov.info | coveralls",
     "example": "npm run build && node ./test/example.js",
-    "lint": "npx eslint --fix --ignore-path .gitignore ./build"
+    "lint": "npx eslint --fix --ignore-path .gitignore ./build",
+    "tslint": "npx tslint --fix --ignore-path .gitignore ./src"
   },
   "repository": {
     "type": "git",

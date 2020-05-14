@@ -1,5 +1,6 @@
+import { TypeModificator } from '../../types';
 declare const TypesUtils: {
-    isClass: (functionPointer: Function) => boolean;
+    isClass: (functionPointer: CallableFunction) => boolean;
     CreationHandler: (this: any, constructionAnswer: any) => any;
     getModificationConstructor: (useOldStyle: boolean) => (this: any, ModificatorType: Function, ModificatorTypePrototype: {
         [index: string]: any;
@@ -10,6 +11,6 @@ declare const TypesUtils: {
     getExistentAsyncStack: (existentInstance: any) => any[];
     checkTypeName: (name: string) => void;
     findParentSubType: any;
-    makeFakeModificatorType: (TypeName: string, fakeModificator?: () => void) => any;
+    makeFakeModificatorType: (TypeName: string, fakeModificator?: TypeModificator<{}>) => any;
 };
 export default TypesUtils;

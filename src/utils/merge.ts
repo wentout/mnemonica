@@ -5,23 +5,23 @@ const {
 	WRONG_ARGUMENTS_USED
 } = ErrorsTypes;
 
-export const merge = (a:any, b:any, ...args:any[]) => {
-	
+export const merge = ( a: any, b: any, ...args: any[] ) => {
+
 	// at this situation this check is enough
-	if (a !== Object(a)) {
-		throw new WRONG_ARGUMENTS_USED('A should be an object');
-	}
-	
-	// at this situation this check is enough
-	if (b !== Object(b)) {
-		throw new WRONG_ARGUMENTS_USED('B should be an object');
+	if ( a !== Object( a ) ) {
+		throw new WRONG_ARGUMENTS_USED( 'A should be an object' );
 	}
 
-	if (typeof a.fork !== 'function') {
-		throw new WRONG_ARGUMENTS_USED('A should have A.fork()');
+	// at this situation this check is enough
+	if ( b !== Object( b ) ) {
+		throw new WRONG_ARGUMENTS_USED( 'B should be an object' );
 	}
-	
-	const aa = a.fork.call(b, ...args);
+
+	if ( typeof a.fork !== 'function' ) {
+		throw new WRONG_ARGUMENTS_USED( 'A should have A.fork()' );
+	}
+
+	const aa = a.fork.call( b, ...args );
 	return aa;
 
 };

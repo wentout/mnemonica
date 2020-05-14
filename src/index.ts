@@ -1,7 +1,10 @@
 'use strict';
 
+import { ConstructorFunction } from './types';
+export { ConstructorFunction } from './types';
 
 import { constants } from './constants';
+const { odp } = constants;
 
 import * as errorsApi from './api/errors';
 import { descriptors } from './descriptors';
@@ -10,7 +13,7 @@ export const {
 	defaultTypes,
 } = descriptors;
 
-const checkThis = function ( pointer: any ): boolean {
+function checkThis ( pointer: any ): boolean {
 	if (
 		pointer === mnemonica ||
 		pointer === exports
@@ -20,22 +23,42 @@ const checkThis = function ( pointer: any ): boolean {
 	return false;
 };
 
-// define: any = function ( subtypes: any, TypeOrTypeName: string | any, constructHandlerOrConfig: any, proto: object, config: object ) {
-function definer ( this: object, TypeModificatorClass: Function, config: object ): any;
-function definer ( this: object, TypeModificatorFunction: Function, proto: object, config: object ): any;
-function definer ( this: object, TypeName: string, TypeModificatortHandler: Function, proto: object, config: object ): any;
-function definer ( this: object, TypeOrTypeName: string | Function, constructHandlerOrConfig: object | Function, proto?: object, config?: object ): any {
+// interface ConstructorFactory<T extends object> {
+// 	// tslint:disable-next-line: callable-types
+// 	( ...args: any[] ): ConstructorFunction<T>
+// }
+// function definer<T extends object> (
+// 	this: any,
+// 	TypeOrTypeName: ConstructorFactory<T>,
+// 	constructHandlerOrConfig?: object,
+// 	proto?: object,
+// 	config?: object
+// ): ConstructorFunction<T> {
+
+interface SubType<T extends object> extends ConstructorFunction<T> {
+	new( ...args: any[] ): T;
+	( this: T, ...args: any[] ): ConstructorFunction<T>;
+	prototype: T;
+	define: typeof define,
+	lookup: typeof lookup,
+}
+
+export const define = function <T extends object, S extends ConstructorFunction<T>> (
+	this: any,
+	TypeName: string,
+	constructHandler: S,
+	proto?: object,
+	config?: object
+): SubType<InstanceType<S>> {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
-	return types.define( TypeOrTypeName, constructHandlerOrConfig, proto, config );
+	return types.define( TypeName, constructHandler, proto, config );
 };
 
-function lookuper ( this: typeof defaultTypes, TypeNestedPath: string ) {
+export const lookup = function ( this: typeof defaultTypes, TypeNestedPath: string ) {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
 	return types.lookup( TypeNestedPath );
 };
 
-export const define = definer;
-export const lookup = lookuper;
 
 export const mnemonica = Object.entries( {
 
@@ -49,7 +72,7 @@ export const mnemonica = Object.entries( {
 
 } ).reduce( ( acc: { [ index: string ]: any }, entry: any ) => {
 	const [ name, code ] = entry;
-	Object.defineProperty( acc, name, {
+	odp( acc, name, {
 		get () {
 			return code;
 		},

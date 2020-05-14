@@ -24,7 +24,8 @@ exports.parse = (self) => {
     delete props.constructor;
     const joint = extract_1.extract(Object.assign({}, proto));
     delete joint.constructor;
-    let parent, gaia;
+    let parent;
+    let gaia;
     if (hop_1.hop(protoProto, SymbolGaia)) {
         parent = protoProto;
         gaia = self[SymbolGaia];

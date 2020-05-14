@@ -2,13 +2,15 @@
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.constructError = exports.BASE_MNEMONICA_ERROR = exports.getStack = exports.cleanupStack = exports.stackCleaners = void 0;
 const constants_1 = require('../../constants');
-const { SymbolConstructorName, MNEMONICA, ErrorMessages, } = constants_1.constants;
+const { odp, SymbolConstructorName, MNEMONICA, ErrorMessages, } = constants_1.constants;
 const { BASE_ERROR_MESSAGE } = ErrorMessages;
 exports.stackCleaners = [];
 exports.cleanupStack = (stack) => {
     const cleaned = stack.reduce((arr, line) => {
         exports.stackCleaners.forEach(cleanerRegExp => {
-            (!cleanerRegExp.test(line)) && arr.push(line);
+            if (!cleanerRegExp.test(line)) {
+                arr.push(line);
+            }
         });
         return arr;
     }, []);
@@ -24,7 +26,9 @@ exports.getStack = function (title, stackAddition, tillFunction) {
     this.stack = this.stack.split('\n').slice(1);
     this.stack = exports.cleanupStack(this.stack);
     this.stack.unshift(title);
-    stackAddition && this.stack.push(...stackAddition);
+    if (Array.isArray(stackAddition) && stackAddition.length) {
+        this.stack.push(...stackAddition);
+    }
     this.stack.push('\n');
     return this.stack;
 };
@@ -32,7 +36,7 @@ class BASE_MNEMONICA_ERROR extends Error {
     constructor (message = BASE_ERROR_MESSAGE, additionalStack) {
         super(message);
         const BaseStack = this.stack;
-        Object.defineProperty(this, 'BaseStack', {
+        odp(this, 'BaseStack', {
             get () {
                 return BaseStack;
             }

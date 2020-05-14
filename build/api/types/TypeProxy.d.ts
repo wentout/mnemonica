@@ -1,1 +1,2 @@
-export declare const TypeProxy: any;
+import { ConstructorFunction } from '../../types';
+export declare const TypeProxy: ConstructorFunction<any>;

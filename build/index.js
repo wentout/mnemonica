@@ -2,32 +2,30 @@
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.errors = exports.defaultCollection = exports.createTypesCollection = exports.defaultNamespace = exports.namespaces = exports.createNamespace = exports.ErrorMessages = exports.TYPE_TITLE_PREFIX = exports.URANUS = exports.GAIA = exports.MNEMOSYNE = exports.MNEMONICA = exports.SymbolConfig = exports.SymbolDefaultTypesCollection = exports.SymbolDefaultNamespace = exports.SymbolReplaceGaia = exports.SymbolGaia = exports.SymbolConstructorName = exports.SymbolSubtypeCollection = exports.mnemonica = exports.lookup = exports.define = exports.defaultTypes = void 0;
 const constants_1 = require('./constants');
+const { odp } = constants_1.constants;
 const errorsApi = require('./api/errors');
 const descriptors_1 = require('./descriptors');
 exports.defaultTypes = descriptors_1.descriptors.defaultTypes;
-const checkThis = function (pointer) {
+function checkThis (pointer) {
     if (pointer === exports.mnemonica ||
         pointer === exports) {
         return true;
     }
     return false;
-};
-function definer (TypeOrTypeName, constructHandlerOrConfig, proto, config) {
-    const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
-    return types.define(TypeOrTypeName, constructHandlerOrConfig, proto, config);
 }
 
-function lookuper (TypeNestedPath) {
+exports.define = function (TypeName, constructHandler, proto, config) {
+    const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
+    return types.define(TypeName, constructHandler, proto, config);
+};
+exports.lookup = function (TypeNestedPath) {
     const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
     return types.lookup(TypeNestedPath);
-}
-
-exports.define = definer;
-exports.lookup = lookuper;
+};
 exports.mnemonica = Object.entries(Object.assign(Object.assign(Object.assign({ define : exports.define,
     lookup : exports.lookup }, descriptors_1.descriptors), errorsApi), constants_1.constants)).reduce((acc, entry) => {
     const [name, code] = entry;
-    Object.defineProperty(acc, name, {
+    odp(acc, name, {
         get () {
             return code;
         },

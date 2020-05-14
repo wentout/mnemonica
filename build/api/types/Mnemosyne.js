@@ -1,8 +1,7 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
-const odp = Object.defineProperty;
 const constants_1 = require('../../constants');
-const { SymbolConstructorName, SymbolGaia, SymbolReplaceGaia, MNEMONICA, GAIA, URANUS } = constants_1.constants;
+const { odp, SymbolConstructorName, SymbolGaia, SymbolReplaceGaia, MNEMONICA, GAIA, URANUS } = constants_1.constants;
 const utils_1 = require('./utils');
 const { getTypeChecker, } = utils_1.default;
 const extract_1 = require('../../utils/extract');
@@ -45,7 +44,7 @@ const MnemonicaProtoProps = {
         const { __type__: type, __collection__: collection, __parent__: existentInstance, __args__, __self__ } = this;
         const { isSubType, TypeName } = type;
         return function (...forkArgs) {
-            var forked;
+            let forked;
             const Constructor = isSubType ?
                 existentInstance :
                 collection;
@@ -96,7 +95,8 @@ const Mnemosyne = function (namespace, gaia) {
     Object.getOwnPropertySymbols(MnemonicaProtoProps).forEach((symbol) => {
         odp(Mnemonica.prototype, symbol, {
             get () {
-                return MnemonicaProtoProps[symbol].call(this);
+                const symbolMethod = Reflect.get(MnemonicaProtoProps, symbol);
+                return symbolMethod.call(this);
             }
         });
     });

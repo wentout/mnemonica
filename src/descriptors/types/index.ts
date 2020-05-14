@@ -3,12 +3,13 @@
 // 1. init default namespace
 // 2. create default namespace in types
 
-const odp = Object.defineProperty;
+import { hop } from '../../utils/hop';
 
-const hop = ( o: object, p: string ): boolean => Object.prototype.hasOwnProperty.call( o, p );
+import { ConstructorFunction } from '../../types';
 
 import { constants } from '../../constants';
 const {
+	odp,
 	SymbolConstructorName,
 	SymbolDefaultNamespace,
 	SymbolDefaultTypesCollection,
@@ -41,7 +42,7 @@ const proto = {
 	...hooksAPI
 };
 
-const TypesCollection: any = function ( this: any, namespace: any, config: { [ index: string ]: any } ) {
+const TypesCollection = function ( namespace: any, config: { [ index: string ]: any } ) {
 
 	const self = this;
 
@@ -112,7 +113,7 @@ const TypesCollection: any = function ( this: any, namespace: any, config: { [ i
 		}
 	} );
 
-};
+} as ConstructorFunction<{}>;
 
 
 odp( TypesCollection.prototype, MNEMONICA, {
@@ -148,7 +149,7 @@ odp( TypesCollection.prototype, 'lookup', {
 odp( TypesCollection.prototype, 'registerHook', {
 	get () {
 		const proxy = this.namespace.typesCollections.get( this );
-		return function ( this: any, hookName: string, hookCallback: Function ) {
+		return function ( this: any, hookName: string, hookCallback: CallableFunction ) {
 			return proto.registerHook.call( this, hookName, hookCallback );
 		}.bind( proxy );
 	},
@@ -158,7 +159,7 @@ odp( TypesCollection.prototype, 'registerHook', {
 odp( TypesCollection.prototype, 'invokeHook', {
 	get () {
 		const proxy = this.namespace.typesCollections.get( this );
-		return function ( this: any, hookName: string, hookCallback: Function ) {
+		return function ( this: any, hookName: string, hookCallback: CallableFunction ) {
 			return proto.invokeHook.call( this, hookName, hookCallback );
 		}.bind( proxy );
 	}
@@ -167,7 +168,7 @@ odp( TypesCollection.prototype, 'invokeHook', {
 odp( TypesCollection.prototype, 'registerFlowChecker', {
 	get () {
 		const proxy = this.namespace.typesCollections.get( this );
-		return function ( this: any, flowCheckerCallback: Function ) {
+		return function ( this: any, flowCheckerCallback: CallableFunction ) {
 			return proto.registerFlowChecker.call( this, flowCheckerCallback );
 		}.bind( proxy );
 	}
@@ -236,6 +237,7 @@ odp( DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 
 export const types = {
 	get createTypesCollection () {
+		// tslint:disable-next-line: only-arrow-functions
 		return function ( namespace: any, association: any, config = {} ) {
 			return createTypesCollection( namespace, association, config );
 		};

@@ -2,8 +2,7 @@
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.collectConstructors = void 0;
 const constants_1 = require('../constants');
-const descriptors_1 = require('../descriptors');
-const { SymbolConstructorName, MNEMOSYNE, MNEMONICA, GAIA, } = constants_1.constants;
+const { MNEMOSYNE, MNEMONICA, GAIA, } = constants_1.constants;
 const getAdditor = (constructors) => {
     return Array.isArray(constructors) ?
         (name) => {
@@ -38,8 +37,7 @@ exports.collectConstructors = (self, asSequence = false) => {
         if (constructorName === MNEMONICA) {
             if (!mnemonicaReached) {
                 addToSequence(constructorName);
-                const baseName = proto[SymbolConstructorName];
-                descriptors_1.descriptors.namespaces.get(baseName) && addToSequence(MNEMOSYNE);
+                addToSequence(MNEMOSYNE);
                 mnemonicaReached = true;
             }
         }

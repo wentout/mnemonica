@@ -19,7 +19,7 @@
 		"sourceMap": false,
 		"outDir": "build",
 		"traceResolution": false,
-		"isolatedModules": true,
+		"isolatedModules": false,
 		"removeComments": true,
 		"forceConsistentCasingInFileNames": true,
 		"types": ["node"]
