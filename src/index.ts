@@ -24,7 +24,6 @@ const checkThis = function ( pointer: any ): boolean {
 function definer ( this: object, TypeModificatorClass: Function, config: object ): any;
 function definer ( this: object, TypeModificatorFunction: Function, proto: object, config: object ): any;
 function definer ( this: object, TypeName: string, TypeModificatortHandler: Function, proto: object, config: object ): any;
-function definer ( this: object, TypeName: string, TypeModificatortHandler: Function, proto: object, config: object ): any;
 function definer ( this: object, TypeOrTypeName: string | Function, constructHandlerOrConfig: object | Function, proto?: object, config?: object ): any {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
 	return types.define( TypeOrTypeName, constructHandlerOrConfig, proto, config );

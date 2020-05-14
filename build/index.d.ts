@@ -2,7 +2,6 @@ export declare const defaultTypes: any;
 declare function definer(this: object, TypeModificatorClass: Function, config: object): any;
 declare function definer(this: object, TypeModificatorFunction: Function, proto: object, config: object): any;
 declare function definer(this: object, TypeName: string, TypeModificatortHandler: Function, proto: object, config: object): any;
-declare function definer(this: object, TypeName: string, TypeModificatortHandler: Function, proto: object, config: object): any;
 declare function lookuper(this: typeof defaultTypes, TypeNestedPath: string): any;
 export declare const define: typeof definer;
 export declare const lookup: typeof lookuper;

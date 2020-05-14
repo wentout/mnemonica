@@ -41,7 +41,6 @@ const proto = {
 	...hooksAPI
 };
 
-
 const TypesCollection: any = function ( this: any, namespace: any, config: { [ index: string ]: any } ) {
 
 	const self = this;
@@ -228,7 +227,7 @@ const createTypesCollection = ( namespace = defaultNamespace, association: any, 
 
 };
 
-const DEFAULT_TYPES:object = createTypesCollection( defaultNamespace, SymbolDefaultTypesCollection );
+const DEFAULT_TYPES = createTypesCollection( defaultNamespace, SymbolDefaultTypesCollection );
 odp( DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 	get () {
 		return true;
@@ -241,8 +240,8 @@ export const types = {
 			return createTypesCollection( namespace, association, config );
 		};
 	},
-	get defaultTypes ():typeof DEFAULT_TYPES {
+	get defaultTypes () {
 		return DEFAULT_TYPES;
 	}
-	
+
 };
