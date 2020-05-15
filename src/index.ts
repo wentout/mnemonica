@@ -33,7 +33,7 @@ function checkThis ( pointer: any ): boolean {
 // 	config?: object
 // ): ConstructorFunction<T> {
 
-interface SubType<T extends object> {
+interface SubType<T> {
 	new( ...args: any[] ): T;
 	( this: T, ...args: any[] ): T;
 	prototype: ThisType<T>;
@@ -42,10 +42,11 @@ interface SubType<T extends object> {
 }
 
 export const define = function <
-	T,
-	Z extends Extract<T, M>,
-	S extends ConstructorFunction<Z>,
-	M extends SubType<InstanceType<S>>,
+	T extends ThisType<S>,
+	// Z extends Extract<M, keyof M>,
+	S extends ConstructorFunction<T>,
+	I extends InstanceType<S>,
+	M extends SubType<I>,
 > (
 	this: any,
 	TypeName: string,

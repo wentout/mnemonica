@@ -7,10 +7,12 @@ type SomeTypeInstance = {
 	SomeSubType: ConstructorFunction<SubTypeInstance>
 }
 type SubTypeInstance = {
+	one: undefined;
 	two?: string;
 	FinalType: ConstructorFunction<FinalInstance>
 }
 type FinalInstance = {
+	one: undefined;
 	three?: string;
 }
 
@@ -20,6 +22,7 @@ const SomeType = define( 'SomeType', function () {
 } as ConstructorFunction<SomeTypeInstance> );
 
 const SomeSubType = SomeType.define( 'SomeSubType', function () {
+	// this.one = undefined;
 	this.two = 'SomeSubType';
 	// this.q = 123;
 } as ConstructorFunction<SubTypeInstance> );
@@ -30,11 +33,12 @@ SomeSubType.define( 'FinalType', function () {
 } as ConstructorFunction<FinalInstance> );
 
 const first = new SomeType();
+const x = first.one;
 first.one = 'one';
 // first.x = 543;
 
 const second = new first.SomeSubType();
-// second.one = 'one must';
+const y = second.one;
 second.two = 'two';
 // second.y = 'no way';
 
@@ -43,9 +47,10 @@ const final = new second.FinalType();
 // final.two = 'must two';
 final.three = 'three';
 // final.z = 'no way';
+const z = final.one;
 
 // tslint:disable-next-line: no-console
-console.log( first, second, final );
+console.log( first, second, final, { x, y, z } );
 
 
 
