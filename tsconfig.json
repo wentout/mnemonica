@@ -25,7 +25,7 @@
 		"types": ["node"]
 	},
 	"include": [
-		"./src/**/*"
+		"./src/**/*.ts"
 	],
 	"exclude": [
 		"./build/**/*",

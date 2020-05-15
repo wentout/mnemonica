@@ -1,14 +1,14 @@
-import { ConstructorFunction } from './types';
 export { ConstructorFunction } from './types';
+import { ConstructorFunction } from './types';
 export declare const defaultTypes: any;
-interface SubType<T extends object> extends ConstructorFunction<T> {
+interface SubType<T extends object> {
     new (...args: any[]): T;
-    (this: T, ...args: any[]): ConstructorFunction<T>;
-    prototype: T;
+    (this: T, ...args: any[]): T;
+    prototype: ThisType<T>;
     define: typeof define;
     lookup: typeof lookup;
 }
-export declare const define: <T extends object, S extends ConstructorFunction<T>>(this: any, TypeName: string, constructHandler: S, proto?: object | undefined, config?: object | undefined) => SubType<InstanceType<S>>;
+export declare const define: <T, Z extends Extract<T, M>, S extends ConstructorFunction<Z>, M extends SubType<InstanceType<S>>>(this: any, TypeName: string, constructHandler: S, proto?: object | undefined, config?: object | undefined) => M;
 export declare const lookup: (this: typeof defaultTypes, TypeNestedPath: string) => any;
 export declare const mnemonica: {
     [index: string]: any;

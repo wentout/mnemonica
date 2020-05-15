@@ -1,8 +1,6 @@
 'use strict';
-
-import { ConstructorFunction } from './types';
 export { ConstructorFunction } from './types';
-
+import { ConstructorFunction } from './types';
 import { constants } from './constants';
 const { odp } = constants;
 
@@ -35,21 +33,26 @@ function checkThis ( pointer: any ): boolean {
 // 	config?: object
 // ): ConstructorFunction<T> {
 
-interface SubType<T extends object> extends ConstructorFunction<T> {
+interface SubType<T extends object> {
 	new( ...args: any[] ): T;
-	( this: T, ...args: any[] ): ConstructorFunction<T>;
-	prototype: T;
+	( this: T, ...args: any[] ): T;
+	prototype: ThisType<T>;
 	define: typeof define,
 	lookup: typeof lookup,
 }
 
-export const define = function <T extends object, S extends ConstructorFunction<T>> (
+export const define = function <
+	T,
+	Z extends Extract<T, M>,
+	S extends ConstructorFunction<Z>,
+	M extends SubType<InstanceType<S>>,
+> (
 	this: any,
 	TypeName: string,
 	constructHandler: S,
 	proto?: object,
 	config?: object
-): SubType<InstanceType<S>> {
+): M {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
 	return types.define( TypeName, constructHandler, proto, config );
 };
