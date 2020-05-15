@@ -33,7 +33,7 @@
     "watch": "npx tsc --pretty -w",
     "test": "npm run build && mocha --allow-uncaught test/index.js",
     "test:cov:dev": "npm run build && nyc --reporter=text mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
-    "test:cov": "npm run build && nyc --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
+    "test:cov": "npm run build &&  nyc --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
     "test:mjs": "npm run build && node --experimental-modules ./test/test.mjs",
     "debug": "npx tsc --pretty --sourceMap && npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
     "report-coverage": "cat coverage/lcov.info | coveralls",
