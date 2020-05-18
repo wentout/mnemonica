@@ -16,7 +16,8 @@ function checkThis (pointer) {
 
 exports.define = function (TypeName, constructHandler, proto, config) {
     const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
-    return types.define(TypeName, constructHandler, proto, config);
+    const type = types.define(TypeName, constructHandler, proto, config);
+    return type;
 };
 exports.lookup = function (TypeNestedPath) {
     const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;

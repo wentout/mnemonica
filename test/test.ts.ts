@@ -1,67 +1,59 @@
+// @ts-nocheck
 'use strict';
 
-import { define, ConstructorFunction } from '..';
+import { define, IDEF } from '..';
+
+type TypeDef<T> = new(...args: any[]) => T
 
 type SomeTypeInstance = {
 	one?: string;
-	SomeSubType: ConstructorFunction<SubTypeInstance>
+	SomeSubType: IDEF<SubTypeInstance>
 }
-type SubTypeInstance = {
-	one: undefined;
+
+interface SubTypeInstance extends SomeTypeInstance {
+	// one: undefined;
 	two?: string;
-	FinalType: ConstructorFunction<FinalInstance>
+	FinalType: IDEF<FinalInstance>
 }
-type FinalInstance = {
-	one: undefined;
+interface FinalInstance extends SubTypeInstance {
+	// one: undefined;
 	three?: string;
 }
 
 const SomeType = define( 'SomeType', function () {
 	this.one = 'SomeType';
-	// this.q = 123;
-} as ConstructorFunction<SomeTypeInstance> );
+	this.q = 123;
+} as IDEF<SomeTypeInstance>);
 
 const SomeSubType = SomeType.define( 'SomeSubType', function () {
-	// this.one = undefined;
+	this.one = undefined;
 	this.two = 'SomeSubType';
-	// this.q = 123;
-} as ConstructorFunction<SubTypeInstance> );
+	this.q = 123;
+} as IDEF<SubTypeInstance> );
 
 SomeSubType.define( 'FinalType', function () {
+	this.one = 'final one';
 	this.three = 'FinalType';
-	// this.q = 123;
-} as ConstructorFunction<FinalInstance> );
+	this.q = 123;
+} as IDEF<FinalInstance> );
 
 const first = new SomeType();
 const x = first.one;
 first.one = 'one';
-// first.x = 543;
+first.x = 543;
 
 const second = new first.SomeSubType();
 const y = second.one;
 second.two = 'two';
-// second.y = 'no way';
+second.y = 'no way';
 
 const final = new second.FinalType();
-// final.one = 'must one';
-// final.two = 'must two';
+final.one = 'must one';
+final.two = 'must two';
 final.three = 'three';
-// final.z = 'no way';
-const z = final.one;
+final.z = 'no way';
+// const z = final.one;
 
-// tslint:disable-next-line: no-console
-console.log( first, second, final, { x, y, z } );
+// // tslint:disable-next-line: no-console
+// console.log( first, second, final, { x, y, z } );
 
-
-
-
-// TODO: interface description
-// export const SomeType2 = define( function () {
-// 	// tslint:disable-next-line: only-arrow-functions no-empty
-// 	return function () {
-// 		this.z = 321;
-// 	}
-// } as ConstructorFactory<SomeTypeInstance> );
-// export const test2 = new SomeType2();
-// test2.z = '543';
-// test2.s = 543;

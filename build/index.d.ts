@@ -1,14 +1,20 @@
-export { ConstructorFunction } from './types';
-import { ConstructorFunction } from './types';
 export declare const defaultTypes: any;
-interface SubType<T> {
+interface Constructible<T> {
     new (...args: any[]): T;
-    (this: T, ...args: any[]): T;
     prototype: ThisType<T>;
+}
+export interface IDEF<T extends Constructible<T>> {
+    new (...args: any[]): InstanceType<Constructible<T>>;
+    (this: T, ...args: any[]): T;
+}
+interface SubType<T> {
+    new (...args: any[]): InstanceType<Constructible<T>>;
+    (this: T, ...args: any[]): T;
     define: typeof define;
     lookup: typeof lookup;
+    registerHook: (type: string, hook: CallableFunction) => any;
 }
-export declare const define: <T extends ThisType<S>, S extends ConstructorFunction<T>, I extends InstanceType<S>, M extends SubType<I>>(this: any, TypeName: string, constructHandler: S, proto?: object | undefined, config?: object | undefined) => M;
+export declare const define: <T, S extends Constructible<T>>(this: any, TypeName: string, constructHandler: S, proto?: object | undefined, config?: object | undefined) => SubType<S>;
 export declare const lookup: (this: typeof defaultTypes, TypeNestedPath: string) => any;
 export declare const mnemonica: {
     [index: string]: any;

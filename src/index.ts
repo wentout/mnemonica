@@ -1,6 +1,4 @@
 'use strict';
-export { ConstructorFunction } from './types';
-import { ConstructorFunction } from './types';
 import { constants } from './constants';
 const { odp } = constants;
 
@@ -21,42 +19,36 @@ function checkThis ( pointer: any ): boolean {
 	return false;
 };
 
-// interface ConstructorFactory<T extends object> {
-// 	// tslint:disable-next-line: callable-types
-// 	( ...args: any[] ): ConstructorFunction<T>
-// }
-// function definer<T extends object> (
-// 	this: any,
-// 	TypeOrTypeName: ConstructorFactory<T>,
-// 	constructHandlerOrConfig?: object,
-// 	proto?: object,
-// 	config?: object
-// ): ConstructorFunction<T> {
-
-interface SubType<T> {
+interface Constructible<T> {
 	new( ...args: any[] ): T;
-	( this: T, ...args: any[] ): T;
 	prototype: ThisType<T>;
-	define: typeof define,
-	lookup: typeof lookup,
 }
 
-export const define = function <
-	T extends ThisType<S>,
-	// Z extends Extract<M, keyof M>,
-	S extends ConstructorFunction<T>,
-	I extends InstanceType<S>,
-	M extends SubType<I>,
-> (
+export interface IDEF<T extends Constructible<T>> {
+	new( ...args: any[] ): InstanceType<Constructible<T>>;
+	( this: T, ...args: any[] ): T;
+}
+
+interface SubType<T> {
+	new( ...args: any[] ): InstanceType<Constructible<T>>;
+	( this: T, ...args: any[] ): T;
+	define: typeof define,
+	lookup: typeof lookup,
+	registerHook: ( type: string, hook: CallableFunction ) => any;
+}
+
+export const define = function <T, S extends Constructible<T>> (
 	this: any,
 	TypeName: string,
 	constructHandler: S,
 	proto?: object,
 	config?: object
-): M {
+): SubType<S> {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
-	return types.define( TypeName, constructHandler, proto, config );
+	const type = types.define( TypeName, constructHandler, proto, config );
+	return type;
 };
+
 
 export const lookup = function ( this: typeof defaultTypes, TypeNestedPath: string ) {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
