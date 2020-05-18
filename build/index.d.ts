@@ -2,16 +2,17 @@ export declare const defaultTypes: any;
 export interface IDEF<T> {
     new (...args: any[]): T;
     (this: T, ...args: any[]): T;
-    prototype: ThisType<T>;
+    prototype?: ThisType<T>;
 }
-interface SubType<T> {
+declare type SubDefine<T> = (TypeName: string, constructHandler: IDEF<T>, proto?: object, config?: object) => TypeClass<T>;
+interface TypeClass<T> {
     new (...args: any[]): T;
     (this: T, ...args: any[]): T;
-    define: typeof define;
+    define: SubDefine<T>;
     lookup: typeof lookup;
-    registerHook: (type: string, hook: CallableFunction) => any;
+    registerHook: (type: 'preCreation' | 'postCreation' | 'creationError', hook: CallableFunction) => any;
 }
-export declare const define: <T>(this: any, TypeName: string, constructHandler: IDEF<T>, proto?: object | undefined, config?: object | undefined) => SubType<T>;
+export declare const define: <T>(this: any, TypeName: string, constructHandler: IDEF<T>, proto?: object | undefined, config?: object | undefined) => TypeClass<T>;
 export declare const lookup: (this: typeof defaultTypes, TypeNestedPath: string) => any;
 export declare const mnemonica: {
     [index: string]: any;

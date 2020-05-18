@@ -21,17 +21,30 @@ function checkThis ( pointer: any ): boolean {
 
 
 export interface IDEF<T> {
-	new(...args: any[]): T;
-	( this: T, ...args: any[] ): T;
-	prototype: ThisType<T>;
-}
-
-interface SubType<T> {
 	new( ...args: any[] ): T;
 	( this: T, ...args: any[] ): T;
-	define: typeof define,
+	prototype?: ThisType<T>;
+}
+
+type SubDefine<T> = (
+	TypeName: string,
+	// constructHandler: S,
+	constructHandler: IDEF<T>,
+	proto?: object,
+	config?: object
+) => TypeClass<T>;
+
+interface TypeClass<T> {
+	// construct
+	new( ...args: any[] ): T;
+	// define, lookup, registerHook
+	( this: T, ...args: any[] ): T;
+	// props
+	// define: SubDefine<T, IDEF<T>>,
+	define: SubDefine<T>,
+	// define: typeof define,
 	lookup: typeof lookup,
-	registerHook: (type: string, hook: CallableFunction ) => any;
+	registerHook: ( type: 'preCreation' | 'postCreation' | 'creationError', hook: CallableFunction ) => any;
 }
 
 export const define = function <T> (
@@ -40,7 +53,7 @@ export const define = function <T> (
 	constructHandler: IDEF<T>,
 	proto?: object,
 	config?: object
-): SubType<T> {
+): TypeClass<T> {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
 	const type = types.define( TypeName, constructHandler, proto, config );
 	return type;

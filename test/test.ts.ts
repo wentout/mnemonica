@@ -2,22 +2,24 @@
 
 import { define, IDEF } from '..';
 
-type TypeDef<T> = new(...args: any[]) => T
+type TypeDef<T> = new ( ...args: any[] ) => T
 
 type SomeTypeInstance = {
 	one?: string;
-	SomeSubType: IDEF<SubTypeInstance>
-	q?:any;
-	x?:any;
-	y?:any;
-	z?:any;
+	SomeSubType: IDEF<SubTypeInstance>;
+	q?: any;
+	x?: any;
+	y?: any;
+	z?: any;
 }
 
 interface SubTypeInstance extends SomeTypeInstance {
+	SomeSubType: IDEF<SubTypeInstance>;
 	// one: undefined;
 	two?: string;
 	FinalType: IDEF<FinalInstance>
 }
+
 interface FinalInstance extends SubTypeInstance {
 	// one: undefined;
 	three?: string;
@@ -26,19 +28,21 @@ interface FinalInstance extends SubTypeInstance {
 const SomeType = define( 'SomeType', function () {
 	this.one = 'SomeType';
 	this.q = 123;
-} as IDEF<SomeTypeInstance>);
+
+} as IDEF<SomeTypeInstance> );
 
 const SomeSubType = SomeType.define( 'SomeSubType', function () {
 	this.one = undefined;
 	this.two = 'SomeSubType';
 	this.q = 123;
+
 } as IDEF<SubTypeInstance> );
 
 SomeSubType.define( 'FinalType', function () {
 	this.one = 'final one';
 	this.three = 'FinalType';
 	this.q = 123;
-} as IDEF<FinalInstance> );
+} as IDEF<FinalInstance>);
 
 const first = new SomeType();
 const x = first.one;
@@ -55,8 +59,8 @@ final.one = 'must one';
 final.two = 'must two';
 final.three = 'three';
 final.z = 'no way';
-// const z = final.one;
 
+// const z = final.one;
 // // tslint:disable-next-line: no-console
 // console.log( first, second, final, { x, y, z } );
 
