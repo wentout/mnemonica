@@ -19,31 +19,28 @@ function checkThis ( pointer: any ): boolean {
 	return false;
 };
 
-interface Constructible<T> {
-	new( ...args: any[] ): T;
+
+export interface IDEF<T> {
+	new(...args: any[]): T;
+	( this: T, ...args: any[] ): T;
 	prototype: ThisType<T>;
 }
 
-export interface IDEF<T extends Constructible<T>> {
-	new( ...args: any[] ): InstanceType<Constructible<T>>;
-	( this: T, ...args: any[] ): T;
-}
-
 interface SubType<T> {
-	new( ...args: any[] ): InstanceType<Constructible<T>>;
+	new( ...args: any[] ): T;
 	( this: T, ...args: any[] ): T;
 	define: typeof define,
 	lookup: typeof lookup,
-	registerHook: ( type: string, hook: CallableFunction ) => any;
+	registerHook: (type: string, hook: CallableFunction ) => any;
 }
 
-export const define = function <T, S extends Constructible<T>> (
+export const define = function <T> (
 	this: any,
 	TypeName: string,
-	constructHandler: S,
+	constructHandler: IDEF<T>,
 	proto?: object,
 	config?: object
-): SubType<S> {
+): SubType<T> {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
 	const type = types.define( TypeName, constructHandler, proto, config );
 	return type;

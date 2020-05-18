@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use strict';
 
 import { define, IDEF } from '..';
@@ -8,6 +7,10 @@ type TypeDef<T> = new(...args: any[]) => T
 type SomeTypeInstance = {
 	one?: string;
 	SomeSubType: IDEF<SubTypeInstance>
+	q?:any;
+	x?:any;
+	y?:any;
+	z?:any;
 }
 
 interface SubTypeInstance extends SomeTypeInstance {

@@ -1,20 +1,17 @@
 export declare const defaultTypes: any;
-interface Constructible<T> {
+export interface IDEF<T> {
     new (...args: any[]): T;
+    (this: T, ...args: any[]): T;
     prototype: ThisType<T>;
 }
-export interface IDEF<T extends Constructible<T>> {
-    new (...args: any[]): InstanceType<Constructible<T>>;
-    (this: T, ...args: any[]): T;
-}
 interface SubType<T> {
-    new (...args: any[]): InstanceType<Constructible<T>>;
+    new (...args: any[]): T;
     (this: T, ...args: any[]): T;
     define: typeof define;
     lookup: typeof lookup;
     registerHook: (type: string, hook: CallableFunction) => any;
 }
-export declare const define: <T, S extends Constructible<T>>(this: any, TypeName: string, constructHandler: S, proto?: object | undefined, config?: object | undefined) => SubType<S>;
+export declare const define: <T>(this: any, TypeName: string, constructHandler: IDEF<T>, proto?: object | undefined, config?: object | undefined) => SubType<T>;
 export declare const lookup: (this: typeof defaultTypes, TypeNestedPath: string) => any;
 export declare const mnemonica: {
     [index: string]: any;
