@@ -8,39 +8,39 @@ const { SymbolGaia } = constants_1.constants;
 const extract_1 = require('./extract');
 const hop_1 = require('./hop');
 exports.parse = (self) => {
-    if (!self || !self.constructor) {
-        throw new WRONG_MODIFICATION_PATTERN;
-    }
-    const proto = Reflect.getPrototypeOf(self);
-    if (self.constructor.name !== proto.constructor.name) {
-        throw new WRONG_ARGUMENTS_USED('have to use "instance" itself');
-    }
-    const protoProto = Reflect.getPrototypeOf(proto);
-    if (protoProto && proto.constructor.name !== protoProto.constructor.name) {
-        throw new WRONG_ARGUMENTS_USED('have to use "instance" itself');
-    }
-    const { name } = proto.constructor;
-    const props = extract_1.extract(Object.assign({}, self));
-    delete props.constructor;
-    const joint = extract_1.extract(Object.assign({}, proto));
-    delete joint.constructor;
-    let parent;
-    let gaia;
-    if (hop_1.hop(protoProto, SymbolGaia)) {
-        parent = protoProto;
-        gaia = self[SymbolGaia];
-    }
-    else {
-        parent = exports.parse(Reflect.getPrototypeOf(protoProto));
-        gaia = parent.gaia;
-    }
-    return {
-        name,
-        props,
-        self,
-        proto,
-        joint,
-        parent,
-        gaia
-    };
+	if (!self || !self.constructor) {
+		throw new WRONG_MODIFICATION_PATTERN;
+	}
+	const proto = Reflect.getPrototypeOf(self);
+	if (self.constructor.name !== proto.constructor.name) {
+		throw new WRONG_ARGUMENTS_USED('have to use "instance" itself');
+	}
+	const protoProto = Reflect.getPrototypeOf(proto);
+	if (protoProto && proto.constructor.name !== protoProto.constructor.name) {
+		throw new WRONG_ARGUMENTS_USED('have to use "instance" itself');
+	}
+	const { name } = proto.constructor;
+	const props = extract_1.extract(Object.assign({}, self));
+	delete props.constructor;
+	const joint = extract_1.extract(Object.assign({}, proto));
+	delete joint.constructor;
+	let parent;
+	let gaia;
+	if (hop_1.hop(protoProto, SymbolGaia)) {
+		parent = protoProto;
+		gaia = self[SymbolGaia];
+	}
+	else {
+		parent = exports.parse(Reflect.getPrototypeOf(protoProto));
+		gaia = parent.gaia;
+	}
+	return {
+		name,
+		props,
+		self,
+		proto,
+		joint,
+		parent,
+		gaia
+	};
 };

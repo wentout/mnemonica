@@ -19,16 +19,14 @@ function checkThis ( pointer: any ): boolean {
 	return false;
 };
 
-
 export interface IDEF<T> {
 	new( ...args: any[] ): T;
 	( this: T, ...args: any[] ): T;
 	prototype?: ThisType<T>;
 }
 
-type SubDefine<T> = (
+type TypeAbsorber<T> = (
 	TypeName: string,
-	// constructHandler: S,
 	constructHandler: IDEF<T>,
 	proto?: object,
 	config?: object
@@ -40,8 +38,7 @@ interface TypeClass<T> {
 	// define, lookup, registerHook
 	( this: T, ...args: any[] ): T;
 	// props
-	// define: SubDefine<T, IDEF<T>>,
-	define: SubDefine<T>,
+	define: TypeAbsorber<T>,
 	// define: typeof define,
 	lookup: typeof lookup,
 	registerHook: ( type: 'preCreation' | 'postCreation' | 'creationError', hook: CallableFunction ) => any;

@@ -7,32 +7,32 @@ const errorsApi = require('./api/errors');
 const descriptors_1 = require('./descriptors');
 exports.defaultTypes = descriptors_1.descriptors.defaultTypes;
 function checkThis (pointer) {
-    if (pointer === exports.mnemonica ||
+	if (pointer === exports.mnemonica ||
         pointer === exports) {
-        return true;
-    }
-    return false;
+		return true;
+	}
+	return false;
 }
 
 exports.define = function (TypeName, constructHandler, proto, config) {
-    const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
-    const type = types.define(TypeName, constructHandler, proto, config);
-    return type;
+	const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
+	const type = types.define(TypeName, constructHandler, proto, config);
+	return type;
 };
 exports.lookup = function (TypeNestedPath) {
-    const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
-    return types.lookup(TypeNestedPath);
+	const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
+	return types.lookup(TypeNestedPath);
 };
 exports.mnemonica = Object.entries(Object.assign(Object.assign(Object.assign({ define : exports.define,
-    lookup : exports.lookup }, descriptors_1.descriptors), errorsApi), constants_1.constants)).reduce((acc, entry) => {
-    const [name, code] = entry;
-    odp(acc, name, {
-        get () {
-            return code;
-        },
-        enumerable : true
-    });
-    return acc;
+	lookup : exports.lookup }, descriptors_1.descriptors), errorsApi), constants_1.constants)).reduce((acc, entry) => {
+	const [name, code] = entry;
+	odp(acc, name, {
+		get () {
+			return code;
+		},
+		enumerable : true
+	});
+	return acc;
 }, {});
 exports.SymbolSubtypeCollection = exports.mnemonica.SymbolSubtypeCollection, exports.SymbolConstructorName = exports.mnemonica.SymbolConstructorName, exports.SymbolGaia = exports.mnemonica.SymbolGaia, exports.SymbolReplaceGaia = exports.mnemonica.SymbolReplaceGaia, exports.SymbolDefaultNamespace = exports.mnemonica.SymbolDefaultNamespace, exports.SymbolDefaultTypesCollection = exports.mnemonica.SymbolDefaultTypesCollection, exports.SymbolConfig = exports.mnemonica.SymbolConfig, exports.MNEMONICA = exports.mnemonica.MNEMONICA, exports.MNEMOSYNE = exports.mnemonica.MNEMOSYNE, exports.GAIA = exports.mnemonica.GAIA, exports.URANUS = exports.mnemonica.URANUS, exports.TYPE_TITLE_PREFIX = exports.mnemonica.TYPE_TITLE_PREFIX, exports.ErrorMessages = exports.mnemonica.ErrorMessages, exports.createNamespace = exports.mnemonica.createNamespace, exports.namespaces = exports.mnemonica.namespaces, exports.defaultNamespace = exports.mnemonica.defaultNamespace, exports.createTypesCollection = exports.mnemonica.createTypesCollection;
 exports.defaultCollection = exports.defaultTypes.subtypes;

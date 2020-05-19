@@ -4,11 +4,11 @@ export interface IDEF<T> {
     (this: T, ...args: any[]): T;
     prototype?: ThisType<T>;
 }
-declare type SubDefine<T> = (TypeName: string, constructHandler: IDEF<T>, proto?: object, config?: object) => TypeClass<T>;
+declare type TypeAbsorber<T> = (TypeName: string, constructHandler: IDEF<T>, proto?: object, config?: object) => TypeClass<T>;
 interface TypeClass<T> {
     new (...args: any[]): T;
     (this: T, ...args: any[]): T;
-    define: SubDefine<T>;
+    define: TypeAbsorber<T>;
     lookup: typeof lookup;
     registerHook: (type: 'preCreation' | 'postCreation' | 'creationError', hook: CallableFunction) => any;
 }

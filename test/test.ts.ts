@@ -6,18 +6,17 @@ type TypeDef<T> = new ( ...args: any[] ) => T
 
 type SomeTypeInstance = {
 	one?: string;
-	SomeSubType: IDEF<SubTypeInstance>;
 	q?: any;
 	x?: any;
 	y?: any;
 	z?: any;
+	SomeSubType: IDEF<SubTypeInstance>;
 }
 
 interface SubTypeInstance extends SomeTypeInstance {
-	SomeSubType: IDEF<SubTypeInstance>;
 	// one: undefined;
 	two?: string;
-	FinalType: IDEF<FinalInstance>
+	FinalType: IDEF<SubTypeInstance>;
 }
 
 interface FinalInstance extends SubTypeInstance {
@@ -42,7 +41,7 @@ SomeSubType.define( 'FinalType', function () {
 	this.one = 'final one';
 	this.three = 'FinalType';
 	this.q = 123;
-} as IDEF<FinalInstance>);
+} as IDEF<FinalInstance> );
 
 const first = new SomeType();
 const x = first.one;
@@ -57,7 +56,6 @@ second.y = 'no way';
 const final = new second.FinalType();
 final.one = 'must one';
 final.two = 'must two';
-final.three = 'three';
 final.z = 'no way';
 
 // const z = final.one;

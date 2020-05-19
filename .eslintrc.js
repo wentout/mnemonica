@@ -18,6 +18,7 @@ module.exports = {
 		'eslint-plugin-no-arrow-this',
 	],
 	rules: {
+		'indent': ['error', 'tab'],
 		'key-spacing': [
 			'warn',
 			{
