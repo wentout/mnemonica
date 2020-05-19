@@ -84,7 +84,7 @@ const tests = (opts) => {
 
 								).AsyncChain1st({ async1st : '1_1st' })
 
-								// after promise
+							// after promise
 							).AsyncChain2nd({ async2nd : '1_2nd' })
 							// sync 2 async
 						).Async2Sync2nd({ sync : '1_is' })
@@ -103,7 +103,7 @@ const tests = (opts) => {
 				).AsyncChain1st({ async1st : '2_1st' })
 					// after promise
 					// .then(async function (instance) {
-						// return await instance.AsyncChain1st({ async1st: '2_1st' });
+				// return await instance.AsyncChain1st({ async1st: '2_1st' });
 					// })
 					.then(async function (instance) {
 						return await instance.AsyncChain2nd({ async2nd : '2_2nd' });
@@ -118,17 +118,17 @@ const tests = (opts) => {
 
 				// debugger;
 				syncWAsyncChained = await /* (await (await sure */
-					new UserTypeConstructor({
-						email    : 'async@gmail.com',
-						password : 32123
-					})
-						.WithoutPassword()
-						.WithAdditionalSign('async sign')
-						.AsyncChain1st({ async1st : '1st' })
-						// after promise
-						.AsyncChain2nd({ async2nd : '2nd' })
-						.Async2Sync2nd({ sync : 'is' })
-						.AsyncChain3rd({ async : '3rd' });
+				new UserTypeConstructor({
+					email    : 'async@gmail.com',
+					password : 32123
+				})
+					.WithoutPassword()
+					.WithAdditionalSign('async sign')
+					.AsyncChain1st({ async1st : '1st' })
+				// after promise
+					.AsyncChain2nd({ async2nd : '2nd' })
+					.Async2Sync2nd({ sync : 'is' })
+					.AsyncChain3rd({ async : '3rd' });
 
 				// debugger;
 				done();

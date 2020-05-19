@@ -374,8 +374,8 @@ describe('Main Test', () => {
 			function (str) {
 				this.str = str || 're-defined OverMore str';
 			}, OverMoreProto, {
-			submitStack : true
-		});
+				submitStack : true
+			});
 
 	const EvenMoreProto = {
 		EvenMoreSign : 'EvenMoreSign'
