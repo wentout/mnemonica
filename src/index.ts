@@ -1,4 +1,8 @@
 'use strict';
+
+export type { IDEF } from './types';
+import { IDEF, TypeClass, TypeLookup } from './types';
+
 import { constants } from './constants';
 const { odp } = constants;
 
@@ -19,31 +23,6 @@ function checkThis ( pointer: any ): boolean {
 	return false;
 };
 
-export interface IDEF<T> {
-	new( ...args: any[] ): T;
-	( this: T, ...args: any[] ): T;
-	prototype?: ThisType<T>;
-}
-
-type TypeAbsorber<T> = (
-	TypeName: string,
-	constructHandler: IDEF<T>,
-	proto?: object,
-	config?: object
-) => TypeClass<T>;
-
-interface TypeClass<T> {
-	// construct
-	new( ...args: any[] ): T;
-	// define, lookup, registerHook
-	( this: T, ...args: any[] ): T;
-	// props
-	define: TypeAbsorber<T>,
-	// define: typeof define,
-	lookup: typeof lookup,
-	registerHook: ( type: 'preCreation' | 'postCreation' | 'creationError', hook: CallableFunction ) => any;
-}
-
 export const define = function <T> (
 	this: any,
 	TypeName: string,
@@ -57,10 +36,10 @@ export const define = function <T> (
 };
 
 
-export const lookup = function ( this: typeof defaultTypes, TypeNestedPath: string ) {
+export const lookup = function ( TypeNestedPath ) {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
 	return types.lookup( TypeNestedPath );
-};
+} as TypeLookup;
 
 
 export const mnemonica = Object.entries( {

@@ -39,7 +39,7 @@
     "report-coverage": "cat coverage/lcov.info | coveralls",
     "example": "npm run build && node ./test/example.js",
     "lint": "npx eslint --fix --ignore-path .gitignore ./build",
-    "ts:example": "npx tsc ./test/test.ts.ts && npx eslint --fix ./test/test.ts.js && node ./test/test.ts.js",
+    "ts:example": "npx tsc ./test-ts/test.ts && npx eslint --fix ./test-ts/test.js && node ./test-ts/test.js",
     "ts:lint": "npx tslint --fix --ignore-path .gitignore ./src"
   },
   "repository": {
