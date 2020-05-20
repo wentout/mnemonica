@@ -13,7 +13,7 @@ So, getting from the README.md as a starting point, the main method of the libra
 	const TypeClass = define('TypeClass', function (opts) {
 		// any operators here, for example
 		Object.assign(this, opts);
-	};
+	});
 
 	const typeClassInstance = new TypeClass();
 
@@ -25,14 +25,23 @@ And `.define` it is indeed have to typed. And there is almost no way somebody wo
 ```js
 
 	import { define } from 'mnemonica';
-
+	
+	type SomeType = {
+		// some definitions
+	};
+	
+	type TypeClassNesteds = {
+		// defined in future
+		NestedMethod: NewableFunction
+	};
+	
 	// TypeClass
-	const TypeClass = define('TypeClass', function (opts) {
+	const TypeClass: = define('TypeClass', function (this:SomeType, opts) {
 		// any operators here, for example
 		Object.assign(this, opts);
-	};
+	});
 
-	const typeClassInstance = new TypeClass();
+	const typeClassInstance:SomeType = new TypeClass();
 
 ```
 
@@ -51,6 +60,7 @@ And yes, it works like this for us, if we wish to get reach to the typings right
 
 	type SomeTypeInstance = {
 		someField: string;
+		// defined in future
 		SomeSubType: IDEF<SubTypeInstance>;
 	}
 
@@ -121,7 +131,7 @@ Making the JavaScript part of code better and better and will be able to concent
 
 And TypeScript typings support, emm... if you wish play with types -- it is not my choice, but yours. I gave the ability to describe types and will accept PRs. That is why I'm asking for Help with TypeScript typings...
 
-So, the Truth is... that [Prototype](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Inheritance_and_the_prototype_chain) is Asynchronous [Set](https://en.wikipedia.org/wiki/Set_theory) of [Linearizable](https://en.wikipedia.org/wiki/Linearizability) [Dependent](https://en.wikipedia.org/wiki/Dependent_type) [Refinement](https://en.wikipedia.org/wiki/Refinement_type) of [Bounded quantification](https://en.wikipedia.org/wiki/Bounded_quantification) based on [History monoid](https://en.wikipedia.org/wiki/History_monoid) solving [Expression problem](https://en.wikipedia.org/wiki/Expression_problem) through [Chaining](https://en.wikipedia.org/wiki/Method_chaining) of [Type Classes](https://en.wikipedia.org/wiki/Type_class) through [Multimethods](https://en.wikipedia.org/wiki/Multiple_dispatch)... and might be I missed something else... for example [Trace](https://en.wikipedia.org/wiki/Trace_theory) and [HoTT](https://en.wikipedia.org/wiki/Homotopy_type_theory)...
+So, the Truth is... it is time for joke... that [Prototype](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Inheritance_and_the_prototype_chain) is Asynchronous [Set](https://en.wikipedia.org/wiki/Set_theory) of [Linearizable](https://en.wikipedia.org/wiki/Linearizability) [Dependent](https://en.wikipedia.org/wiki/Dependent_type) [Refinement](https://en.wikipedia.org/wiki/Refinement_type) of [Bounded quantification](https://en.wikipedia.org/wiki/Bounded_quantification) based on [History monoid](https://en.wikipedia.org/wiki/History_monoid) solving [Expression problem](https://en.wikipedia.org/wiki/Expression_problem) through [Chaining](https://en.wikipedia.org/wiki/Method_chaining) of [Type Classes](https://en.wikipedia.org/wiki/Type_class) by [Multimethods](https://en.wikipedia.org/wiki/Multiple_dispatch)... and might be I missed something else... for example [Trace](https://en.wikipedia.org/wiki/Trace_theory) and [HoTT](https://en.wikipedia.org/wiki/Homotopy_type_theory)...
 
 # Thank YOU ;^)
 ## best wishes
