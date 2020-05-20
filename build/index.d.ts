@@ -1,7 +1,8 @@
 export type { IDEF } from './types';
-import { IDEF, TypeClass, TypeLookup } from './types';
+import { TypeAbsorber, ITypeClass, TypeLookup, IDEF } from './types';
 export declare const defaultTypes: any;
-export declare const define: <T>(this: any, TypeName: string, constructHandler: IDEF<T>, proto?: object | undefined, config?: object | undefined) => TypeClass<T>;
+export declare const define: TypeAbsorber;
+export declare const tsdefine: <T>(this: any, TypeName: string, constructHandler: IDEF<T>, proto?: object | undefined, config?: object | undefined) => ITypeClass<T>;
 export declare const lookup: TypeLookup;
 export declare const mnemonica: {
     [index: string]: any;

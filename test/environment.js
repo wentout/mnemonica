@@ -89,6 +89,7 @@ const tests = (opts) => {
 				'errors',
 				'utils',
 				'define',
+				'tsdefine',
 				'lookup',
 				'mnemonica',
 			];

@@ -1,8 +1,6 @@
 'use strict';
 
-import { define, IDEF } from '..';
-
-type TypeDef<T> = new ( ...args: any[] ) => T
+import { tsdefine, IDEF } from '..';
 
 type SomeTypeInstance = {
 	one?: string;
@@ -24,7 +22,7 @@ interface FinalInstance extends SubTypeInstance {
 	three?: string;
 }
 
-const SomeType = define( 'SomeType', function () {
+const SomeType = tsdefine( 'SomeType', function () {
 	this.one = 'SomeType';
 	this.q = 123;
 
@@ -58,7 +56,17 @@ final.one = 'must one';
 final.two = 'must two';
 final.z = 'no way';
 
-// const z = final.one;
-// // tslint:disable-next-line: no-console
-// console.log( first, second, final, { x, y, z } );
+const z = final.one;
+
+// tslint:disable-next-line: no-console
+console.log('\nWith Typings: \n')
+
+// tslint:disable-next-line: no-console
+console.log( 'first: ', first );
+// tslint:disable-next-line: no-console
+console.log( 'second: ', second );
+// tslint:disable-next-line: no-console
+console.log( 'final: ', final );
+// tslint:disable-next-line: no-console
+console.log( '{ x, y, z }: ', { x, y, z } );
 

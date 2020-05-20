@@ -1,6 +1,6 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
-exports.errors = exports.defaultCollection = exports.createTypesCollection = exports.defaultNamespace = exports.namespaces = exports.createNamespace = exports.ErrorMessages = exports.TYPE_TITLE_PREFIX = exports.URANUS = exports.GAIA = exports.MNEMOSYNE = exports.MNEMONICA = exports.SymbolConfig = exports.SymbolDefaultTypesCollection = exports.SymbolDefaultNamespace = exports.SymbolReplaceGaia = exports.SymbolGaia = exports.SymbolConstructorName = exports.SymbolSubtypeCollection = exports.mnemonica = exports.lookup = exports.define = exports.defaultTypes = void 0;
+exports.errors = exports.defaultCollection = exports.createTypesCollection = exports.defaultNamespace = exports.namespaces = exports.createNamespace = exports.ErrorMessages = exports.TYPE_TITLE_PREFIX = exports.URANUS = exports.GAIA = exports.MNEMOSYNE = exports.MNEMONICA = exports.SymbolConfig = exports.SymbolDefaultTypesCollection = exports.SymbolDefaultNamespace = exports.SymbolReplaceGaia = exports.SymbolGaia = exports.SymbolConstructorName = exports.SymbolSubtypeCollection = exports.mnemonica = exports.lookup = exports.tsdefine = exports.define = exports.defaultTypes = void 0;
 const constants_1 = require('./constants');
 const { odp } = constants_1.constants;
 const errorsApi = require('./api/errors');
@@ -18,6 +18,9 @@ exports.define = function (TypeName, constructHandler, proto, config) {
 	const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
 	const type = types.define(TypeName, constructHandler, proto, config);
 	return type;
+};
+exports.tsdefine = function (TypeName, constructHandler, proto, config) {
+	return exports.defaultTypes.define(TypeName, constructHandler, proto, config);
 };
 exports.lookup = function (TypeNestedPath) {
 	const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;

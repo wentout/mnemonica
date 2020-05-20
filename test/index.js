@@ -20,6 +20,7 @@ const mnemonica = require('..');
 
 const {
 	define,
+	tsdefine,
 	defaultTypes: types,
 	createNamespace,
 	createTypesCollection,
@@ -246,7 +247,7 @@ const userPL2 = new user.UserTypePL2();
 const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
 
-const AsyncType = define('AsyncType', async function (data) {
+const AsyncType = tsdefine('AsyncType', async function (data) {
 	return Object.assign(this, {
 		data
 	});

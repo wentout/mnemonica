@@ -1,7 +1,7 @@
 'use strict';
 
 export type { IDEF } from './types';
-import { IDEF, TypeClass, TypeLookup } from './types';
+import { TypeAbsorber, ITypeClass, TypeLookup, IDEF } from './types';
 
 import { constants } from './constants';
 const { odp } = constants;
@@ -23,18 +23,27 @@ function checkThis ( pointer: any ): boolean {
 	return false;
 };
 
-export const define = function <T> (
+export const define = function (
+	this: any,
+	TypeName: string,
+	constructHandler: NewableFunction,
+	proto?: object,
+	config?: object,
+) {
+	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
+	const type = types.define( TypeName, constructHandler, proto, config );
+	return type;
+} as TypeAbsorber;
+
+export const tsdefine = function <T> (
 	this: any,
 	TypeName: string,
 	constructHandler: IDEF<T>,
 	proto?: object,
-	config?: object
-): TypeClass<T> {
-	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
-	const type = types.define( TypeName, constructHandler, proto, config );
-	return type;
+	config?: object,
+): ITypeClass<T> {
+	return defaultTypes.define( TypeName, constructHandler, proto, config );
 };
-
 
 export const lookup = function ( TypeNestedPath ) {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
