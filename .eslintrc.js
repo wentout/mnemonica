@@ -1,15 +1,24 @@
 module.exports = {
+	parser: '@typescript-eslint/parser',
 	env: {
 		node: true,
 		es6: true,
 		mocha: true,
 	},
-	extends: ['eslint:recommended'],
+	extends: [
+		'eslint:recommended',
+		'plugin:@typescript-eslint/eslint-recommended',
+		'plugin:import/typescript',
+	],
 	parserOptions: {
 		ecmaVersion: 2018,
 	},
-	plugins: ['mocha', 'eslint-plugin-no-arrow-this'],
+	plugins: [
+		'mocha',
+		'eslint-plugin-no-arrow-this',
+	],
 	rules: {
+		'indent': ['error', 'tab'],
 		'key-spacing': [
 			'warn',
 			{

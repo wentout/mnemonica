@@ -10,6 +10,8 @@ abstract technique that aids information retention : instance inheritance system
 * ?. : state : **mad science**
 * ?. : type : **asynchronous monad descriptor** => this
 * ?. : prod ready : **we wonder about**
+* ?. : typescript : **yes, some, starting from 0.9.77**
+* ?. : example : **git clone && npm run example**
 
 ---
 
@@ -21,9 +23,19 @@ abstract technique that aids information retention : instance inheritance system
 
 [![NPM](https://nodei.co/npm/mnemonica.png?mini=true)](https://www.npmjs.com/package/mnemonica)
 
+---
 
+# TypeScript note
+
+If you are TypeScript user we have good news for you:
+* there is more than one way to annotate the code
+* we provide support with some limitations
+* and you can help to do better
+
+Please visit [Mnemonica TypeScript](https://github.com/wentout/mnemonica/TypeScript.md) page for explanations.
 
 ---
+
 
 # core concept
 

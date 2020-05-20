@@ -1,0 +1,10 @@
+{
+  "name": "mnemonica",
+  "type": "commonjs",
+  "main": "index.js",
+  "exports": {
+    "default": "index.js",
+    "require": "index.js"
+  }
+}
+

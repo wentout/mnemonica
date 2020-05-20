@@ -33,10 +33,8 @@ const {
 	defineStackCleaner
 } = mnemonica;
 
-const dirname = require('path').resolve(__dirname, '../lib');
+const dirname = require('path').resolve(__dirname, '../build');
 const stackCleanerRegExp = new RegExp(dirname);
-
-
 
 const tests = (opts) => {
 
@@ -91,10 +89,13 @@ const tests = (opts) => {
 				'errors',
 				'utils',
 				'define',
-				'lookup'
+				'tsdefine',
+				'lookup',
+				'mnemonica',
 			];
 
 			const mnemonica_keys = Object.keys(mnemonica);
+			debugger;
 
 			it('interface length', () => {
 				expect(mnemonica_keys.length).equal(interface_keys.length);
@@ -205,6 +206,7 @@ const tests = (opts) => {
 
 			it('defineStackCleaner wrong definition should be instancof error', () => {
 				expect(madeError).instanceOf(errors.BASE_MNEMONICA_ERROR);
+				expect(madeError).instanceOf(errors.WRONG_STACK_CLEANER);
 			});
 		});
 
@@ -414,6 +416,7 @@ const tests = (opts) => {
 			it('thrown error.stack should have seekable definition with stack cleaner', () => {
 				defineStackCleaner(stackCleanerRegExp);
 				const errored2 = new BadType({});
+				debugger;
 				expect(errored2.stack.indexOf(stackstart)).equal(1);
 				expect(errored2.stack
 					.indexOf('environment.js') > 0).is.true;
