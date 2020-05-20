@@ -98,11 +98,11 @@ And yes, it works like this for us, if we wish to get reach to the typings right
 
 This example is not so easy. As you see we if we go deeper with the purpose of mnemonica, we have to craft a lot of additional tooling per each step.
 
-And seems there is no way to make the other 99% cause of TypeScript limitations. Therefore `.tsdefine` method is extremely hard to passthrough without types. And if you are TypeScript developer, emm... **Please Help Me!**
+And seems there is no way to make the other 99% cause of TypeScript limitations. Therefore `tsdefine` method is extremely hard to passthrough without types. And if you are TypeScript developer, emm... **Please Help Me!**
 
-The other way is `.tsdefine` instead of `.define` provides the same typechecks as you can do with **(default)** way. And you would need to annotate a lot of other things instead of annotating the results. There where `.define` is just a way to go as you wish and as you go, `.tsdefine` enforces you to make a lot of hard stuff. 
+The other way is `tsdefine` instead of `.define` provides the same typechecks as you can do with **(default)** way. And you would need to annotate a lot of other things instead of annotating the results. There where `.define` is just a way to go as you wish and as you go, `tsdefine` enforces you to make a lot of hard stuff. 
 
-Moreover, if the default way would win, the support of `.tsdefine` might be excluded from library, as it would be not so necessary anymore, though we think to leave it for backward compatibility.
+Moreover, if the default way would win, the support of `tsdefine` might be excluded from library, as it would be not so necessary anymore, though we think to leave it for backward compatibility.
 
 # The Truth is...
 
