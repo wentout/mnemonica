@@ -3,7 +3,7 @@
 
 ## (default) way to go with typings
 
-So, getting from the README.md as a starting point, the main method of the library is `.define`, here is how it works:
+So, getting from the README.md as a starting point, the main method of the library is `define`, here is how it works:
 
 ```js
 
@@ -19,7 +19,7 @@ So, getting from the README.md as a starting point, the main method of the libra
 
 ```
 
-And `.define` it is indeed have to typed. And there is almost no way somebody would be glad reading it's interface if it would. Therefore it just checks that provided constructor function is `:NewableFunction` and provided typename is `:string`. The rest of typing is on your own. You can mark `TypeClass` or `typeClassInstance` with necessary type you wish, and you can pass `this` definition argument to newable function. Combining all three you will get all necessary typings.
+And `define` it is indeed have to typed. And there is almost no way somebody would be glad reading it's interface if it would. Therefore it just checks that provided constructor function is `:NewableFunction` and provided typename is `:string`. The rest of typing is on your own. You can mark `TypeClass` or `typeClassInstance` with necessary type you wish, and you can pass `this` definition argument to newable function. Combining all three you will get all necessary typings.
 
 
 ```js
@@ -100,7 +100,7 @@ This example is not so easy. As you see we if we go deeper with the purpose of m
 
 And seems there is no way to make the other 99% cause of TypeScript limitations. Therefore `tsdefine` method is extremely hard to passthrough without types. And if you are TypeScript developer, emm... **Please Help Me!**
 
-The other way is `tsdefine` instead of `.define` provides the same typechecks as you can do with **(default)** way. And you would need to annotate a lot of other things instead of annotating the results. There where `.define` is just a way to go as you wish and as you go, `tsdefine` enforces you to make a lot of hard stuff. 
+The other way is `tsdefine` instead of `define` provides the same typechecks as you can do with **(default)** way. And you would need to annotate a lot of other things instead of annotating the results. There where `define` is just a way to go as you wish and as you go, `tsdefine` enforces you to make a lot of hard stuff. 
 
 Moreover, if the default way would win, the support of `tsdefine` might be excluded from library, as it would be not so necessary anymore, though we think to leave it for backward compatibility.
 
@@ -108,7 +108,7 @@ Moreover, if the default way would win, the support of `tsdefine` might be exclu
 
 About the plans. Indeed, as we can see from code there Should be no typings at all, it Must be the same as JavaSript code, but with type checker. And the goal is to make the following:
 
-* extract `typeof this` from newable function or class provided to `.define`
+* extract `typeof this` from newable function or class provided to `define`
 * give `this` as some sort of result for `new TypeClass()`, so the type of `typeClassInstance` magically casts with `typeof this` inside of `TypeClass` constructor
 * get `'SomeSubType'` string somehow and add it to the result of `new TypeClass()` as mnemonica does through hidden mechanics, so there is a way to make `new instance.SomeSubType()` with automated typecheck, derived from previous step of consruction trie (from prototype).
 
