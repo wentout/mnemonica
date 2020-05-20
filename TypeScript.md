@@ -120,14 +120,12 @@ Chaining with TypeClass provides a lot of features:
 * **straight** viable steps of application **lifecycle** via described steps of construction chain for each instance
 * the ability to make `.clone` or `.fork` and even re-write or re-initialize the constructor
 * powerfull `Error`'s checking with automated ability to get `instanceof FailedConstructor` check which is written above `Error` instance
-* testing simplicity because each constructor is a separate clean function, it is easy to write unit tests
-* mnemonica collections are is a sort of DI container, you can extract, mock and so on, as you wish
-* * chained asynchronous constructors are good also, grep for `await new` of the `./test` folder
-* everything is connected, therefore we indeed write much less code
+* **testing simplicity** because each constructor is a separate clean function, it is easy to write unit tests
+* chained **asynchronous constructors** are good also, grep for `await new` of the `./test` folder
 
 And if this all is not enough, there is overwhelming power of `.registerHook`, which provides the ability to get reach to :
 
-* answer the question where each tiny piece of running code it belongs to... through combination of `auto-bind` and `async_hooks` module.
+* answer the question where each tiny piece of running code it belongs to... and it can be even more powerfull in combination with some sort of [`auto-bind`](https://www.npmjs.com/package/auto-bind) package and [AsyncLocalStorage](https://nodejs.org/api/async_hooks.html#async_hooks_class_asynclocalstorage) module.
 * easy monitoring of each construction step, written once
 * powerful validations based on `'preCreation'` and `'postCreation'` hooks
 
