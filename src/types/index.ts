@@ -21,7 +21,8 @@ export type TypeClass = {
 export type TypeAbsorber = (
 	this: any,
 	TypeName: string,
-	constructHandler: NewableFunction,
+	// constructHandler: NewableFunction,
+	constructHandler: CallableFunction,
 	proto?: object,
 	config?: object
 ) => TypeClass;

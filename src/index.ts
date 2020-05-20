@@ -26,7 +26,7 @@ function checkThis ( pointer: any ): boolean {
 export const define = function (
 	this: any,
 	TypeName: string,
-	constructHandler: NewableFunction,
+	constructHandler: CallableFunction,
 	proto?: object,
 	config?: object,
 ) {
