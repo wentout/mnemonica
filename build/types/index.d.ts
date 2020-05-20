@@ -11,7 +11,7 @@ export declare type TypeClass = {
     lookup: TypeLookup;
     registerHook: (type: 'preCreation' | 'postCreation' | 'creationError', hook: CallableFunction) => any;
 };
-export declare type TypeAbsorber = (this: any, TypeName: string, constructHandler: NewableFunction, proto?: object, config?: object) => TypeClass;
+export declare type TypeAbsorber = (this: any, TypeName: string, constructHandler: CallableFunction, proto?: object, config?: object) => TypeClass;
 export declare type IDEF<T> = {
     new (...args: any[]): T;
     (this: T, ...args: any[]): T;
