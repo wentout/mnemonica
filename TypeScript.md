@@ -3,7 +3,7 @@
 
 ## (default) way to go with typings
 
-So, getting from the README.md as a starting point, the main method of the library is `define`, here is how it works:
+So, getting from the [README.md](https://github.com/wentout/mnemonica/blob/master/README.md) as a starting point, the main method of the library is `define`, here is how it works:
 
 ```js
 
