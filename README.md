@@ -32,7 +32,7 @@ If you are TypeScript user we have good news for you:
 * we provide support with some limitations
 * and you can help to do better
 
-Please visit [Mnemonica TypeScript](https://github.com/wentout/mnemonica/TypeScript.md) page for explanations.
+Please visit [Mnemonica TypeScript](https://github.com/wentout/mnemonica/blob/master/TypeScript.md) page for explanations.
 
 ---
 
