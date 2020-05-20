@@ -28,20 +28,27 @@ And `.define` it is indeed have to typed. And there is almost no way somebody wo
 	
 	type SomeType = {
 		// some definitions
+		...
+		// defined in future
+		NestedType: NewableFunction
 	};
 	
-	type TypeClassNesteds = {
-		// defined in future
-		NestedMethod: NewableFunction
+	type Nesteds = {
+		define: CallableFunction
 	};
 	
 	// TypeClass
-	const TypeClass: = define('TypeClass', function (this:SomeType, opts) {
+	const TypeClass:Nesteds = define('TypeClass', function (this:SomeType, opts) {
 		// any operators here, for example
 		Object.assign(this, opts);
 	});
 
 	const typeClassInstance:SomeType = new TypeClass();
+	
+	const NestedClass = TypeClass.define('NestedType', function () { /* ... */});
+	
+	const nestedType:SomeType = new typeClassInstance.NestedType();
+	
 
 ```
 
