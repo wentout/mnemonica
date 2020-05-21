@@ -19,7 +19,7 @@ So, getting from the [README.md](https://github.com/wentout/mnemonica/blob/maste
 
 ```
 
-And indeed it is necessary to make type annotations for `define`. There is almost no way somebody would be glad reading it's interface if it wouldn't be so. Therefore it just checks that provided constructor function is `:CallableFunction` and provided typename is `:string`. And we can mark `TypeClass` and  `typeClassInstance` with necessary type annotations. And we can pass `this` definition argument to constructor function. Combining all three we will get all that is necessary for full type annotation.
+And indeed it is necessary to make type annotations for `define`. There is almost no way somebody would be glad reading it's interface if it wouldn't be so. Therefore it just checks that provided constructor function is `:CallableFunction` and provided typename is `:string`. And we can mark `TypeClass` and  `typeClassInstance` with necessary type annotations. And we can pass `this` definition argument to constructor function. Combining all three we will get all that is necessary for full support of type annotations.
 
 ```js
 
