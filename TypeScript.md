@@ -19,8 +19,7 @@ So, getting from the [README.md](https://github.com/wentout/mnemonica/blob/maste
 
 ```
 
-And `define` it is indeed have to typed. And there is almost no way somebody would be glad reading it's interface if it would. Therefore it just checks that provided constructor function is `:NewableFunction` and provided typename is `:string`. The rest of typing is on your own. You can mark `TypeClass` or `typeClassInstance` with necessary type you wish, and you can pass `this` definition argument to newable function. Combining all three you will get all necessary typings.
-
+And indeed it is necessary to make type annotations for `define`. There is almost no way somebody would be glad reading it's interface if it wouldn't be so. Therefore it just checks that provided constructor function is `:CallableFunction` and provided typename is `:string`. And we can mark `TypeClass` and  `typeClassInstance` with necessary type annotations. And we can pass `this` definition argument to constructor function. Combining all three we will get all that is necessary for full type annotation.
 
 ```js
 
