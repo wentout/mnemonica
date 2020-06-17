@@ -369,8 +369,9 @@ const addThen = function ( this: any, then: any ) {
 	const self = this;
 
 	self.inheritedInstance = self.inheritedInstance
-		.then( ( instance: any ) => {
-			self.inheritedInstance = instance;
+		// .then( ( instance: any ) => {
+		.then( () => {
+			// self.inheritedInstance = instance;
 			self.inheritedInstance =
 				new InstanceCreator(
 					then.subtype,
@@ -392,6 +393,15 @@ const makeWaiter = function ( this: any, type: any, then: any ) {
 
 	self.inheritedInstance = self.inheritedInstance
 		.then( ( instance: any ) => {
+
+			if ( typeof instance !== 'object' ) {
+				if ( self.config.awaitReturn ) {
+					const msg = `should inherit from ${type.TypeName}: seems async ${type.TypeName} has no return statement`;
+					throw new WRONG_MODIFICATION_PATTERN( msg, self.stack );
+				} else {
+					return instance;
+				}
+			}
 
 			if ( !( instance instanceof self.type ) ) {
 				const icn = instance.constructor.name;

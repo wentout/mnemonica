@@ -207,8 +207,7 @@ const postProcessing = function (continuationOf) {
 const addThen = function (then) {
 	const self = this;
 	self.inheritedInstance = self.inheritedInstance
-		.then((instance) => {
-			self.inheritedInstance = instance;
+		.then(() => {
 			self.inheritedInstance =
             new exports.InstanceCreator(then.subtype, self.inheritedInstance, then.args, true);
 			return self.inheritedInstance;
@@ -218,6 +217,15 @@ const makeWaiter = function (type, then) {
 	const self = this;
 	self.inheritedInstance = self.inheritedInstance
 		.then((instance) => {
+			if (typeof instance !== 'object') {
+				if (self.config.awaitReturn) {
+					const msg = `should inherit from ${type.TypeName}: seems async ${type.TypeName} has no return statement`;
+					throw new WRONG_MODIFICATION_PATTERN(msg, self.stack);
+				}
+				else {
+					return instance;
+				}
+			}
 			if (!(instance instanceof self.type)) {
 				const icn = instance.constructor.name;
 				const msg = `should inherit from ${type.TypeName} but got ${icn}`;

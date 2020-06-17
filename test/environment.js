@@ -54,6 +54,8 @@ const tests = (opts) => {
 		oneElseCollectionInstance,
 		OneElseCollectionType,
 		userWithoutPassword,
+		UserWithoutPassword,
+		unchainedUserWithoutPassword,
 		chained,
 		derived,
 		rounded,
@@ -95,7 +97,6 @@ const tests = (opts) => {
 			];
 
 			const mnemonica_keys = Object.keys(mnemonica);
-			debugger;
 
 			it('interface length', () => {
 				expect(mnemonica_keys.length).equal(interface_keys.length);
@@ -366,6 +367,27 @@ const tests = (opts) => {
 		});
 
 		describe('should respect DFD', () => {
+			const BadBadType = define('BadBadType', function () {
+				return null;
+			}, {
+				constructor () {}
+			}, {
+				submitStack : true
+			});
+
+			const badbad = new BadBadType({});
+
+			it('checks primitives are omitted as spec describes', () => {
+				expect(badbad).instanceOf(BadBadType);
+			});
+
+			it('checks prototype constructor property is omited', () => {
+				expect(badbad.constructor.name).equal('BadBadType');
+			});
+
+		});
+
+		describe('should respect DFD', () => {
 			const BadType = define('BadType', function (NotThis) {
 				// returns not instanceof this
 				return NotThis;
@@ -416,7 +438,6 @@ const tests = (opts) => {
 			it('thrown error.stack should have seekable definition with stack cleaner', () => {
 				defineStackCleaner(stackCleanerRegExp);
 				const errored2 = new BadType({});
-				debugger;
 				expect(errored2.stack.indexOf(stackstart)).equal(1);
 				expect(errored2.stack
 					.indexOf('environment.js') > 0).is.true;
@@ -619,6 +640,14 @@ const tests = (opts) => {
 				expect(userWithoutPassword.WithoutPassword).equal(undefined);
 			});
 		});
+
+		describe('check uncained construction', () => {
+			it('check instance creation without chain', () => {
+				expect(unchainedUserWithoutPassword).instanceof(UserWithoutPassword);
+			});
+		});
+
+
 
 		describe('merge tests', () => {
 			const mergedSample = {

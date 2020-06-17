@@ -53,7 +53,7 @@ And indeed it is necessary to make type annotations for `define`. There is almos
 
 ## (default) future compatibility
 
-For future compatibility it is better to **default**. It might be possible there would be TypeScript compatibility to cover all code in future and we will be able to provide all the necessary things. Therefore it wouldn't be necessary to get rid of already written proper typings of your code.
+For future compatibility it is better to follow **default** explanation. It might be possible there would be TypeScript compatibility to cover all parts of mnemonica code with type definitions in future, and therefore we will be able to provide the rest of other necessary things. Therefore, inspite it wouldn't be so necessary anymore, but keeping type definitions will not break existent code of other depentent project written for on previous versions of mnemonica.
 
 ## the other way
 

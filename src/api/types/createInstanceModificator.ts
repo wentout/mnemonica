@@ -2,7 +2,7 @@
 
 export default function () {
 
-	const CreateInstanceModificator = function (this:any, ModificatorType:Function, ModificatorTypePrototype:{[index:string]:any}, addProps:Function) {
+	const CreateInstanceModificator = function (this:any, ModificatorType:CallableFunction, ModificatorTypePrototype:{[index:string]:any}, addProps:CallableFunction) {
 
 		const existentInstance = this;
 
@@ -24,11 +24,13 @@ export default function () {
 		// so now we have to copy all constructor props
 		Object.entries(ModificatorTypePrototype).forEach((entry) => {
 			const [name, value] = entry;
-			(
+			if (
 				name !== 'constructor'
 				// &&
 				// name !== SymbolConstructorName
-			) && (ModificatorType.prototype[name] = value);
+			) {
+				(ModificatorType.prototype[name] = value);
+			}
 		});
 		// 1. next line is done 4 our console.log will print proper type
 		// and it should be explicit declaration, or it wouldn't see

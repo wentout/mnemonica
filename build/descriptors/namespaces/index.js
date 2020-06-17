@@ -11,7 +11,9 @@ const defaultOptions = {
 	useOldStyle : false,
 	strictChain : true,
 	blockErrors : true,
-	submitStack : false
+	submitStack : false,
+	awaitReturn : true,
+	bindMethods : true,
 };
 const namespaceStorage = new Map();
 const Namespace = function (name, config) {
