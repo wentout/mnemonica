@@ -64,7 +64,6 @@ const UserType = mnemonica.define('UserType', function (userData) {
 
 const userTypeHooksInvocations = [];
 
-debugger;
 UserType.registerHook('preCreation', function (opts) {
 	userTypeHooksInvocations.push({
 		kind : 'pre',
@@ -239,13 +238,17 @@ const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionTy
 });
 const oneElseCollectionInstance = new OneElseCollectionType();
 
-debugger;
 const user = UserType(USER_DATA);
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
 
 const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
+
+const AsyncWOReturn = define('AsyncWOReturn', async function () {});
+const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () {}, {}, {
+	awaitReturn: false
+});
 
 const AsyncType = tsdefine('AsyncType', async function (data) {
 	return Object.assign(this, {
@@ -442,7 +445,9 @@ describe('Main Test', () => {
 	]);
 	const userTCForkBind = userTC.fork.bind(user)(FORK_CALL_DATA);
 	const utcfcwp = userTCForkCall.WithoutPassword();
-
+	
+	// check unchained construction
+	const unchainedUserWithoutPassword = new UserWithoutPassword();
 
 	const userWithoutPassword = new userTC.WithoutPassword();
 	const userWithoutPassword_2 = new userTC.WithoutPassword();
@@ -500,6 +505,8 @@ describe('Main Test', () => {
 		oneElseCollectionInstance,
 		OneElseCollectionType,
 		userWithoutPassword,
+		UserWithoutPassword,
+		unchainedUserWithoutPassword,
 		UserTypeConstructor,
 		chained,
 		derived,
@@ -511,6 +518,8 @@ describe('Main Test', () => {
 	require('./async.chain')({
 		UserType,
 		UserTypeConstructor,
+		AsyncWOReturn,
+		AsyncWOReturnNAR,
 	});
 
 

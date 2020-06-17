@@ -14,17 +14,17 @@ const compileNewModificatorFunctionBody = function (FunctionName, asClass = fals
 		return CreationHandler.call(this, answer);
 	};`;
 	return new Function('ConstructHandler', 'CreationHandler', 'SymbolConstructorName', `return function () {
-			
+
 			${modString}
-			
+
 			Object.defineProperty(${FunctionName}, SymbolConstructorName, {
 				get () {
 					return '${FunctionName}';
 				}
 			});
-			
+
 			return ${FunctionName};
-			
+
 		};
 	`);
 };

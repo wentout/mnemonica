@@ -12,7 +12,9 @@ function default_1 () {
 		});
 		Object.entries(ModificatorTypePrototype).forEach((entry) => {
 			const [name, value] = entry;
-			(name !== 'constructor') && (ModificatorType.prototype[name] = value);
+			if (name !== 'constructor') {
+				(ModificatorType.prototype[name] = value);
+			}
 		});
 		ModificatorType.prototype.constructor = ModificatorType;
 		Reflect.setPrototypeOf(ModificatorType.prototype, Mnemosyne);

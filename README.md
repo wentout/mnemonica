@@ -3,6 +3,9 @@ abstract technique that aids information retention : instance inheritance system
 
 ... allows us to make inherited descriptions of mappings of transformations from predecessor structured data types to the successors, as if it was math `f(x)=>y` ... and we will use `this` keyword as a persistent data structure where we will apply that transformations
 
+![concept](https://raw.githubusercontent.com/mythographica/stash/master/img/LifeCycle/LifeCycle.png)
+
+
 ---
 
 # shortcuts

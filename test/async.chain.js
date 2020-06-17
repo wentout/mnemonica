@@ -1,6 +1,6 @@
 'use strict';
 
-const { assert, expect } = require('chai');
+const {assert, expect} = require('chai');
 
 const {
 	define,
@@ -8,11 +8,47 @@ const {
 } = require('..');
 
 const tests = (opts) => {
-	
+
 	const {
 		UserType,
 		UserTypeConstructor,
+		AsyncWOReturn,
+		AsyncWOReturnNAR,
 	} = opts;
+
+	describe('async construct should return something', async () => {
+
+		let thrown;
+		try {
+			await new AsyncWOReturn();
+		} catch (error) {
+			thrown = error;
+		}
+
+		it('should throw without return statement', () => {
+			expect(thrown).instanceOf(Error);
+			expect(thrown).instanceOf(AsyncWOReturn);
+			expect(thrown).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			expect(thrown.message).exist.and.is.a('string');
+			assert.equal(thrown.message, 'wrong modification pattern : should inherit from AsyncWOReturn: seems async AsyncWOReturn has no return statement');
+		});
+
+	});
+
+	describe('async construct should NOT return something', async () => {
+
+		let thrown;
+		try {
+			thrown = await new AsyncWOReturnNAR();
+		} catch (error) {
+			thrown = error;
+		}
+
+		it('should NOT throw without return statement', () => {
+			assert.equal(thrown, undefined);
+		});
+
+	});
 
 	describe('async chain check', () => {
 
@@ -20,14 +56,14 @@ const tests = (opts) => {
 			const self = new UserType(data);
 			return self;
 		}, {}, {
-			submitStack : true
+			submitStack: true
 		});
-		
+
 		var WrongAsyncType = define('WrongAsyncType', async function (data) {
 			const self = new UserType(data);
 			return self;
 		}, {}, {
-			submitStack : true
+			submitStack: true
 		});
 
 
@@ -38,28 +74,28 @@ const tests = (opts) => {
 			wrongAsyncTypeErr;
 
 		const etalon1 = {
-			WithAdditionalSignSign : 'WithAdditionalSignSign',
-			WithoutPasswordSign    : 'WithoutPasswordSign',
-			async1st               : '1_1st',
-			description            : 'UserTypeConstructor',
-			email                  : 'async@gmail.com',
-			password               : undefined,
-			sign                   : 'async sign',
-			async2nd               : '1_2nd',
-			sync                   : '1_is',
-			async                  : '1_3rd',
+			WithAdditionalSignSign: 'WithAdditionalSignSign',
+			WithoutPasswordSign: 'WithoutPasswordSign',
+			async1st: '1_1st',
+			description: 'UserTypeConstructor',
+			email: 'async@gmail.com',
+			password: undefined,
+			sign: 'async sign',
+			async2nd: '1_2nd',
+			sync: '1_is',
+			async: '1_3rd',
 		};
 		const etalon2 = {
-			WithAdditionalSignSign : 'WithAdditionalSignSign',
-			WithoutPasswordSign    : 'WithoutPasswordSign',
-			async1st               : '2_1st',
-			description            : 'UserTypeConstructor',
-			email                  : 'async@gmail.com',
-			password               : undefined,
-			sign                   : 'async sign',
-			async2nd               : '2_2nd',
-			sync                   : '2_is',
-			async                  : '2_3rd',
+			WithAdditionalSignSign: 'WithAdditionalSignSign',
+			WithoutPasswordSign: 'WithoutPasswordSign',
+			async1st: '2_1st',
+			description: 'UserTypeConstructor',
+			email: 'async@gmail.com',
+			password: undefined,
+			sign: 'async sign',
+			async2nd: '2_2nd',
+			sync: '2_is',
+			async: '2_3rd',
 		};
 
 		var syncWAsyncChained;
@@ -77,66 +113,66 @@ const tests = (opts) => {
 								await (
 
 									new UserTypeConstructor({
-										email : 'async@gmail.com', password : 32123
+										email: 'async@gmail.com', password: 32123
 									})
 										.WithoutPassword()
 										.WithAdditionalSign('async sign')
 
-								).AsyncChain1st({ async1st : '1_1st' })
+								).AsyncChain1st({async1st: '1_1st'})
 
-							// after promise
-							).AsyncChain2nd({ async2nd : '1_2nd' })
+								// after promise
+							).AsyncChain2nd({async2nd: '1_2nd'})
 							// sync 2 async
-						).Async2Sync2nd({ sync : '1_is' })
-					).AsyncChain3rd({ async : '1_3rd' });
+						).Async2Sync2nd({sync: '1_is'})
+					).AsyncChain3rd({async: '1_3rd'});
 
 				// debugger;
 				// working two
 				syncWAsync2 = await (
 
 					new UserTypeConstructor({
-						email : 'async@gmail.com', password : 32123
+						email: 'async@gmail.com', password: 32123
 					})
 						.WithoutPassword()
 						.WithAdditionalSign('async sign')
 
-				).AsyncChain1st({ async1st : '2_1st' })
+				).AsyncChain1st({async1st: '2_1st'})
 					// after promise
 					// .then(async function (instance) {
-				// return await instance.AsyncChain1st({ async1st: '2_1st' });
+					// return await instance.AsyncChain1st({ async1st: '2_1st' });
 					// })
 					.then(async function (instance) {
-						return await instance.AsyncChain2nd({ async2nd : '2_2nd' });
+						return await instance.AsyncChain2nd({async2nd: '2_2nd'});
 					})
 					.then(async function (instance) {
 						// sync 2 async
-						return await instance.Async2Sync2nd({ sync : '2_is' });
+						return await instance.Async2Sync2nd({sync: '2_is'});
 					})
 					.then(async function (instance) {
-						return await instance.AsyncChain3rd({ async : '2_3rd' });
+						return await instance.AsyncChain3rd({async: '2_3rd'});
 					});
 
 				// debugger;
 				syncWAsyncChained = await /* (await (await sure */
-				new UserTypeConstructor({
-					email    : 'async@gmail.com',
-					password : 32123
-				})
-					.WithoutPassword()
-					.WithAdditionalSign('async sign')
-					.AsyncChain1st({ async1st : '1st' })
-				// after promise
-					.AsyncChain2nd({ async2nd : '2nd' })
-					.Async2Sync2nd({ sync : 'is' })
-					.AsyncChain3rd({ async : '3rd' });
+					new UserTypeConstructor({
+						email: 'async@gmail.com',
+						password: 32123
+					})
+						.WithoutPassword()
+						.WithAdditionalSign('async sign')
+						.AsyncChain1st({async1st: '1st'})
+						// after promise
+						.AsyncChain2nd({async2nd: '2nd'})
+						.Async2Sync2nd({sync: 'is'})
+						.AsyncChain3rd({async: '3rd'});
 
 				// debugger;
 				done();
 
 				try {
 					new WrongSyncType({
-						email    : 'wrong@gmail.com',
-						password : 111
+						email: 'wrong@gmail.com',
+						password: 111
 					});
 				} catch (err) {
 					wrongSyncTypeErr = err;
@@ -144,8 +180,8 @@ const tests = (opts) => {
 
 				try {
 					await new WrongAsyncType({
-						email    : 'wrong@gmail.com',
-						password : 111
+						email: 'wrong@gmail.com',
+						password: 111
 					});
 				} catch (err) {
 					wrongAsyncTypeErr = err;
@@ -159,16 +195,16 @@ const tests = (opts) => {
 			assert.deepEqual(etalon2, syncWAsync2.extract());
 
 			const etalon3 = {
-				WithAdditionalSignSign : 'WithAdditionalSignSign',
-				WithoutPasswordSign    : 'WithoutPasswordSign',
-				async1st               : '1st',
-				description            : 'UserTypeConstructor',
-				email                  : 'async@gmail.com',
-				password               : undefined,
-				sign                   : 'async sign',
-				async2nd               : '2nd',
-				sync                   : 'is',
-				async                  : '3rd',
+				WithAdditionalSignSign: 'WithAdditionalSignSign',
+				WithoutPasswordSign: 'WithoutPasswordSign',
+				async1st: '1st',
+				description: 'UserTypeConstructor',
+				email: 'async@gmail.com',
+				password: undefined,
+				sign: 'async sign',
+				async2nd: '2nd',
+				sync: 'is',
+				async: '3rd',
 			};
 
 			assert.deepEqual(etalon3, syncWAsyncChained.extract());
@@ -232,115 +268,115 @@ const tests = (opts) => {
 		});
 
 	});
-	
+
 	describe('async chain forced errors types check', () => {
-		
+
 		var sleepError = null;
-		
+
 		var sleepInstance = null;
 		var otherSleepInstance = null;
 		var anotherSleepInstance = null;
-		
+
 		var syncErrorStart = null;
 		var syncErrorEnd = null;
-		
+
 		var straightErrorSync = null;
 		var straightErrorAsync = null;
-		
-		const argsTest = { argsTest : 123 };
-		
-		const sleep = (time) =>{
+
+		const argsTest = {argsTest: 123};
+
+		const sleep = (time) => {
 			return new Promise((resolve) => setTimeout(resolve, time));
 		};
-	
+
 		const SleepType = define('SleepType', async function () {
-			
+
 			await sleep(100);
 			this.slept = true;
 			return this;
-			
+
 		});
-		
+
 		const AsyncErroredType = SleepType.define('AsyncErroredType', async function (...args) {
 			await sleep(100);
-			const b = { ...args };
+			const b = {...args};
 			// TypeError
 			b.c.async = null;
 		});
-		
+
 		const SyncErroredType = SleepType.define('SyncErroredType', function (...args) {
-			const b = { ...args };
+			const b = {...args};
 			// TypeError
 			b.c.sync = null;
 		});
-		
+
 		const AsyncErroredTypeStraight = SleepType.define('AsyncErroredTypeStraight', async function (...args) {
 			await sleep(100);
-			const b = { ...args };
+			const b = {...args};
 			// TypeError
 			b.c.async = null;
 		}, {}, {
-			blockErrors : false
+			blockErrors: false
 		});
-		
+
 		const SyncErroredTypeStraight = SleepType.define('SyncErroredTypeStraight', function (...args) {
-			const b = { ...args };
+			const b = {...args};
 			// TypeError
 			b.c.sync = null;
 		}, {}, {
-			blockErrors : false
+			blockErrors: false
 		});
-		
+
 		before(function (done) {
 			(async () => {
-				
+
 				sleepInstance = await new SleepType();
-				
+
 				try {
 					await sleepInstance.AsyncErroredType(argsTest);
 				} catch (error) {
 					sleepError = error;
 				}
-				
+
 				otherSleepInstance = await new SleepType();
-				
+
 				anotherSleepInstance = await new SleepType();
-				
+
 				try {
 					anotherSleepInstance.SyncErroredType(argsTest);
 				} catch (error) {
 					syncErrorStart = error;
 				}
-				
+
 				try {
 					anotherSleepInstance.SyncErroredType(argsTest);
 				} catch (error) {
 					syncErrorEnd = error;
 				}
-				
+
 				try {
 					await new SleepType().AsyncErroredTypeStraight(argsTest);
 				} catch (error) {
 					straightErrorAsync = error;
 				}
-				
+
 				try {
 					await new SleepType().SyncErroredTypeStraight(argsTest);
 				} catch (error) {
 					straightErrorSync = error;
 				}
-				
+
 				done();
-				
+
 			})();
 		});
-		
+
 		it('shold have props', () => {
 			expect(sleepInstance.slept).is.true;
 			expect(sleepError.slept).is.true;
 			expect(otherSleepInstance.slept).is.true;
 		});
-		
+
 		it('sleepError shold be instanceof Error', () => {
 			expect(sleepError).instanceOf(Error);
 		});
@@ -356,8 +392,8 @@ const tests = (opts) => {
 		it('sleepError expect args of SyncErroredType', () => {
 			expect(sleepError.__args__[0]).equal(argsTest);
 		});
-		
-		
+
+
 		it('straightErrorAsync expect args of AsyncErroredTypeStraight', () => {
 			expect(straightErrorAsync.__args__).equal(undefined);
 		});
@@ -375,7 +411,7 @@ const tests = (opts) => {
 			expect(straightErrorSync).instanceOf(TypeError);
 			expect(straightErrorSync).not.instanceOf(SyncErroredTypeStraight);
 		});
-		
+
 		it('sleepInstance shold be instanceof SleepType', () => {
 			expect(sleepInstance).instanceOf(SleepType);
 		});
@@ -385,7 +421,7 @@ const tests = (opts) => {
 		it('sleepInstance shold be instanceof TypeError', () => {
 			expect(sleepInstance).instanceOf(TypeError);
 		});
-		
+
 		it('otherSleepInstance shold be instanceof SleepType', () => {
 			expect(otherSleepInstance).instanceOf(SleepType);
 		});
@@ -395,7 +431,7 @@ const tests = (opts) => {
 		it('otherSleepInstance sholdn\'t be instanceof TypeError', () => {
 			expect(otherSleepInstance).not.instanceOf(TypeError);
 		});
-		
+
 		it('anotherSleepInstance shold be instanceof SleepType', () => {
 			const insof = anotherSleepInstance instanceof SleepType;
 			expect(insof).is.true;
@@ -407,11 +443,11 @@ const tests = (opts) => {
 			expect(anotherSleepInstance).instanceOf(TypeError);
 		});
 
-		
+
 		it('sleepInstance sholdn\'t be instanceof AsyncErroredType', () => {
 			expect(sleepInstance).not.instanceOf(AsyncErroredType);
 		});
-		
+
 		it('syncErrorStart shold be instanceof Error', () => {
 			expect(syncErrorStart).instanceOf(Error);
 		});
@@ -424,7 +460,7 @@ const tests = (opts) => {
 		it('syncErrorEnd expect args of SyncErroredType', () => {
 			expect(syncErrorStart.__args__[0]).equal(argsTest);
 		});
-		
+
 		it('syncErrorEnd shold be instanceof Error', () => {
 			expect(syncErrorEnd).instanceOf(Error);
 		});
@@ -438,7 +474,7 @@ const tests = (opts) => {
 			expect(syncErrorEnd.__args__[0]).equal(argsTest);
 		});
 
-		
+
 	});
 
 };

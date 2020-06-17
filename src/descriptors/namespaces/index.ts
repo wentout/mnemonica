@@ -46,7 +46,17 @@ const defaultOptions = {
 	// if it is necessary to collect stack
 	// as a __stack__ prototype property
 	// during the process of instance creation
-	submitStack: false
+	submitStack: false,
+
+	// await new Constructor()
+	// must return value
+	// optional ./issues/106
+	awaitReturn: true,
+
+	// instance methods calls
+	// are binded by default
+	// with instance itself
+	bindMethods: true,
 
 };
 

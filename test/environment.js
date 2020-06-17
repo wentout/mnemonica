@@ -54,6 +54,8 @@ const tests = (opts) => {
 		oneElseCollectionInstance,
 		OneElseCollectionType,
 		userWithoutPassword,
+		UserWithoutPassword,
+		unchainedUserWithoutPassword,
 		chained,
 		derived,
 		rounded,
@@ -95,7 +97,6 @@ const tests = (opts) => {
 			];
 
 			const mnemonica_keys = Object.keys(mnemonica);
-			debugger;
 
 			it('interface length', () => {
 				expect(mnemonica_keys.length).equal(interface_keys.length);
@@ -129,14 +130,14 @@ const tests = (opts) => {
 			});
 
 			const NamedClass = UserType.define(class NamedClass {
-				constructor (snc) {
+				constructor(snc) {
 					this.type = 'class';
 					this.snc = snc;
 				}
 			});
 
 			const SubNamedClass = NamedClass.define(class SubNamedClass {
-				constructor () {
+				constructor() {
 					this.type = 'subclass';
 				}
 			});
@@ -366,11 +367,29 @@ const tests = (opts) => {
 		});
 
 		describe('should respect DFD', () => {
+			const BadBadType = define('BadBadType', function (NotThis) {
+				return null;
+			}, {
+				constructor () {}
+			}, {
+				submitStack: true
+			});
+
+			try {
+				const errored = new BadBadType({});
+				debugger;
+			} catch (error) {
+				debugger;
+			}
+
+		});
+
+		describe('should respect DFD', () => {
 			const BadType = define('BadType', function (NotThis) {
 				// returns not instanceof this
 				return NotThis;
 			}, {}, {
-				submitStack : true
+				submitStack: true
 			});
 			var hookInstance;
 			BadType.registerHook('creationError', (_hookInstance) => {
@@ -416,7 +435,6 @@ const tests = (opts) => {
 			it('thrown error.stack should have seekable definition with stack cleaner', () => {
 				defineStackCleaner(stackCleanerRegExp);
 				const errored2 = new BadType({});
-				debugger;
 				expect(errored2.stack.indexOf(stackstart)).equal(1);
 				expect(errored2.stack
 					.indexOf('environment.js') > 0).is.true;
@@ -492,7 +510,7 @@ const tests = (opts) => {
 				['handler must be a function', () => {
 					define(() => {
 						return {
-							name : null
+							name: null
 						};
 					});
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
@@ -620,16 +638,24 @@ const tests = (opts) => {
 			});
 		});
 
+		describe('check uncained construction', () => {
+			it('check instance creation without chain', () => {
+				expect(unchainedUserWithoutPassword).instanceof(UserWithoutPassword);
+			});
+		});
+
+
+
 		describe('merge tests', () => {
 			const mergedSample = {
-				OverMoreSign           : 'OverMoreSign',
-				WithAdditionalSignSign : 'WithAdditionalSignSign',
-				WithoutPasswordSign    : 'WithoutPasswordSign',
-				description            : 'UserType',
-				email                  : 'forkmail@gmail.com',
-				password               : '54321',
-				sign                   : 'userWithoutPassword_2.WithAdditionalSign',
-				str                    : 're-defined OverMore str',
+				OverMoreSign: 'OverMoreSign',
+				WithAdditionalSignSign: 'WithAdditionalSignSign',
+				WithoutPasswordSign: 'WithoutPasswordSign',
+				description: 'UserType',
+				email: 'forkmail@gmail.com',
+				password: '54321',
+				sign: 'userWithoutPassword_2.WithAdditionalSign',
+				str: 're-defined OverMore str',
 			};
 			it('merge works correctly', () => {
 				assert.deepEqual(merged.extract(), mergedSample);
@@ -721,7 +747,7 @@ const tests = (opts) => {
 		});
 
 		const goodNamespaceTC = goodNamespace.createTypesCollection('good namespace types collection', {
-			useOldStyle : true
+			useOldStyle: true
 		});
 		it('namespace types collection creation check', () => {
 			expect(goodNamespaceTC[SymbolConfig].useOldStyle).is.equal(true);
