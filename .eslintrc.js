@@ -84,7 +84,8 @@ module.exports = {
 			'files': ['build/**/*.js'],
 			'rules': {
 				'no-multi-assign': 0,
-				'prefer-destructuring': 0
+				'prefer-destructuring': 0,
+				'new-cap': 0
 			}
 		}
 	]

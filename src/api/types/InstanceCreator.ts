@@ -1,6 +1,9 @@
 'use strict';
 
 import { ConstructorFunction } from '../../types';
+
+// import { hop } from '../../utils/hop';
+
 import { constants } from '../../constants';
 const {
 	odp,
@@ -315,35 +318,42 @@ const invokePostHooks = function ( this: any ) {
 };
 
 
-const bindMethod = ( instance: any, name: string, MethodItself: any ) => {
+const bindMethod = function ( this: any, instance: any, name: string, MethodItself: any ) {
 	odp( instance, name, {
 		get () {
 			const addTo = this;
 			return function ( this: any, ...args: any[] ) {
 				const applicateTo = this || addTo; // || instance;
-				if ( new.target ) {
-					return new MethodItself( ...args );
+				try {
+					if ( new.target ) {
+						return new MethodItself( ...args );
+					}
+					return MethodItself.call( applicateTo, ...args );
+				} catch ( error ) {
+					throw new applicateTo.exception( error, args );
 				}
-				return MethodItself.call( applicateTo, ...args );
 			}
 		}
 	} );
 };
 
-const makeMethodBind = function ( this: any ) {
+const bindProtoMethods = function ( this: any ) {
 	const self = this;
 	const {
 		inheritedInstance,
 		// existentInstance,
 		proto,
 	} = self;
-	Object.entries( Reflect.getPrototypeOf( inheritedInstance ) ).forEach( ( entry: [ string, any ] ) => {
-		const [ name, MayBeMethodFunction ] = entry;
-		if ( name === 'constructor' ) {
+	const protoPointer = Reflect.getPrototypeOf( inheritedInstance );
+	Object.entries( protoPointer ).forEach( ( entry: [ string, any ] ) => {
+		const [ mayBeMethodName, MayBeMethodFunction ] = entry;
+		if ( mayBeMethodName === 'constructor' ) {
 			return;
 		}
-		if ( MayBeMethodFunction instanceof Function && proto[ name ] instanceof Function ) {
-			bindMethod( inheritedInstance, name, MayBeMethodFunction );
+		if ( MayBeMethodFunction instanceof Function && proto[ mayBeMethodName ] instanceof Function ) {
+			// if (!hop(inheritedInstance, mayBeMethodName)) {
+			bindMethod( protoPointer, mayBeMethodName, MayBeMethodFunction );
+			// }
 		}
 	} );
 	// Object.entries( existentInstance ).forEach( ( entry: [ string, any ] ) => {
@@ -390,7 +400,7 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 
 	self.invokePostHooks();
 	if ( bindedProto ) {
-		self.makeMethodBind();
+		self.bindProtoMethods();
 	}
 
 
@@ -485,7 +495,7 @@ const InstanceCreatorPrototype = {
 	getExistentAsyncStack,
 	postProcessing,
 	bindMethod,
-	makeMethodBind,
+	bindProtoMethods,
 	makeWaiter,
 	proceedProto,
 	addProps,
