@@ -855,6 +855,55 @@ Starting from v0.6.8 you can try to import ESM using the following scenario:
 import { define, lookup } from 'mnemonica/module';
 ```
 
+# Config Options
+
+While making `define` we can provide some config data about how instance should be created, default values and descriptions are below:
+
+```js
+define('SomeType', function () {}, {}, {
+
+	// shall or not we use strict checking
+	// for creation sub-instances Only from current type
+	// or we might use up-nested sub-instances from chain
+	strictChain: true,
+
+	// should we use forced errors checking
+	// to make all inherited types errored
+	// if there is an error somewhere in chain
+	// disallow instance construction
+	// if there is an error in prototype chain
+	blockErrors: true,
+
+	// if it is necessary to collect stack
+	// as a __stack__ prototype property
+	// during the process of instance creation
+	submitStack: false,
+
+	// await new Constructor()
+	// must return value
+	// optional ./issues/106
+	awaitReturn: true,
+
+	// instance methods calls
+	// are binded by default
+	// with instance itself
+	bindedProto: true,
+})
+```
+
+Also you can override default config options for Types Collection or Namespace. Keep in mind, that TypesCollection options override namespace options. Therefore if you will override namespace options all previously created types collections would not update. For example, after doing so all types that have no own config will fall without any error:
+
+```js
+import {
+	defaultTypes,
+	SymbolConfig
+} from 'mnemonica';
+
+defaultTypes[SymbolConfig].blockErrors = false;
+
+```
+
+
 # finally
 
 So, now you can craft as much types as you wish, combine them, re-define them and spend much more time playing with them:
