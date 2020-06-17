@@ -130,14 +130,14 @@ const tests = (opts) => {
 			});
 
 			const NamedClass = UserType.define(class NamedClass {
-				constructor(snc) {
+				constructor (snc) {
 					this.type = 'class';
 					this.snc = snc;
 				}
 			});
 
 			const SubNamedClass = NamedClass.define(class SubNamedClass {
-				constructor() {
+				constructor () {
 					this.type = 'subclass';
 				}
 			});
@@ -367,20 +367,23 @@ const tests = (opts) => {
 		});
 
 		describe('should respect DFD', () => {
-			const BadBadType = define('BadBadType', function (NotThis) {
+			const BadBadType = define('BadBadType', function () {
 				return null;
 			}, {
 				constructor () {}
 			}, {
-				submitStack: true
+				submitStack : true
 			});
 
-			try {
-				const errored = new BadBadType({});
-				debugger;
-			} catch (error) {
-				debugger;
-			}
+			const badbad = new BadBadType({});
+
+			it('checks primitives are omitted as spec describes', () => {
+				expect(badbad).instanceOf(BadBadType);
+			});
+
+			it('checks prototype constructor property is omited', () => {
+				expect(badbad.constructor.name).equal('BadBadType');
+			});
 
 		});
 
@@ -389,7 +392,7 @@ const tests = (opts) => {
 				// returns not instanceof this
 				return NotThis;
 			}, {}, {
-				submitStack: true
+				submitStack : true
 			});
 			var hookInstance;
 			BadType.registerHook('creationError', (_hookInstance) => {
@@ -510,7 +513,7 @@ const tests = (opts) => {
 				['handler must be a function', () => {
 					define(() => {
 						return {
-							name: null
+							name : null
 						};
 					});
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
@@ -648,14 +651,14 @@ const tests = (opts) => {
 
 		describe('merge tests', () => {
 			const mergedSample = {
-				OverMoreSign: 'OverMoreSign',
-				WithAdditionalSignSign: 'WithAdditionalSignSign',
-				WithoutPasswordSign: 'WithoutPasswordSign',
-				description: 'UserType',
-				email: 'forkmail@gmail.com',
-				password: '54321',
-				sign: 'userWithoutPassword_2.WithAdditionalSign',
-				str: 're-defined OverMore str',
+				OverMoreSign           : 'OverMoreSign',
+				WithAdditionalSignSign : 'WithAdditionalSignSign',
+				WithoutPasswordSign    : 'WithoutPasswordSign',
+				description            : 'UserType',
+				email                  : 'forkmail@gmail.com',
+				password               : '54321',
+				sign                   : 'userWithoutPassword_2.WithAdditionalSign',
+				str                    : 're-defined OverMore str',
 			};
 			it('merge works correctly', () => {
 				assert.deepEqual(merged.extract(), mergedSample);
@@ -747,7 +750,7 @@ const tests = (opts) => {
 		});
 
 		const goodNamespaceTC = goodNamespace.createTypesCollection('good namespace types collection', {
-			useOldStyle: true
+			useOldStyle : true
 		});
 		it('namespace types collection creation check', () => {
 			expect(goodNamespaceTC[SymbolConfig].useOldStyle).is.equal(true);

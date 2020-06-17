@@ -247,7 +247,7 @@ const userPL_NoNew = userPL1.UserTypePL2();
 
 const AsyncWOReturn = define('AsyncWOReturn', async function () {});
 const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () {}, {}, {
-	awaitReturn: false
+	awaitReturn : false
 });
 
 const AsyncType = tsdefine('AsyncType', async function (data) {
