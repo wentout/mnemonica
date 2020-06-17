@@ -13,7 +13,8 @@ function default_1 () {
 				Object.defineProperty(ModificatorType.prototype, 'constructor', {
 					get () {
 						return ModificatorType;
-					}
+					},
+					enumerable : false
 				});
 				return ModificatorType;
 			};

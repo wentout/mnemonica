@@ -12,6 +12,7 @@ const tests = (opts) => {
 	const {
 		UserType,
 		UserTypeConstructor,
+		
 		AsyncWOReturn,
 		AsyncWOReturnNAR,
 	} = opts;
@@ -35,6 +36,27 @@ const tests = (opts) => {
 
 	});
 
+	describe('test hook throwModificationError', async () => {
+		const thrownError = new Error('aha');
+		var thrown;
+		const HookThrownType = define('HookThrownType', function(){});
+		HookThrownType.registerHook('postCreation', (hookData) => {
+			if (!(thrown instanceof Error)) {
+				hookData.throwModificationError(thrownError);
+			}
+		});
+		try {
+			await new HookThrownType();
+		} catch (error) {
+			thrown = error;
+		}
+		it('should throw without return statement', () => {
+			expect(thrown).instanceOf(Error);
+			expect(thrown).instanceOf(HookThrownType);
+			expect(thrown.message).equal('aha');
+		});
+	});
+
 	describe('async construct should NOT return something', async () => {
 
 		let thrown;
@@ -56,14 +78,14 @@ const tests = (opts) => {
 			const self = new UserType(data);
 			return self;
 		}, {}, {
-			submitStack : true
+			submitStack: true
 		});
 
 		var WrongAsyncType = define('WrongAsyncType', async function (data) {
 			const self = new UserType(data);
 			return self;
 		}, {}, {
-			submitStack : true
+			submitStack: true,
 		});
 
 
@@ -74,28 +96,28 @@ const tests = (opts) => {
 			wrongAsyncTypeErr;
 
 		const etalon1 = {
-			WithAdditionalSignSign : 'WithAdditionalSignSign',
-			WithoutPasswordSign    : 'WithoutPasswordSign',
-			async1st               : '1_1st',
-			description            : 'UserTypeConstructor',
-			email                  : 'async@gmail.com',
-			password               : undefined,
-			sign                   : 'async sign',
-			async2nd               : '1_2nd',
-			sync                   : '1_is',
-			async                  : '1_3rd',
+			WithAdditionalSignSign: 'WithAdditionalSignSign',
+			WithoutPasswordSign: 'WithoutPasswordSign',
+			async1st: '1_1st',
+			description: 'UserTypeConstructor',
+			email: 'async@gmail.com',
+			password: undefined,
+			sign: 'async sign',
+			async2nd: '1_2nd',
+			sync: '1_is',
+			async: '1_3rd',
 		};
 		const etalon2 = {
-			WithAdditionalSignSign : 'WithAdditionalSignSign',
-			WithoutPasswordSign    : 'WithoutPasswordSign',
-			async1st               : '2_1st',
-			description            : 'UserTypeConstructor',
-			email                  : 'async@gmail.com',
-			password               : undefined,
-			sign                   : 'async sign',
-			async2nd               : '2_2nd',
-			sync                   : '2_is',
-			async                  : '2_3rd',
+			WithAdditionalSignSign: 'WithAdditionalSignSign',
+			WithoutPasswordSign: 'WithoutPasswordSign',
+			async1st: '2_1st',
+			description: 'UserTypeConstructor',
+			email: 'async@gmail.com',
+			password: undefined,
+			sign: 'async sign',
+			async2nd: '2_2nd',
+			sync: '2_is',
+			async: '2_3rd',
 		};
 
 		var syncWAsyncChained;
@@ -113,66 +135,66 @@ const tests = (opts) => {
 								await (
 
 									new UserTypeConstructor({
-										email : 'async@gmail.com', password : 32123
+										email: 'async@gmail.com', password: 32123
 									})
 										.WithoutPassword()
 										.WithAdditionalSign('async sign')
 
-								).AsyncChain1st({async1st : '1_1st'})
+								).AsyncChain1st({async1st: '1_1st'})
 
-							// after promise
-							).AsyncChain2nd({async2nd : '1_2nd'})
+								// after promise
+							).AsyncChain2nd({async2nd: '1_2nd'})
 							// sync 2 async
-						).Async2Sync2nd({sync : '1_is'})
-					).AsyncChain3rd({async : '1_3rd'});
+						).Async2Sync2nd({sync: '1_is'})
+					).AsyncChain3rd({async: '1_3rd'});
 
 				// debugger;
 				// working two
 				syncWAsync2 = await (
 
 					new UserTypeConstructor({
-						email : 'async@gmail.com', password : 32123
+						email: 'async@gmail.com', password: 32123
 					})
 						.WithoutPassword()
 						.WithAdditionalSign('async sign')
 
-				).AsyncChain1st({async1st : '2_1st'})
+				).AsyncChain1st({async1st: '2_1st'})
 					// after promise
 					// .then(async function (instance) {
 					// return await instance.AsyncChain1st({ async1st: '2_1st' });
 					// })
 					.then(async function (instance) {
-						return await instance.AsyncChain2nd({async2nd : '2_2nd'});
+						return await instance.AsyncChain2nd({async2nd: '2_2nd'});
 					})
 					.then(async function (instance) {
 						// sync 2 async
-						return await instance.Async2Sync2nd({sync : '2_is'});
+						return await instance.Async2Sync2nd({sync: '2_is'});
 					})
 					.then(async function (instance) {
-						return await instance.AsyncChain3rd({async : '2_3rd'});
+						return await instance.AsyncChain3rd({async: '2_3rd'});
 					});
 
 				// debugger;
 				syncWAsyncChained = await /* (await (await sure */
-				new UserTypeConstructor({
-					email    : 'async@gmail.com',
-					password : 32123
-				})
-					.WithoutPassword()
-					.WithAdditionalSign('async sign')
-					.AsyncChain1st({async1st : '1st'})
-				// after promise
-					.AsyncChain2nd({async2nd : '2nd'})
-					.Async2Sync2nd({sync : 'is'})
-					.AsyncChain3rd({async : '3rd'});
+					new UserTypeConstructor({
+						email: 'async@gmail.com',
+						password: 32123
+					})
+						.WithoutPassword()
+						.WithAdditionalSign('async sign')
+						.AsyncChain1st({async1st: '1st'})
+						// after promise
+						.AsyncChain2nd({async2nd: '2nd'})
+						.Async2Sync2nd({sync: 'is'})
+						.AsyncChain3rd({async: '3rd'});
 
 				// debugger;
 				done();
 
 				try {
 					new WrongSyncType({
-						email    : 'wrong@gmail.com',
-						password : 111
+						email: 'wrong@gmail.com',
+						password: 111
 					});
 				} catch (err) {
 					wrongSyncTypeErr = err;
@@ -180,8 +202,8 @@ const tests = (opts) => {
 
 				try {
 					await new WrongAsyncType({
-						email    : 'wrong@gmail.com',
-						password : 111
+						email: 'wrong@gmail.com',
+						password: 111
 					});
 				} catch (err) {
 					wrongAsyncTypeErr = err;
@@ -195,16 +217,16 @@ const tests = (opts) => {
 			assert.deepEqual(etalon2, syncWAsync2.extract());
 
 			const etalon3 = {
-				WithAdditionalSignSign : 'WithAdditionalSignSign',
-				WithoutPasswordSign    : 'WithoutPasswordSign',
-				async1st               : '1st',
-				description            : 'UserTypeConstructor',
-				email                  : 'async@gmail.com',
-				password               : undefined,
-				sign                   : 'async sign',
-				async2nd               : '2nd',
-				sync                   : 'is',
-				async                  : '3rd',
+				WithAdditionalSignSign: 'WithAdditionalSignSign',
+				WithoutPasswordSign: 'WithoutPasswordSign',
+				async1st: '1st',
+				description: 'UserTypeConstructor',
+				email: 'async@gmail.com',
+				password: undefined,
+				sign: 'async sign',
+				async2nd: '2nd',
+				sync: 'is',
+				async: '3rd',
 			};
 
 			assert.deepEqual(etalon3, syncWAsyncChained.extract());
@@ -256,9 +278,8 @@ const tests = (opts) => {
 			const {
 				stack
 			} = wrongAsyncTypeErr;
-			// debugger;
 			expect(stack.indexOf(stackstart)).equal(1);
-			expect(stack.indexOf('async.chain.js:1') > 0).is.true;
+			expect(stack.indexOf('async.chain.js:2') > 0).is.true;
 			expect(wrongAsyncTypeErr).instanceOf(Error);
 			expect(wrongAsyncTypeErr).instanceOf(WrongAsyncType);
 			expect(wrongAsyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
@@ -283,7 +304,7 @@ const tests = (opts) => {
 		var straightErrorSync = null;
 		var straightErrorAsync = null;
 
-		const argsTest = {argsTest : 123};
+		const argsTest = {argsTest: 123};
 
 		const sleep = (time) => {
 			return new Promise((resolve) => setTimeout(resolve, time));
@@ -316,7 +337,7 @@ const tests = (opts) => {
 			// TypeError
 			b.c.async = null;
 		}, {}, {
-			blockErrors : false
+			blockErrors: false
 		});
 
 		const SyncErroredTypeStraight = SleepType.define('SyncErroredTypeStraight', function (...args) {
@@ -324,7 +345,7 @@ const tests = (opts) => {
 			// TypeError
 			b.c.sync = null;
 		}, {}, {
-			blockErrors : false
+			blockErrors: false
 		});
 
 		before(function (done) {

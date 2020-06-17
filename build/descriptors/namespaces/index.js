@@ -13,7 +13,7 @@ const defaultOptions = {
 	blockErrors : true,
 	submitStack : false,
 	awaitReturn : true,
-	bindMethods : true,
+	bindedProto : true,
 };
 const namespaceStorage = new Map();
 const Namespace = function (name, config) {

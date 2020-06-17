@@ -8,7 +8,8 @@ function default_1 () {
 		Object.defineProperty(Mnemosyne, 'constructor', {
 			get () {
 				return ModificatorType;
-			}
+			},
+			enumerable : false
 		});
 		Object.entries(ModificatorTypePrototype).forEach((entry) => {
 			const [name, value] = entry;

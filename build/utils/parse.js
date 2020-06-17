@@ -13,11 +13,11 @@ exports.parse = (self) => {
 	}
 	const proto = Reflect.getPrototypeOf(self);
 	if (self.constructor.name !== proto.constructor.name) {
-		throw new WRONG_ARGUMENTS_USED('have to use "instance" itself');
+		throw new WRONG_ARGUMENTS_USED(`have to use "instance" itself: '${self.constructor.name}' vs '${proto.constructor.name}'`);
 	}
 	const protoProto = Reflect.getPrototypeOf(proto);
 	if (protoProto && proto.constructor.name !== protoProto.constructor.name) {
-		throw new WRONG_ARGUMENTS_USED('have to use "instance" itself');
+		throw new WRONG_ARGUMENTS_USED(`have to use "instance" itself: '${proto.constructor.name}' vs '${protoProto.constructor.name}'`);
 	}
 	const { name } = proto.constructor;
 	const props = extract_1.extract(Object.assign({}, self));

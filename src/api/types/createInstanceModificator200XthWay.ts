@@ -1,20 +1,25 @@
 'use strict';
 
 export default function () {
-	
-	const CreateInstanceModificatorAncient200XthWay = function (this:any, ModificatorType:Function, ModificatorTypePrototype:{[index:string]:any}, addProps:Function) {
+
+	const CreateInstanceModificatorAncient200XthWay = function (
+		this: any,
+		ModificatorType: CallableFunction,
+		ModificatorTypePrototype: { [ index: string ]: any },
+		addProps: CallableFunction
+	) {
 
 		const existentInstance = this;
 
 		// const PreTripleSchemeClosure = function () {
-		const TripleSchemeClosure:any = function (this:any) {
+		const TripleSchemeClosure: any = function ( this: any ) {
 
 			const Mnemosyne = this;
-			addProps(Mnemosyne);
+			addProps( Mnemosyne );
 
 			// about to setup constructor property for new instance
 
-			const Inherico:any = function (this:any) {
+			const Inherico: any = function ( this: any ) {
 
 				const moreInherited = this;
 				// so now we have to copy all the inherited props
@@ -26,16 +31,17 @@ export default function () {
 
 				// give modification itself
 				ModificatorType.prototype = moreInherited;
-				Object.assign(ModificatorType.prototype, ModificatorTypePrototype);
+				Object.assign( ModificatorType.prototype, ModificatorTypePrototype );
 
 				// 2. Object.defineProperty below is done
 				//    to make "constructor" property non enumerable
 				//    cause we did it enumerable at "1." below
-				Object.defineProperty(ModificatorType.prototype, 'constructor', {
+				Object.defineProperty( ModificatorType.prototype, 'constructor', {
 					get () {
 						return ModificatorType;
-					}
-				});
+					},
+					enumerable: false
+				} );
 
 				return ModificatorType;
 
@@ -46,10 +52,11 @@ export default function () {
 			// 1. next line is done 4 our console.log will print proper type
 			// and it should be explicit declaration, or it wouldn't see
 			Inherico.prototype.constructor = ModificatorType;
+			// therfore the following lines are commented
 			// Object.defineProperty(Inherico.prototype, 'constructor', {
 			// 	get () {
 			// 		return ModificatorType;
-			// 	}
+			// 	},
 			// });
 
 			return new Inherico();
