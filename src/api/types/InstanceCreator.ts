@@ -44,7 +44,6 @@ export const makeInstanceModificator = ( self: any ) => {
 	);
 };
 
-
 const throwModificationError = function ( this: any, error: any ) {
 
 	// InstanceCreator
@@ -258,35 +257,28 @@ const invokePreHooks = function ( this: any ) {
 		collection,
 	} = type;
 
-	namespace.invokeHook( 'preCreation', {
+	const hookData = {
 		type,
 		existentInstance,
 		args,
 		InstanceModificator
-	} );
+	};
 
-	collection.invokeHook( 'preCreation', {
-		type,
-		existentInstance,
-		args,
-		InstanceModificator
-	} );
+	namespace.invokeHook( 'preCreation', hookData );
 
-	type.invokeHook( 'preCreation', {
-		type,
-		existentInstance,
-		args,
-		InstanceModificator
-	} );
+	collection.invokeHook( 'preCreation', hookData );
+
+	type.invokeHook( 'preCreation', hookData );
 
 };
 
 
 const invokePostHooks = function ( this: any ) {
 
+	const creator = this;
 	const {
-		inheritedInstance
-	} = this;
+		inheritedInstance,
+	} = creator;
 
 	const {
 		__type__: type,
@@ -302,39 +294,75 @@ const invokePostHooks = function ( this: any ) {
 	const hookType = inheritedInstance instanceof Error ?
 		'creationError' : 'postCreation';
 
+	const hookData = {
+		type,
+		existentInstance,
+		inheritedInstance,
+		args,
+		creator
+	};
+
 	return {
 
-		type: type.invokeHook( hookType, {
-			type,
-			existentInstance,
-			inheritedInstance,
-			args
-		} ),
+		type: type.invokeHook( hookType, hookData ),
 
-		collection: collection.invokeHook( hookType, {
-			type,
-			existentInstance,
-			inheritedInstance,
-			args
-		} ),
+		collection: collection.invokeHook( hookType, hookData ),
 
-		namespace: namespace.invokeHook( hookType, {
-			type,
-			existentInstance,
-			inheritedInstance,
-			args
-		} )
+		namespace: namespace.invokeHook( hookType, hookData )
 
 	};
 
 };
 
 
+const bindMethod = ( instance: any, name: string, MethodItself: any ) => {
+	odp( instance, name, {
+		get () {
+			const addTo = this;
+			return function ( this: any, ...args: any[] ) {
+				const applicateTo = this || addTo; // || instance;
+				if ( new.target ) {
+					return new MethodItself( ...args );
+				}
+				return MethodItself.call( applicateTo, ...args );
+			}
+		}
+	} );
+};
+
+const makeMethodBind = function ( this: any ) {
+	const self = this;
+	const {
+		inheritedInstance,
+		// existentInstance,
+		proto,
+	} = self;
+	Object.entries( Reflect.getPrototypeOf( inheritedInstance ) ).forEach( ( entry: [ string, any ] ) => {
+		const [ name, MayBeMethodFunction ] = entry;
+		if ( name === 'constructor' ) {
+			return;
+		}
+		if ( MayBeMethodFunction instanceof Function && proto[ name ] instanceof Function ) {
+			bindMethod( inheritedInstance, name, MayBeMethodFunction );
+		}
+	} );
+	// Object.entries( existentInstance ).forEach( ( entry: [ string, any ] ) => {
+	// 	const [ name, MayBeMethodFunction ] = entry;
+	// 	if ( MayBeMethodFunction instanceof Function ) {
+	// 		bindMethod( inheritedInstance, name, MayBeMethodFunction );
+	// 	}
+	// } );
+};
+
 const postProcessing = function ( this: any, continuationOf: any ) {
 
 	const self = this;
 	const {
 		stack,
+		config: {
+			bindedProto
+		},
+
 	} = self;
 
 	if ( !self.inheritedInstance.constructor ) {
@@ -361,6 +389,10 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 	} );
 
 	self.invokePostHooks();
+	if ( bindedProto ) {
+		self.makeMethodBind();
+	}
+
 
 };
 
@@ -452,6 +484,8 @@ const makeWaiter = function ( this: any, type: any, then: any ) {
 const InstanceCreatorPrototype = {
 	getExistentAsyncStack,
 	postProcessing,
+	bindMethod,
+	makeMethodBind,
 	makeWaiter,
 	proceedProto,
 	addProps,
@@ -483,7 +517,6 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	const ModificationConstructor = getModificationConstructor( useOldStyle );
 
 	const ModificatorType = constructHandler();
-
 
 	Object.assign( self, {
 

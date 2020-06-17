@@ -185,10 +185,6 @@ const typesCollectionProxyHandler = {
 	set ( target: any, TypeName: string, Constructor: FunctionConstructor ) {
 		return target.define( TypeName, Constructor );
 	},
-	// has (target, prop) {
-	// 	debugger;
-	// },
-
 	// Object.prototype.hasOwnProperty.call
 	getOwnPropertyDescriptor ( target: any, prop: string ) {
 		return target.subtypes.has( prop ) ? {

@@ -135,55 +135,66 @@ const proceedProto = function () {
 const invokePreHooks = function () {
 	const { type, existentInstance, args, InstanceModificator } = this;
 	const { namespace, collection, } = type;
-	namespace.invokeHook('preCreation', {
+	const hookData = {
 		type,
 		existentInstance,
 		args,
 		InstanceModificator
-	});
-	collection.invokeHook('preCreation', {
-		type,
-		existentInstance,
-		args,
-		InstanceModificator
-	});
-	type.invokeHook('preCreation', {
-		type,
-		existentInstance,
-		args,
-		InstanceModificator
-	});
+	};
+	namespace.invokeHook('preCreation', hookData);
+	collection.invokeHook('preCreation', hookData);
+	type.invokeHook('preCreation', hookData);
 };
 const invokePostHooks = function () {
-	const { inheritedInstance } = this;
+	const creator = this;
+	const { inheritedInstance, } = creator;
 	const { __type__: type, __parent__: existentInstance, __args__: args, } = inheritedInstance;
 	const { namespace, collection, } = type;
 	const hookType = inheritedInstance instanceof Error ?
 		'creationError' : 'postCreation';
-	return {
-		type : type.invokeHook(hookType, {
-			type,
-			existentInstance,
-			inheritedInstance,
-			args
-		}),
-		collection : collection.invokeHook(hookType, {
-			type,
-			existentInstance,
-			inheritedInstance,
-			args
-		}),
-		namespace : namespace.invokeHook(hookType, {
-			type,
-			existentInstance,
-			inheritedInstance,
-			args
-		})
+	const hookData = {
+		type,
+		existentInstance,
+		inheritedInstance,
+		args,
+		creator
 	};
+	return {
+		type       : type.invokeHook(hookType, hookData),
+		collection : collection.invokeHook(hookType, hookData),
+		namespace  : namespace.invokeHook(hookType, hookData)
+	};
+};
+const bindMethod = (instance, name, MethodItself) => {
+	odp(instance, name, {
+		get () {
+			const addTo = this;
+			return function (...args) {
+				const applicateTo = this || addTo;
+				if (new.target) {
+					return new MethodItself(...args);
+				}
+				return MethodItself.call(applicateTo, ...args);
+			};
+		}
+	});
+};
+const makeMethodBind = function () {
+	const self = this;
+	const { inheritedInstance, proto, } = self;
+	Object.entries(Reflect.getPrototypeOf(inheritedInstance)).forEach((entry) => {
+		const [name, MayBeMethodFunction] = entry;
+		if (name === 'constructor') {
+			return;
+		}
+		if (MayBeMethodFunction instanceof Function && proto[name] instanceof Function) {
+			bindMethod(inheritedInstance, name, MayBeMethodFunction);
+		}
+	});
 };
 const postProcessing = function (continuationOf) {
 	const self = this;
-	const { stack, } = self;
+	const { stack, config: { bindedProto }, } = self;
 	if (!self.inheritedInstance.constructor) {
 		const msg = 'should inherit from mnemonica instance';
 		self.throwModificationError(new WRONG_MODIFICATION_PATTERN(msg, stack));
@@ -203,6 +214,9 @@ const postProcessing = function (continuationOf) {
 		}
 	});
 	self.invokePostHooks();
+	if (bindedProto) {
+		self.makeMethodBind();
+	}
 };
 const addThen = function (then) {
 	const self = this;
@@ -263,6 +277,8 @@ const makeWaiter = function (type, then) {
 const InstanceCreatorPrototype = {
 	getExistentAsyncStack,
 	postProcessing,
+	bindMethod,
+	makeMethodBind,
 	makeWaiter,
 	proceedProto,
 	addProps,

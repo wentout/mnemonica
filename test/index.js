@@ -29,6 +29,7 @@ const {
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
 	SymbolGaia,
+	SymbolConfig,
 	defaultNamespace,
 	utils: {
 		extract,
@@ -175,7 +176,6 @@ types.registerHook('postCreation', function (opts) {
 	});
 });
 
-
 defaultNamespace.registerFlowChecker((opts) => {
 	namespaceFlowCheckerInvocations.push(opts);
 });
@@ -246,21 +246,45 @@ const userPL_1_2 = new userPL1.UserTypePL2();
 const userPL_NoNew = userPL1.UserTypePL2();
 
 const AsyncWOReturn = define('AsyncWOReturn', async function () {});
+
 const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () {}, {}, {
 	awaitReturn : false
 });
 
+types[SymbolConfig].bindedProto = false;
 const AsyncType = tsdefine('AsyncType', async function (data) {
 	return Object.assign(this, {
+		arg123 : 123
+	}, {
 		data
 	});
+}, {
+	getThisPropMethod : function (propName) {
+		if (new.target) {
+			this[propName] = propName;
+			return this;
+		}
+		return this[propName];
+	}
+}, {
+	bindedProto : true
 });
 
 AsyncType.SubOfAsync = function (data) {
+	this.arg123 = 321;
 	Object.assign(this, {
 		data
 	});
 };
+AsyncType.SubOfAsync.registerHook('postCreation', (hookData) => {
+	hookData.bindProtoMethods();
+	hookData.bindMethod('hookedMethod', function (propName) {
+		return this[propName];
+	});
+});
+
+types[SymbolConfig].bindedProto = true;
+
 AsyncType.SubOfAsync.NestedAsyncType = async function (data) {
 	return Object.assign(this, {
 		data
@@ -275,12 +299,14 @@ const SubOfNestedAsync = NestedAsyncType.define('SubOfNestedAsync', function (da
 	Object.assign(this, {
 		data
 	});
-});
+	this.arg123 = 456;
+}, {}, {bindedProto : false});
 
 var SubOfNestedAsyncPostHookData;
 SubOfNestedAsync.registerHook('postCreation', function (opts) {
 	SubOfNestedAsyncPostHookData = opts;
 });
+
 
 
 // debugger;
@@ -445,7 +471,7 @@ describe('Main Test', () => {
 	]);
 	const userTCForkBind = userTC.fork.bind(user)(FORK_CALL_DATA);
 	const utcfcwp = userTCForkCall.WithoutPassword();
-	
+
 	// check unchained construction
 	const unchainedUserWithoutPassword = new UserWithoutPassword();
 
@@ -893,6 +919,52 @@ describe('Main Test', () => {
 						done();
 					};
 					wait();
+				});
+
+				it('should be able to call binded methods properly', () => {
+					
+					const result1 = asyncInstance.getThisPropMethod('arg123');
+					expect(result1).equal(123);
+					
+					const result2 = asyncInstanceClone.getThisPropMethod('arg123');
+					expect(result2).equal(123);
+					
+					const result3 = nestedAsyncSub.getThisPropMethod('arg123');
+					expect(result3).equal(456);
+					
+					const result4 = new nestedAsyncSub.getThisPropMethod('arg123');
+					expect(typeof result4).equal('object');
+					expect(result4.arg123).equal('arg123');
+
+					const getThisPropMethod1 = asyncSub.getThisPropMethod;
+					const result5 = getThisPropMethod1('arg123');
+					expect(result5).equal(321);
+					
+					const {getThisPropMethod} = asyncSub;
+					const result6 = getThisPropMethod('arg123');
+					expect(result6).equal(321);
+					
+					const result7 = new getThisPropMethod('arg123');
+					expect(typeof result7).equal('object');
+					expect(result7.arg123).equal('arg123');
+
+					const result8 = asyncSub.parent().getThisPropMethod('arg123');
+					expect(result8).equal(123);
+
+					const result9 = nestedAsyncInstance.getThisPropMethod('arg123');
+					expect(result9).equal(321);
+					
+					const {
+						getThisPropMethod : getThisPropMethod2,
+						hookedMethod
+					} = nestedAsyncSub;
+					
+					const result10 = getThisPropMethod2('arg123');
+					expect(result10).equal(456);
+					
+					const result11 = hookedMethod('getThisPropMethod')('arg123');
+					expect(result11).equal(456);
+					
 				});
 
 				it('should be able to construct async', () => {

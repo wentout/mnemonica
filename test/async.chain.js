@@ -12,6 +12,7 @@ const tests = (opts) => {
 	const {
 		UserType,
 		UserTypeConstructor,
+		
 		AsyncWOReturn,
 		AsyncWOReturnNAR,
 	} = opts;
@@ -33,6 +34,27 @@ const tests = (opts) => {
 			assert.equal(thrown.message, 'wrong modification pattern : should inherit from AsyncWOReturn: seems async AsyncWOReturn has no return statement');
 		});
 
+	});
+
+	describe('test hook throwModificationError', async () => {
+		const thrownError = new Error('aha');
+		var thrown;
+		const HookThrownType = define('HookThrownType', function (){});
+		HookThrownType.registerHook('postCreation', (hookData) => {
+			if (!(thrown instanceof Error)) {
+				hookData.throwModificationError(thrownError);
+			}
+		});
+		try {
+			await new HookThrownType();
+		} catch (error) {
+			thrown = error;
+		}
+		it('should throw without return statement', () => {
+			expect(thrown).instanceOf(Error);
+			expect(thrown).instanceOf(HookThrownType);
+			expect(thrown.message).equal('aha');
+		});
 	});
 
 	describe('async construct should NOT return something', async () => {
@@ -63,7 +85,7 @@ const tests = (opts) => {
 			const self = new UserType(data);
 			return self;
 		}, {}, {
-			submitStack : true
+			submitStack : true,
 		});
 
 
@@ -256,9 +278,8 @@ const tests = (opts) => {
 			const {
 				stack
 			} = wrongAsyncTypeErr;
-			// debugger;
 			expect(stack.indexOf(stackstart)).equal(1);
-			expect(stack.indexOf('async.chain.js:1') > 0).is.true;
+			expect(stack.indexOf('async.chain.js:2') > 0).is.true;
 			expect(wrongAsyncTypeErr).instanceOf(Error);
 			expect(wrongAsyncTypeErr).instanceOf(WrongAsyncType);
 			expect(wrongAsyncTypeErr).instanceOf(errors.WRONG_MODIFICATION_PATTERN);

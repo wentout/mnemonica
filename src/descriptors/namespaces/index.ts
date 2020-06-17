@@ -56,7 +56,7 @@ const defaultOptions = {
 	// instance methods calls
 	// are binded by default
 	// with instance itself
-	bindMethods: true,
+	bindedProto: true,
 
 };
 
