@@ -324,17 +324,27 @@ const bindMethod = function ( this: any, instance: any, methodName: string, Meth
 			const addTo = this;
 			return function ( this: any, ...args: any[] ) {
 				const applicateTo = this || addTo; // || instance;
+				let asNewKeyword = false;
 				try {
 					if ( new.target ) {
+						asNewKeyword = true;
 						return new MethodItself( ...args );
 					}
 					return MethodItself.call( applicateTo, ...args );
 				} catch ( error ) {
-					error.exceptionMethod = MethodItself;
-					throw new applicateTo.exception( error, args );
+					error.exceptionReasonMethod = MethodItself;
+					error.exceptionReasonObject = applicateTo;
+					error.exceptionReasonsIsNew = asNewKeyword;
+					throw new applicateTo.exception( error, {
+						args,
+						exceptionReasonMethod: MethodItself,
+						exceptionReasonObject: applicateTo,
+						exceptionReasonsIsNew: asNewKeyword
+					} );
 				}
 			}
-		}
+		},
+		enumerable: true
 	} );
 };
 

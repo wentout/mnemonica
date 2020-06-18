@@ -187,12 +187,28 @@ const defineFromType = function ( this: any, subtypes: any, constructHandlerGett
 	);
 };
 
+const extractNonEnumerableProps = ( _obj: object ) => {
+	const extracted = Object.entries( Object.getOwnPropertyDescriptors( _obj ) ).reduce( ( obj, entry ) => {
+		const [ name, { value } ] = entry;
+		odp( obj, name, {
+			value,
+			configurable: true,
+			enumerable: true,
+			writable: true,
+		}
+		);
+		return obj;
+	}, {} );
+	return extracted;
+};
+
+
 const defineFromFunction = function (
 	this: any,
 	subtypes: any,
 	TypeName: string,
 	// tslint:disable-next-line: only-arrow-functions no-empty
-	constructHandler = function () {},
+	constructHandler = function () { },
 	proto: any,
 	config: any = {}
 ) {
@@ -216,6 +232,10 @@ const defineFromFunction = function (
 		} else {
 			proto = {};
 		}
+	}
+
+	if ( asClass ) {
+		proto = extractNonEnumerableProps( proto );
 	}
 
 	if ( typeof config === 'object' ) {
@@ -246,7 +266,7 @@ export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: 
 
 	if ( typeof TypeOrTypeName === 'function' ) {
 		if ( TypeOrTypeName.name ) {
-			return define.call( this, subtypes, TypeOrTypeName.name, TypeOrTypeName, constructHandlerOrConfig, proto, config );
+			return define.call( this, subtypes, TypeOrTypeName.name, TypeOrTypeName, constructHandlerOrConfig || TypeOrTypeName.prototype, config );
 		} else {
 			return defineFromType.call( this, subtypes, TypeOrTypeName, constructHandlerOrConfig );
 		}

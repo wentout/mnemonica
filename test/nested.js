@@ -32,6 +32,9 @@ const tests = (opts) => {
 			assert.equal(ogp(ogp(ogp(userPL1))), user);
 			assert.equal(ogp(ogp(ogp(userPL2))), user);
 		});
+		it('actually do construction with nested methods', () => {
+			assert.equal(userPL2.getSign(), 'pl_2');
+		});
 		it('.constructor.name is correct', () => {
 			assert.equal(userPL1.constructor.name, 'UserTypePL1');
 		});
