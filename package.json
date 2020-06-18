@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "0.9.82",
+  "version": "0.9.83",
   "description": "abstract technique that aids information retention : instance inheritance system",
   "type": "commonjs",
   "main": "./build/index.js",
@@ -29,7 +29,7 @@
     "Goodluckhf <Goodluckhf@yandex.ru>"
   ],
   "scripts": {
-    "build": "rm -rf ./build && npx tsc --pretty && npm run lint",
+    "build": "rm -rf ./build && npx tsc --pretty && npm run lint && npm run lint:test",
     "watch": "npx tsc --pretty -w",
     "test": "npm run build && mocha --allow-uncaught test/index.js",
     "test:cov:dev": "npm run build && nyc --reporter=text mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
@@ -39,6 +39,7 @@
     "report-coverage": "cat coverage/lcov.info | coveralls",
     "example": "npm run build && node ./test/example.js",
     "lint": "npx eslint --fix --ignore-path .gitignore ./build",
+    "lint:test": "npx eslint --fix --ignore-path .gitignore ./test",
     "ts:example": "npx tsc ./test-ts/*.ts && npx eslint --fix ./test-ts/*.js && node ./test-ts/test-no-types.js && node ./test-ts/test-with-types.js",
     "ts:lint": "npx tslint --fix --ignore-path .gitignore ./src"
   },

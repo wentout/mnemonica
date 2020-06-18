@@ -32,7 +32,7 @@ const Gaia = function ( Uranus: any ) {
 	const gaiaProto = Uranus ? Uranus : this;
 
 	// tslint:disable-next-line: only-arrow-functions no-empty
-	const GaiaConstructor = function () {} as ConstructorFunction<{}>;
+	const GaiaConstructor = function () { } as ConstructorFunction<{}>;
 	GaiaConstructor.prototype = Object.create( gaiaProto );
 
 	const gaia = new GaiaConstructor;
@@ -156,7 +156,7 @@ const Mnemosyne = function ( namespace: any, gaia: any ) {
 	Object.getOwnPropertySymbols( MnemonicaProtoProps ).forEach( ( symbol: symbol ) => {
 		odp( Mnemonica.prototype, symbol, {
 			get () {
-				const symbolMethod = Reflect.get(MnemonicaProtoProps, symbol);
+				const symbolMethod = Reflect.get( MnemonicaProtoProps, symbol );
 				return symbolMethod.call( this );
 			}
 		} );

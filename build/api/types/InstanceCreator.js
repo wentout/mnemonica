@@ -165,8 +165,8 @@ const invokePostHooks = function () {
 		namespace  : namespace.invokeHook(hookType, hookData)
 	};
 };
-const bindMethod = function (instance, name, MethodItself) {
-	odp(instance, name, {
+const bindMethod = function (instance, methodName, MethodItself) {
+	odp(instance, methodName, {
 		get () {
 			const addTo = this;
 			return function (...args) {
@@ -178,6 +178,7 @@ const bindMethod = function (instance, name, MethodItself) {
 					return MethodItself.call(applicateTo, ...args);
 				}
 				catch (error) {
+					error.exceptionMethod = MethodItself;
 					throw new applicateTo.exception(error, args);
 				}
 			};

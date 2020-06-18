@@ -979,6 +979,8 @@ describe('Main Test', () => {
 					expect(thrown).instanceOf(SubOfNestedAsync);
 					expect(thrown.message).exist.and.is.a('string');
 					assert.equal(thrown.message, 'prop is missing');
+					expect(thrown.originalError).instanceOf(Error);
+					expect(thrown.originalError).not.instanceOf(SubOfNestedAsync);
 
 				});
 

@@ -76,7 +76,8 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 		instance,
 		TypeName,
 		typeStack,
-		args
+		args,
+		error
 	} = opts;
 
 
@@ -85,6 +86,12 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 	odp( exception, 'args', {
 		get () {
 			return args;
+		}
+	} );
+
+	odp( exception, 'originalError', {
+		get () {
+			return error;
 		}
 	} );
 
@@ -169,12 +176,13 @@ const prepareException = function ( this: any, target: any, error: Error, ...arg
 	ExceptionCreator.config.blockErrors = false;
 
 	ExceptionCreator.existentInstance = error;
-	ExceptionCreator.ModificatorType = makeFakeModificatorType( TypeName, function (this:any) {
+	ExceptionCreator.ModificatorType = makeFakeModificatorType( TypeName, function ( this: any ) {
 		return exceptionConsctructHandler.call( this, {
 			instance,
 			TypeName,
 			typeStack,
-			args
+			args,
+			error
 		} );
 	} );
 	ExceptionCreator.InstanceModificator = makeInstanceModificator( ExceptionCreator );

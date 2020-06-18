@@ -39,11 +39,16 @@ const checkThrowArgs = (instance, target, error, args) => {
 	throw wrongThrow;
 };
 const exceptionConsctructHandler = function (opts) {
-	const { instance, TypeName, typeStack, args } = opts;
+	const { instance, TypeName, typeStack, args, error } = opts;
 	const exception = this;
 	odp(exception, 'args', {
 		get () {
 			return args;
+		}
+	});
+	odp(exception, 'originalError', {
+		get () {
+			return error;
 		}
 	});
 	odp(exception, 'instance', {
@@ -95,7 +100,8 @@ const prepareException = function (target, error, ...args) {
 			instance,
 			TypeName,
 			typeStack,
-			args
+			args,
+			error
 		});
 	});
 	ExceptionCreator.InstanceModificator = InstanceCreator_1.makeInstanceModificator(ExceptionCreator);
