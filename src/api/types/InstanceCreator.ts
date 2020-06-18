@@ -321,26 +321,46 @@ const invokePostHooks = function ( this: any ) {
 const bindMethod = function ( this: any, instance: any, methodName: string, MethodItself: any ) {
 	odp( instance, methodName, {
 		get () {
-			const addTo = this;
+			const from = this;
 			return function ( this: any, ...args: any[] ) {
-				const applicateTo = this || addTo; // || instance;
+				const applyTo = this !== undefined ? this : from; // || instance;
 				let asNewKeyword = false;
 				try {
 					if ( new.target ) {
 						asNewKeyword = true;
 						return new MethodItself( ...args );
 					}
-					return MethodItself.call( applicateTo, ...args );
+					return MethodItself.call( applyTo, ...args );
 				} catch ( error ) {
-					error.exceptionReasonMethod = MethodItself;
-					error.exceptionReasonObject = applicateTo;
-					error.exceptionReasonsIsNew = asNewKeyword;
-					throw new applicateTo.exception( error, {
-						args,
-						exceptionReasonMethod: MethodItself,
-						exceptionReasonObject: applicateTo,
-						exceptionReasonsIsNew: asNewKeyword
-					} );
+					error.exceptionReason = {
+						method: MethodItself,
+						methodName,
+						this: this,
+						from,
+						instance,
+						applyTo,
+						new: asNewKeyword,
+						args
+					};
+					// if ( typeof applyTo === 'object' && applyTo.exception instanceof Function ) {
+					if ( applyTo && applyTo.exception instanceof Function ) {
+						let preparedException = error;
+						try {
+							preparedException = new applyTo.exception( error, {
+								args,
+								exceptionReasonMethod: MethodItself,
+								exceptionReasonObject: applyTo,
+								exceptionReasonsIsNew: asNewKeyword
+							} );
+						} catch (additionalError) {
+							error.exceptionReason.additionalError = additionalError;
+							throw error;
+						}
+						if ( preparedException instanceof Error ) {
+							throw preparedException;
+						}
+					}
+					throw error;
 				}
 			}
 		},

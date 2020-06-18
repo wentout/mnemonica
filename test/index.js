@@ -985,6 +985,69 @@ describe('Main Test', () => {
 					expect(thrown.originalError).instanceOf(Error);
 					expect(thrown.originalError).not.instanceOf(SubOfNestedAsync);
 
+					// const result12 = hookedMethod.call({
+					// 	getThisPropMethod (arg) {
+					// 		return this[arg];
+					// 	}
+					// }, 'getThisPropMethod')('arg123');
+
+					let thrown2;
+					try {
+						hookedMethod.call(null, 'getThisPropMethod');
+					} catch (error) {
+						thrown2 = error;
+					}
+					expect(thrown2).instanceOf(Error);
+					expect(thrown2.message).exist.and.is.a('string');
+					// expect(thrown2.originalError).instanceOf(Error);
+					expect(thrown2.exceptionReason).instanceOf(Object);
+					expect(thrown2.exceptionReason.methodName).equal('hookedMethod');
+
+					debugger;
+
+					Object.defineProperty(asyncSub, 'exception', {
+						get () {
+							return function () {
+								return null;
+							};
+						}
+					});
+
+					let thrown3;
+					try {
+						hookedMethod('getThisPropMethod')('missingProp');
+					} catch (error) {
+						thrown3 = error;
+					}
+					expect(thrown3).instanceOf(Error);
+					expect(thrown3.message).exist.and.is.a('string');
+					// expect(thrown2.originalError).instanceOf(Error);
+					expect(thrown3.exceptionReason).instanceOf(Object);
+					expect(thrown3.exceptionReason.methodName).equal('getThisPropMethod');
+					
+					const cae = 'check additional error';
+					Object.defineProperty(nestedAsyncInstance, 'exception', {
+						get () {
+							return function () {
+								throw new Error(cae);
+							};
+						}
+					});
+
+					let thrown4;
+					try {
+						hookedMethod('getThisPropMethod')('missingProp');
+					} catch (error) {
+						thrown4 = error;
+					}
+					expect(thrown4).instanceOf(Error);
+					expect(thrown4.message).exist.and.is.a('string');
+					// expect(thrown2.originalError).instanceOf(Error);
+					expect(thrown4.exceptionReason).instanceOf(Object);
+					expect(thrown4.exceptionReason.methodName).equal('getThisPropMethod');
+					expect(thrown4.exceptionReason.additionalError).instanceOf(Error);
+					expect(thrown4.exceptionReason.additionalError.message).equal(cae);
+
 				});
 
 				it('should be able to construct async', () => {
