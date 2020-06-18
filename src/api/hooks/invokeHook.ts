@@ -50,7 +50,7 @@ export const invokeHook = function ( this: any, hookType: string, opts: { [ inde
 					creator.bindMethod(inheritedInstance, name, method);
 				},
 				bindProtoMethods () {
-					creator.makeMethodBind();
+					creator.bindProtoMethods();
 				},
 				throwModificationError ( error: Error ) {
 					creator.throwModificationError( error );

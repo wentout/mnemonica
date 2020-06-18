@@ -264,7 +264,11 @@ const AsyncType = tsdefine('AsyncType', async function (data) {
 			this[propName] = propName;
 			return this;
 		}
-		return this[propName];
+		if (this[propName]) {
+			return this[propName];
+		}
+		throw new Error('prop is missing');
+
 	}
 }, {
 	bindedProto : true
@@ -922,16 +926,16 @@ describe('Main Test', () => {
 				});
 
 				it('should be able to call binded methods properly', () => {
-					
+
 					const result1 = asyncInstance.getThisPropMethod('arg123');
 					expect(result1).equal(123);
-					
+
 					const result2 = asyncInstanceClone.getThisPropMethod('arg123');
 					expect(result2).equal(123);
-					
+
 					const result3 = nestedAsyncSub.getThisPropMethod('arg123');
 					expect(result3).equal(456);
-					
+
 					const result4 = new nestedAsyncSub.getThisPropMethod('arg123');
 					expect(typeof result4).equal('object');
 					expect(result4.arg123).equal('arg123');
@@ -939,11 +943,11 @@ describe('Main Test', () => {
 					const getThisPropMethod1 = asyncSub.getThisPropMethod;
 					const result5 = getThisPropMethod1('arg123');
 					expect(result5).equal(321);
-					
+
 					const {getThisPropMethod} = asyncSub;
 					const result6 = getThisPropMethod('arg123');
 					expect(result6).equal(321);
-					
+
 					const result7 = new getThisPropMethod('arg123');
 					expect(typeof result7).equal('object');
 					expect(result7.arg123).equal('arg123');
@@ -953,18 +957,29 @@ describe('Main Test', () => {
 
 					const result9 = nestedAsyncInstance.getThisPropMethod('arg123');
 					expect(result9).equal(321);
-					
+
 					const {
-						getThisPropMethod : getThisPropMethod2,
+						getThisPropMethod: getThisPropMethod2,
 						hookedMethod
 					} = nestedAsyncSub;
-					
+
 					const result10 = getThisPropMethod2('arg123');
 					expect(result10).equal(456);
-					
+
 					const result11 = hookedMethod('getThisPropMethod')('arg123');
 					expect(result11).equal(456);
-					
+
+					let thrown;
+					try {
+						hookedMethod('getThisPropMethod')('missingProp');
+					} catch (error) {
+						thrown = error;
+					}
+					expect(thrown).instanceOf(Error);
+					expect(thrown).instanceOf(SubOfNestedAsync);
+					expect(thrown.message).exist.and.is.a('string');
+					assert.equal(thrown.message, 'prop is missing');
+
 				});
 
 				it('should be able to construct async', () => {

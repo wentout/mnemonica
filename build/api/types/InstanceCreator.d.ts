@@ -3,8 +3,8 @@ export declare const makeInstanceModificator: (self: any) => any;
 export declare const InstanceCreator: ConstructorFunction<{
     getExistentAsyncStack: (existentInstance: any) => any[];
     postProcessing: (this: any, continuationOf: any) => void;
-    bindMethod: (instance: any, name: string, MethodItself: any) => void;
-    makeMethodBind: (this: any) => void;
+    bindMethod: (this: any, instance: any, name: string, MethodItself: any) => void;
+    bindProtoMethods: (this: any) => void;
     makeWaiter: (this: any, type: any, then: any) => any;
     proceedProto: (this: any) => void;
     addProps: (this: any) => void;

@@ -165,30 +165,36 @@ const invokePostHooks = function () {
 		namespace  : namespace.invokeHook(hookType, hookData)
 	};
 };
-const bindMethod = (instance, name, MethodItself) => {
+const bindMethod = function (instance, name, MethodItself) {
 	odp(instance, name, {
 		get () {
 			const addTo = this;
 			return function (...args) {
 				const applicateTo = this || addTo;
-				if (new.target) {
-					return new MethodItself(...args);
+				try {
+					if (new.target) {
+						return new MethodItself(...args);
+					}
+					return MethodItself.call(applicateTo, ...args);
 				}
-				return MethodItself.call(applicateTo, ...args);
+				catch (error) {
+					throw new applicateTo.exception(error, args);
+				}
 			};
 		}
 	});
 };
-const makeMethodBind = function () {
+const bindProtoMethods = function () {
 	const self = this;
 	const { inheritedInstance, proto, } = self;
-	Object.entries(Reflect.getPrototypeOf(inheritedInstance)).forEach((entry) => {
-		const [name, MayBeMethodFunction] = entry;
-		if (name === 'constructor') {
+	const protoPointer = Reflect.getPrototypeOf(inheritedInstance);
+	Object.entries(protoPointer).forEach((entry) => {
+		const [mayBeMethodName, MayBeMethodFunction] = entry;
+		if (mayBeMethodName === 'constructor') {
 			return;
 		}
-		if (MayBeMethodFunction instanceof Function && proto[name] instanceof Function) {
-			bindMethod(inheritedInstance, name, MayBeMethodFunction);
+		if (MayBeMethodFunction instanceof Function && proto[mayBeMethodName] instanceof Function) {
+			bindMethod(protoPointer, mayBeMethodName, MayBeMethodFunction);
 		}
 	});
 };
@@ -215,7 +221,7 @@ const postProcessing = function (continuationOf) {
 	});
 	self.invokePostHooks();
 	if (bindedProto) {
-		self.makeMethodBind();
+		self.bindProtoMethods();
 	}
 };
 const addThen = function (then) {
@@ -278,7 +284,7 @@ const InstanceCreatorPrototype = {
 	getExistentAsyncStack,
 	postProcessing,
 	bindMethod,
-	makeMethodBind,
+	bindProtoMethods,
 	makeWaiter,
 	proceedProto,
 	addProps,

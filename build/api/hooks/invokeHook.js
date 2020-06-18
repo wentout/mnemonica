@@ -25,7 +25,7 @@ exports.invokeHook = function (hookType, opts) {
 					creator.bindMethod(inheritedInstance, name, method);
 				},
 				bindProtoMethods () {
-					creator.makeMethodBind();
+					creator.bindProtoMethods();
 				},
 				throwModificationError (error) {
 					creator.throwModificationError(error);
