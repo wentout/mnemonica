@@ -42,14 +42,14 @@ const {
 } = mnemonica;
 
 const USER_DATA = {
-	email    : 'went.out@gmail.com',
-	password : 321
+	email: 'went.out@gmail.com',
+	password: 321
 };
 
 const UserTypeProto = {
-	email       : '',
-	password    : '',
-	description : 'UserType'
+	email: '',
+	password: '',
+	description: 'UserType'
 };
 
 const UserType = mnemonica.define('UserType', function (userData) {
@@ -67,26 +67,26 @@ const userTypeHooksInvocations = [];
 
 UserType.registerHook('preCreation', function (opts) {
 	userTypeHooksInvocations.push({
-		kind : 'pre',
-		sort : 'type',
-		self : this,
+		kind: 'pre',
+		sort: 'type',
+		self: this,
 		opts
 	});
 });
 
 UserType.registerHook('postCreation', function (opts) {
 	userTypeHooksInvocations.push({
-		kind : 'post',
-		sort : 'type',
-		self : this,
+		kind: 'post',
+		sort: 'type',
+		self: this,
 		opts
 	});
 });
 
 
 const pl1Proto = {
-	UserTypePL1      : 'UserTypePL_1',
-	UserTypePL1Extra : 'UserTypePL_1_Extra',
+	UserTypePL1: 'UserTypePL_1',
+	UserTypePL1Extra: 'UserTypePL_1_Extra',
 };
 
 UserType.define(() => {
@@ -96,16 +96,16 @@ UserType.define(() => {
 	UserTypePL1.prototype = pl1Proto;
 	return UserTypePL1;
 }, {
-	strictChain : false,
-	submitStack : true
+	strictChain: false,
+	submitStack: true
 });
 
 const pl2Proto = {
-	UserTypePL2 : 'UserTypePL_2_AlwaysIncluded'
+	UserTypePL2: 'UserTypePL_2_AlwaysIncluded'
 };
 
 class Shaper {
-	constructor () {
+	constructor() {
 		// const zzz = new.target;
 		// Shaper;
 		// debugger;
@@ -115,7 +115,7 @@ class Shaper {
 
 UserType.define(() => {
 	class UserTypePL2 extends Shaper {
-		constructor () {
+		constructor() {
 			super();
 			// const zzz = new.target;
 			// Shaper;
@@ -128,8 +128,8 @@ UserType.define(() => {
 	}
 	return UserTypePL2;
 }, {
-	useOldStyle : true,
-	strictChain : false
+	useOldStyle: true,
+	strictChain: false
 });
 
 
@@ -137,7 +137,7 @@ const ProxyTyped = function (str) {
 	this.str = str;
 };
 ProxyTyped.prototype = {
-	proxyTyped : true,
+	proxyTyped: true,
 	SaySomething () {
 		return `something : ${ this.proxyTyped }`;
 	}
@@ -160,18 +160,18 @@ types.registerFlowChecker((opts) => {
 
 types.registerHook('preCreation', function (opts) {
 	typesPreCreationInvocations.push({
-		kind : 'pre',
-		sort : 'collection',
-		self : this,
+		kind: 'pre',
+		sort: 'collection',
+		self: this,
 		opts
 	});
 });
 
 types.registerHook('postCreation', function (opts) {
 	typesPostCreationInvocations.push({
-		kind : 'post',
-		sort : 'collection',
-		self : this,
+		kind: 'post',
+		sort: 'collection',
+		self: this,
 		opts
 	});
 });
@@ -182,29 +182,29 @@ defaultNamespace.registerFlowChecker((opts) => {
 
 defaultNamespace.registerHook('preCreation', function (opts) {
 	namespacePreCreationInvocations.push({
-		kind : 'pre',
-		sort : 'namespace',
-		self : this,
+		kind: 'pre',
+		sort: 'namespace',
+		self: this,
 		opts
 	});
 });
 
 defaultNamespace.registerHook('postCreation', function (opts) {
 	namespacePostCreationInvocations.push({
-		kind  : 'pre',
-		sort  : 'namespace',
-		self  : this,
-		order : 'first',
+		kind: 'pre',
+		sort: 'namespace',
+		self: this,
+		order: 'first',
 		opts
 	});
 });
 
 defaultNamespace.registerHook('postCreation', function (opts) {
 	namespacePostCreationInvocations.push({
-		kind  : 'pre',
-		sort  : 'namespace',
-		self  : this,
-		order : 'second',
+		kind: 'pre',
+		sort: 'namespace',
+		self: this,
+		order: 'second',
 		opts
 	});
 });
@@ -248,26 +248,30 @@ const userPL_NoNew = userPL1.UserTypePL2();
 const AsyncWOReturn = define('AsyncWOReturn', async function () {});
 
 const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () {}, {}, {
-	awaitReturn : false
+	awaitReturn: false
 });
 
 types[SymbolConfig].bindedProto = false;
 const AsyncType = tsdefine('AsyncType', async function (data) {
 	return Object.assign(this, {
-		arg123 : 123
+		arg123: 123
 	}, {
 		data
 	});
 }, {
-	getThisPropMethod : function (propName) {
+	getThisPropMethod: function (propName) {
 		if (new.target) {
 			this[propName] = propName;
 			return this;
 		}
-		return this[propName];
+		if (this[propName]) {
+			return this[propName];
+		}
+		throw new Error('prop is missing');
+
 	}
 }, {
-	bindedProto : true
+	bindedProto: true
 });
 
 AsyncType.SubOfAsync = function (data) {
@@ -291,7 +295,7 @@ AsyncType.SubOfAsync.NestedAsyncType = async function (data) {
 	});
 };
 AsyncType.SubOfAsync.NestedAsyncType.prototype = {
-	description : 'nested async instance'
+	description: 'nested async instance'
 };
 const {NestedAsyncType} = AsyncType.SubOfAsync;
 
@@ -300,7 +304,7 @@ const SubOfNestedAsync = NestedAsyncType.define('SubOfNestedAsync', function (da
 		data
 	});
 	this.arg123 = 456;
-}, {}, {bindedProto : false});
+}, {}, {bindedProto: false});
 
 var SubOfNestedAsyncPostHookData;
 SubOfNestedAsync.registerHook('postCreation', function (opts) {
@@ -317,21 +321,21 @@ describe('Main Test', () => {
 	*/
 
 	const UserTypeConstructorProto = {
-		email       : '',
-		password    : '',
-		description : 'UserTypeConstructor'
+		email: '',
+		password: '',
+		description: 'UserTypeConstructor'
 	};
 
 	const evenMoreNecessaryProps = {
-		str                    : 're-defined EvenMore str',
-		EvenMoreSign           : 'EvenMoreSign',
-		OverMoreSign           : 'OverMoreSign',
-		sign                   : 'userWithoutPassword_2.WithAdditionalSign',
-		WithAdditionalSignSign : 'WithAdditionalSignSign',
-		WithoutPasswordSign    : 'WithoutPasswordSign',
-		email                  : 'went.out@gmail.com',
-		description            : 'UserTypeConstructor',
-		password               : undefined
+		str: 're-defined EvenMore str',
+		EvenMoreSign: 'EvenMoreSign',
+		OverMoreSign: 'OverMoreSign',
+		sign: 'userWithoutPassword_2.WithAdditionalSign',
+		WithAdditionalSignSign: 'WithAdditionalSignSign',
+		WithoutPasswordSign: 'WithoutPasswordSign',
+		email: 'went.out@gmail.com',
+		description: 'UserTypeConstructor',
+		password: undefined
 	};
 
 	const UserTypeConstructor = define('UserTypeConstructor', function (userData) {
@@ -346,11 +350,11 @@ describe('Main Test', () => {
 		});
 
 	}, UserTypeConstructorProto, {
-		submitStack : true
+		submitStack: true
 	});
 
 	const WithoutPasswordProto = {
-		WithoutPasswordSign : 'WithoutPasswordSign'
+		WithoutPasswordSign: 'WithoutPasswordSign'
 	};
 
 	// debugger;
@@ -362,11 +366,11 @@ describe('Main Test', () => {
 		WithoutPassword.prototype = WithoutPasswordProto;
 		return WithoutPassword;
 	}, {
-		submitStack : true
+		submitStack: true
 	});
 
 	const WithAdditionalSignProto = {
-		WithAdditionalSignSign : 'WithAdditionalSignSign'
+		WithAdditionalSignSign: 'WithAdditionalSignSign'
 	};
 	const WithAdditionalSignTypeDef = UserWithoutPassword.define(() => {
 		const WithAdditionalSign = function (sign) {
@@ -375,15 +379,15 @@ describe('Main Test', () => {
 		WithAdditionalSign.prototype = WithAdditionalSignProto;
 		return WithAdditionalSign;
 	}, {
-		submitStack : true
+		submitStack: true
 	});
 
 	const MoreOverProto = {
-		MoreOverSign : 'MoreOverSign'
+		MoreOverSign: 'MoreOverSign'
 	};
 	const MoreOverTypeDef = WithAdditionalSignTypeDef.define(() => {
 		class MoreOver {
-			constructor (str) {
+			constructor(str) {
 				this.str = str || 'moreover str';
 			}
 			get MoreOverSign () {
@@ -392,11 +396,11 @@ describe('Main Test', () => {
 		}
 		return MoreOver;
 	}, {
-		submitStack : true
+		submitStack: true
 	});
 
 	const OverMoreProto = {
-		OverMoreSign : 'OverMoreSign'
+		OverMoreSign: 'OverMoreSign'
 	};
 	// debugger;
 	const OverMore = WithAdditionalSignTypeDef
@@ -404,11 +408,11 @@ describe('Main Test', () => {
 			function (str) {
 				this.str = str || 're-defined OverMore str';
 			}, OverMoreProto, {
-				submitStack : true
-			});
+			submitStack: true
+		});
 
 	const EvenMoreProto = {
-		EvenMoreSign : 'EvenMoreSign'
+		EvenMoreSign: 'EvenMoreSign'
 	};
 
 	const EvenMoreTypeDef = WithAdditionalSignTypeDef.define(`
@@ -420,7 +424,7 @@ describe('Main Test', () => {
 		EvenMore.prototype = Object.assign({}, EvenMoreProto);
 		return EvenMore;
 	}, {}, {
-		submitStack : true
+		submitStack: true
 	});
 
 	const ThrowTypeError = EvenMoreTypeDef.define('ThrowTypeError', require('./throw-type-error'));
@@ -428,22 +432,22 @@ describe('Main Test', () => {
 	const AsyncChain1st = WithAdditionalSignTypeDef.define('AsyncChain1st', async function (opts) {
 		return Object.assign(this, opts);
 	}, {}, {
-		submitStack : true
+		submitStack: true
 	});
 	const AsyncChain2nd = AsyncChain1st.define('AsyncChain2nd', async function (opts) {
 		return Object.assign(this, opts);
 	}, {}, {
-		submitStack : true
+		submitStack: true
 	});
 	const Async2Sync2nd = AsyncChain2nd.define('Async2Sync2nd', function (opts) {
 		Object.assign(this, opts);
 	}, {}, {
-		submitStack : true
+		submitStack: true
 	});
 	Async2Sync2nd.define('AsyncChain3rd', async function (opts) {
 		return Object.assign(this, opts);
 	}, {}, {
-		submitStack : true
+		submitStack: true
 	});
 
 
@@ -461,8 +465,8 @@ describe('Main Test', () => {
 	const userTC = new UserTypeConstructor(USER_DATA);
 
 	const FORK_CALL_DATA = {
-		email    : 'forkmail@gmail.com',
-		password : '54321'
+		email: 'forkmail@gmail.com',
+		password: '54321'
 	};
 
 	const userTCForkCall = userTC.fork.call(user, FORK_CALL_DATA);
@@ -505,11 +509,11 @@ describe('Main Test', () => {
 	const evenMoreFork = evenMore.fork(strFork);
 	const evenMoreForkFork = evenMoreFork.fork(strForkOfFork);
 
-	const chained = new UserTypeConstructor({email : 'someother@gmail.com', password : 32123});
+	const chained = new UserTypeConstructor({email: 'someother@gmail.com', password: 32123});
 	const derived = new chained.WithoutPassword();
 	const rounded = new derived.WithAdditionalSign(sign2add);
 
-	const chained2 = new UserTypeConstructor({email : 'someother@gmail.com', password : 32123})
+	const chained2 = new UserTypeConstructor({email: 'someother@gmail.com', password: 32123})
 		.WithoutPassword()
 		.WithAdditionalSign(sign2add);
 
@@ -663,7 +667,7 @@ describe('Main Test', () => {
 			});
 			it('nested object of empty object .extract() ok', () => {
 				const sample = {
-					emptySign : filledEmptySign
+					emptySign: filledEmptySign
 				};
 				const extracted = emptySub.extract();
 				assert.deepOwnInclude(extracted, sample);
@@ -671,7 +675,7 @@ describe('Main Test', () => {
 			});
 			it('nested object of empty object .pick() ok', () => {
 				const sample = {
-					emptySign : filledEmptySign
+					emptySign: filledEmptySign
 				};
 				const pickedArg = emptySub.pick('emptySign');
 				const pickedArR = emptySub.pick(['emptySign']);
@@ -849,7 +853,7 @@ describe('Main Test', () => {
 			evenMoreNecessaryProps,
 			MoreOverProto,
 			UserWithoutPassword,
-			MoreOver : MoreOverTypeDef
+			MoreOver: MoreOverTypeDef
 		});
 
 		require('./instance.proto')({
@@ -922,16 +926,16 @@ describe('Main Test', () => {
 				});
 
 				it('should be able to call binded methods properly', () => {
-					
+
 					const result1 = asyncInstance.getThisPropMethod('arg123');
 					expect(result1).equal(123);
-					
+
 					const result2 = asyncInstanceClone.getThisPropMethod('arg123');
 					expect(result2).equal(123);
-					
+
 					const result3 = nestedAsyncSub.getThisPropMethod('arg123');
 					expect(result3).equal(456);
-					
+
 					const result4 = new nestedAsyncSub.getThisPropMethod('arg123');
 					expect(typeof result4).equal('object');
 					expect(result4.arg123).equal('arg123');
@@ -939,11 +943,11 @@ describe('Main Test', () => {
 					const getThisPropMethod1 = asyncSub.getThisPropMethod;
 					const result5 = getThisPropMethod1('arg123');
 					expect(result5).equal(321);
-					
+
 					const {getThisPropMethod} = asyncSub;
 					const result6 = getThisPropMethod('arg123');
 					expect(result6).equal(321);
-					
+
 					const result7 = new getThisPropMethod('arg123');
 					expect(typeof result7).equal('object');
 					expect(result7.arg123).equal('arg123');
@@ -953,18 +957,29 @@ describe('Main Test', () => {
 
 					const result9 = nestedAsyncInstance.getThisPropMethod('arg123');
 					expect(result9).equal(321);
-					
+
 					const {
-						getThisPropMethod : getThisPropMethod2,
+						getThisPropMethod: getThisPropMethod2,
 						hookedMethod
 					} = nestedAsyncSub;
-					
+
 					const result10 = getThisPropMethod2('arg123');
 					expect(result10).equal(456);
-					
+
 					const result11 = hookedMethod('getThisPropMethod')('arg123');
 					expect(result11).equal(456);
-					
+
+					let thrown;
+					try {
+						hookedMethod('getThisPropMethod')('missingProp');
+					} catch (error) {
+						thrown = error;
+					}
+					expect(thrown).instanceOf(Error);
+					expect(thrown).instanceOf(SubOfNestedAsync);
+					expect(thrown.message).exist.and.is.a('string');
+					assert.equal(thrown.message, 'prop is missing');
+
 				});
 
 				it('should be able to construct async', () => {
