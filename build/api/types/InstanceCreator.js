@@ -171,18 +171,28 @@ const bindMethod = function (instance, methodName, MethodItself) {
 			const addTo = this;
 			return function (...args) {
 				const applicateTo = this || addTo;
+				let asNewKeyword = false;
 				try {
 					if (new.target) {
+						asNewKeyword = true;
 						return new MethodItself(...args);
 					}
 					return MethodItself.call(applicateTo, ...args);
 				}
 				catch (error) {
-					error.exceptionMethod = MethodItself;
-					throw new applicateTo.exception(error, args);
+					error.exceptionReasonMethod = MethodItself;
+					error.exceptionReasonObject = applicateTo;
+					error.exceptionReasonsIsNew = asNewKeyword;
+					throw new applicateTo.exception(error, {
+						args,
+						exceptionReasonMethod : MethodItself,
+						exceptionReasonObject : applicateTo,
+						exceptionReasonsIsNew : asNewKeyword
+					});
 				}
 			};
-		}
+		},
+		enumerable : true
 	});
 };
 const bindProtoMethods = function () {

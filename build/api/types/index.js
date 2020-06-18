@@ -94,6 +94,19 @@ const defineFromType = function (subtypes, constructHandlerGetter, config) {
 	config.asClass = asClass;
 	return new TypeDescriptor(this, subtypes, TypeName, makeConstructHandler, type.prototype, config);
 };
+const extractNonEnumerableProps = (_obj) => {
+	const extracted = Object.entries(Object.getOwnPropertyDescriptors(_obj)).reduce((obj, entry) => {
+		const [name, { value }] = entry;
+		odp(obj, name, {
+			value,
+			configurable : true,
+			enumerable   : true,
+			writable     : true,
+		});
+		return obj;
+	}, {});
+	return extracted;
+};
 const defineFromFunction = function (subtypes, TypeName, constructHandler = function () { }, proto, config = {}) {
 	if (typeof constructHandler !== 'function') {
 		throw new HANDLER_MUST_BE_A_FUNCTION;
@@ -109,6 +122,9 @@ const defineFromFunction = function (subtypes, TypeName, constructHandler = func
 			proto = {};
 		}
 	}
+	if (asClass) {
+		proto = extractNonEnumerableProps(proto);
+	}
 	if (typeof config === 'object') {
 		config = Object.assign({}, config);
 	}
@@ -123,7 +139,7 @@ const defineFromFunction = function (subtypes, TypeName, constructHandler = func
 exports.define = function (subtypes, TypeOrTypeName, constructHandlerOrConfig, proto, config) {
 	if (typeof TypeOrTypeName === 'function') {
 		if (TypeOrTypeName.name) {
-			return exports.define.call(this, subtypes, TypeOrTypeName.name, TypeOrTypeName, constructHandlerOrConfig, proto, config);
+			return exports.define.call(this, subtypes, TypeOrTypeName.name, TypeOrTypeName, constructHandlerOrConfig || TypeOrTypeName.prototype, config);
 		}
 		else {
 			return defineFromType.call(this, subtypes, TypeOrTypeName, constructHandlerOrConfig);

@@ -123,6 +123,10 @@ const tests = (opts) => {
 			const NamedFunction = UserType.define(async function NamedFunction () {
 				this.type = 'function';
 				return this;
+			}, {
+				getTypeValue () {
+					return this.type;
+				}
 			});
 
 			it('named function definition exist', () => {
@@ -134,6 +138,23 @@ const tests = (opts) => {
 					this.type = 'class';
 					this.snc = snc;
 				}
+
+				getTypeValue () {
+					return this.type;
+				}
+			});
+
+			UserType.define(function () {
+				return class NamedClass2 {
+					constructor (snc) {
+						this.type = 'class';
+						this.snc = snc;
+					}
+
+					getTypeValue () {
+						return this.type;
+					}
+				};
 			});
 
 			const SubNamedClass = NamedClass.define(class SubNamedClass {
@@ -153,6 +174,9 @@ const tests = (opts) => {
 			it('instance made with named function props', () => {
 				expect(nf.type).is.equal('function');
 			});
+			it('instance made with named function prototype methods', () => {
+				expect(nf.getTypeValue()).is.equal('function');
+			});
 
 			const nc = new user.NamedClass(1);
 
@@ -161,6 +185,9 @@ const tests = (opts) => {
 			});
 			it('instance made with named class props', () => {
 				expect(nc.type).is.equal('class');
+			});
+			it('instance made with named class  prototype methods', () => {
+				expect(nc.getTypeValue()).is.equal('class');
 			});
 
 			const snc1 = new nc.SubNamedClass();
@@ -172,6 +199,12 @@ const tests = (opts) => {
 				expect(snc2).instanceOf(NamedClass);
 				expect(snc2).instanceOf(SubNamedClass);
 			});
+			
+			it('sub instance made with named class  prototype methods', () => {
+				expect(snc1.getTypeValue()).is.equal('subclass');
+				expect(snc2.getTypeValue()).is.equal('subclass');
+			});
+
 			it('instance made with sub-named class props', () => {
 
 				expect(snc1.type).is.equal('subclass');

@@ -125,6 +125,9 @@ UserType.define(() => {
 		get UserTypePL2 () {
 			return pl2Proto.UserTypePL2;
 		}
+		getSign () {
+			return this.user_pl_2_sign;
+		}
 	}
 	return UserTypePL2;
 }, {
