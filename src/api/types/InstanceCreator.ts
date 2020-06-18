@@ -318,8 +318,8 @@ const invokePostHooks = function ( this: any ) {
 };
 
 
-const bindMethod = function ( this: any, instance: any, name: string, MethodItself: any ) {
-	odp( instance, name, {
+const bindMethod = function ( this: any, instance: any, methodName: string, MethodItself: any ) {
+	odp( instance, methodName, {
 		get () {
 			const addTo = this;
 			return function ( this: any, ...args: any[] ) {
@@ -330,6 +330,7 @@ const bindMethod = function ( this: any, instance: any, name: string, MethodItse
 					}
 					return MethodItself.call( applicateTo, ...args );
 				} catch ( error ) {
+					error.exceptionMethod = MethodItself;
 					throw new applicateTo.exception( error, args );
 				}
 			}
