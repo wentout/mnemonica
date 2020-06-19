@@ -46,8 +46,8 @@ export const invokeHook = function ( this: any, hookType: string, opts: { [ inde
 		if ( typeof inheritedInstance === 'object' ) {
 			Object.assign( hookArgs, {
 				inheritedInstance,
-				bindMethod (name: string, method: CallableFunction) {
-					creator.bindMethod(inheritedInstance, name, method);
+				bindMethod ( name: string, method: CallableFunction ) {
+					creator.bindMethod( inheritedInstance, name, method );
 				},
 				bindProtoMethods () {
 					creator.bindProtoMethods();

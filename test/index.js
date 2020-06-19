@@ -274,8 +274,9 @@ const AsyncType = tsdefine('AsyncType', async function (data) {
 
 	},
 
-	async erroredAsyncMethod () {
-		throw new Error('async error');
+	async erroredAsyncMethod (error) {
+		const result = error === undefined ? new Error('async error') : error;
+		throw result;
 	}
 
 }, {
@@ -1049,8 +1050,8 @@ describe('Main Test', () => {
 					// expect(thrown2.originalError).instanceOf(Error);
 					expect(thrown4.exceptionReason).instanceOf(Object);
 					expect(thrown4.exceptionReason.methodName).equal('getThisPropMethod');
-					expect(thrown4.exceptionReason.additionalError).instanceOf(Error);
-					expect(thrown4.exceptionReason.additionalError.message).equal(cae);
+					expect(thrown4.surplus[0]).instanceOf(Error);
+					expect(thrown4.surplus[0].message).equal(cae);
 
 				});
 
@@ -1075,13 +1076,39 @@ describe('Main Test', () => {
 					} catch (error) {
 						thrown = error;
 					}
-					debugger;
+
+					asyncInstanceClone.thrownForReThrow = thrown;
 					expect(thrown).instanceOf(Error);
 					expect(thrown).instanceOf(AsyncType);
 					expect(thrown.message).exist.and.is.a('string');
 					assert.equal(thrown.message, 'async error');
 					expect(thrown.originalError).instanceOf(Error);
 					expect(thrown.originalError).not.instanceOf(AsyncType);
+
+				});
+
+				it('should be able to re-throw async binded methods invocations properly', async () => {
+					const {
+						erroredAsyncMethod,
+						thrownForReThrow
+					} = asyncInstanceClone;
+
+					let thrown;
+					try {
+						await erroredAsyncMethod(thrownForReThrow);
+					} catch (error) {
+						thrown = error;
+					}
+
+					expect(thrown).instanceOf(Error);
+					expect(thrown).instanceOf(AsyncType);
+					expect(thrown.message).exist.and.is.a('string');
+					assert.equal(thrown.message, 'async error');
+					expect(thrown.originalError).instanceOf(Error);
+					expect(thrown.originalError).not.instanceOf(AsyncType);
+					expect(thrown.surplus[0]).instanceOf(AsyncType);
+
+					expect(thrown.reasons.length).equal(2);
 
 				});
 
