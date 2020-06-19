@@ -272,7 +272,12 @@ const AsyncType = tsdefine('AsyncType', async function (data) {
 		}
 		throw new Error('prop is missing');
 
+	},
+
+	async erroredAsyncMethod () {
+		throw new Error('async error');
 	}
+
 }, {
 	bindedProto : true
 });
@@ -971,6 +976,12 @@ describe('Main Test', () => {
 
 					const result11 = hookedMethod('getThisPropMethod')('arg123');
 					expect(result11).equal(456);
+				});
+
+				it('should be able to throw binded methods invocations properly', () => {
+					const {
+						hookedMethod
+					} = nestedAsyncSub;
 
 					let thrown;
 					try {
@@ -985,12 +996,6 @@ describe('Main Test', () => {
 					expect(thrown.originalError).instanceOf(Error);
 					expect(thrown.originalError).not.instanceOf(SubOfNestedAsync);
 
-					// const result12 = hookedMethod.call({
-					// 	getThisPropMethod (arg) {
-					// 		return this[arg];
-					// 	}
-					// }, 'getThisPropMethod')('arg123');
-
 					let thrown2;
 					try {
 						hookedMethod.call(null, 'getThisPropMethod');
@@ -1003,7 +1008,6 @@ describe('Main Test', () => {
 					expect(thrown2.exceptionReason).instanceOf(Object);
 					expect(thrown2.exceptionReason.methodName).equal('hookedMethod');
 
-					debugger;
 
 					Object.defineProperty(asyncSub, 'exception', {
 						get () {
@@ -1024,7 +1028,7 @@ describe('Main Test', () => {
 					// expect(thrown2.originalError).instanceOf(Error);
 					expect(thrown3.exceptionReason).instanceOf(Object);
 					expect(thrown3.exceptionReason.methodName).equal('getThisPropMethod');
-					
+
 					const cae = 'check additional error';
 					Object.defineProperty(nestedAsyncInstance, 'exception', {
 						get () {
@@ -1047,6 +1051,37 @@ describe('Main Test', () => {
 					expect(thrown4.exceptionReason.methodName).equal('getThisPropMethod');
 					expect(thrown4.exceptionReason.additionalError).instanceOf(Error);
 					expect(thrown4.exceptionReason.additionalError.message).equal(cae);
+
+				});
+
+				// it('should be able to throw on returned after invocations', () => {
+				// 	debugger;
+				// 	hookedMethod.call({
+				// 		getThisPropMethod (arg) {
+				// 			return this[arg];
+				// 		}
+				// 	}, 'getThisPropMethod')('arg123');
+
+				// });
+
+				it('should be able to throw async binded methods invocations properly', async () => {
+					const {
+						erroredAsyncMethod
+					} = asyncInstanceClone;
+
+					let thrown;
+					try {
+						await erroredAsyncMethod();
+					} catch (error) {
+						thrown = error;
+					}
+					debugger;
+					expect(thrown).instanceOf(Error);
+					expect(thrown).instanceOf(AsyncType);
+					expect(thrown.message).exist.and.is.a('string');
+					assert.equal(thrown.message, 'async error');
+					expect(thrown.originalError).instanceOf(Error);
+					expect(thrown.originalError).not.instanceOf(AsyncType);
 
 				});
 

@@ -165,50 +165,68 @@ const invokePostHooks = function () {
 		namespace  : namespace.invokeHook(hookType, hookData)
 	};
 };
+const bindMethodErrorHandler = (error, exceptionReason) => {
+	odp(error, 'exceptionReason', {
+		get () {
+			return exceptionReason;
+		}
+	});
+	const { applyTo, args, method, asNew } = exceptionReason;
+	if (applyTo && applyTo.exception instanceof Function) {
+		let preparedException = error;
+		try {
+			preparedException = new applyTo.exception(error, {
+				args,
+				exceptionReasonMethod : method,
+				exceptionReasonObject : applyTo,
+				exceptionReasonsIsNew : asNew
+			});
+		}
+		catch (additionalError) {
+			error.exceptionReason.additionalError = additionalError;
+			return error;
+		}
+		if (preparedException instanceof Error) {
+			return preparedException;
+		}
+	}
+	return error;
+};
 const bindMethod = function (instance, methodName, MethodItself) {
 	odp(instance, methodName, {
 		get () {
 			const from = this;
 			return function (...args) {
 				const applyTo = this !== undefined ? this : from;
-				let asNewKeyword = false;
+				const exceptionReason = {
+					method : MethodItself,
+					methodName,
+					this   : this,
+					from,
+					instance,
+					applyTo,
+					asNew  : false,
+					args
+				};
 				try {
+					let answer;
 					if (new.target) {
-						asNewKeyword = true;
-						return new MethodItself(...args);
+						exceptionReason.asNew = true;
+						answer = new MethodItself(...args);
 					}
-					return MethodItself.call(applyTo, ...args);
+					else {
+						answer = MethodItself.call(applyTo, ...args);
+					}
+					if (answer instanceof Promise) {
+						answer = answer.catch((error) => {
+							const errorInstance = bindMethodErrorHandler(error, exceptionReason);
+							throw errorInstance;
+						});
+					}
+					return answer;
 				}
 				catch (error) {
-					error.exceptionReason = {
-						method : MethodItself,
-						methodName,
-						this   : this,
-						from,
-						instance,
-						applyTo,
-						new    : asNewKeyword,
-						args
-					};
-					if (applyTo && applyTo.exception instanceof Function) {
-						let preparedException = error;
-						try {
-							preparedException = new applyTo.exception(error, {
-								args,
-								exceptionReasonMethod : MethodItself,
-								exceptionReasonObject : applyTo,
-								exceptionReasonsIsNew : asNewKeyword
-							});
-						}
-						catch (additionalError) {
-							error.exceptionReason.additionalError = additionalError;
-							throw error;
-						}
-						if (preparedException instanceof Error) {
-							throw preparedException;
-						}
-					}
-					throw error;
+					throw bindMethodErrorHandler(error, exceptionReason);
 				}
 			};
 		},
