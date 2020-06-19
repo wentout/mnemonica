@@ -2,9 +2,8 @@
 
 import { ConstructorFunction } from '../../types';
 
-// import { hop } from '../../utils/hop';
-
 import { constants } from '../../constants';
+
 const {
 	odp,
 	SymbolReplaceGaia,
@@ -317,19 +316,43 @@ const invokePostHooks = function ( this: any ) {
 
 };
 
-const bindMethodErrorHandler = ( error: any, exceptionReason: any ) => {
-	odp( error, 'exceptionReason', {
-		get () {
-			return exceptionReason;
-		}
-	} );
+const bindedMethodErrorHandler = ( exceptionReason: any ) => {
 
 	const {
 		applyTo,
 		args,
 		method,
-		asNew
+		asNew,
+		error
 	} = exceptionReason;
+
+	const reThrown = error.exceptionReason !== undefined;
+	if ( reThrown ) {
+		error.reasons.push( exceptionReason );
+		error.surplus.push( error );
+		return error;
+	} else {
+		odp( error, 'exceptionReason', {
+			get () {
+				return exceptionReason;
+			},
+			enumerable: true
+		} );
+		const reasons: any[ typeof exceptionReason ] = [ exceptionReason ];
+		odp( error, 'reasons', {
+			get () {
+				return reasons;
+			},
+			enumerable: true
+		} );
+		const surplus: any[ typeof exceptionReason ] = [];
+		odp( error, 'surplus', {
+			get () {
+				return surplus;
+			},
+			enumerable: true
+		} );
+	}
 
 	// if ( typeof applyTo === 'object' && applyTo.exception instanceof Function ) {
 	if ( applyTo && applyTo.exception instanceof Function ) {
@@ -339,10 +362,10 @@ const bindMethodErrorHandler = ( error: any, exceptionReason: any ) => {
 				args,
 				exceptionReasonMethod: method,
 				exceptionReasonObject: applyTo,
-				exceptionReasonsIsNew: asNew
+				reasonsIsNew: asNew
 			} );
 		} catch ( additionalError ) {
-			error.exceptionReason.additionalError = additionalError;
+			error.surplus.push( additionalError );
 			return error;
 		}
 		if ( preparedException instanceof Error ) {
@@ -368,7 +391,7 @@ const bindMethod = function ( this: any, instance: any, methodName: string, Meth
 					instance,
 					applyTo,
 					asNew: false,
-					args
+					args,
 				};
 
 				try {
@@ -381,15 +404,23 @@ const bindMethod = function ( this: any, instance: any, methodName: string, Meth
 					}
 
 					if ( answer instanceof Promise ) {
-						answer = answer.catch((error) => {
-							const errorInstance = bindMethodErrorHandler( error, exceptionReason );
-							throw errorInstance;
-						});
+						answer = answer.catch( ( error ) => {
+							odp( exceptionReason, 'error', {
+								value: error,
+								enumerable: true
+							} );
+							throw bindedMethodErrorHandler( exceptionReason );
+						} );
 					}
 
 					return answer;
 				} catch ( error ) {
-					throw bindMethodErrorHandler( error, exceptionReason );
+					odp( exceptionReason, 'error', {
+						value: error,
+						enumerable: true
+					} );
+
+					throw bindedMethodErrorHandler( exceptionReason );
 				}
 			}
 		},

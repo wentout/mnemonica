@@ -165,13 +165,36 @@ const invokePostHooks = function () {
 		namespace  : namespace.invokeHook(hookType, hookData)
 	};
 };
-const bindMethodErrorHandler = (error, exceptionReason) => {
-	odp(error, 'exceptionReason', {
-		get () {
-			return exceptionReason;
-		}
-	});
-	const { applyTo, args, method, asNew } = exceptionReason;
+const bindedMethodErrorHandler = (exceptionReason) => {
+	const { applyTo, args, method, asNew, error } = exceptionReason;
+	const reThrown = error.exceptionReason !== undefined;
+	if (reThrown) {
+		error.reasons.push(exceptionReason);
+		error.surplus.push(error);
+		return error;
+	}
+	else {
+		odp(error, 'exceptionReason', {
+			get () {
+				return exceptionReason;
+			},
+			enumerable : true
+		});
+		const reasons = [exceptionReason];
+		odp(error, 'reasons', {
+			get () {
+				return reasons;
+			},
+			enumerable : true
+		});
+		const surplus = [];
+		odp(error, 'surplus', {
+			get () {
+				return surplus;
+			},
+			enumerable : true
+		});
+	}
 	if (applyTo && applyTo.exception instanceof Function) {
 		let preparedException = error;
 		try {
@@ -179,11 +202,11 @@ const bindMethodErrorHandler = (error, exceptionReason) => {
 				args,
 				exceptionReasonMethod : method,
 				exceptionReasonObject : applyTo,
-				exceptionReasonsIsNew : asNew
+				reasonsIsNew          : asNew
 			});
 		}
 		catch (additionalError) {
-			error.exceptionReason.additionalError = additionalError;
+			error.surplus.push(additionalError);
 			return error;
 		}
 		if (preparedException instanceof Error) {
@@ -206,7 +229,7 @@ const bindMethod = function (instance, methodName, MethodItself) {
 					instance,
 					applyTo,
 					asNew  : false,
-					args
+					args,
 				};
 				try {
 					let answer;
@@ -219,14 +242,21 @@ const bindMethod = function (instance, methodName, MethodItself) {
 					}
 					if (answer instanceof Promise) {
 						answer = answer.catch((error) => {
-							const errorInstance = bindMethodErrorHandler(error, exceptionReason);
-							throw errorInstance;
+							odp(exceptionReason, 'error', {
+								value      : error,
+								enumerable : true
+							});
+							throw bindedMethodErrorHandler(exceptionReason);
 						});
 					}
 					return answer;
 				}
 				catch (error) {
-					throw bindMethodErrorHandler(error, exceptionReason);
+					odp(exceptionReason, 'error', {
+						value      : error,
+						enumerable : true
+					});
+					throw bindedMethodErrorHandler(exceptionReason);
 				}
 			};
 		},
