@@ -16,12 +16,13 @@ const {
 	parse
 } = utils;
 
-import TypesUtils from './utils';
+import TypesUtils from '../utils';
+
 const {
 	makeFakeModificatorType
 } = TypesUtils;
 
-import { makeInstanceModificator } from './InstanceCreator';
+import { makeInstanceModificator } from '../types/InstanceModificator';
 
 const checkThrowArgs = ( instance: any, target: any, error: Error, args: any[] ) => {
 
@@ -185,6 +186,7 @@ const prepareException = function ( this: any, target: any, error: Error, ...arg
 			error
 		} );
 	} );
+
 	ExceptionCreator.InstanceModificator = makeInstanceModificator( ExceptionCreator );
 
 	return new ExceptionCreator.InstanceModificator();

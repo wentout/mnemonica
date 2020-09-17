@@ -2,12 +2,12 @@
 Object.defineProperty(exports, '__esModule', { value : true });
 const constants_1 = require('../../constants');
 const { odp, SymbolConstructorName, SymbolGaia, SymbolReplaceGaia, MNEMONICA, GAIA, URANUS } = constants_1.constants;
-const utils_1 = require('./utils');
+const utils_1 = require('../utils');
 const { getTypeChecker, } = utils_1.default;
 const extract_1 = require('../../utils/extract');
 const parent_1 = require('../../utils/parent');
 const pick_1 = require('../../utils/pick');
-const exceptionConstructor_1 = require('./exceptionConstructor');
+const exceptionConstructor_1 = require('../errors/exceptionConstructor');
 const InstanceCreator_1 = require('./InstanceCreator');
 const Gaia = function (Uranus) {
 	const gaiaProto = Uranus ? Uranus : this;

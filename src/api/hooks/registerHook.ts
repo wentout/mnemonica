@@ -12,20 +12,20 @@ const hooksTypes = [
 	'creationError',
 ];
 
-export const registerHook = function (this:any, hookType:string, cb:Function) {
-	
-	if (!hooksTypes.includes(hookType)) {
+export const registerHook = function ( this: any, hookType: string, cb: CallableFunction ) {
+
+	if ( !hooksTypes.includes( hookType ) ) {
 		throw new WRONG_HOOK_TYPE;
 	}
-	
-	if (typeof cb !== 'function') {
+
+	if ( typeof cb !== 'function' ) {
 		throw new MISSING_HOOK_CALLBACK;
 	}
-	
-	if (!this.hooks[hookType]) {
-		this.hooks[hookType] = new Set([cb]);
+
+	if ( !this.hooks[ hookType ] ) {
+		this.hooks[ hookType ] = new Set( [ cb ] );
 	} else {
-		this.hooks[hookType].add(cb);
+		this.hooks[ hookType ].add( cb );
 	}
-	
+
 };

@@ -32,7 +32,7 @@ import { TypeProxy } from './TypeProxy';
 
 import compileNewModificatorFunctionBody from './compileNewModificatorFunctionBody';
 
-import TypesUtils from './utils';
+import TypesUtils from '../utils';
 const {
 	checkProto,
 	getTypeChecker,

@@ -9,7 +9,7 @@ const {
 	WRONG_TYPE_DEFINITION,
 } = ErrorsTypes;
 
-import TypesUtils from './utils';
+import TypesUtils from '../utils';
 const {
 	checkProto,
 	getTypeChecker,

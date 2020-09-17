@@ -1,137 +1,17 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
-exports.InstanceCreator = exports.makeInstanceModificator = void 0;
+exports.InstanceCreator = void 0;
 const constants_1 = require('../../constants');
-const { odp, SymbolReplaceGaia, SymbolConstructorName, } = constants_1.constants;
+const { odp, SymbolConstructorName, } = constants_1.constants;
 const errors_1 = require('../../descriptors/errors');
-const { WRONG_MODIFICATION_PATTERN, BASE_MNEMONICA_ERROR } = errors_1.ErrorsTypes;
-const utils_1 = require('./utils');
-const { getModificationConstructor, getExistentAsyncStack, makeFakeModificatorType } = utils_1.default;
+const { WRONG_MODIFICATION_PATTERN, } = errors_1.ErrorsTypes;
+const utils_1 = require('../utils');
+const { getModificationConstructor, getExistentAsyncStack, makeFakeModificatorType, } = utils_1.default;
 const errors_2 = require('../errors');
-exports.makeInstanceModificator = (self) => {
-	const { ModificationConstructor, existentInstance, ModificatorType, proto, } = self;
-	return ModificationConstructor.call(existentInstance, ModificatorType, Object.assign({}, proto), (__proto_proto__) => {
-		self.__proto_proto__ = __proto_proto__;
-		proceedProto.call(self);
-	});
-};
-const throwModificationError = function (error) {
-	const self = this;
-	const { TypeName, type: { stack: typeStack } } = self;
-	self.ModificatorType = makeFakeModificatorType(TypeName);
-	self.InstanceModificator = exports.makeInstanceModificator(self);
-	const erroredInstance = new self.InstanceModificator();
-	erroredInstance[SymbolReplaceGaia](error);
-	const stack = [];
-	if (error instanceof BASE_MNEMONICA_ERROR) {
-		stack.push(error.stack);
-	}
-	else {
-		const title = `\n<-- creation of [ ${TypeName} ] traced -->`;
-		errors_2.getStack.call(erroredInstance, title, [], throwModificationError);
-		stack.push(...erroredInstance.stack);
-		const errorStack = error.stack.split('\n');
-		stack.push('<-- with the following error -->');
-		errorStack.forEach((line) => {
-			if (!stack.includes(line)) {
-				stack.push(line);
-			}
-		});
-		stack.push('\n<-- of constructor definitions stack -->');
-		stack.push(...typeStack);
-	}
-	erroredInstance.stack = errors_2.cleanupStack(stack).join('\n');
-	self.inheritedInstance = erroredInstance;
-	const results = self.invokePostHooks();
-	const { type, collection, namespace } = results;
-	if (type.has(true) || collection.has(true) || namespace.has(true)) {
-		return;
-	}
-	throw erroredInstance;
-};
-const addProps = function () {
-	const self = this;
-	const { type, existentInstance, args, config: { submitStack }, __proto_proto__: proto } = self;
-	const { namespace, collection, subtypes, } = type;
-	odp(proto, '__proto_proto__', {
-		get () {
-			return proto;
-		}
-	});
-	odp(proto, '__args__', {
-		get () {
-			return args;
-		}
-	});
-	odp(proto, '__collection__', {
-		get () {
-			return collection;
-		}
-	});
-	odp(proto, '__namespace__', {
-		get () {
-			return namespace;
-		}
-	});
-	odp(proto, '__subtypes__', {
-		get () {
-			return subtypes;
-		}
-	});
-	odp(proto, '__type__', {
-		get () {
-			return type;
-		}
-	});
-	odp(proto, '__parent__', {
-		get () {
-			return existentInstance;
-		}
-	});
-	if (submitStack) {
-		const { stack } = this;
-		odp(proto, '__stack__', {
-			get () {
-				return stack.join('\n');
-			}
-		});
-	}
-	odp(proto, '__creator__', {
-		get () {
-			return self;
-		}
-	});
-	const timestamp = Date.now();
-	odp(proto, '__timestamp__', {
-		get () {
-			return timestamp;
-		}
-	});
-};
-const undefineParentSubTypes = function () {
-	const self = this;
-	const { __proto_proto__: proto, existentInstance: { __subtypes__: subtypes } } = self;
-	if (!subtypes) {
-		return;
-	}
-	const unscopables = {};
-	[...subtypes.keys()].forEach((name) => {
-		odp(proto, name, {
-			get () {
-				return undefined;
-			}
-		});
-		unscopables[name] = true;
-	});
-	proto[Symbol.unscopables] = unscopables;
-};
-const proceedProto = function () {
-	const self = this;
-	self.addProps();
-	if (self.config.strictChain) {
-		self.undefineParentSubTypes();
-	}
-};
+const throwModificationError_1 = require('../errors/throwModificationError');
+const bindedMethodErrorHandler_1 = require('../errors/bindedMethodErrorHandler');
+const InstanceCreatorProto_1 = require('./InstanceCreatorProto');
+const InstanceModificator_1 = require('./InstanceModificator');
 const invokePreHooks = function () {
 	const { type, existentInstance, args, InstanceModificator } = this;
 	const { namespace, collection, } = type;
@@ -165,56 +45,6 @@ const invokePostHooks = function () {
 		namespace  : namespace.invokeHook(hookType, hookData)
 	};
 };
-const bindedMethodErrorHandler = (exceptionReason) => {
-	const { applyTo, args, method, asNew, error } = exceptionReason;
-	const reThrown = error.exceptionReason !== undefined;
-	if (reThrown) {
-		error.reasons.push(exceptionReason);
-		error.surplus.push(error);
-		return error;
-	}
-	else {
-		odp(error, 'exceptionReason', {
-			get () {
-				return exceptionReason;
-			},
-			enumerable : true
-		});
-		const reasons = [exceptionReason];
-		odp(error, 'reasons', {
-			get () {
-				return reasons;
-			},
-			enumerable : true
-		});
-		const surplus = [];
-		odp(error, 'surplus', {
-			get () {
-				return surplus;
-			},
-			enumerable : true
-		});
-	}
-	if (applyTo && applyTo.exception instanceof Function) {
-		let preparedException = error;
-		try {
-			preparedException = new applyTo.exception(error, {
-				args,
-				exceptionReasonMethod : method,
-				exceptionReasonObject : applyTo,
-				reasonsIsNew          : asNew
-			});
-		}
-		catch (additionalError) {
-			error.surplus.push(additionalError);
-			return error;
-		}
-		if (preparedException instanceof Error) {
-			return preparedException;
-		}
-	}
-	return error;
-};
 const bindMethod = function (instance, methodName, MethodItself) {
 	odp(instance, methodName, {
 		get () {
@@ -246,7 +76,7 @@ const bindMethod = function (instance, methodName, MethodItself) {
 								value      : error,
 								enumerable : true
 							});
-							throw bindedMethodErrorHandler(exceptionReason);
+							throw bindedMethodErrorHandler_1.bindedMethodErrorHandler(exceptionReason);
 						});
 					}
 					return answer;
@@ -256,7 +86,7 @@ const bindMethod = function (instance, methodName, MethodItself) {
 						value      : error,
 						enumerable : true
 					});
-					throw bindedMethodErrorHandler(exceptionReason);
+					throw bindedMethodErrorHandler_1.bindedMethodErrorHandler(exceptionReason);
 				}
 			};
 		},
@@ -365,13 +195,13 @@ const InstanceCreatorPrototype = {
 	bindMethod,
 	bindProtoMethods,
 	makeWaiter,
-	proceedProto,
-	addProps,
+	proceedProto           : InstanceCreatorProto_1.proceedProto,
+	addProps               : InstanceCreatorProto_1.addProps,
 	addThen,
-	undefineParentSubTypes,
+	undefineParentSubTypes : InstanceCreatorProto_1.undefineParentSubTypes,
 	invokePreHooks,
 	invokePostHooks,
-	throwModificationError
+	throwModificationError : throwModificationError_1.throwModificationError
 };
 exports.InstanceCreator = function (type, existentInstance, args, chained) {
 	const { constructHandler, proto, config, TypeName } = type;
@@ -403,11 +233,11 @@ exports.InstanceCreator = function (type, existentInstance, args, chained) {
 	}
 	if (blockErrors && existentInstance instanceof Error) {
 		self.ModificatorType = makeFakeModificatorType(TypeName);
-		self.InstanceModificator = exports.makeInstanceModificator(self);
+		self.InstanceModificator = InstanceModificator_1.makeInstanceModificator(self);
 		throw new self.InstanceModificator(...args);
 	}
 	self.invokePreHooks();
-	self.InstanceModificator = exports.makeInstanceModificator(self);
+	self.InstanceModificator = InstanceModificator_1.makeInstanceModificator(self);
 	if (blockErrors) {
 		try {
 			self.inheritedInstance = new self.InstanceModificator(...args);
