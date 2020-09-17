@@ -3,8 +3,10 @@
 		"module": "commonjs",
 		"target": "ES6",
 		"lib": [
-			"ES5",
+			"ES6",
 		],
+		"esModuleInterop": false,
+		"allowSyntheticDefaultImports": false,
 		"strict": true,
 		"alwaysStrict": true,
 		"strictFunctionTypes": true,

@@ -12,9 +12,9 @@ const CreationHandler = function (constructionAnswer) {
 	}
 	return this;
 };
-const compileNewModificatorFunctionBody_1 = require('./compileNewModificatorFunctionBody');
-const createInstanceModificator200XthWay_1 = require('./createInstanceModificator200XthWay');
-const createInstanceModificator_1 = require('./createInstanceModificator');
+const compileNewModificatorFunctionBody_1 = require('../types/compileNewModificatorFunctionBody');
+const createInstanceModificator200XthWay_1 = require('../types/createInstanceModificator200XthWay');
+const createInstanceModificator_1 = require('../types/createInstanceModificator');
 const getModificationConstructor = (useOldStyle) => {
 	return (useOldStyle ? createInstanceModificator200XthWay_1.default : createInstanceModificator_1.default)();
 };

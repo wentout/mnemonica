@@ -1,1 +1,1 @@
-export declare const registerHook: (this: any, hookType: string, cb: Function) => void;
+export declare const registerHook: (this: any, hookType: string, cb: CallableFunction) => void;

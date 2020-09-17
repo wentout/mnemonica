@@ -9,7 +9,7 @@ const { ALREADY_DECLARED, WRONG_TYPE_DEFINITION, TYPENAME_MUST_BE_A_STRING, HAND
 const hooksApi = require('../hooks');
 const TypeProxy_1 = require('./TypeProxy');
 const compileNewModificatorFunctionBody_1 = require('./compileNewModificatorFunctionBody');
-const utils_1 = require('./utils');
+const utils_1 = require('../utils');
 const { checkProto, getTypeChecker, CreationHandler, getTypeSplitPath, checkTypeName, isClass, } = utils_1.default;
 const errors_2 = require('../errors');
 const TypeDescriptor = function (defineOrigin, types, TypeName, constructHandler, proto, config) {

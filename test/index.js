@@ -254,6 +254,23 @@ const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () {}, {}, {
 	awaitReturn : false
 });
 
+const Main = define('Main', function () {
+	this.constructNested = function () {
+		return new this.NestedConstruct();
+	};
+});
+const NestedConstruct = Main.define('NestedConstruct', function () {
+	// 1. direct
+	// throw new Error('Nested Constructor Special Error');
+	// 2. sub
+	this.nested = new this.NestedSubError(123);
+});
+NestedConstruct.define('NestedSubError', function (...args) {
+	this.args = args;
+	debugger;
+	throw new Error('Nested SubError Constructor Special Error');
+});
+
 types[SymbolConfig].bindedProto = false;
 const AsyncType = tsdefine('AsyncType', async function (data) {
 	return Object.assign(this, {
@@ -272,6 +289,13 @@ const AsyncType = tsdefine('AsyncType', async function (data) {
 		}
 		throw new Error('prop is missing');
 
+	},
+
+	erroredNestedConstructMethod () {
+		// will throw RangeError : max stack size
+		debugger;
+		const main = new Main();
+		main.nested = main.constructNested();
 	},
 
 	async erroredAsyncMethod (error) {
@@ -1062,8 +1086,45 @@ describe('Main Test', () => {
 				// 			return this[arg];
 				// 		}
 				// 	}, 'getThisPropMethod')('arg123');
-
 				// });
+
+				it('should be able to throw on construct inside binded methods after invocations', () => {
+
+					const {
+						erroredNestedConstructMethod
+					} = asyncInstanceClone;
+					let thrown;
+
+
+					try {
+						debugger;
+						erroredNestedConstructMethod();
+					} catch (error) {
+						debugger;
+						thrown = error;
+					}
+
+					expect(thrown).instanceOf(Error);
+					expect(thrown).not.instanceOf(AsyncType);
+					expect(thrown.message).exist.and.is.a('string');
+					assert.equal(thrown.message, 'Nested SubError Constructor Special Error');
+					expect(thrown.originalError).instanceOf(Error);
+					expect(thrown.originalError).not.instanceOf(AsyncType);
+
+					const {
+						args,
+						instance
+					} = thrown;
+
+					assert.equal(args[0], 123);
+					assert.equal(instance.constructor.name, 'NestedSubError');
+					const parsed = thrown.parse();
+					assert.equal(parsed.name, 'NestedSubError');
+
+					const extracted = thrown.extract();
+					assert.equal(typeof extracted.constructNested, 'function');
+
+				});
 
 				it('should be able to throw async binded methods invocations properly', async () => {
 					const {
@@ -1099,6 +1160,8 @@ describe('Main Test', () => {
 					} catch (error) {
 						thrown = error;
 					}
+
+					debugger;
 
 					expect(thrown).instanceOf(Error);
 					expect(thrown).instanceOf(AsyncType);

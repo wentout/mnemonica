@@ -1,5 +1,4 @@
 import { ConstructorFunction } from '../../types';
-export declare const makeInstanceModificator: (self: any) => any;
 export declare const InstanceCreator: ConstructorFunction<{
     getExistentAsyncStack: (existentInstance: any) => any[];
     postProcessing: (this: any, continuationOf: any) => void;

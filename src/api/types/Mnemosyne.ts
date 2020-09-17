@@ -14,7 +14,7 @@ const {
 
 } = constants;
 
-import TypesUtils from './utils';
+import TypesUtils from '../utils';
 const {
 	getTypeChecker,
 } = TypesUtils;
@@ -23,7 +23,7 @@ import { extract } from '../../utils/extract';
 import { parent } from '../../utils/parent';
 import { pick } from '../../utils/pick';
 
-import exceptionConstructor from './exceptionConstructor';
+import exceptionConstructor from '../errors/exceptionConstructor';
 
 import { InstanceCreator } from './InstanceCreator';
 

@@ -7,9 +7,9 @@ const { WRONG_ARGUMENTS_USED, WRONG_INSTANCE_INVOCATION } = errors_1.ErrorsTypes
 const errors_2 = require('../errors');
 const utils_1 = require('../../utils');
 const { parse } = utils_1.utils;
-const utils_2 = require('./utils');
+const utils_2 = require('../utils');
 const { makeFakeModificatorType } = utils_2.default;
-const InstanceCreator_1 = require('./InstanceCreator');
+const InstanceModificator_1 = require('../types/InstanceModificator');
 const checkThrowArgs = (instance, target, error, args) => {
 	let wrongThrow;
 	if (!target) {
@@ -104,7 +104,7 @@ const prepareException = function (target, error, ...args) {
 			error
 		});
 	});
-	ExceptionCreator.InstanceModificator = InstanceCreator_1.makeInstanceModificator(ExceptionCreator);
+	ExceptionCreator.InstanceModificator = InstanceModificator_1.makeInstanceModificator(ExceptionCreator);
 	return new ExceptionCreator.InstanceModificator();
 };
 exports.default = prepareException;

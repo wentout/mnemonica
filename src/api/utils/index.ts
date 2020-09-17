@@ -36,10 +36,10 @@ const CreationHandler = function ( this: any, constructionAnswer: any ) {
 	return this;
 };
 
-import compileNewModificatorFunctionBody from './compileNewModificatorFunctionBody';
+import compileNewModificatorFunctionBody from '../types/compileNewModificatorFunctionBody';
 
-import oldMC from './createInstanceModificator200XthWay';
-import newMC from './createInstanceModificator';
+import oldMC from '../types/createInstanceModificator200XthWay';
+import newMC from '../types/createInstanceModificator';
 
 const getModificationConstructor = ( useOldStyle: boolean ) => {
 	return ( useOldStyle ? oldMC : newMC )();

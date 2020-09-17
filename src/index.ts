@@ -14,13 +14,8 @@ export const {
 } = descriptors;
 
 function checkThis ( pointer: any ): boolean {
-	if (
-		pointer === mnemonica ||
-		pointer === exports
-	) {
-		return true;
-	}
-	return false;
+	return pointer === mnemonica ||
+		pointer === exports;
 };
 
 export const define = function (
@@ -31,8 +26,7 @@ export const define = function (
 	config?: object,
 ) {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
-	const type = types.define( TypeName, constructHandler, proto, config );
-	return type;
+	return types.define( TypeName, constructHandler, proto, config );
 } as TypeAbsorber;
 
 export const tsdefine = function <T> (
