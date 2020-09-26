@@ -28,6 +28,10 @@ exports.collectConstructors = (self, asSequence = false) => {
 	let proto = Reflect.getPrototypeOf(self);
 	let mnemonicaReached = false;
 	while (proto) {
+		if (!proto.constructor) {
+			addToSequence(proto);
+			break;
+		}
 		const constructorName = proto.constructor.name;
 		if (constructorName === GAIA) {
 			self = proto;

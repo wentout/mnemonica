@@ -82,7 +82,7 @@ exports.undefineParentSubTypes = function () {
 exports.proceedProto = function () {
 	const self = this;
 	self.addProps();
-	if (self.config.strictChain) {
+	if (self.type.isSubType && self.config.strictChain) {
 		self.undefineParentSubTypes();
 	}
 };

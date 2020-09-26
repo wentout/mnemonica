@@ -164,6 +164,8 @@ const findParentSubType: any = ( instance: any, prop: string ) => {
 // 	return /^\s*class\s+/.test( value.trim() );
 // };
 
+// accordingly to the gist from here:
+// https://gist.github.com/wentout/ea3afe9c822a6b6ef32f9e4f3e98b1ba
 const isClass = (fn: CallableFunction) => {
 	// not necessary to check fn for typeof
 	// because of other checks made before

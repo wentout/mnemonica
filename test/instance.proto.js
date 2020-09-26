@@ -1,6 +1,12 @@
 'use strict';
 
-const { assert, expect } = require('chai');
+const {
+	SymbolGaia,
+} = require('..');
+
+const gof = Object.getPrototypeOf;
+
+const {assert, expect} = require('chai');
 
 const tests = (opts) => {
 
@@ -28,7 +34,11 @@ const tests = (opts) => {
 		evenMoreFork,
 		evenMoreForkFork,
 		evenMoreForkCall,
+		overMoreCallEvenMoreUndefined,
 		overMoreCallEvenMoreNull,
+		overMoreCallEvenMoreNumber,
+		overMoreCallEvenMoreString,
+		overMoreCallEvenMoreBoolean,
 		overMoreCallEvenMoreProcess,
 	} = opts;
 
@@ -64,8 +74,8 @@ const tests = (opts) => {
 			const userClone = user.clone;
 
 			assert.notEqual(
-				Object.getPrototypeOf(Object.getPrototypeOf(user)),
-				Object.getPrototypeOf(Object.getPrototypeOf(userClone))
+				gof(gof(user)),
+				gof(gof(userClone))
 			);
 
 			assert.notEqual(user, userClone);
@@ -74,7 +84,7 @@ const tests = (opts) => {
 			assert.deepEqual(userClone, user);
 
 		});
-		
+
 
 		it('should have proper first .fork() old style', () => {
 
@@ -86,10 +96,8 @@ const tests = (opts) => {
 
 			const userFork = user.fork(forkData);
 
-			const userPP =
-				Object.getPrototypeOf(Object.getPrototypeOf(user));
-			const userForkPP =
-				Object.getPrototypeOf(Object.getPrototypeOf(userFork));
+			const userPP = gof(gof(user));
+			const userForkPP = gof(gof(userFork));
 
 			assert.notEqual(userPP, userForkPP);
 
@@ -111,10 +119,8 @@ const tests = (opts) => {
 			const userTCArgs = userTC.__args__;
 			const userTCFork = userTC.fork(forkData);
 
-			const userTCPP =
-				Object.getPrototypeOf(Object.getPrototypeOf(userTC));
-			const userTCForkPP =
-				Object.getPrototypeOf(Object.getPrototypeOf(userTCFork));
+			const userTCPP = gof(gof(userTC));
+			const userTCForkPP = gof(gof(userTCFork));
 			assert.notEqual(userTCPP, userTCForkPP);
 
 			assert.notEqual(userTC, userTCFork);
@@ -135,16 +141,14 @@ const tests = (opts) => {
 			// debugger;
 			expect(__stack__.indexOf(stackstart)).equal(1);
 		});
-		
+
 		it('should have proper nested .fork() old style', () => {
 
 			const userPL1Fork = userPL1.fork();
 
-			const userPL1PP =
-				Object.getPrototypeOf(Object.getPrototypeOf(userPL1));
-			const userPL1ForkPP =
-				Object.getPrototypeOf(Object.getPrototypeOf(userPL1Fork));
-				
+			const userPL1PP = gof(gof(userPL1));
+			const userPL1ForkPP = gof(gof(userPL1Fork));
+
 			assert.equal(userPL1ForkPP.UserTypePL1.toString(), userPL1PP.UserTypePL1.toString());
 			assert.equal(userPL1ForkPP.UserTypePL2.toString(), userPL1PP.UserTypePL2.toString());
 			assert.deepInclude(userPL1ForkPP.UserTypePL1, userPL1PP.UserTypePL1);
@@ -164,8 +168,8 @@ const tests = (opts) => {
 
 			const evenMoreClone = evenMore.clone;
 			assert.deepEqual(
-				Object.getPrototypeOf(Object.getPrototypeOf(evenMore)),
-				Object.getPrototypeOf(Object.getPrototypeOf(evenMoreClone))
+				gof(gof(evenMore)),
+				gof(gof(evenMoreClone))
 			);
 			assert.notEqual(evenMore, evenMoreClone);
 			assert.deepInclude(evenMore, evenMoreClone);
@@ -187,10 +191,8 @@ const tests = (opts) => {
 			assert.notEqual(evenMore, evenMoreFork);
 			assert.notEqual(evenMoreForkFork, evenMoreFork);
 
-			const evenMorePP =
-				Object.getPrototypeOf(Object.getPrototypeOf(evenMore));
-			const evenMoreForkPP =
-				Object.getPrototypeOf(Object.getPrototypeOf(evenMoreFork));
+			const evenMorePP = gof(gof(evenMore));
+			const evenMoreForkPP = gof(gof(evenMoreFork));
 
 			assert.notEqual(evenMorePP, evenMoreForkPP);
 			assert.equal(evenMoreFork.str, strFork);
@@ -212,14 +214,50 @@ const tests = (opts) => {
 
 		});
 
-		it('instance.ConstructorName.call() should work', () => {
+		it('instance.ConstructorName.call(undefined) should work', () => {
+			expect(overMoreCallEvenMoreUndefined).instanceof(overMore.EvenMore);
+			expect(overMoreCallEvenMoreUndefined).instanceof(evenMore);
+			expect(overMoreCallEvenMoreUndefined.str).equal('re-defined EvenMore str');
+		});
+
+		it('instance.ConstructorName.call(null) should work', () => {
 			expect(overMoreCallEvenMoreNull).instanceof(overMore.EvenMore);
 			expect(overMoreCallEvenMoreNull).instanceof(evenMore);
+			expect(overMoreCallEvenMoreNull + 1).equal(1);
+		});
+
+		it('instance.ConstructorName.call(new Number) should work', () => {
+			expect(overMoreCallEvenMoreNumber).instanceof(overMore.EvenMore);
+			expect(overMoreCallEvenMoreNumber).instanceof(evenMore);
+			expect(overMoreCallEvenMoreNumber).instanceof(Number);
+			expect(overMoreCallEvenMoreNumber + 2).equal(7);
+		});
+
+		it('instance.ConstructorName.call(new String) should work', () => {
+
+			expect(overMoreCallEvenMoreString).instanceof(overMore.EvenMore);
+			expect(overMoreCallEvenMoreString).instanceof(evenMore);
+			expect(overMoreCallEvenMoreString).instanceof(String);
+			expect(overMoreCallEvenMoreString + 2).equal('52');
+		});
+
+		it('instance.ConstructorName.call(new Boolean) should work', () => {
+			expect(overMoreCallEvenMoreBoolean).instanceof(overMore.EvenMore);
+			expect(overMoreCallEvenMoreBoolean).instanceof(evenMore);
+			expect(overMoreCallEvenMoreBoolean).instanceof(Boolean);
+			expect(overMoreCallEvenMoreBoolean + 1).equal(2);
+		});
+
+		it('instance.ConstructorName.call(process) should work', () => {
+			const gaia = overMoreCallEvenMoreProcess[SymbolGaia];
+			const gaiaProto = gof(gaia);
+			expect(gof(gaiaProto)).equal(process);
+
 			expect(overMoreCallEvenMoreProcess).instanceof(overMore.EvenMore);
 			expect(overMoreCallEvenMoreProcess).instanceof(evenMore);
 			assert.isFunction(overMoreCallEvenMoreProcess.on);
 		});
-		
+
 		it('instance.fork.call() should work + SomeType.SomeSubType', () => {
 			expect(userTCForkCall).instanceof(UserTypeConstructor);
 			expect(userTCForkCall).instanceof(UserType);
@@ -250,7 +288,7 @@ const tests = (opts) => {
 			expect(evenMoreForkCall).instanceof(UserType);
 			expect(evenMoreForkCall).instanceof(user);
 		});
-		
+
 	});
 
 };

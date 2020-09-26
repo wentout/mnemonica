@@ -1,6 +1,8 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.TypeProxy = void 0;
+const constants_1 = require('../../constants');
+const { odp, SymbolGaia, } = constants_1.constants;
 const hop_1 = require('../../utils/hop');
 const errors_1 = require('../../descriptors/errors');
 const { WRONG_TYPE_DEFINITION, } = errors_1.ErrorsTypes;
@@ -75,9 +77,38 @@ const makeSubTypeProxy = function (subtype, inheritedInstance) {
 		construct (Target, _args) {
 			return new Target(subtype, inheritedInstance, _args);
 		},
-		apply (Target, thisArg, _args) {
-			const existentInstance = thisArg || inheritedInstance;
-			return new Target(subtype, existentInstance, _args);
+		apply (Target, _thisArg = inheritedInstance, _args) {
+			let thisArg = _thisArg;
+			if (_thisArg === null) {
+				thisArg = Object.create(null);
+				odp(thisArg, Symbol.toPrimitive, {
+					get () {
+						return () => {
+							return _thisArg;
+						};
+					}
+				});
+			}
+			if (_thisArg instanceof Number ||
+                _thisArg instanceof Boolean ||
+                _thisArg instanceof String) {
+				odp(thisArg, Symbol.toPrimitive, {
+					get () {
+						return () => {
+							return _thisArg.valueOf();
+						};
+					}
+				});
+			}
+			let existentInstance = thisArg;
+			if (!existentInstance[SymbolGaia]) {
+				const gaia = new Mnemosyne(subtype.namespace, new Gaia(existentInstance));
+				existentInstance = new Proxy(gaia, {
+					get : gaiaProxyHandlerGet
+				});
+			}
+			const entity = new Target(subtype, existentInstance, _args);
+			return entity;
 		},
 	});
 	return subtypeProxy;

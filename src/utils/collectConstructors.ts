@@ -38,6 +38,11 @@ export const collectConstructors = ( self: object, asSequence = false ) => {
 	let proto: any = Reflect.getPrototypeOf( self );
 	let mnemonicaReached = false;
 	while ( proto ) {
+		if (!proto.constructor) {
+			// this is Object.create(null)
+			addToSequence( proto );
+			break;
+		}
 		const constructorName = proto.constructor.name;
 		if ( constructorName === GAIA ) {
 			self = proto;

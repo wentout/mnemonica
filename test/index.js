@@ -534,8 +534,12 @@ describe('Main Test', () => {
 	const strForkOfFork = 'fork of fork of evenMore';
 
 	const overMoreFork = overMore.fork();
-
+	
+	const overMoreCallEvenMoreUndefined = overMore.EvenMore.call(undefined);
 	const overMoreCallEvenMoreNull = overMore.EvenMore.call(null);
+	const overMoreCallEvenMoreNumber = overMore.EvenMore.call(new Number(5));
+	const overMoreCallEvenMoreString = overMore.EvenMore.call(new String(5));
+	const overMoreCallEvenMoreBoolean = overMore.EvenMore.call(new Boolean(5));
 	const overMoreCallEvenMoreProcess = overMore.EvenMore.call(process);
 
 	const evenMoreArgs = evenMore.__args__;
@@ -913,7 +917,11 @@ describe('Main Test', () => {
 			evenMoreFork,
 			evenMoreForkFork,
 			evenMoreForkCall,
+			overMoreCallEvenMoreUndefined,
 			overMoreCallEvenMoreNull,
+			overMoreCallEvenMoreNumber,
+			overMoreCallEvenMoreString,
+			overMoreCallEvenMoreBoolean,
 			overMoreCallEvenMoreProcess
 		});
 
