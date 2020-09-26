@@ -12,5 +12,6 @@ declare const TypesUtils: {
     checkTypeName: (name: string) => void;
     findParentSubType: any;
     makeFakeModificatorType: (TypeName: string, fakeModificator?: TypeModificator<{}>) => any;
+    reflectPrimitiveWrappers: (_thisArg: any) => any;
 };
 export default TypesUtils;

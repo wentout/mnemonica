@@ -25,21 +25,21 @@ const tests = (opts) => {
 			assert.equal(8, userTypeHooksInvocations.length);
 			// debugger;
 			// +2
-			assert.equal(160, namespaceFlowCheckerInvocations.length);
+			assert.equal(164, namespaceFlowCheckerInvocations.length);
 			// +2
-			assert.equal(158, typesFlowCheckerInvocations.length);
+			assert.equal(162, typesFlowCheckerInvocations.length);
 			// +1
-			assert.equal(86, typesPreCreationInvocations.length);
+			assert.equal(88, typesPreCreationInvocations.length);
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
 			// +1
-			assert.equal(72, typesPostCreationInvocations.length);
+			assert.equal(74, typesPostCreationInvocations.length);
 			// +1
-			assert.equal(87, namespacePreCreationInvocations.length);
+			assert.equal(89, namespacePreCreationInvocations.length);
 			// there are two registered Hooks, that is why
 			// +2
-			assert.equal(146, namespacePostCreationInvocations.length);
+			assert.equal(150, namespacePostCreationInvocations.length);
 		});
 	});
 

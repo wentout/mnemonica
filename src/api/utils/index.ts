@@ -5,6 +5,7 @@ import { ErrorsTypes } from '../../descriptors/errors';
 import { utils } from '../../utils';
 
 const {
+	odp,
 	SymbolConstructorName,
 	MNEMONICA,
 	MNEMOSYNE,
@@ -201,6 +202,37 @@ const makeFakeModificatorType = (
 
 };
 
+const reflectPrimitiveWrappers = ( _thisArg: any ) => {
+	let thisArg = _thisArg;
+
+	if ( _thisArg === null ) {
+		thisArg = Object.create( null );
+		odp( thisArg, Symbol.toPrimitive, {
+			get () {
+				return () => {
+					return _thisArg;
+				}
+			}
+		} );
+	}
+
+	if (
+		_thisArg instanceof Number ||
+		_thisArg instanceof Boolean ||
+		_thisArg instanceof String
+	) {
+		odp( thisArg, Symbol.toPrimitive, {
+			get () {
+				return () => {
+					return _thisArg.valueOf();
+				}
+			}
+		} );
+	}
+
+	return thisArg;
+};
+
 const TypesUtils = {
 	isClass,
 	CreationHandler,
@@ -211,7 +243,8 @@ const TypesUtils = {
 	getExistentAsyncStack,
 	checkTypeName,
 	findParentSubType,
-	makeFakeModificatorType
+	makeFakeModificatorType,
+	reflectPrimitiveWrappers
 };
 
 export default TypesUtils;

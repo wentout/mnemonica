@@ -40,6 +40,8 @@ const tests = (opts) => {
 		overMoreCallEvenMoreString,
 		overMoreCallEvenMoreBoolean,
 		overMoreCallEvenMoreProcess,
+		userTCdirectDAG,
+		userTCforkDAG,
 	} = opts;
 
 	describe('instance .proto props tests', () => {
@@ -256,6 +258,18 @@ const tests = (opts) => {
 			expect(overMoreCallEvenMoreProcess).instanceof(overMore.EvenMore);
 			expect(overMoreCallEvenMoreProcess).instanceof(evenMore);
 			assert.isFunction(overMoreCallEvenMoreProcess.on);
+		});
+
+		it('direct primitive DAG.call(new Boolean) should work', () => {
+			expect(userTCdirectDAG).instanceof(UserTypeConstructor);
+			expect(userTCdirectDAG).instanceof(Boolean);
+			expect(userTCdirectDAG + 1).equal(2);
+		});
+
+		it('direct primitive DAG somethin.fork.call(new Boolean) should work', () => {
+			expect(userTCforkDAG).instanceof(UserTypeConstructor);
+			expect(userTCforkDAG).instanceof(Boolean);
+			expect(userTCforkDAG + 1).equal(2);
 		});
 
 		it('instance.fork.call() should work + SomeType.SomeSubType', () => {

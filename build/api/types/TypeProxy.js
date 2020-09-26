@@ -2,12 +2,12 @@
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.TypeProxy = void 0;
 const constants_1 = require('../../constants');
-const { odp, SymbolGaia, } = constants_1.constants;
+const { SymbolGaia, } = constants_1.constants;
 const hop_1 = require('../../utils/hop');
 const errors_1 = require('../../descriptors/errors');
 const { WRONG_TYPE_DEFINITION, } = errors_1.ErrorsTypes;
 const utils_1 = require('../utils');
-const { checkProto, getTypeChecker, findParentSubType, } = utils_1.default;
+const { checkProto, getTypeChecker, findParentSubType, reflectPrimitiveWrappers, } = utils_1.default;
 const Mnemosyne_1 = require('./Mnemosyne');
 const { Gaia, Mnemosyne, MnemosynePrototypeKeys } = Mnemosyne_1.default;
 const InstanceCreator_1 = require('./InstanceCreator');
@@ -77,30 +77,8 @@ const makeSubTypeProxy = function (subtype, inheritedInstance) {
 		construct (Target, _args) {
 			return new Target(subtype, inheritedInstance, _args);
 		},
-		apply (Target, _thisArg = inheritedInstance, _args) {
-			let thisArg = _thisArg;
-			if (_thisArg === null) {
-				thisArg = Object.create(null);
-				odp(thisArg, Symbol.toPrimitive, {
-					get () {
-						return () => {
-							return _thisArg;
-						};
-					}
-				});
-			}
-			if (_thisArg instanceof Number ||
-                _thisArg instanceof Boolean ||
-                _thisArg instanceof String) {
-				odp(thisArg, Symbol.toPrimitive, {
-					get () {
-						return () => {
-							return _thisArg.valueOf();
-						};
-					}
-				});
-			}
-			let existentInstance = thisArg;
+		apply (Target, thisArg = inheritedInstance, _args) {
+			let existentInstance = reflectPrimitiveWrappers(thisArg);
 			if (!existentInstance[SymbolGaia]) {
 				const gaia = new Mnemosyne(subtype.namespace, new Gaia(existentInstance));
 				existentInstance = new Proxy(gaia, {
@@ -168,7 +146,8 @@ const gaiaProxyHandlerGet = (target, prop, receiver) => {
 };
 exports.TypeProxy.prototype.construct = function (__, args) {
 	const { __type__: type, Uranus } = this;
-	const gaia = new Mnemosyne(type.namespace, new Gaia(Uranus));
+	const uranus = reflectPrimitiveWrappers(Uranus);
+	const gaia = new Mnemosyne(type.namespace, new Gaia(uranus));
 	const gaiaProxy = new Proxy(gaia, {
 		get : gaiaProxyHandlerGet
 	});

@@ -3,7 +3,7 @@ Object.defineProperty(exports, '__esModule', { value : true });
 const constants_1 = require('../../constants');
 const { odp, SymbolConstructorName, SymbolGaia, SymbolReplaceGaia, MNEMONICA, GAIA, URANUS } = constants_1.constants;
 const utils_1 = require('../utils');
-const { getTypeChecker, } = utils_1.default;
+const { getTypeChecker, reflectPrimitiveWrappers } = utils_1.default;
 const extract_1 = require('../../utils/extract');
 const parent_1 = require('../../utils/parent');
 const pick_1 = require('../../utils/pick');
@@ -53,7 +53,7 @@ const MnemonicaProtoProps = {
 				forked = new (Constructor[TypeName])(...args);
 			}
 			else {
-				forked = new InstanceCreator_1.InstanceCreator(type, this, args);
+				forked = new InstanceCreator_1.InstanceCreator(type, reflectPrimitiveWrappers(this), args);
 			}
 			return forked;
 		};

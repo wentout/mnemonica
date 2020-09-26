@@ -534,7 +534,7 @@ describe('Main Test', () => {
 	const strForkOfFork = 'fork of fork of evenMore';
 
 	const overMoreFork = overMore.fork();
-	
+
 	const overMoreCallEvenMoreUndefined = overMore.EvenMore.call(undefined);
 	const overMoreCallEvenMoreNull = overMore.EvenMore.call(null);
 	const overMoreCallEvenMoreNumber = overMore.EvenMore.call(new Number(5));
@@ -555,6 +555,9 @@ describe('Main Test', () => {
 		.WithAdditionalSign(sign2add);
 
 	const merged = merge(user, overMore, FORK_CALL_DATA);
+
+	const userTCdirectDAG = UserTypeConstructor.call(new Boolean(5), FORK_CALL_DATA);
+	const userTCforkDAG = userTC.fork.call(new Boolean(5), FORK_CALL_DATA);
 
 	require('./environment')({
 		user,
@@ -922,7 +925,9 @@ describe('Main Test', () => {
 			overMoreCallEvenMoreNumber,
 			overMoreCallEvenMoreString,
 			overMoreCallEvenMoreBoolean,
-			overMoreCallEvenMoreProcess
+			overMoreCallEvenMoreProcess,
+			userTCdirectDAG,
+			userTCforkDAG,
 		});
 
 		if (asyncConstructionTest) {

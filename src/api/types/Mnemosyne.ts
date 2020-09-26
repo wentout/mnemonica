@@ -17,6 +17,7 @@ const {
 import TypesUtils from '../utils';
 const {
 	getTypeChecker,
+	reflectPrimitiveWrappers
 } = TypesUtils;
 
 import { extract } from '../../utils/extract';
@@ -101,7 +102,7 @@ const MnemonicaProtoProps = {
 				forked = new ( Constructor[ TypeName ] )( ...args );
 			} else {
 				// fork.call ? let's do it !
-				forked = new InstanceCreator( type, this, args );
+				forked = new InstanceCreator( type, reflectPrimitiveWrappers(this), args );
 			}
 
 			return forked;
