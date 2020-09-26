@@ -2,6 +2,12 @@
 
 import { ConstructorFunction } from '../../types';
 
+import { constants } from '../../constants';
+const {
+	odp,
+	SymbolGaia,
+} = constants;
+
 import { hop } from '../../utils/hop';
 
 import { ErrorsTypes } from '../../descriptors/errors';
@@ -129,13 +135,48 @@ const makeSubTypeProxy = function ( subtype: any, inheritedInstance: any ) {
 			return new Target( subtype, inheritedInstance, _args );
 		},
 
-		apply ( Target, thisArg, _args ) {
+		apply ( Target, _thisArg = inheritedInstance, _args ) {
 
 			// if we would make new keyword obligatory
 			// then we should avoid it here, with throw Error
+			let thisArg = _thisArg;
 
-			const existentInstance = thisArg || inheritedInstance;
-			return new Target( subtype, existentInstance, _args );
+			if ( _thisArg === null ) {
+				thisArg = Object.create( null );
+				odp( thisArg, Symbol.toPrimitive, {
+					get () {
+						return () => {
+							return _thisArg;
+						}
+					}
+				} );
+			}
+
+			if (
+				_thisArg instanceof Number ||
+				_thisArg instanceof Boolean ||
+				_thisArg instanceof String
+			) {
+				odp( thisArg, Symbol.toPrimitive, {
+					get () {
+						return () => {
+							return _thisArg.valueOf();
+						}
+					}
+				} );
+			}
+
+			let existentInstance = thisArg;
+
+			if ( !existentInstance[ SymbolGaia ] ) {
+				const gaia = new Mnemosyne( subtype.namespace, new Gaia( existentInstance ) );
+				existentInstance = new Proxy( gaia, {
+					get: gaiaProxyHandlerGet
+				} );
+			}
+
+			const entity = new Target( subtype, existentInstance, _args );
+			return entity;
 		},
 
 	} );
