@@ -4,7 +4,6 @@ import { ConstructorFunction } from '../../types';
 
 import { constants } from '../../constants';
 const {
-	odp,
 	SymbolGaia,
 } = constants;
 
@@ -20,6 +19,7 @@ const {
 	checkProto,
 	getTypeChecker,
 	findParentSubType,
+	reflectPrimitiveWrappers,
 } = TypesUtils;
 
 import mnemosynes from './Mnemosyne';
@@ -135,38 +135,13 @@ const makeSubTypeProxy = function ( subtype: any, inheritedInstance: any ) {
 			return new Target( subtype, inheritedInstance, _args );
 		},
 
-		apply ( Target, _thisArg = inheritedInstance, _args ) {
+		apply ( Target, thisArg = inheritedInstance, _args ) {
 
 			// if we would make new keyword obligatory
 			// then we should avoid it here, with throw Error
-			let thisArg = _thisArg;
 
-			if ( _thisArg === null ) {
-				thisArg = Object.create( null );
-				odp( thisArg, Symbol.toPrimitive, {
-					get () {
-						return () => {
-							return _thisArg;
-						}
-					}
-				} );
-			}
 
-			if (
-				_thisArg instanceof Number ||
-				_thisArg instanceof Boolean ||
-				_thisArg instanceof String
-			) {
-				odp( thisArg, Symbol.toPrimitive, {
-					get () {
-						return () => {
-							return _thisArg.valueOf();
-						}
-					}
-				} );
-			}
-
-			let existentInstance = thisArg;
+			let existentInstance = reflectPrimitiveWrappers(thisArg);
 
 			if ( !existentInstance[ SymbolGaia ] ) {
 				const gaia = new Mnemosyne( subtype.namespace, new Gaia( existentInstance ) );
@@ -284,7 +259,8 @@ TypeProxy.prototype.construct = function ( __: any, args: any[] ) {
 
 	// constructs new Gaia -> new Mnemosyne
 	// 2 build the first instance in chain
-	const gaia = new Mnemosyne( type.namespace, new Gaia( Uranus ) );
+	const uranus = reflectPrimitiveWrappers(Uranus);
+	const gaia = new Mnemosyne( type.namespace, new Gaia( uranus ) );
 	const gaiaProxy = new Proxy( gaia, {
 		get: gaiaProxyHandlerGet
 	} );

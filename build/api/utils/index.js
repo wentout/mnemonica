@@ -3,7 +3,7 @@ Object.defineProperty(exports, '__esModule', { value : true });
 const constants_1 = require('../../constants');
 const errors_1 = require('../../descriptors/errors');
 const utils_1 = require('../../utils');
-const { SymbolConstructorName, MNEMONICA, MNEMOSYNE, GAIA, URANUS } = constants_1.constants;
+const { odp, SymbolConstructorName, MNEMONICA, MNEMOSYNE, GAIA, URANUS } = constants_1.constants;
 const { WRONG_TYPE_DEFINITION, } = errors_1.ErrorsTypes;
 const { collectConstructors } = utils_1.utils;
 const CreationHandler = function (constructionAnswer) {
@@ -113,6 +113,31 @@ const makeFakeModificatorType = (TypeName, fakeModificator = function () { }) =>
 	const modificatorType = modificatorBody(fakeModificator, CreationHandler, SymbolConstructorName);
 	return modificatorType();
 };
+const reflectPrimitiveWrappers = (_thisArg) => {
+	let thisArg = _thisArg;
+	if (_thisArg === null) {
+		thisArg = Object.create(null);
+		odp(thisArg, Symbol.toPrimitive, {
+			get () {
+				return () => {
+					return _thisArg;
+				};
+			}
+		});
+	}
+	if (_thisArg instanceof Number ||
+        _thisArg instanceof Boolean ||
+        _thisArg instanceof String) {
+		odp(thisArg, Symbol.toPrimitive, {
+			get () {
+				return () => {
+					return _thisArg.valueOf();
+				};
+			}
+		});
+	}
+	return thisArg;
+};
 const TypesUtils = {
 	isClass,
 	CreationHandler,
@@ -123,6 +148,7 @@ const TypesUtils = {
 	getExistentAsyncStack,
 	checkTypeName,
 	findParentSubType,
-	makeFakeModificatorType
+	makeFakeModificatorType,
+	reflectPrimitiveWrappers
 };
 exports.default = TypesUtils;
