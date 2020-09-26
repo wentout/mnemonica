@@ -70,7 +70,6 @@ module.exports = {
 				position: 'above',
 			},
 		],
-		quotes: ['error', 'single'],
 		'no-arrow-this/no-arrow-this': [
 			'error',
 			{

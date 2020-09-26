@@ -37,13 +37,12 @@ export const parse = ( self: any ): any => {
 
 	const { name } = proto.constructor;
 
-	const props = extract( { ...self } );
+	const props:any = extract( { ...self } );
 	// props.constructor = undefined;
 	delete props.constructor;
 
-	const joint = extract( Object.assign( {}, proto ) );
+	const joint:any = extract( Object.assign( {}, proto ) );
 	delete joint.constructor;
-
 
 	let parent;
 	let gaia;

@@ -1,5 +1,5 @@
-export type { IDEF } from './types';
 import { TypeAbsorber, ITypeClass, TypeLookup, IDEF } from './types';
+export type { IDEF } from './types';
 export declare const defaultTypes: any;
 export declare const define: TypeAbsorber;
 export declare const tsdefine: <T>(this: any, TypeName: string, constructHandler: IDEF<T>, proto?: object | undefined, config?: object | undefined) => ITypeClass<T>;

@@ -1,6 +1,6 @@
 import { TypeModificator } from '../../types';
 declare const TypesUtils: {
-    isClass: (functionPointer: CallableFunction) => boolean;
+    isClass: (fn: CallableFunction) => boolean;
     CreationHandler: (this: any, constructionAnswer: any) => any;
     getModificationConstructor: (useOldStyle: boolean) => (this: any, ModificatorType: CallableFunction, ModificatorTypePrototype: {
         [index: string]: any;
