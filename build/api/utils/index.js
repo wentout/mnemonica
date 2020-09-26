@@ -99,9 +99,14 @@ const findParentSubType = (instance, prop) => {
 	}
 	return findParentSubType(instance.__parent__, prop);
 };
-const isClass = (functionPointer) => {
-	const value = Function.prototype.toString.call(functionPointer);
-	return /^\s*class\s+/.test(value.trim());
+const isClass = (fn) => {
+	if (typeof fn.prototype !== 'object') {
+		return false;
+	}
+	if (fn.prototype.constructor !== fn) {
+		return false;
+	}
+	return Reflect.getOwnPropertyDescriptor(fn, 'prototype').writable === false;
 };
 const makeFakeModificatorType = (TypeName, fakeModificator = function () { }) => {
 	const modificatorBody = compileNewModificatorFunctionBody_1.default(TypeName);

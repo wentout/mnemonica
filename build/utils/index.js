@@ -1,6 +1,6 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
-exports.utils = void 0;
+exports.defineStackCleaner = exports.utils = void 0;
 const collectConstructors_1 = require('./collectConstructors');
 const extract_1 = require('./extract');
 const parent_1 = require('./parent');

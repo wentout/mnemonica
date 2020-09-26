@@ -31,6 +31,7 @@ export default function () {
 
 				// give modification itself
 				ModificatorType.prototype = moreInherited;
+
 				Object.assign( ModificatorType.prototype, ModificatorTypePrototype );
 
 				// 2. Object.defineProperty below is done

@@ -159,9 +159,24 @@ const findParentSubType: any = ( instance: any, prop: string ) => {
 	return findParentSubType( instance.__parent__, prop );
 };
 
-const isClass = ( functionPointer: CallableFunction ) => {
-	const value = Function.prototype.toString.call( functionPointer );
-	return /^\s*class\s+/.test( value.trim() );
+// const isClass = ( functionPointer: CallableFunction ) => {
+// 	const value = Function.prototype.toString.call( functionPointer );
+// 	return /^\s*class\s+/.test( value.trim() );
+// };
+
+const isClass = (fn: CallableFunction) => {
+	// not necessary to check fn for typeof
+	// because of other checks made before
+	// if (typeof fn !== 'function') {
+	// 	return false;
+	// }
+	if (typeof fn.prototype !== 'object') {
+		return false;
+	}
+	if (fn.prototype.constructor !== fn) {
+		return false;
+	}
+	return Reflect.getOwnPropertyDescriptor(fn, 'prototype')!.writable === false;
 };
 
 import { TypeModificator } from '../../types';

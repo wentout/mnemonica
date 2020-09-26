@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "0.9.9",
+  "version": "0.9.901",
   "description": "abstract technique that aids information retention : instance inheritance system",
   "type": "commonjs",
   "main": "./build/index.js",
@@ -80,7 +80,7 @@
     "mocha-lcov-reporter": "^1.3.0",
     "nyc": "^14.1.1",
     "tslint": "^6.1.3",
-    "typescript": "^3.9.7"
+    "typescript": "^4.0.3"
   },
   "engines": {
     "node": ">=8.7"

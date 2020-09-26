@@ -1,6 +1,5 @@
 'use strict';
 
-export type { IDEF } from './types';
 import { TypeAbsorber, ITypeClass, TypeLookup, IDEF } from './types';
 
 import { constants } from './constants';
@@ -8,6 +7,8 @@ const { odp } = constants;
 
 import * as errorsApi from './api/errors';
 import { descriptors } from './descriptors';
+
+export type { IDEF } from './types';
 
 export const {
 	defaultTypes,
