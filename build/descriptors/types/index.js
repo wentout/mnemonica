@@ -129,7 +129,7 @@ const typesCollectionProxyHandler = {
 		return target.subtypes.has(prop) ? {
 			configurable : true,
 			enumerable   : true,
-			writeable    : false,
+			writable     : false,
 			value        : target.subtypes.get(prop)
 		} : undefined;
 	}

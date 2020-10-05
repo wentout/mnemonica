@@ -4,7 +4,7 @@ const ogp = Object.getPrototypeOf;
 
 const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
 
-const { assert, expect } = require('chai');
+const {assert, expect} = require('chai');
 
 const {
 	defaultTypes: types,
@@ -21,8 +21,7 @@ const tests = (opts) => {
 		userPL_1_2,
 		userPL_NoNew,
 		UserTypeProto,
-		USER_DATA,
-		Shaper
+		USER_DATA
 	} = opts;
 
 	describe('nested type with old style check', () => {
@@ -58,12 +57,20 @@ const tests = (opts) => {
 		});
 	});
 
+	describe('nested .getPrototypeOf(instence.constructor)', () => {
+		it('must follow constructor inheritance for classes', () => {
+			const protoConstructor = ogp(ogp(userPL2.constructor));
+			assert.equal(protoConstructor, user.constructor);
+		});
+	});
+
 	describe('nested type with new style check', () => {
 		it('actually do construction', () => {
 			assert.instanceOf(userPL2, types.UserType.subtypes.get('UserTypePL2'));
 			assert.instanceOf(userPL2, user.UserTypePL2);
 			// assert.notInstanceOf(userPL2, Shaper);
-			const shouldNot = userPL2 instanceof Shaper;
+			debugger;
+			const shouldNot = userPL2 instanceof userPL2.constructor.Shaper;
 			assert.equal(shouldNot, false);
 		});
 		it('.constructor.name is correct', () => {

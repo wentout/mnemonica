@@ -23,6 +23,7 @@ const SymbolGaia = Symbol( 'Defined Gaia Constructor' );
 const SymbolReplaceGaia = Symbol( 'Defined Method Name to Replace Gaia' );
 
 const SymbolConfig = Symbol( 'Mnemonica Config Data' );
+const SymbolUsed = Symbol( '.prototype used twice' );
 
 // etc...
 const TYPE_TITLE_PREFIX = 'modificator of : ';
@@ -46,7 +47,8 @@ const ErrorMessages = {
 	NAMESPACE_DOES_NOT_EXIST: 'namespace does not exits',
 	ASSOCIATION_EXISTS: 'association is already made',
 	OPTIONS_ERROR: 'options must be an object or a string',
-	WRONG_STACK_CLEANER: 'wrong stack cleaner instanceof'
+	WRONG_STACK_CLEANER: 'wrong stack cleaner instanceof',
+	PROTOTYPE_USED_TWICE: '.prototype used twice',
 };
 
 export const constants = {
@@ -77,6 +79,10 @@ export const constants = {
 
 	get 'SymbolConfig' () {
 		return SymbolConfig;
+	},
+
+	get 'SymbolUsed' () {
+		return SymbolUsed;
 	},
 
 	// constants
