@@ -11,7 +11,7 @@ export const makeInstanceModificator = ( self: any ) => {
 		proto,
 	} = self;
 
-	return ModificationConstructor.call(
+	const result = ModificationConstructor.call(
 		existentInstance,
 		ModificatorType,
 		Object.assign( {}, proto ),
@@ -21,4 +21,6 @@ export const makeInstanceModificator = ( self: any ) => {
 			proceedProto.call( self );
 		}
 	);
+
+	return result;
 };

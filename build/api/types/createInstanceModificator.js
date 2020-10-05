@@ -1,9 +1,11 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
+const obeyConstructor_1 = require('./obeyConstructor');
 function default_1 () {
 	const CreateInstanceModificator = function (ModificatorType, ModificatorTypePrototype, addProps) {
 		const existentInstance = this;
-		const Mnemosyne = Object.create(existentInstance);
+		const Mnemosyne = {};
+		Reflect.setPrototypeOf(Mnemosyne, existentInstance);
 		addProps(Mnemosyne);
 		Object.defineProperty(Mnemosyne, 'constructor', {
 			get () {
@@ -19,6 +21,7 @@ function default_1 () {
 		});
 		ModificatorType.prototype.constructor = ModificatorType;
 		Reflect.setPrototypeOf(ModificatorType.prototype, Mnemosyne);
+		obeyConstructor_1.obey(existentInstance, ModificatorType);
 		return ModificatorType;
 	};
 	return CreateInstanceModificator;

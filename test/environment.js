@@ -133,15 +133,17 @@ const tests = (opts) => {
 				expect(user.__subtypes__.has('NamedFunction')).is.true;
 			});
 
-			const NamedClass = UserType.define(class NamedClass {
-				constructor (snc) {
-					this.type = 'class';
-					this.snc = snc;
-				}
+			const NamedClassPtr = UserType.define(() => {
+				return class NamedClass {
+					constructor (snc) {
+						this.type = 'class';
+						this.snc = snc;
+					}
 
-				getTypeValue () {
-					return this.type;
-				}
+					getTypeValue () {
+						return this.type;
+					}
+				};
 			});
 
 			UserType.define(function () {
@@ -157,10 +159,12 @@ const tests = (opts) => {
 				};
 			});
 
-			const SubNamedClass = NamedClass.define(class SubNamedClass {
-				constructor () {
-					this.type = 'subclass';
-				}
+			const SubNamedClassPtr = NamedClassPtr.define(() => {
+				return class SubNamedClass {
+					constructor () {
+						this.type = 'subclass';
+					}
+				};
 			});
 
 			it('named class definition exist', () => {
@@ -181,7 +185,7 @@ const tests = (opts) => {
 			const nc = new user.NamedClass(1);
 
 			it('instance made through named class instanceof', () => {
-				expect(nc).instanceOf(NamedClass);
+				expect(nc).instanceOf(NamedClassPtr);
 			});
 			it('instance made with named class props', () => {
 				expect(nc.type).is.equal('class');
@@ -190,16 +194,20 @@ const tests = (opts) => {
 				expect(nc.getTypeValue()).is.equal('class');
 			});
 
-			const snc1 = new nc.SubNamedClass();
-			const snc2 = new user.NamedClass(2).SubNamedClass();
+			try {
+				var snc1 = new nc.SubNamedClass();
+				var snc2 = new user.NamedClass(2).SubNamedClass();
+			} catch (err) {
+				console.error(err);
+			}
 
 			it('instance made through sub-named class instanceof', () => {
-				expect(snc1).instanceOf(NamedClass);
-				expect(snc1).instanceOf(SubNamedClass);
-				expect(snc2).instanceOf(NamedClass);
-				expect(snc2).instanceOf(SubNamedClass);
+				expect(snc1).instanceOf(NamedClassPtr);
+				expect(snc1).instanceOf(SubNamedClassPtr);
+				expect(snc2).instanceOf(NamedClassPtr);
+				expect(snc2).instanceOf(SubNamedClassPtr);
 			});
-			
+
 			it('sub instance made with named class  prototype methods', () => {
 				expect(snc1.getTypeValue()).is.equal('subclass');
 				expect(snc2.getTypeValue()).is.equal('subclass');
@@ -764,6 +772,69 @@ const tests = (opts) => {
 			});
 		});
 
+	});
+
+	describe('immediate error shape', () => {
+		const ErroredShapePtr = UserType.define(class ErroredShape {
+			constructor () {
+				this.shape = 321;
+			}
+		});
+		const esi = new ErroredShapePtr;
+		assert.equal(esi.shape, 321);
+
+		let errorPtr;
+		try {
+			new ErroredShapePtr;
+		} catch (error) {
+			errorPtr = error;
+		}
+
+		it('wrong ErroredShapePtr creation instanceof Error', () => {
+			expect(errorPtr).instanceOf(Error);
+		});
+		it('wrong .exception() creation instanceof WRONG_INSTANCE_INVOCATION', () => {
+			expect(errorPtr).instanceOf(errors.PROTOTYPE_USED_TWICE);
+		});
+		it('wrong .exception() creation should have nice message', () => {
+			expect(errorPtr.message.includes('.prototype used twice')).is.true;
+			expect(errorPtr.message.includes('ErroredShape')).is.true;
+		});
+	});
+
+	describe('delayed error shape', () => {
+
+		class DelayedErrorShape {
+			constructor () {
+				this.shape = 321;
+			}
+		}
+
+		const ErroredShapePtr = UserType.define(() => {
+			return class ShapeMyError extends DelayedErrorShape {};
+		});
+
+		const esi = new ErroredShapePtr;
+		assert.equal(esi.shape, 321);
+
+		let errorPtr;
+		try {
+			new ErroredShapePtr;
+		} catch (error) {
+			errorPtr = error;
+		}
+
+		it('wrong ErroredShapePtr creation instanceof Error', () => {
+			expect(errorPtr).instanceOf(Error);
+		});
+		it('wrong .exception() creation instanceof WRONG_INSTANCE_INVOCATION', () => {
+			expect(errorPtr).instanceOf(errors.PROTOTYPE_USED_TWICE);
+		});
+		it('wrong .exception() creation should have nice message', () => {
+			expect(errorPtr.message.includes('.prototype used twice')).is.true;
+			expect(errorPtr.message.includes('DelayedErrorShape')).is.true;
+			expect(errorPtr.message.includes('ShapeMyError')).is.true;
+		});
 	});
 
 	describe('wrong namespace creation', () => {

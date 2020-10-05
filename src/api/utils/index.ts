@@ -146,13 +146,17 @@ const checkTypeName = ( name: string ) => {
 
 const findParentSubType: any = ( instance: any, prop: string ) => {
 	let subtype = null;
+
 	// if (!instance.__subtypes__) {
-	// if (!instance.__type__) {
-	// mocha + chai makes .inspect 4 Shaper class
-	// or .showDiff if something wrong with constructor
-	// 	debugger;
+
+	// if ( !instance.__type__ ) {
+
+	// 	// mocha + chai makes .inspect 4 Shaper class
+	// 	// or .showDiff if something wrong with constructor
+	// 	// debugger;
 	// 	return null;
 	// }
+
 	if ( instance.__type__.subtypes.has( prop ) ) {
 		subtype = instance.__type__.subtypes.get( prop );
 		return subtype;
@@ -167,19 +171,19 @@ const findParentSubType: any = ( instance: any, prop: string ) => {
 
 // accordingly to the gist from here:
 // https://gist.github.com/wentout/ea3afe9c822a6b6ef32f9e4f3e98b1ba
-const isClass = (fn: CallableFunction) => {
+const isClass = ( fn: CallableFunction ) => {
 	// not necessary to check fn for typeof
 	// because of other checks made before
 	// if (typeof fn !== 'function') {
 	// 	return false;
 	// }
-	if (typeof fn.prototype !== 'object') {
+	if ( typeof fn.prototype !== 'object' ) {
 		return false;
 	}
-	if (fn.prototype.constructor !== fn) {
+	if ( fn.prototype.constructor !== fn ) {
 		return false;
 	}
-	return Reflect.getOwnPropertyDescriptor(fn, 'prototype')!.writable === false;
+	return Reflect.getOwnPropertyDescriptor( fn, 'prototype' )!.writable === false;
 };
 
 import { TypeModificator } from '../../types';
@@ -187,7 +191,7 @@ import { TypeModificator } from '../../types';
 const makeFakeModificatorType = (
 	TypeName: string,
 	// tslint:disable-next-line: only-arrow-functions no-empty
-	fakeModificator = function () {} as TypeModificator<{}>
+	fakeModificator = function () { } as TypeModificator<{}>
 ) => {
 
 	const modificatorBody = compileNewModificatorFunctionBody( TypeName );

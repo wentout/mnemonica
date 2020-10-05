@@ -1,5 +1,7 @@
 'use strict';
 
+import { obey } from './obeyConstructor';
+
 export default function () {
 
 	const CreateInstanceModificator = function (
@@ -14,7 +16,8 @@ export default function () {
 		// const TripleSchemeClosure = function () {
 		// const Mnemosyne = this;
 
-		const Mnemosyne = Object.create( existentInstance );
+		const Mnemosyne = {};
+		Reflect.setPrototypeOf( Mnemosyne, existentInstance );
 		addProps( Mnemosyne );
 
 		// about to setup constructor property for new instance
@@ -51,6 +54,8 @@ export default function () {
 		// and set the prototype inherited
 		Reflect.setPrototypeOf( ModificatorType.prototype, Mnemosyne );
 		// Reflect.setPrototypeOf(ModificatorType.prototype, inherited);
+
+		obey( existentInstance, ModificatorType );
 
 		return ModificatorType;
 

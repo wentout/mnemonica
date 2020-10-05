@@ -1,5 +1,6 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
+const obeyConstructor_1 = require('./obeyConstructor');
 function default_1 () {
 	const CreateInstanceModificatorAncient200XthWay = function (ModificatorType, ModificatorTypePrototype, addProps) {
 		const existentInstance = this;
@@ -16,6 +17,7 @@ function default_1 () {
 					},
 					enumerable : false
 				});
+				obeyConstructor_1.obey(existentInstance, ModificatorType);
 				return ModificatorType;
 			};
 			Inherico.prototype = Mnemosyne;

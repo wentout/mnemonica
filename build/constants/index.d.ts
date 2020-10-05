@@ -6,6 +6,7 @@ export declare const constants: {
     readonly SymbolDefaultNamespace: symbol;
     readonly SymbolDefaultTypesCollection: symbol;
     readonly SymbolConfig: symbol;
+    readonly SymbolUsed: symbol;
     readonly MNEMONICA: string;
     readonly MNEMOSYNE: string;
     readonly GAIA: string;
@@ -29,5 +30,6 @@ export declare const constants: {
         ASSOCIATION_EXISTS: string;
         OPTIONS_ERROR: string;
         WRONG_STACK_CLEANER: string;
+        PROTOTYPE_USED_TWICE: string;
     };
 };

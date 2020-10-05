@@ -104,18 +104,24 @@ const pl2Proto = {
 	UserTypePL2 : 'UserTypePL_2_AlwaysIncluded'
 };
 
-class Shaper {
-	constructor () {
-		// const zzz = new.target;
-		// Shaper;
-		// debugger;
-		this.shape = 123;
-	}
-}
+
+const shaperFactory = () => {
+	return class Shaper {
+		constructor () {
+			// const zzz = new.target;
+			// Shaper;
+			// debugger;
+			this.shape = 123;
+		}
+	};
+};
 
 UserType.define(() => {
+	// const Shaper = shaperFactory(true);
+	const Shaper = shaperFactory(false);
 	class UserTypePL2 extends Shaper {
 		constructor () {
+			// debugger;
 			super();
 			// const zzz = new.target;
 			// Shaper;
@@ -129,6 +135,7 @@ UserType.define(() => {
 			return this.user_pl_2_sign;
 		}
 	}
+	UserTypePL2.Shaper = Shaper;
 	return UserTypePL2;
 }, {
 	useOldStyle : true,
@@ -245,8 +252,12 @@ const user = UserType(USER_DATA);
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
 
-const userPL_1_2 = new userPL1.UserTypePL2();
-const userPL_NoNew = userPL1.UserTypePL2();
+try {
+	var userPL_1_2 = new userPL1.UserTypePL2();
+} catch (err) { console.error(err);}
+try {
+	var userPL_NoNew = userPL1.UserTypePL2();
+} catch (err) { console.error(err);}
 
 const AsyncWOReturn = define('AsyncWOReturn', async function () {});
 
@@ -872,8 +883,7 @@ describe('Main Test', () => {
 			userPL_1_2,
 			userPL_NoNew,
 			UserTypeProto,
-			USER_DATA,
-			Shaper
+			USER_DATA
 		});
 
 		require('./nested.more')({

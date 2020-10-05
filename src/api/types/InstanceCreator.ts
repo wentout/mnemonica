@@ -201,6 +201,7 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 	}
 
 	if ( continuationOf && !( self.inheritedInstance instanceof continuationOf ) ) {
+		// debugger;
 		const icn = self.inheritedInstance.constructor.name;
 		const msg = `should inherit from ${continuationOf.TypeName} but got ${icn}`;
 		self.throwModificationError( new WRONG_MODIFICATION_PATTERN( msg, stack ) );

@@ -1,5 +1,7 @@
 'use strict';
 
+import { obey } from './obeyConstructor';
+
 export default function () {
 
 	const CreateInstanceModificatorAncient200XthWay = function (
@@ -43,6 +45,8 @@ export default function () {
 					},
 					enumerable: false
 				} );
+
+				obey( existentInstance, ModificatorType );
 
 				return ModificatorType;
 
