@@ -72,6 +72,13 @@ const MnemonicaProtoProps = {
 			const target = new.target;
 			return exceptionConstructor_1.default.call(me, target, error, ...args);
 		};
+	},
+	sibling () {
+		return function (SiblingTypeName) {
+			const { __collection__: collection, } = this;
+			const sibling = collection[SiblingTypeName];
+			return sibling;
+		};
 	}
 };
 const Mnemosyne = function (namespace, gaia) {
