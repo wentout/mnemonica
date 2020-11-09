@@ -74,11 +74,20 @@ const MnemonicaProtoProps = {
 		};
 	},
 	sibling () {
-		return function (SiblingTypeName) {
-			const { __collection__: collection, } = this;
+		const me = this;
+		const siblings = (SiblingTypeName) => {
+			const { __collection__: collection, } = me;
 			const sibling = collection[SiblingTypeName];
 			return sibling;
 		};
+		return new Proxy(siblings, {
+			get (_, prop) {
+				return siblings(prop);
+			},
+			apply (_, __, args) {
+				return siblings(args[0]);
+			}
+		});
 	}
 };
 const Mnemosyne = function (namespace, gaia) {

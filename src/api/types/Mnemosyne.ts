@@ -130,13 +130,23 @@ const MnemonicaProtoProps = {
 	},
 
 	sibling () {
-		return function ( this: any, SiblingTypeName: string ) {
+		const me: any = this;
+		const siblings = ( SiblingTypeName: string ) => {
 			const {
 				__collection__: collection,
-			} = this;
+			} = me;
 			const sibling: any = collection[ SiblingTypeName ];
 			return sibling;
 		};
+
+		return new Proxy( siblings, {
+			get ( _, prop: string ) {
+				return siblings( prop );
+			},
+			apply ( _, __, args, ) {
+				return siblings( args[ 0 ] );
+			}
+		} )
 	}
 
 };

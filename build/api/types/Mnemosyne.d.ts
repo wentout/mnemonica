@@ -13,7 +13,7 @@ declare const _default: {
         clone(this: any): any;
         fork(this: any): (this: any, ...forkArgs: any[]) => any;
         exception(): (error: Error, ...args: any[]) => any;
-        sibling(): (this: any, SiblingTypeName: string) => any;
+        sibling(): (SiblingTypeName: string) => any;
     }>;
     readonly MnemosynePrototypeKeys: string[];
 };
