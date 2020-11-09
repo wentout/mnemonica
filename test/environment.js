@@ -389,9 +389,13 @@ const tests = (opts) => {
 		});
 
 		describe('sibling test', () => {
-			const UserTypePtr = user.sibling('UserType');
-			it('sibling works', () => {
-				expect(UserType).equal(UserTypePtr);
+			const UserTypePtr1 = user.sibling('UserType');
+			const {UserType: UserTypePtr2} = user.sibling;
+			it('direct sibling works', () => {
+				expect(UserType).equal(UserTypePtr1);
+			});
+			it('destructured sibling works', () => {
+				expect(UserType).equal(UserTypePtr2);
 			});
 		});
 
