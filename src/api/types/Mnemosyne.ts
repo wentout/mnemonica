@@ -102,7 +102,7 @@ const MnemonicaProtoProps = {
 				forked = new ( Constructor[ TypeName ] )( ...args );
 			} else {
 				// fork.call ? let's do it !
-				forked = new InstanceCreator( type, reflectPrimitiveWrappers(this), args );
+				forked = new InstanceCreator( type, reflectPrimitiveWrappers( this ), args );
 			}
 
 			return forked;
@@ -126,6 +126,16 @@ const MnemonicaProtoProps = {
 		return function ( error: Error, ...args: any[] ) {
 			const target = new.target;
 			return exceptionConstructor.call( me, target, error, ...args );
+		};
+	},
+
+	sibling () {
+		return function ( this: any, SiblingTypeName: string ) {
+			const {
+				__collection__: collection,
+			} = this;
+			const sibling: any = collection[ SiblingTypeName ];
+			return sibling;
 		};
 	}
 

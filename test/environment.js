@@ -388,6 +388,13 @@ const tests = (opts) => {
 
 		});
 
+		describe('sibling test', () => {
+			const UserTypePtr = user.sibling('UserType');
+			it('sibling works', () => {
+				expect(UserType).equal(UserTypePtr);
+			});
+		});
+
 		describe('base error shoud be defined', () => {
 			it('BASE_MNEMONICA_ERROR exists', () => {
 				expect(errors.BASE_MNEMONICA_ERROR).to.exist;
@@ -527,11 +534,13 @@ const tests = (opts) => {
 				});
 			}
 		});
+
 		describe('should define through typesCollection proxy', () => {
 			it('check typesCollection proxified creation', () => {
 				types.ProxifiedCreation = function () {};
 			});
 		});
+
 		describe('should throw with wrong definition', () => {
 			[
 				['wrong type definition : expect prototype to be an object', () => {
@@ -687,8 +696,6 @@ const tests = (opts) => {
 				expect(unchainedUserWithoutPassword).instanceof(UserWithoutPassword);
 			});
 		});
-
-
 
 		describe('merge tests', () => {
 			const mergedSample = {
