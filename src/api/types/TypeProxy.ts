@@ -141,7 +141,7 @@ const makeSubTypeProxy = function ( subtype: any, inheritedInstance: any ) {
 			// then we should avoid it here, with throw Error
 
 
-			let existentInstance = reflectPrimitiveWrappers(thisArg);
+			let existentInstance = reflectPrimitiveWrappers( thisArg );
 
 			if ( !existentInstance[ SymbolGaia ] ) {
 				const gaia = new Mnemosyne( subtype.namespace, new Gaia( existentInstance ) );
@@ -259,7 +259,7 @@ TypeProxy.prototype.construct = function ( __: any, args: any[] ) {
 
 	// constructs new Gaia -> new Mnemosyne
 	// 2 build the first instance in chain
-	const uranus = reflectPrimitiveWrappers(Uranus);
+	const uranus = reflectPrimitiveWrappers( Uranus );
 	const gaia = new Mnemosyne( type.namespace, new Gaia( uranus ) );
 	const gaiaProxy = new Proxy( gaia, {
 		get: gaiaProxyHandlerGet

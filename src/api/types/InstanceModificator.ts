@@ -1,6 +1,6 @@
 'use strict';
 
-import { proceedProto } from './InstanceCreatorProto';
+import { addProps } from './addProps';
 
 export const makeInstanceModificator = ( self: any ) => {
 
@@ -18,7 +18,7 @@ export const makeInstanceModificator = ( self: any ) => {
 		// tslint:disable-next-line: variable-name
 		( __proto_proto__: any ) => {
 			self.__proto_proto__ = __proto_proto__;
-			proceedProto.call( self );
+			addProps.call( self );
 		}
 	);
 

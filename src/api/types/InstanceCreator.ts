@@ -25,7 +25,7 @@ import { getStack } from '../errors';
 import { throwModificationError } from '../errors/throwModificationError';
 import { bindedMethodErrorHandler } from '../errors/bindedMethodErrorHandler';
 
-import { proceedProto, addProps, undefineParentSubTypes } from './InstanceCreatorProto';
+import { addProps } from './addProps';
 
 import { makeInstanceModificator } from './InstanceModificator';
 
@@ -313,10 +313,8 @@ const InstanceCreatorPrototype = {
 	bindMethod,
 	bindProtoMethods,
 	makeWaiter,
-	proceedProto,
 	addProps,
 	addThen,
-	undefineParentSubTypes,
 	invokePreHooks,
 	invokePostHooks,
 	throwModificationError

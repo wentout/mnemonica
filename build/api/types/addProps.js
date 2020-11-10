@@ -1,6 +1,6 @@
 'use strict';
 Object.defineProperty(exports, '__esModule', { value : true });
-exports.proceedProto = exports.undefineParentSubTypes = exports.addProps = void 0;
+exports.addProps = void 0;
 const constants_1 = require('../../constants');
 const { odp, } = constants_1.constants;
 exports.addProps = function () {
@@ -62,27 +62,6 @@ exports.addProps = function () {
 		}
 	});
 };
-exports.undefineParentSubTypes = function () {
-	const self = this;
-	const { __proto_proto__: proto, existentInstance: { __subtypes__: subtypes } } = self;
-	if (!subtypes) {
-		return;
-	}
-	const unscopables = {};
-	[...subtypes.keys()].forEach((name) => {
-		odp(proto, name, {
-			get () {
-				return undefined;
-			}
-		});
-		unscopables[name] = true;
-	});
-	proto[Symbol.unscopables] = unscopables;
-};
-exports.proceedProto = function () {
-	const self = this;
-	self.addProps();
-	if (self.type.isSubType && self.config.strictChain) {
-		self.undefineParentSubTypes();
-	}
+module.exports = {
+	addProps : exports.addProps
 };
