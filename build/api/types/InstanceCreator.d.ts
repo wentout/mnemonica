@@ -5,10 +5,8 @@ export declare const InstanceCreator: ConstructorFunction<{
     bindMethod: (this: any, instance: any, methodName: string, MethodItself: any) => void;
     bindProtoMethods: (this: any) => void;
     makeWaiter: (this: any, type: any, then: any) => any;
-    proceedProto: (this: any) => void;
-    addProps: (this: any) => void;
+    addProps: (this: any) => any;
     addThen: (this: any, then: any) => void;
-    undefineParentSubTypes: (this: any) => void;
     invokePreHooks: (this: any) => void;
     invokePostHooks: (this: any) => {
         type: any;

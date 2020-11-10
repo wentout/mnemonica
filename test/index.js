@@ -524,6 +524,7 @@ describe('Main Test', () => {
 	const unchainedUserWithoutPassword = new UserWithoutPassword();
 
 	const userWithoutPassword = new userTC.WithoutPassword();
+	// debugger;
 	const userWithoutPassword_2 = new userTC.WithoutPassword();
 
 	const sign2add = 'userWithoutPassword_2.WithAdditionalSign';

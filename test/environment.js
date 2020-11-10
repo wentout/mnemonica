@@ -530,13 +530,17 @@ const tests = (opts) => {
 			BadTypeReInConstruct.define('ExistentConstructor', function () {
 				this.ExistentConstructor = undefined;
 			});
+			let errored = null;
 			try {
-				new BadTypeReInConstruct().ExistentConstructor();
+				const badType = new BadTypeReInConstruct();
+				const existent = badType.ExistentConstructor();
+				existent.ExistentConstructor();
 			} catch (error) {
-				it('Thrown with General JS Error', () => {
-					expect(error).instanceOf(Error);
-				});
+				errored = error;
 			}
+			it('Thrown with General JS Error', () => {
+				expect(errored).instanceOf(Error);
+			});
 		});
 
 		describe('should define through typesCollection proxy', () => {

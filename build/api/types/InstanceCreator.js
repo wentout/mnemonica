@@ -10,7 +10,7 @@ const { getModificationConstructor, getExistentAsyncStack, makeFakeModificatorTy
 const errors_2 = require('../errors');
 const throwModificationError_1 = require('../errors/throwModificationError');
 const bindedMethodErrorHandler_1 = require('../errors/bindedMethodErrorHandler');
-const InstanceCreatorProto_1 = require('./InstanceCreatorProto');
+const addProps_1 = require('./addProps');
 const InstanceModificator_1 = require('./InstanceModificator');
 const invokePreHooks = function () {
 	const { type, existentInstance, args, InstanceModificator } = this;
@@ -195,10 +195,8 @@ const InstanceCreatorPrototype = {
 	bindMethod,
 	bindProtoMethods,
 	makeWaiter,
-	proceedProto           : InstanceCreatorProto_1.proceedProto,
-	addProps               : InstanceCreatorProto_1.addProps,
+	addProps               : addProps_1.addProps,
 	addThen,
-	undefineParentSubTypes : InstanceCreatorProto_1.undefineParentSubTypes,
 	invokePreHooks,
 	invokePostHooks,
 	throwModificationError : throwModificationError_1.throwModificationError
