@@ -14,7 +14,7 @@ const getAdditor = (constructors) => {
 const getAccumulator = (asSequence) => {
 	return asSequence ? [] : {};
 };
-exports.collectConstructors = (self, asSequence = false) => {
+const collectConstructors = (self, asSequence = false) => {
 	const constructors = getAccumulator(asSequence);
 	const addToSequence = getAdditor(constructors);
 	if (typeof self === 'object') {
@@ -57,3 +57,4 @@ exports.collectConstructors = (self, asSequence = false) => {
 	}
 	return constructors;
 };
+exports.collectConstructors = collectConstructors;

@@ -136,7 +136,7 @@ const defineFromFunction = function (subtypes, TypeName, constructHandler = func
 	config.asClass = asClass;
 	return new TypeDescriptor(this, subtypes, TypeName, makeConstructHandler, proto, config);
 };
-exports.define = function (subtypes, TypeOrTypeName, constructHandlerOrConfig, proto, config) {
+const define = function (subtypes, TypeOrTypeName, constructHandlerOrConfig, proto, config) {
 	if (typeof TypeOrTypeName === 'function') {
 		if (TypeOrTypeName.name) {
 			return exports.define.call(this, subtypes, TypeOrTypeName.name, TypeOrTypeName, constructHandlerOrConfig || TypeOrTypeName.prototype, config);
@@ -163,7 +163,8 @@ exports.define = function (subtypes, TypeOrTypeName, constructHandlerOrConfig, p
 	}
 	throw new WRONG_TYPE_DEFINITION('definition is not provided');
 };
-exports.lookup = function (TypeNestedPath) {
+exports.define = define;
+const lookup = function (TypeNestedPath) {
 	if (typeof TypeNestedPath !== 'string') {
 		throw new WRONG_TYPE_DEFINITION('arg : type nested path must be a string');
 	}
@@ -179,3 +180,4 @@ exports.lookup = function (TypeNestedPath) {
 	const NextNestedPath = split.slice(1).join('.');
 	return exports.lookup.call(type.subtypes, NextNestedPath);
 };
+exports.lookup = lookup;

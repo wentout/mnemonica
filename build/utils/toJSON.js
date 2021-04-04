@@ -2,7 +2,7 @@
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.toJSON = void 0;
 const extract_1 = require('./extract');
-exports.toJSON = (instance) => {
+const toJSON = (instance) => {
 	const extracted = extract_1.extract(instance);
 	return Object.entries(extracted).reduce((o, entry) => {
 		const [name, _value] = entry;
@@ -27,3 +27,4 @@ exports.toJSON = (instance) => {
 	}, '{')
 		.replace(/,$/, '}');
 };
+exports.toJSON = toJSON;

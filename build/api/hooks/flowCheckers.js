@@ -4,7 +4,7 @@ exports.registerFlowChecker = exports.flowCheckers = void 0;
 const errors_1 = require('../../descriptors/errors');
 const { MISSING_CALLBACK_ARGUMENT, FLOW_CHECKER_REDEFINITION, } = errors_1.ErrorsTypes;
 exports.flowCheckers = new WeakMap();
-exports.registerFlowChecker = function (cb) {
+const registerFlowChecker = function (cb) {
 	if (typeof cb !== 'function') {
 		throw new MISSING_CALLBACK_ARGUMENT;
 	}
@@ -13,3 +13,4 @@ exports.registerFlowChecker = function (cb) {
 	}
 	exports.flowCheckers.set(this, cb);
 };
+exports.registerFlowChecker = registerFlowChecker;

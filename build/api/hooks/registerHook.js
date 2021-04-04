@@ -8,7 +8,7 @@ const hooksTypes = [
 	'postCreation',
 	'creationError',
 ];
-exports.registerHook = function (hookType, cb) {
+const registerHook = function (hookType, cb) {
 	if (!hooksTypes.includes(hookType)) {
 		throw new WRONG_HOOK_TYPE;
 	}
@@ -22,3 +22,4 @@ exports.registerHook = function (hookType, cb) {
 		this.hooks[hookType].add(cb);
 	}
 };
+exports.registerHook = registerHook;

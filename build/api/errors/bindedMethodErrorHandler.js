@@ -3,7 +3,7 @@ Object.defineProperty(exports, '__esModule', { value : true });
 exports.bindedMethodErrorHandler = void 0;
 const constants_1 = require('../../constants');
 const { odp, } = constants_1.constants;
-exports.bindedMethodErrorHandler = (exceptionReason) => {
+const bindedMethodErrorHandler = (exceptionReason) => {
 	const { applyTo, args, method, asNew, error } = exceptionReason;
 	const reThrown = error.exceptionReason !== undefined;
 	if (reThrown) {
@@ -53,3 +53,4 @@ exports.bindedMethodErrorHandler = (exceptionReason) => {
 	}
 	return error;
 };
+exports.bindedMethodErrorHandler = bindedMethodErrorHandler;

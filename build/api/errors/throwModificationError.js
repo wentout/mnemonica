@@ -11,7 +11,7 @@ const { makeFakeModificatorType } = utils_1.default;
 const utils_2 = require('../../utils');
 const { parse } = utils_2.utils;
 const InstanceModificator_1 = require('../types/InstanceModificator');
-exports.throwModificationError = function (error) {
+const throwModificationError = function (error) {
 	const self = this;
 	const { TypeName, type: { stack: typeStack }, args } = self;
 	const exceptionReason = error.exceptionReason || error;
@@ -100,3 +100,4 @@ exports.throwModificationError = function (error) {
 	});
 	throw erroredInstance;
 };
+exports.throwModificationError = throwModificationError;

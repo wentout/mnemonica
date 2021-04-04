@@ -3,7 +3,7 @@ Object.defineProperty(exports, '__esModule', { value : true });
 exports.addProps = void 0;
 const constants_1 = require('../../constants');
 const { odp, } = constants_1.constants;
-exports.addProps = function () {
+const addProps = function () {
 	const self = this;
 	const { type, existentInstance, args, config: { submitStack }, __proto_proto__: proto } = self;
 	const { namespace, collection, subtypes, } = type;
@@ -62,6 +62,7 @@ exports.addProps = function () {
 		}
 	});
 };
+exports.addProps = addProps;
 module.exports = {
 	addProps : exports.addProps
 };

@@ -112,6 +112,7 @@ const MnemonicaProtoProps = {
 
 	[ SymbolReplaceGaia ] () {
 		return function ( this: any, uranus: any ) {
+			// @ts-ignore
 			Reflect.setPrototypeOf( Reflect.getPrototypeOf( this[ SymbolGaia ] ), uranus );
 		};
 	},

@@ -53,18 +53,19 @@ const checkProto = ( proto: any ) => {
 };
 
 const getTypeChecker = ( TypeName: string ) => {
-	const seeker: any = ( instance: any ) => {
+	const seeker: any = ( instance: object ) => {
 
 		if ( typeof instance !== 'object' ) {
 			return false;
 		}
 
-		if ( !instance.constructor ) {
+		if ( !instance!.constructor ) {
 			return false;
 		}
-
+		// @ts-ignore
 		if ( Reflect.getPrototypeOf( instance ).constructor.name === 'Promise' ) {
 			// if ( instance instanceof Promise ) {
+			// @ts-ignore
 			return instance[ SymbolConstructorName ] === TypeName;
 		}
 

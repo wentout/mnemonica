@@ -2,7 +2,7 @@
 Object.defineProperty(exports, '__esModule', { value : true });
 exports.makeInstanceModificator = void 0;
 const addProps_1 = require('./addProps');
-exports.makeInstanceModificator = (self) => {
+const makeInstanceModificator = (self) => {
 	const { ModificationConstructor, existentInstance, ModificatorType, proto, } = self;
 	const result = ModificationConstructor.call(existentInstance, ModificatorType, Object.assign({}, proto), (__proto_proto__) => {
 		self.__proto_proto__ = __proto_proto__;
@@ -10,3 +10,4 @@ exports.makeInstanceModificator = (self) => {
 	});
 	return result;
 };
+exports.makeInstanceModificator = makeInstanceModificator;

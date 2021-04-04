@@ -3,7 +3,7 @@ Object.defineProperty(exports, '__esModule', { value : true });
 exports.pick = void 0;
 const errors_1 = require('../descriptors/errors');
 const { WRONG_INSTANCE_INVOCATION } = errors_1.ErrorsTypes;
-exports.pick = (instance, ...args) => {
+const pick = (instance, ...args) => {
 	if (instance !== Object(instance)) {
 		throw new WRONG_INSTANCE_INVOCATION;
 	}
@@ -22,3 +22,4 @@ exports.pick = (instance, ...args) => {
 	}, {});
 	return picked;
 };
+exports.pick = pick;
