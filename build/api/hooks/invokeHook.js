@@ -5,7 +5,7 @@ const constants_1 = require('../../constants');
 const { MNEMONICA, } = constants_1.constants;
 const flowCheckers_1 = require('./flowCheckers');
 const hop_1 = require('../../utils/hop');
-exports.invokeHook = function (hookType, opts) {
+const invokeHook = function (hookType, opts) {
 	const { type, existentInstance, inheritedInstance, args, creator } = opts;
 	const invocationResults = new Set();
 	const self = this;
@@ -47,3 +47,4 @@ exports.invokeHook = function (hookType, opts) {
 	}
 	return invocationResults;
 };
+exports.invokeHook = invokeHook;

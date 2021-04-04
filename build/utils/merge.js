@@ -3,7 +3,7 @@ Object.defineProperty(exports, '__esModule', { value : true });
 exports.merge = void 0;
 const errors_1 = require('../descriptors/errors');
 const { WRONG_ARGUMENTS_USED } = errors_1.ErrorsTypes;
-exports.merge = (a, b, ...args) => {
+const merge = (a, b, ...args) => {
 	if (a !== Object(a)) {
 		throw new WRONG_ARGUMENTS_USED('A should be an object');
 	}
@@ -16,3 +16,4 @@ exports.merge = (a, b, ...args) => {
 	const aa = a.fork.call(b, ...args);
 	return aa;
 };
+exports.merge = merge;

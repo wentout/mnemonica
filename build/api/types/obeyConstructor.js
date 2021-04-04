@@ -5,7 +5,7 @@ const constants_1 = require('../../constants');
 const { SymbolUsed } = constants_1.constants;
 const errors_1 = require('../../descriptors/errors');
 const { PROTOTYPE_USED_TWICE, } = errors_1.ErrorsTypes;
-exports.obey = (existentInstance, ModificatorType) => {
+const obey = (existentInstance, ModificatorType) => {
 	let protoConstructor = ModificatorType;
 	while (protoConstructor instanceof Function) {
 		if (Object.prototype.hasOwnProperty.call(protoConstructor, SymbolUsed) && protoConstructor[SymbolUsed]) {
@@ -27,3 +27,4 @@ exports.obey = (existentInstance, ModificatorType) => {
 	}
 	Reflect.setPrototypeOf(protoConstructor, existentInstance.constructor);
 };
+exports.obey = obey;

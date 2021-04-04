@@ -4,7 +4,7 @@ exports.extract = void 0;
 const errors_1 = require('../descriptors/errors');
 const { WRONG_INSTANCE_INVOCATION } = errors_1.ErrorsTypes;
 const hop_1 = require('./hop');
-exports.extract = (instance) => {
+const extract = (instance) => {
 	if (instance !== Object(instance)) {
 		throw new WRONG_INSTANCE_INVOCATION;
 	}
@@ -17,3 +17,4 @@ exports.extract = (instance) => {
 	}
 	return extracted;
 };
+exports.extract = extract;

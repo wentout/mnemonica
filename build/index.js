@@ -15,9 +15,10 @@ exports.define = function (TypeName, constructHandler, proto, config) {
 	const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
 	return types.define(TypeName, constructHandler, proto, config);
 };
-exports.tsdefine = function (TypeName, constructHandler, proto, config) {
+const tsdefine = function (TypeName, constructHandler, proto, config) {
 	return exports.defaultTypes.define(TypeName, constructHandler, proto, config);
 };
+exports.tsdefine = tsdefine;
 exports.lookup = function (TypeNestedPath) {
 	const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
 	return types.lookup(TypeNestedPath);

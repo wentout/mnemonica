@@ -160,7 +160,7 @@ const bindProtoMethods = function ( this: any ) {
 		proto,
 	} = self;
 	const protoPointer = Reflect.getPrototypeOf( inheritedInstance );
-	Object.entries( protoPointer ).forEach( ( entry: [ string, any ] ) => {
+	Object.entries( protoPointer as object ).forEach( ( entry: [ string, any ] ) => {
 		const [ mayBeMethodName, MayBeMethodFunction ] = entry;
 		if ( mayBeMethodName === 'constructor' ) {
 			return;

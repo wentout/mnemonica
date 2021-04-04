@@ -5,7 +5,7 @@ const constants_1 = require('../../constants');
 const { odp, SymbolConstructorName, MNEMONICA, ErrorMessages, } = constants_1.constants;
 const { BASE_ERROR_MESSAGE } = ErrorMessages;
 exports.stackCleaners = [];
-exports.cleanupStack = (stack) => {
+const cleanupStack = (stack) => {
 	const cleaned = stack.reduce((arr, line) => {
 		exports.stackCleaners.forEach(cleanerRegExp => {
 			if (!cleanerRegExp.test(line)) {
@@ -16,7 +16,8 @@ exports.cleanupStack = (stack) => {
 	}, []);
 	return cleaned.length ? cleaned : stack;
 };
-exports.getStack = function (title, stackAddition, tillFunction) {
+exports.cleanupStack = cleanupStack;
+const getStack = function (title, stackAddition, tillFunction) {
 	if (Error.captureStackTrace) {
 		Error.captureStackTrace(this, tillFunction || exports.getStack);
 	}
@@ -32,6 +33,7 @@ exports.getStack = function (title, stackAddition, tillFunction) {
 	this.stack.push('\n');
 	return this.stack;
 };
+exports.getStack = getStack;
 class BASE_MNEMONICA_ERROR extends Error {
 	constructor (message = BASE_ERROR_MESSAGE, additionalStack) {
 		super(message);
@@ -52,7 +54,7 @@ class BASE_MNEMONICA_ERROR extends Error {
 	}
 }
 exports.BASE_MNEMONICA_ERROR = BASE_MNEMONICA_ERROR;
-exports.constructError = (name, message) => {
+const constructError = (name, message) => {
 	const body = `
 		class ${name} extends base {
 			constructor (addition, stack) {
@@ -68,3 +70,4 @@ exports.constructError = (name, message) => {
 	const ErrorConstructor = (new Function('base', body))(BASE_MNEMONICA_ERROR);
 	return ErrorConstructor;
 };
+exports.constructError = constructError;

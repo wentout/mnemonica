@@ -21,7 +21,7 @@ export const parse = ( self: any ): any => {
 		throw new WRONG_MODIFICATION_PATTERN;
 	}
 
-	const proto = Reflect.getPrototypeOf( self );
+	const proto = Reflect.getPrototypeOf( self ) as object;
 
 	if ( self.constructor.name !== proto.constructor.name ) {
 		throw new WRONG_ARGUMENTS_USED( `have to use "instance" itself: '${self.constructor.name}' vs '${proto.constructor.name}'` );

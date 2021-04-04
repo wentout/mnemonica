@@ -7,7 +7,7 @@ const constants_1 = require('../constants');
 const { SymbolGaia } = constants_1.constants;
 const extract_1 = require('./extract');
 const hop_1 = require('./hop');
-exports.parse = (self) => {
+const parse = (self) => {
 	if (!self || !self.constructor) {
 		throw new WRONG_MODIFICATION_PATTERN;
 	}
@@ -44,3 +44,4 @@ exports.parse = (self) => {
 		gaia
 	};
 };
+exports.parse = parse;

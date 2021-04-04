@@ -3,7 +3,7 @@ Object.defineProperty(exports, '__esModule', { value : true });
 exports.parent = void 0;
 const errors_1 = require('../descriptors/errors');
 const { WRONG_INSTANCE_INVOCATION } = errors_1.ErrorsTypes;
-exports.parent = (instance, path) => {
+const parent = (instance, path) => {
 	if (instance !== Object(instance)) {
 		throw new WRONG_INSTANCE_INVOCATION;
 	}
@@ -18,3 +18,4 @@ exports.parent = (instance, path) => {
 	return name === path ?
 		p : exports.parent(p, path);
 };
+exports.parent = parent;
