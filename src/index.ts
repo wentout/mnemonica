@@ -14,7 +14,7 @@ export const {
 	defaultTypes,
 } = descriptors;
 
-function checkThis ( pointer: any ): boolean {
+function checkThis(pointer: any): boolean {
 	return pointer === mnemonica ||
 		pointer === exports;
 };
@@ -26,27 +26,27 @@ export const define = function (
 	proto?: object,
 	config?: object,
 ) {
-	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
-	return types.define( TypeName, constructHandler, proto, config );
+	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
+	return types.define(TypeName, constructHandler, proto, config);
 } as TypeAbsorber;
 
-export const tsdefine = function <T> (
+export const tsdefine = function <T>(
 	this: any,
 	TypeName: string,
 	constructHandler: IDEF<T>,
 	proto?: object,
 	config?: object,
 ): ITypeClass<T> {
-	return defaultTypes.define( TypeName, constructHandler, proto, config );
+	return defaultTypes.define(TypeName, constructHandler, proto, config);
 };
 
-export const lookup = function ( TypeNestedPath ) {
-	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
-	return types.lookup( TypeNestedPath );
+export const lookup = function (TypeNestedPath) {
+	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
+	return types.lookup(TypeNestedPath);
 } as TypeLookup;
 
 
-export const mnemonica = Object.entries( {
+export const mnemonica = Object.entries({
 
 	define,
 	lookup,
@@ -56,16 +56,16 @@ export const mnemonica = Object.entries( {
 	...errorsApi,
 	...constants,
 
-} ).reduce( ( acc: { [ index: string ]: any }, entry: any ) => {
-	const [ name, code ] = entry;
-	odp( acc, name, {
-		get () {
+}).reduce((acc: { [index: string]: unknown }, entry: [string, unknown]) => {
+	const [name, code] = entry;
+	odp(acc, name, {
+		get() {
 			return code;
 		},
 		enumerable: true
-	} );
+	});
 	return acc;
-}, {} );
+}, {});
 
 export const {
 

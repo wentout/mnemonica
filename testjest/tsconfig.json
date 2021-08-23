@@ -5,10 +5,7 @@
 		"lib": [
 			"ES6",
 		],
-		"esModuleInterop": false,
-		"allowSyntheticDefaultImports": false,
 		"strict": true,
-		"strictNullChecks": true,
 		"alwaysStrict": true,
 		"strictFunctionTypes": true,
 		"diagnostics": true,
@@ -18,24 +15,15 @@
 		"noFallthroughCasesInSwitch": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"declaration": true,
-		"sourceMap": false,
-		"outDir": "build",
+		"declaration": false,
+		"sourceMap": true,
 		"traceResolution": false,
-		"isolatedModules": true,
 		"removeComments": true,
+		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
-		"types": ["node"]
+		"types": [
+			"jest",
+			"node"
+		]
 	},
-	"include": [
-		"./src/**/*.ts"
-	],
-	"exclude": [
-		"./build/**/*",
-		"./lib/**/*",
-		"./coverage/**/*",
-		"./module/**/*",
-		"./test/**/*",
-		"./testjest/**/*"
-	]
 }
