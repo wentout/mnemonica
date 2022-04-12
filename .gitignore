@@ -4,6 +4,7 @@ npm-debug.log
 todo.txt
 back.*
 coverage
+coveragejest
 .nyc_output
 .idea
 test/example.js

@@ -17,7 +17,7 @@ function default_1 () {
 					},
 					enumerable : false
 				});
-				obeyConstructor_1.obey(existentInstance, ModificatorType);
+				(0, obeyConstructor_1.obey)(existentInstance, ModificatorType);
 				return ModificatorType;
 			};
 			Inherico.prototype = Mnemosyne;

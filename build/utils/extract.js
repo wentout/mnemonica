@@ -10,7 +10,7 @@ const extract = (instance) => {
 	}
 	const extracted = {};
 	for (const name in instance) {
-		if (name === 'constructor' && !hop_1.hop(instance, name)) {
+		if (name === 'constructor' && !(0, hop_1.hop)(instance, name)) {
 			continue;
 		}
 		extracted[name] = instance[name];

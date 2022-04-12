@@ -9,6 +9,6 @@ exports.ErrorsTypes = {
 };
 Object.entries(ErrorMessages).forEach(entry => {
 	const [ErrorConstructorName, message] = entry;
-	const ErrorConstructor = errors_1.constructError(ErrorConstructorName, message);
+	const ErrorConstructor = (0, errors_1.constructError)(ErrorConstructorName, message);
 	exports.ErrorsTypes[ErrorConstructorName] = ErrorConstructor;
 });

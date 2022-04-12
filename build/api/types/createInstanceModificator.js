@@ -21,7 +21,7 @@ function default_1 () {
 		});
 		ModificatorType.prototype.constructor = ModificatorType;
 		Reflect.setPrototypeOf(ModificatorType.prototype, Mnemosyne);
-		obeyConstructor_1.obey(existentInstance, ModificatorType);
+		(0, obeyConstructor_1.obey)(existentInstance, ModificatorType);
 		return ModificatorType;
 	};
 	return CreateInstanceModificator;

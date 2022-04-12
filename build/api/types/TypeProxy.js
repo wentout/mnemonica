@@ -28,7 +28,7 @@ exports.TypeProxy.prototype.get = function (target, prop) {
 	if (propDeclaration) {
 		return propDeclaration;
 	}
-	if (hop_1.hop(type, prop)) {
+	if ((0, hop_1.hop)(type, prop)) {
 		return propDeclaration;
 	}
 	if (type.subtypes.has(prop)) {

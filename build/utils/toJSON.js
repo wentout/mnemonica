@@ -3,7 +3,7 @@ Object.defineProperty(exports, '__esModule', { value : true });
 exports.toJSON = void 0;
 const extract_1 = require('./extract');
 const toJSON = (instance) => {
-	const extracted = extract_1.extract(instance);
+	const extracted = (0, extract_1.extract)(instance);
 	return Object.entries(extracted).reduce((o, entry) => {
 		const [name, _value] = entry;
 		if ([null, undefined].includes(_value)) {

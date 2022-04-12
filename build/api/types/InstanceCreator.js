@@ -76,7 +76,7 @@ const bindMethod = function (instance, methodName, MethodItself) {
 								value      : error,
 								enumerable : true
 							});
-							throw bindedMethodErrorHandler_1.bindedMethodErrorHandler(exceptionReason);
+							throw (0, bindedMethodErrorHandler_1.bindedMethodErrorHandler)(exceptionReason);
 						});
 					}
 					return answer;
@@ -86,7 +86,7 @@ const bindMethod = function (instance, methodName, MethodItself) {
 						value      : error,
 						enumerable : true
 					});
-					throw bindedMethodErrorHandler_1.bindedMethodErrorHandler(exceptionReason);
+					throw (0, bindedMethodErrorHandler_1.bindedMethodErrorHandler)(exceptionReason);
 				}
 			};
 		},
@@ -231,11 +231,11 @@ exports.InstanceCreator = function (type, existentInstance, args, chained) {
 	}
 	if (blockErrors && existentInstance instanceof Error) {
 		self.ModificatorType = makeFakeModificatorType(TypeName);
-		self.InstanceModificator = InstanceModificator_1.makeInstanceModificator(self);
+		self.InstanceModificator = (0, InstanceModificator_1.makeInstanceModificator)(self);
 		throw new self.InstanceModificator(...args);
 	}
 	self.invokePreHooks();
-	self.InstanceModificator = InstanceModificator_1.makeInstanceModificator(self);
+	self.InstanceModificator = (0, InstanceModificator_1.makeInstanceModificator)(self);
 	if (blockErrors) {
 		try {
 			self.inheritedInstance = new self.InstanceModificator(...args);

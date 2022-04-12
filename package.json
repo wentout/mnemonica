@@ -1,94 +1,97 @@
 {
-  "name": "mnemonica",
-  "version": "0.9.94",
-  "description": "abstract technique that aids information retention : instance inheritance system",
-  "type": "commonjs",
-  "main": "./build/index.js",
-  "exports": {
-    ".": "./build/index.js",
-    "./module": {
-      "import": "./module/index.js",
-      "browser": "./module/index.js",
-      "require": "./build/index.js",
-      "default": "./build/index.js"
-    }
-  },
-  "files": [
-    "README.md",
-    "LICENSE",
-    "module",
-    "build"
-  ],
-  "directories": {
-    "build": "build/",
-    "module": "module/"
-  },
-  "contributors": [
-    "laplandin <laplandin.denis@gmail.com>",
-    "petrgrishin <iam@petrgrishin.com>",
-    "Goodluckhf <Goodluckhf@yandex.ru>"
-  ],
-  "scripts": {
-    "build": "rm -rf ./build && npx tsc --pretty && npm run lint && npm run lint:test",
-    "watch": "npx tsc --pretty -w",
-    "test": "npm run build && mocha --allow-uncaught test/index.js",
-    "test:cov:dev": "npm run build && nyc --reporter=text mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
-    "test:cov": "npm run build &&  nyc --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
-    "test:mjs": "npm run build && node --experimental-modules ./test/test.mjs",
-    "debug": "npx tsc --pretty --sourceMap && npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
-    "report-coverage": "cat coverage/lcov.info | coveralls",
-    "example": "npm run build && node ./test/example.js",
-    "lint": "npx eslint --fix --ignore-path .gitignore ./build",
-    "lint:test": "npx eslint --fix --ignore-path .gitignore ./test",
-    "ts:example": "npx tsc ./test-ts/*.ts && npx eslint --fix ./test-ts/*.js && node ./test-ts/test-no-types.js && node ./test-ts/test-with-types.js",
-    "ts:lint": "npx tslint --fix --ignore-path .gitignore ./src"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/wentout/mnemonica.git"
-  },
-  "keywords": [
-    "ETL",
-    "DFD",
-    "inheritance",
-    "mnemonica"
-  ],
-  "author": "went.out@gmail.com",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/wentout/mnemonica/issues"
-  },
-  "lint-staged": {
-    "*.js": "eslint --fix --ignore-path .gitignore"
-  },
-  "homepage": "https://github.com/wentout/mnemonica#readme",
-  "devDependencies": {
-    "@types/node": "^13.13.51",
-    "@typescript-eslint/eslint-plugin": "^2.33.0",
-    "@typescript-eslint/parser": "^2.33.0",
-    "chai": "^4.3.4",
-    "coveralls": "^3.1.0",
-    "eslint": "^6.8.0",
-    "eslint-config-prettier": "^6.12.0",
-    "eslint-plugin-import": "^2.22.1",
-    "eslint-plugin-mocha": "^5.2.0",
-    "eslint-plugin-no-arrow-this": "^1.2.0",
-    "eslint-plugin-prettier": "^3.4.0",
-    "husky": "^3.0.5",
-    "lint-staged": "^9.2.5",
-    "mocha": "^7.2.0",
-    "mocha-lcov-reporter": "^1.3.0",
-    "nyc": "^14.1.1",
-    "tslint": "^6.1.3",
-    "typescript": "^4.2.4"
-  },
-  "engines": {
-    "node": ">=8.7"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "dependencies": {}
+	"name": "mnemonica",
+	"version": "0.9.942",
+	"description": "abstract technique that aids information retention : instance inheritance system",
+	"type": "commonjs",
+	"main": "./build/index.js",
+	"exports": {
+		".": "./build/index.js",
+		"./module": {
+			"import": "./module/index.js",
+			"browser": "./module/index.js",
+			"require": "./build/index.js",
+			"default": "./build/index.js"
+		}
+	},
+	"files": [
+		"README.md",
+		"LICENSE",
+		"module",
+		"build"
+	],
+	"directories": {
+		"build": "build/",
+		"module": "module/"
+	},
+	"contributors": [
+		"laplandin <laplandin.denis@gmail.com>",
+		"petrgrishin <iam@petrgrishin.com>",
+		"Goodluckhf <Goodluckhf@yandex.ru>"
+	],
+	"scripts": {
+		"build": "rm -rf ./build && npx tsc --pretty && npm run lint && npm run lint:test",
+		"watch": "npx tsc --pretty -w",
+		"test": "npm run build && mocha --allow-uncaught test/index.js",
+		"test:cov": "npm run build && nyc --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
+		"test:mjs": "npm run build && node --experimental-modules ./test/test.mjs",
+		"debug": "npx tsc --pretty --sourceMap && npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
+		"report-coverage": "cat coverage/lcov.info | coveralls",
+		"example": "npm run build && node ./test/example.js",
+		"lint": "npx eslint --fix --ignore-path .gitignore ./build",
+		"lint:test": "npx eslint --fix --ignore-path .gitignore ./test",
+		"ts:example": "npx tsc ./test-ts/*.ts && npx eslint --fix ./test-ts/*.js && node ./test-ts/test-no-types.js && node ./test-ts/test-with-types.js",
+		"testjest": "npx jest",
+		"testjest:cov": "npx jest --collectCoverage",
+		"testjest:debug": "npx --node-arg=--inspect-brk jest"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/wentout/mnemonica.git"
+	},
+	"keywords": [
+		"ETL",
+		"DFD",
+		"inheritance",
+		"mnemonica"
+	],
+	"author": "went.out@gmail.com",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/wentout/mnemonica/issues"
+	},
+	"lint-staged": {
+		"*.js": "eslint --fix --ignore-path .gitignore"
+	},
+	"homepage": "https://github.com/wentout/mnemonica#readme",
+	"devDependencies": {
+		"@types/jest": "^27.0.1",
+		"@types/node": "^13.13.51",
+		"@typescript-eslint/eslint-plugin": "^2.33.0",
+		"@typescript-eslint/parser": "^2.33.0",
+		"chai": "^4.3.4",
+		"coveralls": "^3.1.0",
+		"eslint": "^6.8.0",
+		"eslint-config-prettier": "^6.12.0",
+		"eslint-plugin-import": "^2.22.1",
+		"eslint-plugin-mocha": "^5.2.0",
+		"eslint-plugin-no-arrow-this": "^1.2.0",
+		"eslint-plugin-prettier": "^3.4.0",
+		"husky": "^3.0.5",
+		"jest": "^27.0.6",
+		"lint-staged": "^9.2.5",
+		"mocha": "^7.2.0",
+		"mocha-lcov-reporter": "^1.3.0",
+		"nyc": "^14.1.1",
+		"ts-jest": "^27.0.5",
+		"tslint": "^6.1.3",
+		"typescript": "^4.2.4"
+	},
+	"engines": {
+		"node": ">=8.7"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "lint-staged"
+		}
+	}
 }

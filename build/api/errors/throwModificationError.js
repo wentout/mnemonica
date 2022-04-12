@@ -41,7 +41,7 @@ const throwModificationError = function (error) {
 		enumerable : true
 	});
 	self.ModificatorType = makeFakeModificatorType(TypeName);
-	self.InstanceModificator = InstanceModificator_1.makeInstanceModificator(self);
+	self.InstanceModificator = (0, InstanceModificator_1.makeInstanceModificator)(self);
 	const erroredInstance = new self.InstanceModificator();
 	erroredInstance[SymbolReplaceGaia](error);
 	const stack = [];
@@ -62,7 +62,7 @@ const throwModificationError = function (error) {
 		stack.push('\n<-- of constructor definitions stack -->');
 		stack.push(...typeStack);
 	}
-	erroredInstance.stack = _1.cleanupStack(stack).join('\n');
+	erroredInstance.stack = (0, _1.cleanupStack)(stack).join('\n');
 	self.inheritedInstance = erroredInstance;
 	const results = self.invokePostHooks();
 	const { type, collection, namespace } = results;

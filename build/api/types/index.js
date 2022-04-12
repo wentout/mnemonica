@@ -112,10 +112,10 @@ const defineFromFunction = function (subtypes, TypeName, constructHandler = func
 		throw new HANDLER_MUST_BE_A_FUNCTION;
 	}
 	const asClass = isClass(constructHandler);
-	const modificatorBody = compileNewModificatorFunctionBody_1.default(TypeName, asClass);
+	const modificatorBody = (0, compileNewModificatorFunctionBody_1.default)(TypeName, asClass);
 	const makeConstructHandler = modificatorBody(constructHandler, CreationHandler, SymbolConstructorName);
 	if (!proto) {
-		if (hop_1.hop(constructHandler, 'prototype')) {
+		if ((0, hop_1.hop)(constructHandler, 'prototype')) {
 			proto = Object.assign({}, constructHandler.prototype);
 		}
 		else {

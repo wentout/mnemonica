@@ -109,7 +109,7 @@ const isClass = (fn) => {
 	return Reflect.getOwnPropertyDescriptor(fn, 'prototype').writable === false;
 };
 const makeFakeModificatorType = (TypeName, fakeModificator = function () { }) => {
-	const modificatorBody = compileNewModificatorFunctionBody_1.default(TypeName);
+	const modificatorBody = (0, compileNewModificatorFunctionBody_1.default)(TypeName);
 	const modificatorType = modificatorBody(fakeModificator, CreationHandler, SymbolConstructorName);
 	return modificatorType();
 };

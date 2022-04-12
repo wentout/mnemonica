@@ -20,18 +20,18 @@ const parse = (self) => {
 		throw new WRONG_ARGUMENTS_USED(`have to use "instance" itself: '${proto.constructor.name}' vs '${protoProto.constructor.name}'`);
 	}
 	const { name } = proto.constructor;
-	const props = extract_1.extract(Object.assign({}, self));
+	const props = (0, extract_1.extract)(Object.assign({}, self));
 	delete props.constructor;
-	const joint = extract_1.extract(Object.assign({}, proto));
+	const joint = (0, extract_1.extract)(Object.assign({}, proto));
 	delete joint.constructor;
 	let parent;
 	let gaia;
-	if (hop_1.hop(protoProto, SymbolGaia)) {
+	if ((0, hop_1.hop)(protoProto, SymbolGaia)) {
 		parent = protoProto;
 		gaia = self[SymbolGaia];
 	}
 	else {
-		parent = exports.parse(Reflect.getPrototypeOf(protoProto));
+		parent = (0, exports.parse)(Reflect.getPrototypeOf(protoProto));
 		gaia = parent.gaia;
 	}
 	return {

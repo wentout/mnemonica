@@ -24,17 +24,17 @@ const Gaia = function (Uranus) {
 const MnemonicaProtoProps = {
 	extract () {
 		return function () {
-			return extract_1.extract(this);
+			return (0, extract_1.extract)(this);
 		};
 	},
 	pick () {
 		return function (...args) {
-			return pick_1.pick(this, ...args);
+			return (0, pick_1.pick)(this, ...args);
 		};
 	},
 	parent () {
 		return function (constructorLookupPath) {
-			return parent_1.parent(this, constructorLookupPath);
+			return (0, parent_1.parent)(this, constructorLookupPath);
 		};
 	},
 	clone () {
