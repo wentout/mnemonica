@@ -813,7 +813,7 @@ describe('Main Test', () => {
 			});
 			try {
 				extract(null);
-			} catch (error) {
+			} catch (error: any) {
 				it('thrown by extract(null) should be ok with instanceof', () => {
 					expect(error).toBeInstanceOf(errors.WRONG_INSTANCE_INVOCATION);
 					expect(error).toBeInstanceOf(Error);
@@ -834,7 +834,7 @@ describe('Main Test', () => {
 			});
 			try {
 				pick(null);
-			} catch (error) {
+			} catch (error: any) {
 				it('thrown by pick(null) should be ok with instanceof', () => {
 					expect(error).toBeInstanceOf(errors.WRONG_INSTANCE_INVOCATION);
 					expect(error).toBeInstanceOf(Error);
@@ -1051,7 +1051,7 @@ describe('Main Test', () => {
 						hookedMethod
 					} = nestedAsyncSub;
 
-					let thrown;
+					let thrown: any;
 					try {
 						hookedMethod('getThisPropMethod')('missingProp');
 					} catch (error) {
@@ -1064,7 +1064,7 @@ describe('Main Test', () => {
 					expect(thrown.originalError).toBeInstanceOf(Error);
 					expect(thrown.originalError).not.toBeInstanceOf(SubOfNestedAsync);
 
-					let thrown2;
+					let thrown2: any;
 					try {
 						hookedMethod.call(null, 'getThisPropMethod');
 					} catch (error) {
@@ -1085,7 +1085,7 @@ describe('Main Test', () => {
 						}
 					});
 
-					let thrown3;
+					let thrown3: any;
 					try {
 						hookedMethod('getThisPropMethod')('missingProp');
 					} catch (error) {
@@ -1106,7 +1106,7 @@ describe('Main Test', () => {
 						}
 					});
 
-					let thrown4;
+					let thrown4: any;
 					try {
 						hookedMethod('getThisPropMethod')('missingProp');
 					} catch (error) {
@@ -1136,7 +1136,7 @@ describe('Main Test', () => {
 					const {
 						erroredNestedConstructMethod
 					} = asyncInstanceClone;
-					let thrown;
+					let thrown: any;
 
 
 					try {
@@ -1174,7 +1174,7 @@ describe('Main Test', () => {
 						erroredAsyncMethod
 					} = asyncInstanceClone;
 
-					let thrown;
+					let thrown: any;
 					try {
 						await erroredAsyncMethod();
 					} catch (error) {
@@ -1197,7 +1197,7 @@ describe('Main Test', () => {
 						thrownForReThrow
 					} = asyncInstanceClone;
 
-					let thrown;
+					let thrown: any;
 					try {
 						await erroredAsyncMethod(thrownForReThrow);
 					} catch (error) {

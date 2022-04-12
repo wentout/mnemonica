@@ -9,7 +9,7 @@ const invokeHook = function (hookType, opts) {
 	const { type, existentInstance, inheritedInstance, args, creator } = opts;
 	const invocationResults = new Set();
 	const self = this;
-	if (hop_1.hop(self.hooks, hookType)) {
+	if ((0, hop_1.hop)(self.hooks, hookType)) {
 		const { TypeName, } = type;
 		const hookArgs = {
 			type,

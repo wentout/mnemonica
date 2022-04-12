@@ -16,6 +16,6 @@ const parent = (instance, path) => {
 	}
 	const { constructor: { name } } = p;
 	return name === path ?
-		p : exports.parent(p, path);
+		p : (0, exports.parent)(p, path);
 };
 exports.parent = parent;

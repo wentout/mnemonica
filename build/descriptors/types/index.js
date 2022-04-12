@@ -136,7 +136,7 @@ const typesCollectionProxyHandler = {
 };
 const createTypesCollection = (namespace = defaultNamespace, association, config = {}) => {
 	if (!(namespace instanceof Object) ||
-        !hop_1.hop(namespace, 'name') ||
+        !(0, hop_1.hop)(namespace, 'name') ||
         !namespaces_1.namespaces.namespaces.has(namespace.name)) {
 		throw new NAMESPACE_DOES_NOT_EXIST;
 	}

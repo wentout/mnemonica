@@ -2,7 +2,7 @@ import { ConstructorFunction } from '../../types';
 declare const _default: {
     Gaia: ConstructorFunction<{}>;
     Mnemosyne: ConstructorFunction<{
-        [x: string]: (this: any) => any;
+        [x: symbol]: (() => (this: any, uranus: any) => void) | (() => string);
         extract(): (this: any) => {
             [index: string]: any;
         };

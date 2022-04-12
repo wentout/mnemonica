@@ -83,7 +83,7 @@ const exceptionConsctructHandler = function (opts) {
 	});
 	stack.push('\n<-- of constructor definitions stack -->');
 	stack.push(...typeStack);
-	exception.stack = errors_2.cleanupStack(stack).join('\n');
+	exception.stack = (0, errors_2.cleanupStack)(stack).join('\n');
 	return exception;
 };
 const prepareException = function (target, error, ...args) {
@@ -104,7 +104,7 @@ const prepareException = function (target, error, ...args) {
 			error
 		});
 	});
-	ExceptionCreator.InstanceModificator = InstanceModificator_1.makeInstanceModificator(ExceptionCreator);
+	ExceptionCreator.InstanceModificator = (0, InstanceModificator_1.makeInstanceModificator)(ExceptionCreator);
 	return new ExceptionCreator.InstanceModificator();
 };
 exports.default = prepareException;

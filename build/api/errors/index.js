@@ -25,7 +25,7 @@ const getStack = function (title, stackAddition, tillFunction) {
 		this.stack = (new Error()).stack;
 	}
 	this.stack = this.stack.split('\n').slice(1);
-	this.stack = exports.cleanupStack(this.stack);
+	this.stack = (0, exports.cleanupStack)(this.stack);
 	this.stack.unshift(title);
 	if (Array.isArray(stackAddition) && stackAddition.length) {
 		this.stack.push(...stackAddition);
@@ -43,7 +43,7 @@ class BASE_MNEMONICA_ERROR extends Error {
 				return BaseStack;
 			}
 		});
-		const stack = exports.cleanupStack(BaseStack.split('\n'));
+		const stack = (0, exports.cleanupStack)(BaseStack.split('\n'));
 		if (additionalStack) {
 			stack.unshift(...additionalStack);
 		}

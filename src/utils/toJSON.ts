@@ -15,7 +15,7 @@ export const toJSON = ( instance: object ) => {
 
 		try {
 			value = JSON.stringify( _value );
-		} catch ( error ) {
+		} catch ( error: any | Error) {
 			const description = 'This value type is not supported by JSON.stringify';
 			const {
 				stack,
