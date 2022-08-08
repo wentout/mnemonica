@@ -16,14 +16,27 @@
 // the name of the function might be obfuscated during bundling
 // therefore it seems to be more correct to implement using 'new Function'
 
-// however, for better understanding of what is going on here
-// I'd like to provide solution with preliminary compiled functions
+// therefore considering we have open bug now:
+// https://bugs.chromium.org/p/chromium/issues/detail?id=1350404
+// related to the links below
+// https://gist.github.com/wentout/5dcdd34f926460d89c8c1552d1bbc3d7
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/name
+
+// we will use next solution as working code
+// because this.constructor.name kept OK
+// just the bug is for Chrome Dev Tools
+
+// and as preliminary compiled functions solution works faster
+// and does not require new code compilation
+// we will keep it further
+
+*/
 
 const getClassConstructor = ( ConstructHandler: any, CreationHandler: any, ) => {
 	return class extends ConstructHandler {
 		constructor ( ...args: any[] ) {
 			const answer = super( ...args );
-			debugger;
+			// debugger;
 			return CreationHandler.call( this, answer );
 		}
 	};
@@ -32,7 +45,7 @@ const getClassConstructor = ( ConstructHandler: any, CreationHandler: any, ) => 
 const getFunctionConstructor = ( ConstructHandler: any, CreationHandler: any, ) => {
 	return function ( this: any, ...args: any[] ) {
 		const answer = ConstructHandler.call( this, ...args );
-		debugger;
+		// debugger;
 		return CreationHandler.call( this, answer );
 	};
 };
@@ -61,7 +74,12 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 	};
 };
 
-*/
+export default compileNewModificatorFunctionBody;
+
+/*
+
+// however, for better understanding of what is going on here
+// I'd like to provide 
 
 const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass: boolean = false ) {
 	
@@ -101,3 +119,7 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 };
 
 export default compileNewModificatorFunctionBody;
+
+*/
+
+
