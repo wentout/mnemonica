@@ -179,6 +179,7 @@ const Mnemosyne = function ( namespace: any, gaia: any ) {
 		odp( Mnemonica.prototype, symbol, {
 			get () {
 				const symbolMethod = Reflect.get( MnemonicaProtoProps, symbol );
+				// @ts-ignore
 				return symbolMethod.call( this );
 			}
 		} );
