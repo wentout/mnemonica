@@ -252,7 +252,7 @@ const anotherNamespace = createNamespace('anotherNamespace');
 const anotherTypesCollection = createTypesCollection(anotherNamespace, 'another types collection');
 const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 
-const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType', function (this: unknown, check: unknown) {
+const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType', function (this: object, check: unknown) {
 	Object.assign(this, { check });
 });
 
