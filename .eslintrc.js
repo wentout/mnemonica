@@ -18,7 +18,7 @@ module.exports = {
 		'eslint-plugin-no-arrow-this',
 	],
 	rules: {
-		'indent': ['error', 'tab'],
+		indent: ['error', 'tab'],
 		'key-spacing': [
 			'warn',
 			{
@@ -78,14 +78,12 @@ module.exports = {
 		],
 		yoda: 'warn',
 	},
-	'overrides': [
-		{
-			'files': ['build/**/*.js'],
-			'rules': {
-				'no-multi-assign': 0,
-				'prefer-destructuring': 0,
-				'new-cap': 0
-			}
+	overrides: [{
+		files: ['build/**/*.js'],
+		rules: {
+			'no-multi-assign': 0,
+			'prefer-destructuring': 0,
+			'new-cap': 0
 		}
-	]
+	}]
 };
