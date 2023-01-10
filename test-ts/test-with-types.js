@@ -1,6 +1,6 @@
 'use strict';
 exports.__esModule = true;
-var __1 = require('..');
+var __1 = require('../build');
 var SomeType = __1.tsdefine('SomeType', function () {
 	this.one = 'SomeType';
 	this.q = 123;

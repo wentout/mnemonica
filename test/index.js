@@ -1,6 +1,6 @@
 'use strict';
 
-const {assert, expect} = require('chai');
+const { assert, expect } = require('chai');
 
 const ogp = Object.getPrototypeOf;
 const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
@@ -149,7 +149,7 @@ const ProxyTyped = function (str) {
 ProxyTyped.prototype = {
 	proxyTyped : true,
 	SaySomething () {
-		return `something : ${ this.proxyTyped }`;
+		return `something : ${this.proxyTyped}`;
 	}
 };
 Object.assign(UserType, {
@@ -237,7 +237,7 @@ const anotherTypesCollection = createTypesCollection(anotherNamespace, 'another 
 const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 
 const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType', function (check) {
-	Object.assign(this, {check});
+	Object.assign(this, { check });
 });
 
 process.TestForAddition = 'passed';
@@ -254,14 +254,14 @@ const userPL2 = new user.UserTypePL2();
 
 try {
 	var userPL_1_2 = new userPL1.UserTypePL2();
-} catch (err) { console.error(err);}
+} catch (err) { console.error(err); }
 try {
 	var userPL_NoNew = userPL1.UserTypePL2();
-} catch (err) { console.error(err);}
+} catch (err) { console.error(err); }
 
-const AsyncWOReturn = define('AsyncWOReturn', async function () {});
+const AsyncWOReturn = define('AsyncWOReturn', async function () { });
 
-const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () {}, {}, {
+const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () { }, {}, {
 	awaitReturn : false
 });
 
@@ -341,14 +341,14 @@ AsyncType.SubOfAsync.NestedAsyncType = async function (data) {
 AsyncType.SubOfAsync.NestedAsyncType.prototype = {
 	description : 'nested async instance'
 };
-const {NestedAsyncType} = AsyncType.SubOfAsync;
+const { NestedAsyncType } = AsyncType.SubOfAsync;
 
 const SubOfNestedAsync = NestedAsyncType.define('SubOfNestedAsync', function (data) {
 	Object.assign(this, {
 		data
 	});
 	this.arg123 = 456;
-}, {}, {bindedProto : false});
+}, {}, { bindedProto : false });
 
 var SubOfNestedAsyncPostHookData;
 SubOfNestedAsync.registerHook('postCreation', function (opts) {
@@ -558,11 +558,11 @@ describe('Main Test', () => {
 	const evenMoreFork = evenMore.fork(strFork);
 	const evenMoreForkFork = evenMoreFork.fork(strForkOfFork);
 
-	const chained = new UserTypeConstructor({email : 'someother@gmail.com', password : 32123});
+	const chained = new UserTypeConstructor({ email : 'someother@gmail.com', password : 32123 });
 	const derived = new chained.WithoutPassword();
 	const rounded = new derived.WithAdditionalSign(sign2add);
 
-	const chained2 = new UserTypeConstructor({email : 'someother@gmail.com', password : 32123})
+	const chained2 = new UserTypeConstructor({ email : 'someother@gmail.com', password : 32123 })
 		.WithoutPassword()
 		.WithAdditionalSign(sign2add);
 
@@ -621,7 +621,7 @@ describe('Main Test', () => {
 	const checkTypeDefinition = (_types, TypeName, proto, useOldStyle) => {
 		const parentType = _types[SymbolSubtypeCollection];
 		const isSubType = parentType ? true : false;
-		describe(`initial type declaration ${ TypeName }`, () => {
+		describe(`initial type declaration ${TypeName}`, () => {
 			const def = _types.get(TypeName);
 			it('should exist', () => {
 				assert.isDefined(def);
@@ -638,10 +638,10 @@ describe('Main Test', () => {
 					assert.deepEqual(proto, def.proto);
 				});
 			}
-			it(`and declared as proper SubType : ${ def.isSubType } `, () => {
+			it(`and declared as proper SubType : ${def.isSubType} `, () => {
 				assert.equal(def.isSubType, isSubType);
 			});
-			it(`will force use of proper style contructor for ${ TypeName } as: ${ useOldStyle }`, () => {
+			it(`will force use of proper style contructor for ${TypeName} as: ${useOldStyle}`, () => {
 				assert.equal(def.config.useOldStyle, useOldStyle);
 			});
 			it('contructor exists', () => {
@@ -804,7 +804,7 @@ describe('Main Test', () => {
 					expect(error.BaseStack).exist.and.is.a('string');
 					expect(error.constructor[SymbolConstructorName])
 						.exist.and.is.a('string')
-						.and.equal(`base of : ${ MNEMONICA } : errors`);
+						.and.equal(`base of : ${MNEMONICA} : errors`);
 				});
 			}
 
@@ -827,7 +827,7 @@ describe('Main Test', () => {
 					expect(error.BaseStack).exist.and.is.a('string');
 					expect(error.constructor[SymbolConstructorName])
 						.exist.and.is.a('string')
-						.and.equal(`base of : ${ MNEMONICA } : errors`);
+						.and.equal(`base of : ${MNEMONICA} : errors`);
 				});
 			}
 			[
@@ -850,7 +850,7 @@ describe('Main Test', () => {
 				[],
 				{}
 			].forEach((value, idx) => {
-				it(`should not throw on wrong instance 4 .collectConstructors() ${ typeof value }`, () => {
+				it(`should not throw on wrong instance 4 .collectConstructors() ${typeof value}`, () => {
 					let collected;
 					expect(() => {
 						collected = collectConstructors(value, true);
@@ -1001,7 +1001,7 @@ describe('Main Test', () => {
 					const result5 = getThisPropMethod1('arg123');
 					expect(result5).equal(321);
 
-					const {getThisPropMethod} = asyncSub;
+					const { getThisPropMethod } = asyncSub;
 					const result6 = getThisPropMethod('arg123');
 					expect(result6).equal(321);
 
