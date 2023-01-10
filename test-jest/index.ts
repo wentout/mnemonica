@@ -1,10 +1,14 @@
 'use strict';
 
+export {};
+import { beforeAll, describe, expect, it, test } from '@jest/globals';
+
 const mnemonica = require('..');
 const { mnemonica: _mnemonica } = mnemonica;
 
-describe('props tests', () => {
 
+describe('props tests', () => {
+	
 	test('base instance has props', () => {
 		expect(mnemonica).not.toBeInstanceOf(Object);
 		expect(mnemonica instanceof Object).not.toBe(true);
@@ -23,9 +27,9 @@ const {
 const ogp = Object.getPrototypeOf;
 const hop = (o: unknown, p: string) => Object.prototype.hasOwnProperty.call(o, p);
 
-const hooksTest = true;
-const parseTest = true;
-const uncaughtExceptionTest = false;
+// const hooksTest = true;
+// const parseTest = true;
+// const uncaughtExceptionTest = false;
 const asyncConstructionTest = true;
 
 debugger;
@@ -33,8 +37,8 @@ const {
 	define,
 	tsdefine,
 	defaultTypes: types,
-	createNamespace,
-	createTypesCollection,
+	// createNamespace,
+	// createTypesCollection,
 	MNEMONICA,
 	URANUS,
 	SymbolSubtypeCollection,
@@ -46,7 +50,7 @@ const {
 		extract,
 		pick,
 		collectConstructors,
-		merge,
+		// merge,
 		parse
 	},
 	errors,
@@ -236,51 +240,51 @@ defaultNamespace.registerHook('postCreation', function (this: unknown, opts: unk
 });
 
 
-const anotherDefaultTypesCollection = createTypesCollection();
+// const anotherDefaultTypesCollection = createTypesCollection();
 
-const {
-	define: adtcDefine
-} = anotherDefaultTypesCollection;
+// const {
+// 	define: adtcDefine
+// } = anotherDefaultTypesCollection;
 
-const SomeADTCType = adtcDefine('SomeADTCType', function (this: { test: number }) {
-	this.test = 123;
-});
+// const SomeADTCType = adtcDefine('SomeADTCType', function (this: { test: number }) {
+// 	this.test = 123;
+// });
 
-const someADTCInstance = new SomeADTCType();
+// const someADTCInstance = new SomeADTCType();
 
-const anotherNamespace = createNamespace('anotherNamespace');
-const anotherTypesCollection = createTypesCollection(anotherNamespace, 'another types collection');
-const oneElseTypesCollection = createTypesCollection(anotherNamespace);
+// const anotherNamespace = createNamespace('anotherNamespace');
+// const anotherTypesCollection = createTypesCollection(anotherNamespace, 'another types collection');
+// const oneElseTypesCollection = createTypesCollection(anotherNamespace);
 
-const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType', function (this: object, check: unknown) {
-	Object.assign(this, { check });
-});
+// const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionType', function (this: object, check: unknown) {
+// 	Object.assign(this, { check });
+// });
 
 //@ts-ignore
 process.TestForAddition = 'passed';
-const anotherCollectionInstance = AnotherCollectionType.apply(process, ['check']);
+// const anotherCollectionInstance = AnotherCollectionType.apply(process, ['check']);
 
-const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionType', function (this: { self: ThisType<unknown> }) {
-	this.self = this;
-});
-const oneElseCollectionInstance = new OneElseCollectionType();
+// const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionType', function (this: { self: ThisType<unknown> }) {
+// 	this.self = this;
+// });
+// const oneElseCollectionInstance = new OneElseCollectionType();
 
 const user = UserType(USER_DATA);
-const userPL1 = new user.UserTypePL1();
-const userPL2 = new user.UserTypePL2();
+// const userPL1 = new user.UserTypePL1();
+// const userPL2 = new user.UserTypePL2();
 
-try {
-	var userPL_1_2 = new userPL1.UserTypePL2();
-} catch (err) { console.error(err); }
-try {
-	var userPL_NoNew = userPL1.UserTypePL2();
-} catch (err) { console.error(err); }
+// try {
+// 	var userPL_1_2 = new userPL1.UserTypePL2();
+// } catch (err) { console.error(err); }
+// try {
+// 	var userPL_NoNew = userPL1.UserTypePL2();
+// } catch (err) { console.error(err); }
 
-const AsyncWOReturn = define('AsyncWOReturn', async function () { });
+// const AsyncWOReturn = define('AsyncWOReturn', async function () { });
 
-const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () { }, {}, {
-	awaitReturn: false
-});
+// const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () { }, {}, {
+// 	awaitReturn: false
+// });
 
 const Main = define('Main', function (this: any) {
 	this.constructNested = function (this: any) {

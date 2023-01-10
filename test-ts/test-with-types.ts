@@ -1,6 +1,6 @@
 'use strict';
 
-import { tsdefine, IDEF } from '..';
+import { tsdefine, IDEF } from '../build';
 
 type SomeTypeInstance = {
 	one?: string;

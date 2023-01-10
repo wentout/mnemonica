@@ -36,6 +36,7 @@
 		"./coverage/**/*",
 		"./module/**/*",
 		"./test/**/*",
-		"./testjest/**/*"
+		"./test-jest/**/*",
+		"./test-ts/**/*"
 	]
 }

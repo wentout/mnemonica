@@ -24,6 +24,10 @@
 		"types": [
 			"jest",
 			"node"
-		]
+		],
 	},
+	"include": [
+		"./src/**/*.ts",
+		"./test-jest/**/*"
+	]
 }
