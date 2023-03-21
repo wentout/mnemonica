@@ -8,3 +8,4 @@ coveragejest
 .nyc_output
 .idea
 test/example.js
+.npmrc
