@@ -61,8 +61,8 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 			}
 			ModificationBody.prototype.constructor = ModificationBody;
 			Object.defineProperty( ModificationBody.prototype.constructor, 'name', {
-				value: FunctionName,
-				writable: false
+				value    : FunctionName,
+				writable : false
 			} );
 			Object.defineProperty( ModificationBody, SymbolConstructorName, {
 				get () {

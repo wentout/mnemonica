@@ -33,13 +33,13 @@ const SomeSubType = SomeType.define( 'SomeSubType', function () {
 	this.two = 'SomeSubType';
 	this.q = 123;
 
-} as IDEF<SubTypeInstance> );
+});
 
 SomeSubType.define( 'FinalType', function () {
 	this.one = 'final one';
 	this.three = 'FinalType';
 	this.q = 123;
-} as IDEF<FinalInstance> );
+});
 
 const first = new SomeType();
 const x = first.one;

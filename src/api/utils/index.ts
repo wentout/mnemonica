@@ -191,7 +191,6 @@ import { TypeModificator } from '../../types';
 
 const makeFakeModificatorType = (
 	TypeName: string,
-	// tslint:disable-next-line: only-arrow-functions no-empty
 	fakeModificator = function () { } as TypeModificator<{}>
 ) => {
 
@@ -216,7 +215,7 @@ const reflectPrimitiveWrappers = ( _thisArg: any ) => {
 			get () {
 				return () => {
 					return _thisArg;
-				}
+				};
 			}
 		} );
 	}
@@ -230,7 +229,7 @@ const reflectPrimitiveWrappers = ( _thisArg: any ) => {
 			get () {
 				return () => {
 					return _thisArg.valueOf();
-				}
+				};
 			}
 		} );
 	}

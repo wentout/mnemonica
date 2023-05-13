@@ -1,8 +1,15 @@
-import { TypeAbsorber, ITypeClass, TypeLookup, IDEF } from './types';
+import { ITypeClass, TypeLookup, IDEF } from './types';
 export type { IDEF } from './types';
 export declare const defaultTypes: any;
-export declare const define: TypeAbsorber;
-export declare const tsdefine: <T>(this: any, TypeName: string, constructHandler: IDEF<T>, proto?: object, config?: object) => ITypeClass<T>;
+type Proto<P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
+interface IDefinitor {
+    <T, P extends object, N extends Proto<P, T>, ID extends string>(this: unknown, TypeName: ID, constructHandler: IDEF<T>, proto?: P, config?: object): {
+        new (): N;
+        define: IDefinitor;
+    };
+}
+export declare const define: IDefinitor;
+export declare const tsdefine: <T>(this: unknown, TypeName: string, constructHandler: IDEF<T>, proto?: object, config?: object) => ITypeClass<T>;
 export declare const lookup: TypeLookup;
 export declare const mnemonica: {
     [index: string]: unknown;

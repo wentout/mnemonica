@@ -58,7 +58,7 @@ export const throwModificationError = function ( this: any, error: any ) {
 		get () {
 			return exceptionReason;
 		},
-		enumerable: true
+		enumerable : true
 	} );
 
 	const reasons: any[ typeof exceptionReason ] = [ exceptionReason ];
@@ -67,14 +67,14 @@ export const throwModificationError = function ( this: any, error: any ) {
 		get () {
 			return reasons;
 		},
-		enumerable: true
+		enumerable : true
 	} );
 	const surplus: any[ typeof exceptionReason ] = [];
 	odp( error, 'surplus', {
 		get () {
 			return surplus;
 		},
-		enumerable: true
+		enumerable : true
 	} );
 
 	self.ModificatorType = makeFakeModificatorType( TypeName );

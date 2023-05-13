@@ -43,7 +43,7 @@ export default function () {
 					get () {
 						return ModificatorType;
 					},
-					enumerable: false
+					enumerable : false
 				} );
 
 				obey( existentInstance, ModificatorType );
@@ -79,4 +79,4 @@ export default function () {
 
 	return CreateInstanceModificatorAncient200XthWay;
 
-};
+}

@@ -38,7 +38,7 @@ export const invokeHook = function ( this: any, hookType: string, opts: { [ inde
 		const hookArgs = {
 			type,
 			TypeName,
-			existentInstance: existentInstance.constructor.name === MNEMONICA ?
+			existentInstance : existentInstance.constructor.name === MNEMONICA ?
 				null : existentInstance,
 			args,
 		};

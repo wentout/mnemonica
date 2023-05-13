@@ -30,4 +30,3 @@ function default_1() {
     return CreateInstanceModificatorAncient200XthWay;
 }
 exports.default = default_1;
-;

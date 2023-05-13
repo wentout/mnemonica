@@ -25,21 +25,21 @@ export const bindedMethodErrorHandler = ( exceptionReason: any ) => {
 			get () {
 				return exceptionReason;
 			},
-			enumerable: true
+			enumerable : true
 		} );
 		const reasons: any[ typeof exceptionReason ] = [ exceptionReason ];
 		odp( error, 'reasons', {
 			get () {
 				return reasons;
 			},
-			enumerable: true
+			enumerable : true
 		} );
 		const surplus: any[ typeof exceptionReason ] = [];
 		odp( error, 'surplus', {
 			get () {
 				return surplus;
 			},
-			enumerable: true
+			enumerable : true
 		} );
 	}
 
@@ -49,9 +49,9 @@ export const bindedMethodErrorHandler = ( exceptionReason: any ) => {
 		try {
 			preparedException = new applyTo.exception( error, {
 				args,
-				exceptionReasonMethod: method,
-				exceptionReasonObject: applyTo,
-				reasonsIsNew: asNew
+				exceptionReasonMethod : method,
+				exceptionReasonObject : applyTo,
+				reasonsIsNew          : asNew
 			} );
 		} catch ( additionalError ) {
 			error.surplus.push( additionalError );

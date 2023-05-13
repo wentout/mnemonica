@@ -48,7 +48,6 @@ export const getStack = function ( this: any, title: string, stackAddition: stri
 
 };
 
-// tslint:disable-next-line: class-name
 export class BASE_MNEMONICA_ERROR extends Error {
 
 	constructor ( message = BASE_ERROR_MESSAGE, additionalStack: string[] ) {
@@ -91,9 +90,9 @@ export const constructError = ( name: string, message: string ) => {
 		return ${name};
 	`;
 
-	const ErrorConstructor = (
+	const NamedErrorConstructor = (
 		new Function( 'base', body )
 	)( BASE_MNEMONICA_ERROR );
 
-	return ErrorConstructor;
+	return NamedErrorConstructor;
 };

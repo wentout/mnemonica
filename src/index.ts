@@ -14,24 +14,56 @@ export const {
 	defaultTypes,
 } = descriptors;
 
-function checkThis(pointer: any): boolean {
-	return pointer === mnemonica ||
-		pointer === exports;
-};
+function checkThis (pointer: typeof mnemonica | typeof exports | unknown): boolean {
+	return pointer === mnemonica || pointer === exports;
+}
 
-export const define = function (
-	this: any,
+type Proto <P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
+
+interface IDefinitor {
+	<T, P extends object, N extends Proto<P, T>, ID extends string> (
+		this: unknown,
+		TypeName: ID,
+		constructHandler: IDEF<T>,
+		proto?: P,
+		config?: object,
+	): {
+		new(): N
+		define: IDefinitor
+	}
+}
+
+export const define = function <T, P extends object, N extends Proto<P, T>> (
+	this: unknown,
 	TypeName: string,
-	constructHandler: CallableFunction,
-	proto?: object,
-	config?: object,
-) {
+	constructHandler: IDEF<T>,
+	proto?: P,
+	config = {},
+): {
+	// new(): T & P // s → never
+	// new(): P & T // s → never
+	// new(): T
+	new(): N
+	define: TypeAbsorber
+} {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	return types.define(TypeName, constructHandler, proto, config);
-} as TypeAbsorber;
+} as IDefinitor;
 
-export const tsdefine = function <T>(
-	this: any,
+// const SSS = define('MyType', function (this: { s: number }) {
+// 	this.s = 123;
+// }, { m : '321', s : '321'});
+
+// const s = new SSS;
+// type ss = typeof s.s;
+// const z: ss = s.s;
+// console.log(z);
+// s.m = '123';
+// s.s = 123;
+// // s.z = '123';
+
+export const tsdefine = function <T> (
+	this: unknown,
 	TypeName: string,
 	constructHandler: IDEF<T>,
 	proto?: object,
@@ -39,6 +71,7 @@ export const tsdefine = function <T>(
 ): ITypeClass<T> {
 	return defaultTypes.define(TypeName, constructHandler, proto, config);
 };
+
 
 export const lookup = function (TypeNestedPath) {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
@@ -59,10 +92,10 @@ export const mnemonica = Object.entries({
 }).reduce((acc: { [index: string]: unknown }, entry: [string, unknown]) => {
 	const [name, code] = entry;
 	odp(acc, name, {
-		get() {
+		get () {
 			return code;
 		},
-		enumerable: true
+		enumerable : true
 	});
 	return acc;
 }, {});

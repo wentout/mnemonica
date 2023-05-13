@@ -32,7 +32,6 @@ const Gaia = function ( Uranus: any ) {
 
 	const gaiaProto = Uranus ? Uranus : this;
 
-	// tslint:disable-next-line: only-arrow-functions no-empty
 	const GaiaConstructor = function () { } as ConstructorFunction<{}>;
 	GaiaConstructor.prototype = Object.create( gaiaProto );
 
@@ -123,7 +122,6 @@ const MnemonicaProtoProps = {
 
 	exception () {
 		const me = this;
-		// tslint:disable-next-line: only-arrow-functions
 		return function ( error: Error, ...args: any[] ) {
 			const target = new.target;
 			return exceptionConstructor.call( me, target, error, ...args );
@@ -147,7 +145,7 @@ const MnemonicaProtoProps = {
 			apply ( _, __, args, ) {
 				return siblings( args[ 0 ] );
 			}
-		} )
+		} );
 	}
 
 };

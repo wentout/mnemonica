@@ -27,4 +27,3 @@ function default_1() {
     return CreateInstanceModificator;
 }
 exports.default = default_1;
-;

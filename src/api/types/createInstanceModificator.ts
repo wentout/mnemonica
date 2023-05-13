@@ -26,7 +26,7 @@ export default function () {
 			get () {
 				return ModificatorType;
 			},
-			enumerable: false
+			enumerable : false
 		} );
 
 		// modification itself
@@ -67,4 +67,4 @@ export default function () {
 
 	return CreateInstanceModificator;
 
-};
+}

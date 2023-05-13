@@ -134,7 +134,7 @@ odp( TypesCollection.prototype, 'define', {
 			return proto.define.call( this, subtypes, ...args );
 		};
 	},
-	enumerable: true
+	enumerable : true
 } );
 
 odp( TypesCollection.prototype, 'lookup', {
@@ -143,7 +143,7 @@ odp( TypesCollection.prototype, 'lookup', {
 			return proto.lookup.call( this.subtypes, ...args );
 		}.bind( this );
 	},
-	enumerable: true
+	enumerable : true
 } );
 
 odp( TypesCollection.prototype, 'registerHook', {
@@ -153,7 +153,7 @@ odp( TypesCollection.prototype, 'registerHook', {
 			return proto.registerHook.call( this, hookName, hookCallback );
 		}.bind( proxy );
 	},
-	enumerable: true
+	enumerable : true
 } );
 
 odp( TypesCollection.prototype, 'invokeHook', {
@@ -188,10 +188,10 @@ const typesCollectionProxyHandler = {
 	// Object.prototype.hasOwnProperty.call
 	getOwnPropertyDescriptor ( target: any, prop: string ) {
 		return target.subtypes.has( prop ) ? {
-			configurable: true,
-			enumerable: true,
-			writable: false,
-			value: target.subtypes.get( prop )
+			configurable : true,
+			enumerable   : true,
+			writable     : false,
+			value        : target.subtypes.get( prop )
 		} : undefined;
 	}
 };
@@ -233,7 +233,6 @@ odp( DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 
 export const types = {
 	get createTypesCollection () {
-		// tslint:disable-next-line: only-arrow-functions
 		return function ( namespace: any, association: any, config = {} ) {
 			return createTypesCollection( namespace, association, config );
 		};

@@ -1,5 +1,5 @@
 module.exports = {
-	parser: '@typescript-eslint/parser',
+	parser: "@typescript-eslint/parser",
 	env: {
 		node: true,
 		es6: true,
@@ -8,7 +8,7 @@ module.exports = {
 	extends: [
 		'eslint:recommended',
 		'plugin:@typescript-eslint/eslint-recommended',
-		'plugin:import/typescript',
+		'plugin:@typescript-eslint/recommended'
 	],
 	parserOptions: {
 		ecmaVersion: 2018,
@@ -16,6 +16,7 @@ module.exports = {
 	plugins: [
 		'mocha',
 		'eslint-plugin-no-arrow-this',
+		'@typescript-eslint'
 	],
 	rules: {
 		indent: ['error', 'tab'],
@@ -30,7 +31,8 @@ module.exports = {
 		'linebreak-style': ['error', 'unix'],
 		quotes: ['error', 'single'],
 		semi: ['error', 'always'],
-		'no-unused-vars': 'warn',
+		'no-unused-vars': 'off',
+		'@typescript-eslint/no-unused-vars': 'error',
 		'no-shadow': [
 			'error',
 			{
@@ -76,6 +78,8 @@ module.exports = {
 				onlyGlobals: true,
 			},
 		],
+		'@typescript-eslint/no-var-requires': 'off',
+		'@typescript-eslint/no-empty-function': 'off',
 		yoda: 'warn',
 	},
 	overrides: [{
