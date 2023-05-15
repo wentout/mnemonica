@@ -1,6 +1,6 @@
 'use strict';
 
-const {assert} = require('chai');
+const { assert } = require('chai');
 
 const {
 	defaultTypes: types,
@@ -22,9 +22,9 @@ const tests = (opts) => {
 
 	describe('Hooks Tests', () => {
 		it('check invocations test', () => {
-			const {namespaceFlowCheckerSample} = require('./hookSamples');
+			const { namespaceFlowCheckerSample } = require('./hookSamples');
 			namespaceFlowCheckerInvocations.forEach((el, idx) => {
-				assert.equal(namespaceFlowCheckerSample[idx], el.TypeName);
+				assert.equal(namespaceFlowCheckerSample[ idx ], el.TypeName);
 			});
 		});
 		it('check invocations count', () => {

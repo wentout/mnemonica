@@ -41,6 +41,9 @@ module.exports = {
 				allow: [],
 			},
 		],
+		'array-bracket-spacing': ['error', 'always'],
+		'computed-property-spacing': ['error', 'always'],
+		'object-curly-spacing': ['error', 'always'],
 		'space-before-function-paren': [
 			'warn', {
 				'anonymous': 'always',

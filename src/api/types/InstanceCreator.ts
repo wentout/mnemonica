@@ -61,6 +61,7 @@ const invokePreHooks = function ( this: any ) {
 
 const invokePostHooks = function ( this: any ) {
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const creator = this;
 	const {
 		inheritedInstance,
@@ -104,7 +105,9 @@ const invokePostHooks = function ( this: any ) {
 const bindMethod = function ( this: any, instance: any, methodName: string, MethodItself: any ) {
 	odp( instance, methodName, {
 		get () {
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			const from = this;
+			// eslint-disable-next-line no-shadow, @typescript-eslint/no-explicit-any
 			return function ( this: any, ...args: any[] ) {
 				const applyTo = this !== undefined ? this : from; // || instance;
 				const exceptionReason = {
@@ -153,6 +156,7 @@ const bindMethod = function ( this: any, instance: any, methodName: string, Meth
 };
 
 const bindProtoMethods = function ( this: any ) {
+// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 	const {
 		inheritedInstance,
@@ -181,6 +185,7 @@ const bindProtoMethods = function ( this: any ) {
 
 const postProcessing = function ( this: any, continuationOf: any ) {
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 	const {
 		stack,
@@ -224,6 +229,7 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 
 const addThen = function ( this: any, then: any ) {
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	self.inheritedInstance = self.inheritedInstance
@@ -247,6 +253,7 @@ const addThen = function ( this: any, then: any ) {
 
 const makeWaiter = function ( this: any, type: any, then: any ) {
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	self.inheritedInstance = self.inheritedInstance
@@ -336,6 +343,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	} = config;
 
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	const ModificationConstructor = getModificationConstructor( useOldStyle );

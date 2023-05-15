@@ -43,7 +43,8 @@ const proto = {
 };
 
 const TypesCollection = function ( namespace: any, config: { [ index: string ]: any } ) {
-
+	
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	const subtypes = new Map();
@@ -113,7 +114,7 @@ const TypesCollection = function ( namespace: any, config: { [ index: string ]: 
 		}
 	} );
 
-} as ConstructorFunction<{}>;
+} as ConstructorFunction<object>;
 
 
 odp( TypesCollection.prototype, MNEMONICA, {
@@ -148,7 +149,7 @@ odp( TypesCollection.prototype, 'lookup', {
 
 odp( TypesCollection.prototype, 'registerHook', {
 	get () {
-		const proxy = this.namespace.typesCollections.get( this );
+		const proxy: unknown = this.namespace.typesCollections.get( this );
 		return function ( this: any, hookName: string, hookCallback: CallableFunction ) {
 			return proto.registerHook.call( this, hookName, hookCallback );
 		}.bind( proxy );
@@ -158,7 +159,7 @@ odp( TypesCollection.prototype, 'registerHook', {
 
 odp( TypesCollection.prototype, 'invokeHook', {
 	get () {
-		const proxy = this.namespace.typesCollections.get( this );
+		const proxy: unknown = this.namespace.typesCollections.get( this );
 		return function ( this: any, hookName: string, hookCallback: CallableFunction ) {
 			return proto.invokeHook.call( this, hookName, hookCallback );
 		}.bind( proxy );
@@ -167,8 +168,8 @@ odp( TypesCollection.prototype, 'invokeHook', {
 
 odp( TypesCollection.prototype, 'registerFlowChecker', {
 	get () {
-		const proxy = this.namespace.typesCollections.get( this );
-		return function ( this: any, flowCheckerCallback: CallableFunction ) {
+		const proxy: unknown = this.namespace.typesCollections.get( this );
+		return function ( this: any, flowCheckerCallback: () => unknown ) {
 			return proto.registerFlowChecker.call( this, flowCheckerCallback );
 		}.bind( proxy );
 	}

@@ -4,7 +4,7 @@ const ogp = Object.getPrototypeOf;
 
 const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
 
-const {assert, expect} = require('chai');
+const { assert, expect } = require('chai');
 
 const {
 	defaultTypes: types,
@@ -41,8 +41,8 @@ const tests = (opts) => {
 			expect(userPL1.constructor.prototype).to.be.an('object')
 				.that.includes(pl1Proto);
 			Object.entries(pl1Proto).forEach(entry => {
-				const [key, value] = entry;
-				assert.equal(userPL1[key], value);
+				const [ key, value ] = entry;
+				assert.equal(userPL1[ key ], value);
 			});
 		});
 		it('definition is correct', () => {
@@ -50,9 +50,9 @@ const tests = (opts) => {
 				user_pl_1_sign : 'pl_1',
 			};
 			Object.entries(checker).forEach(entry => {
-				const [key, value] = entry;
+				const [ key, value ] = entry;
 				assert.isTrue(hop(userPL1, key));
-				assert.equal(userPL1[key], value);
+				assert.equal(userPL1[ key ], value);
 			});
 		});
 	});
@@ -101,13 +101,13 @@ const tests = (opts) => {
 				description    : UserTypeProto.description
 			}, USER_DATA, pl2Proto);
 			Object.keys(USER_DATA).forEach(key => {
-				assert.isFalse(hop(userPL2[key], key));
-				assert.equal(userPL2[key], USER_DATA[key]);
+				assert.isFalse(hop(userPL2[ key ], key));
+				assert.equal(userPL2[ key ], USER_DATA[ key ]);
 			});
 
 			Object.entries(checker).forEach(entry => {
-				const [key, value] = entry;
-				assert.equal(userPL2[key], value);
+				const [ key, value ] = entry;
+				assert.equal(userPL2[ key ], value);
 			});
 		});
 		it('definitions are correct for general', () => {
@@ -116,11 +116,11 @@ const tests = (opts) => {
 				description    : UserTypeProto.description
 			}, USER_DATA, pl1Proto);
 			Object.keys(USER_DATA).forEach(key => {
-				assert.isFalse(hop(userPL1[key], key));
+				assert.isFalse(hop(userPL1[ key ], key));
 			});
 			Object.entries(checker).forEach(entry => {
-				const [key, value] = entry;
-				assert.equal(userPL1[key], value);
+				const [ key, value ] = entry;
+				assert.equal(userPL1[ key ], value);
 			});
 		});
 	});

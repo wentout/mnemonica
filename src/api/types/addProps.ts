@@ -1,6 +1,6 @@
 'use strict';
 
-import {constants} from '../../constants';
+import { constants } from '../../constants';
 
 const {
 	odp,
@@ -8,6 +8,7 @@ const {
 
 export const addProps = function (this: any): any {
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	const {
@@ -69,7 +70,7 @@ export const addProps = function (this: any): any {
 	});
 
 	if (submitStack) {
-		const {stack} = this;
+		const { stack } = this;
 		odp(proto, '__stack__', {
 			get () {
 				return stack.join('\n');

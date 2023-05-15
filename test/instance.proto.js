@@ -6,7 +6,7 @@ const {
 
 const gof = Object.getPrototypeOf;
 
-const {assert, expect} = require('chai');
+const { assert, expect } = require('chai');
 
 const tests = (opts) => {
 
@@ -47,7 +47,7 @@ const tests = (opts) => {
 	describe('instance .proto props tests', () => {
 
 		it('should have proper prototype .__args__', () => {
-			assert.equal(user.__args__[0], USER_DATA);
+			assert.equal(user.__args__[ 0 ], USER_DATA);
 		});
 		it('should have proper prototype .__type__', () => {
 			// undefined !
@@ -104,7 +104,7 @@ const tests = (opts) => {
 			assert.notEqual(userPP, userForkPP);
 
 			assert.notEqual(user, userFork);
-			assert.deepEqual(userArgs[0], USER_DATA);
+			assert.deepEqual(userArgs[ 0 ], USER_DATA);
 			assert.deepEqual(new UserType(forkData), userFork);
 			assert.notDeepEqual(userArgs, userFork.__args__);
 			expect(userFork).instanceof(UserType);
@@ -126,7 +126,7 @@ const tests = (opts) => {
 			assert.notEqual(userTCPP, userTCForkPP);
 
 			assert.notEqual(userTC, userTCFork);
-			assert.deepEqual(userTCArgs[0], USER_DATA);
+			assert.deepEqual(userTCArgs[ 0 ], USER_DATA);
 			const naiveFork = new UserTypeConstructor(forkData);
 			assert.deepOwnInclude(naiveFork, userTCFork);
 			assert.notDeepEqual(userTCArgs, userTCFork.__args__);
@@ -251,7 +251,7 @@ const tests = (opts) => {
 		});
 
 		it('instance.ConstructorName.call(process) should work', () => {
-			const gaia = overMoreCallEvenMoreProcess[SymbolGaia];
+			const gaia = overMoreCallEvenMoreProcess[ SymbolGaia ];
 			const gaiaProto = gof(gaia);
 			expect(gof(gaiaProto)).equal(process);
 
@@ -282,17 +282,17 @@ const tests = (opts) => {
 			expect(userTCForkBind).instanceof(UserTypeConstructor);
 			expect(userTCForkBind).instanceof(UserType);
 			expect(userTCForkBind).instanceof(user);
-			assert.equal(user.__args__[0], USER_DATA);
-			assert.equal(userTC.__args__[0], USER_DATA);
-			assert.deepEqual(userTCForkCall.__args__[0], FORK_CALL_DATA);
-			assert.deepEqual(userTCForkApply.__args__[0], FORK_CALL_DATA);
-			assert.deepEqual(userTCForkBind.__args__[0], FORK_CALL_DATA);
+			assert.equal(user.__args__[ 0 ], USER_DATA);
+			assert.equal(userTC.__args__[ 0 ], USER_DATA);
+			assert.deepEqual(userTCForkCall.__args__[ 0 ], FORK_CALL_DATA);
+			assert.deepEqual(userTCForkApply.__args__[ 0 ], FORK_CALL_DATA);
+			assert.deepEqual(userTCForkBind.__args__[ 0 ], FORK_CALL_DATA);
 			assert.deepInclude(userTCForkCall, FORK_CALL_DATA);
 			assert.deepInclude(userTCForkApply, FORK_CALL_DATA);
 			assert.deepInclude(userTCForkBind, FORK_CALL_DATA);
 			expect(utcfcwp.password).equal(undefined);
 			// debugger;
-			const {EvenMore} = OverMore;
+			const { EvenMore } = OverMore;
 			expect(overMore).instanceof(OverMore);
 			expect(overMore).instanceof(moreOver);
 			expect(evenMore).instanceof(EvenMore);

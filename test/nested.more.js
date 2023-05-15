@@ -55,11 +55,11 @@ const tests = (opts) => {
 			it('definition is correct', () => {
 				const checker = Object.assign(UserTypeConstructorProto, USER_DATA);
 				Object.keys(USER_DATA).forEach(key => {
-					assert.isFalse(hop(userTC[key], key));
+					assert.isFalse(hop(userTC[ key ], key));
 				});
 				Object.entries(checker).forEach(entry => {
-					const [key, value] = entry;
-					assert.equal(userTC[key], value);
+					const [ key, value ] = entry;
+					assert.equal(userTC[ key ], value);
 				});
 			});
 			it('siblings are correct', () => {
@@ -150,7 +150,7 @@ const tests = (opts) => {
 
 					if (name === 'Object') {
 						iof = evenMore instanceof Object;
-					} else if (base && base[name]) {
+					} else if (base && base[ name ]) {
 						// name follows the sequence :
 						// 
 						// Mnemosyne
@@ -161,8 +161,8 @@ const tests = (opts) => {
 						// so the first call : Mnemosyne is checked
 						// with types[DEFAULT_NAMESPACE_NAME] instanceof
 						
-						iof = evenMore instanceof base[name];
-						base = base[name];
+						iof = evenMore instanceof base[ name ];
+						base = base[ name ];
 					} else if (!base) {
 						return { idx, name, iof };
 					}
@@ -335,7 +335,7 @@ const tests = (opts) => {
 				});
 				it('thrown error should be ok with props', () => {
 					expect(error.BaseStack).exist.and.is.a('string');
-					expect(error.constructor[SymbolConstructorName])
+					expect(error.constructor[ SymbolConstructorName ])
 						.exist.and.is.a('string')
 						.and.equal(`base of : ${MNEMONICA} : errors`);
 				});

@@ -11,6 +11,7 @@ export default function () {
 		addProps: CallableFunction
 	) {
 
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const existentInstance = this;
 
 		// const TripleSchemeClosure = function () {

@@ -50,7 +50,7 @@ const getFunctionConstructor = ( ConstructHandler: any, CreationHandler: any, ) 
 	};
 };
 
-const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass: boolean = false ) {
+const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass = false ) {
 	return function ( ConstructHandler: any, CreationHandler: any, SymbolConstructorName: symbol ): any {
 		return function () {
 			let ModificationBody: any;

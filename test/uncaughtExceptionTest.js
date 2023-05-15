@@ -19,7 +19,7 @@ const tests = (opts) => {
 
 				const onUncaughtException = function (error) {
 					assert.equal(
-						error.__args__[0],
+						error.__args__[ 0 ],
 						throwArgs
 					);
 					expect(error).instanceOf(Error);

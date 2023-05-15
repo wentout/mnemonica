@@ -29,6 +29,7 @@ import { makeInstanceModificator } from '../types/InstanceModificator';
 export const throwModificationError = function ( this: any, error: any ) {
 
 	// InstanceCreator
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	const {

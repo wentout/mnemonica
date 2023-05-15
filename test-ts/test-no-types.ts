@@ -2,15 +2,20 @@
 
 import { define } from '..';
 
-const SomeType = define( 'SomeType', function (this: {one:string, q: number}) {
+const SomeType = define( 'SomeType', function (this: {
+	one: string,
+	check: number,
+	q: number
+}) {
 	this.one = 'SomeType';
+	this.check = 321;
 	this.q = 123;
 } );
 
 const SomeSubType = SomeType.define( 'SomeSubType', function ( this: {
 	one: undefined,
 	two: string,
-	q: number
+	q: number,
 } ) {
 	this.one = undefined;
 	this.two = 'SomeSubType';
@@ -18,25 +23,37 @@ const SomeSubType = SomeType.define( 'SomeSubType', function ( this: {
 } );
 
 const first = new SomeType();
+
+
 const x = first.one;
 first.one = 123;	// hinting is correct !
 first.q = 'one';	// hinting is correct !
 first.x = 543;		// hinting is correct !
 
-SomeSubType.define( 'FinalType', function (this: {one:string, q: number, three: string}) {
+const FinalType = SomeSubType.define( 'FinalType', function (this: {
+	one: string,
+	q: number,
+	three: string
+}) {
 	this.one = 'final one';
 	this.three = 'FinalType';
 	this.q = 123;
 } );
 
-const second = new first.SomeSubType();
+type SomeSubTypeInstance = InstanceType<typeof SomeSubType>;
+const second = new first.SomeSubType() as SomeSubTypeInstance;
 const y = second.one;
+second.check = 123;
 second.two = 'two';
 second.y = 'no way';
 
-const final = new second.FinalType();
+type FinalTypeInstance = InstanceType<typeof FinalType>;
+const final = new second.FinalType() as FinalTypeInstance;
+// const final = new FinalType();
 final.one = 'must one';
 final.two = 'must two';
+final.three = 'must two';
+final.check = 'there is mumber';
 final.z = 'no way';
 
 const z = final.one;

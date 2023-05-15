@@ -32,7 +32,7 @@ const Gaia = function ( Uranus: any ) {
 
 	const gaiaProto = Uranus ? Uranus : this;
 
-	const GaiaConstructor = function () { } as ConstructorFunction<{}>;
+	const GaiaConstructor = function () { } as ConstructorFunction<object>;
 	GaiaConstructor.prototype = Object.create( gaiaProto );
 
 	const gaia = new GaiaConstructor;
@@ -44,7 +44,7 @@ const Gaia = function ( Uranus: any ) {
 	} );
 
 	return gaia;
-} as ConstructorFunction<{}>;
+} as ConstructorFunction<object>;
 
 
 const MnemonicaProtoProps = {
@@ -87,6 +87,7 @@ const MnemonicaProtoProps = {
 		} = type;
 
 		// 'function', cause might be called with 'new'
+		// eslint-disable-next-line no-shadow, @typescript-eslint/no-explicit-any
 		return function ( this: any, ...forkArgs: any[] ) {
 
 			let forked;
@@ -110,7 +111,9 @@ const MnemonicaProtoProps = {
 	},
 
 	[ SymbolReplaceGaia ] () {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		return function ( this: any, uranus: any ) {
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			Reflect.setPrototypeOf( Reflect.getPrototypeOf( this[ SymbolGaia ] ), uranus );
 		};
@@ -121,19 +124,21 @@ const MnemonicaProtoProps = {
 	},
 
 	exception () {
-		const me = this;
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		const self = this;
 		return function ( error: Error, ...args: any[] ) {
 			const target = new.target;
-			return exceptionConstructor.call( me, target, error, ...args );
+			return exceptionConstructor.call( self, target, error, ...args );
 		};
 	},
 
 	sibling () {
-		const me: any = this;
+		// eslint-disable-next-line @typescript-eslint/no-this-alias, @typescript-eslint/no-explicit-any
+		const self: any = this;
 		const siblings = ( SiblingTypeName: string ) => {
 			const {
 				__collection__: collection,
-			} = me;
+			} = self;
 			const sibling: any = collection[ SiblingTypeName ];
 			return sibling;
 		};
@@ -177,6 +182,7 @@ const Mnemosyne = function ( namespace: any, gaia: any ) {
 		odp( Mnemonica.prototype, symbol, {
 			get () {
 				const symbolMethod = Reflect.get( MnemonicaProtoProps, symbol );
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 				// @ts-ignore
 				return symbolMethod.call( this );
 			}

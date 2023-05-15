@@ -241,7 +241,7 @@ const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionTy
 });
 
 process.TestForAddition = 'passed';
-const anotherCollectionInstance = AnotherCollectionType.apply(process, ['check']);
+const anotherCollectionInstance = AnotherCollectionType.apply(process, [ 'check' ]);
 
 const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionType', function () {
 	this.self = this;
@@ -282,7 +282,7 @@ NestedConstruct.define('NestedSubError', function (...args) {
 	throw new Error('Nested SubError Constructor Special Error');
 });
 
-types[SymbolConfig].bindedProto = false;
+types[ SymbolConfig ].bindedProto = false;
 const AsyncType = tsdefine('AsyncType', async function (data) {
 	return Object.assign(this, {
 		arg123 : 123
@@ -292,11 +292,11 @@ const AsyncType = tsdefine('AsyncType', async function (data) {
 }, {
 	getThisPropMethod : function (propName) {
 		if (new.target) {
-			this[propName] = propName;
+			this[ propName ] = propName;
 			return this;
 		}
-		if (this[propName]) {
-			return this[propName];
+		if (this[ propName ]) {
+			return this[ propName ];
 		}
 		throw new Error('prop is missing');
 
@@ -327,11 +327,11 @@ AsyncType.SubOfAsync = function (data) {
 AsyncType.SubOfAsync.registerHook('postCreation', (hookData) => {
 	hookData.bindProtoMethods();
 	hookData.bindMethod('hookedMethod', function (propName) {
-		return this[propName];
+		return this[ propName ];
 	});
 });
 
-types[SymbolConfig].bindedProto = true;
+types[ SymbolConfig ].bindedProto = true;
 
 AsyncType.SubOfAsync.NestedAsyncType = async function (data) {
 	return Object.assign(this, {
@@ -619,7 +619,7 @@ describe('Main Test', () => {
 
 
 	const checkTypeDefinition = (_types, TypeName, proto, useOldStyle) => {
-		const parentType = _types[SymbolSubtypeCollection];
+		const parentType = _types[ SymbolSubtypeCollection ];
 		const isSubType = parentType ? true : false;
 		describe(`initial type declaration ${TypeName}`, () => {
 			const def = _types.get(TypeName);
@@ -652,17 +652,17 @@ describe('Main Test', () => {
 
 	describe('Type Definitions Tests', () => {
 		[
-			[types.subtypes, 'UserType', UserTypeProto, true],
-			[UserType.subtypes, 'UserTypePL1', pl1Proto, false],
-			[UserType.subtypes, 'UserTypePL2'],
-			[types.subtypes, 'UserTypeConstructor', UserTypeConstructorProto],
-			[types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto],
-			[UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto],
-			[WithAdditionalSignTypeDef.subtypes, 'MoreOver'],
-			[MoreOverTypeDef.subtypes, 'OverMore', OverMoreProto],
-			[OverMore.subtypes, 'EvenMore', EvenMoreProto],
+			[ types.subtypes, 'UserType', UserTypeProto, true ],
+			[ UserType.subtypes, 'UserTypePL1', pl1Proto, false ],
+			[ UserType.subtypes, 'UserTypePL2' ],
+			[ types.subtypes, 'UserTypeConstructor', UserTypeConstructorProto ],
+			[ types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto ],
+			[ UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto ],
+			[ WithAdditionalSignTypeDef.subtypes, 'MoreOver' ],
+			[ MoreOverTypeDef.subtypes, 'OverMore', OverMoreProto ],
+			[ OverMore.subtypes, 'EvenMore', EvenMoreProto ],
 		].forEach(entry => {
-			const [_types, def, proto, useOldStyle] = entry;
+			const [ _types, def, proto, useOldStyle ] = entry;
 			checkTypeDefinition(_types, def, proto, useOldStyle || false);
 		});
 	});
@@ -730,7 +730,7 @@ describe('Main Test', () => {
 					emptySign : filledEmptySign
 				};
 				const pickedArg = emptySub.pick('emptySign');
-				const pickedArR = emptySub.pick(['emptySign']);
+				const pickedArR = emptySub.pick([ 'emptySign' ]);
 				assert.deepOwnInclude(pickedArg, sample);
 				assert.deepOwnInclude(sample, pickedArg);
 				assert.deepOwnInclude(pickedArR, sample);
@@ -802,7 +802,7 @@ describe('Main Test', () => {
 				});
 				it('thrown error should be ok with props', () => {
 					expect(error.BaseStack).exist.and.is.a('string');
-					expect(error.constructor[SymbolConstructorName])
+					expect(error.constructor[ SymbolConstructorName ])
 						.exist.and.is.a('string')
 						.and.equal(`base of : ${MNEMONICA} : errors`);
 				});
@@ -825,7 +825,7 @@ describe('Main Test', () => {
 				});
 				it('thrown error should be ok with props', () => {
 					expect(error.BaseStack).exist.and.is.a('string');
-					expect(error.constructor[SymbolConstructorName])
+					expect(error.constructor[ SymbolConstructorName ])
 						.exist.and.is.a('string')
 						.and.equal(`base of : ${MNEMONICA} : errors`);
 				});
@@ -959,7 +959,7 @@ describe('Main Test', () => {
 						asyncInstancePromise = new AsyncType('tada');
 						asyncInstance = await asyncInstancePromise;
 						asyncInstanceDirect = await AsyncType.call(process, 'dadada');
-						asyncInstanceDirectApply = await AsyncType.apply(process, ['da da da']);
+						asyncInstanceDirectApply = await AsyncType.apply(process, [ 'da da da' ]);
 						asyncSub = asyncInstance.SubOfAsync('some');
 						nestedAsyncInstance = await new asyncSub
 							.NestedAsyncType('nested');
@@ -1098,8 +1098,8 @@ describe('Main Test', () => {
 					// expect(thrown2.originalError).instanceOf(Error);
 					expect(thrown4.exceptionReason).instanceOf(Object);
 					expect(thrown4.exceptionReason.methodName).equal('getThisPropMethod');
-					expect(thrown4.surplus[0]).instanceOf(Error);
-					expect(thrown4.surplus[0].message).equal(cae);
+					expect(thrown4.surplus[ 0 ]).instanceOf(Error);
+					expect(thrown4.surplus[ 0 ].message).equal(cae);
 
 				});
 
@@ -1140,7 +1140,7 @@ describe('Main Test', () => {
 						instance
 					} = thrown;
 
-					assert.equal(args[0], 123);
+					assert.equal(args[ 0 ], 123);
 					assert.equal(instance.constructor.name, 'NestedSubError');
 					const parsed = thrown.parse();
 					assert.equal(parsed.name, 'NestedSubError');
@@ -1193,7 +1193,7 @@ describe('Main Test', () => {
 					assert.equal(thrown.message, 'async error');
 					expect(thrown.originalError).instanceOf(Error);
 					expect(thrown.originalError).not.instanceOf(AsyncType);
-					expect(thrown.surplus[0]).instanceOf(AsyncType);
+					expect(thrown.surplus[ 0 ]).instanceOf(AsyncType);
 
 					expect(thrown.reasons.length).equal(2);
 
@@ -1217,11 +1217,11 @@ describe('Main Test', () => {
 					expect(asyncInstanceFork).instanceof(AsyncType);
 
 					expect(typeof asyncInstanceDirect.on === 'function').is.true;
-					expect(ogp(ogp(asyncInstanceDirect[SymbolGaia])) === process).is.true;
-					expect(asyncInstanceDirect[SymbolGaia][MNEMONICA] === URANUS).is.true;
+					expect(ogp(ogp(asyncInstanceDirect[ SymbolGaia ])) === process).is.true;
+					expect(asyncInstanceDirect[ SymbolGaia ][ MNEMONICA ] === URANUS).is.true;
 					expect(typeof asyncInstanceDirectApply.on === 'function').is.true;
-					expect(ogp(ogp(asyncInstanceDirectApply[SymbolGaia])) === process).is.true;
-					expect(asyncInstanceDirectApply[SymbolGaia][MNEMONICA] === URANUS).is.true;
+					expect(ogp(ogp(asyncInstanceDirectApply[ SymbolGaia ])) === process).is.true;
+					expect(asyncInstanceDirectApply[ SymbolGaia ][ MNEMONICA ] === URANUS).is.true;
 
 					expect(nestedAsyncInstance).instanceof(AsyncType);
 					expect(nestedAsyncInstance).instanceof(NestedAsyncType);
@@ -1243,7 +1243,7 @@ describe('Main Test', () => {
 				});
 
 				it('parse shouls work with async .call\'ed instances', () => {
-					const etalon = ['name', 'props', 'self', 'proto', 'joint', 'parent', 'gaia'];
+					const etalon = [ 'name', 'props', 'self', 'proto', 'joint', 'parent', 'gaia' ];
 					const keys = Object.keys(parse(asyncInstance));
 					assert.deepEqual(keys, etalon);
 				});

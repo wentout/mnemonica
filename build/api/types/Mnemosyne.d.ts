@@ -1,6 +1,6 @@
 import { ConstructorFunction } from '../../types';
 declare const _default: {
-    Gaia: ConstructorFunction<{}>;
+    Gaia: ConstructorFunction<object>;
     Mnemosyne: ConstructorFunction<{
         [x: symbol]: (() => (this: any, uranus: any) => void) | (() => string);
         extract(): (this: any) => {

@@ -82,6 +82,7 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 	} = opts;
 
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const exception = this;
 
 	odp( exception, 'args', {
@@ -149,6 +150,7 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 
 const prepareException = function ( this: any, target: any, error: Error, ...args: any[] ) {
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const instance = this;
 
 	checkThrowArgs( instance, target, error, args );
@@ -177,7 +179,8 @@ const prepareException = function ( this: any, target: any, error: Error, ...arg
 	ExceptionCreator.config.blockErrors = false;
 
 	ExceptionCreator.existentInstance = error;
-	ExceptionCreator.ModificatorType = makeFakeModificatorType( TypeName, function ( this: any ) {
+	// eslint-disable-next-line no-shadow
+	ExceptionCreator.ModificatorType = makeFakeModificatorType( TypeName, function ( this: unknown ) {
 		return exceptionConsctructHandler.call( this, {
 			instance,
 			TypeName,

@@ -112,10 +112,10 @@ const Namespace = function ( name: string | symbol, config: object ) {
 
 	namespaceStorage.set( name, this );
 
-} as ConstructorFunction<{}>;
+} as ConstructorFunction<object>;
 
 Namespace.prototype = {
-	createTypesCollection ( association: any, config: object ) {
+	createTypesCollection ( association: unknown, config: object ) {
 		const {
 			createTypesCollection
 		} = descriptors;
