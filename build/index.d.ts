@@ -2,23 +2,14 @@ import { ITypeClass, TypeLookup, IDEF } from './types';
 export type { IDEF } from './types';
 export declare const defaultTypes: any;
 type Proto<P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
-interface IDefinitor<P, ID extends string> {
-    <T, N extends Proto<P, T>>(this: unknown, TypeName: ID, constructHandler: IDEF<T>, proto?: P, config?: object): {
-        new (): N & {
-            [key in PropertyKey]: {
-                new (): unknown;
-            };
-        };
-        define: IDefinitor<N, ID>;
-        ID: IDEF<T>;
+interface IDefinitor<P, IN extends string> {
+    <T, M extends Proto<P, T>>(this: unknown, TypeName: IN, constructHandler: IDEF<T>, proto?: P, config?: object): {
+        new (): Record<IN, new () => unknown> & M;
+        define: IDefinitor<M, IN>;
     };
 }
 export declare const define: <T, P extends object, N extends Proto<P, T>, ID extends string>(this: unknown, TypeName: string, constructHandler: IDEF<T>, proto?: P | undefined, config?: {}) => {
-    new (): N & {
-        [x: string]: new () => unknown;
-        [x: number]: new () => unknown;
-        [x: symbol]: new () => unknown;
-    };
+    new (): Record<ID, new () => unknown> & N;
     define: IDefinitor<N, ID>;
 };
 export declare const tsdefine: <T>(this: unknown, TypeName: string, constructHandler: IDEF<T>, proto?: object, config?: object) => ITypeClass<T>;
