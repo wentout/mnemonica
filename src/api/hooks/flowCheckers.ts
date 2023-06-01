@@ -7,7 +7,7 @@ const {
 } = ErrorsTypes;
 
 export const flowCheckers = new WeakMap();
-export const registerFlowChecker = function (this:any, cb: Function ) {
+export const registerFlowChecker = function (this: any, cb: () => unknown ) {
 
 	if ( typeof cb !== 'function' ) {
 		throw new MISSING_CALLBACK_ARGUMENT;

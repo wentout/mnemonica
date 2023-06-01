@@ -62,9 +62,11 @@ const getTypeChecker = ( TypeName: string ) => {
 		if ( !instance!.constructor ) {
 			return false;
 		}
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
 		if ( Reflect.getPrototypeOf( instance ).constructor.name === 'Promise' ) {
 			// if ( instance instanceof Promise ) {
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			return instance[ SymbolConstructorName ] === TypeName;
 		}
@@ -191,8 +193,7 @@ import { TypeModificator } from '../../types';
 
 const makeFakeModificatorType = (
 	TypeName: string,
-	// tslint:disable-next-line: only-arrow-functions no-empty
-	fakeModificator = function () { } as TypeModificator<{}>
+	fakeModificator = function () { } as TypeModificator<object>
 ) => {
 
 	const modificatorBody = compileNewModificatorFunctionBody( TypeName );
@@ -216,7 +217,7 @@ const reflectPrimitiveWrappers = ( _thisArg: any ) => {
 			get () {
 				return () => {
 					return _thisArg;
-				}
+				};
 			}
 		} );
 	}
@@ -230,7 +231,7 @@ const reflectPrimitiveWrappers = ( _thisArg: any ) => {
 			get () {
 				return () => {
 					return _thisArg.valueOf();
-				}
+				};
 			}
 		} );
 	}

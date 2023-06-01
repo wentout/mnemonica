@@ -29,34 +29,34 @@ const defaultOptions = {
 	// e.g. with prototype described with:
 	//    createInstanceModificator200XthWay
 	// or more general with: createInstanceModificator
-	useOldStyle: false,
+	useOldStyle : false,
 
 	// shall or not we use strict checking
 	// for creation sub-instances Only from current type
 	// or we might use up-nested sub-instances from chain
-	strictChain: true,
+	strictChain : true,
 
 	// should we use forced errors checking
 	// to make all inherited types errored
 	// if there is an error somewhere in chain
 	// disallow instance construction
 	// if there is an error in prototype chain
-	blockErrors: true,
+	blockErrors : true,
 
 	// if it is necessary to collect stack
 	// as a __stack__ prototype property
 	// during the process of instance creation
-	submitStack: false,
+	submitStack : false,
 
 	// await new Constructor()
 	// must return value
 	// optional ./issues/106
-	awaitReturn: true,
+	awaitReturn : true,
 
 	// instance methods calls
 	// are binded by default
 	// with instance itself
-	bindedProto: true,
+	bindedProto : true,
 
 };
 
@@ -71,7 +71,7 @@ const Namespace = function ( name: string | symbol, config: object ) {
 
 	if ( typeof config === 'string' ) {
 		config = {
-			description: config
+			description : config
 		};
 	}
 
@@ -93,14 +93,14 @@ const Namespace = function ( name: string | symbol, config: object ) {
 		get () {
 			return name;
 		},
-		enumerable: true
+		enumerable : true
 	} );
 
 	odp( this, 'typesCollections', {
 		get () {
 			return typesCollections;
 		},
-		enumerable: true
+		enumerable : true
 	} );
 
 	const hooks = Object.create( null );
@@ -112,10 +112,10 @@ const Namespace = function ( name: string | symbol, config: object ) {
 
 	namespaceStorage.set( name, this );
 
-} as ConstructorFunction<{}>;
+} as ConstructorFunction<object>;
 
 Namespace.prototype = {
-	createTypesCollection ( association: any, config: object ) {
+	createTypesCollection ( association: unknown, config: object ) {
 		const {
 			createTypesCollection
 		} = descriptors;
@@ -125,7 +125,7 @@ Namespace.prototype = {
 };
 
 const DEFAULT_NAMESPACE = new Namespace( SymbolDefaultNamespace, {
-	description: `default ${MNEMONICA} namespace`
+	description : `default ${MNEMONICA} namespace`
 } );
 
 
@@ -137,21 +137,21 @@ odp( namespaces, 'createNamespace', {
 			return new Namespace( name, config );
 		};
 	},
-	enumerable: true
+	enumerable : true
 } );
 
 odp( namespaces, 'namespaces', {
 	get () {
 		return namespaceStorage;
 	},
-	enumerable: true
+	enumerable : true
 } );
 
 odp( namespaces, 'defaultNamespace', {
 	get () {
 		return DEFAULT_NAMESPACE;
 	},
-	enumerable: true
+	enumerable : true
 } );
 
 odp( namespaces, SymbolDefaultNamespace, {

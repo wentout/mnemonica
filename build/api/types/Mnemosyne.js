@@ -67,16 +67,16 @@ const MnemonicaProtoProps = {
         return MNEMONICA;
     },
     exception() {
-        const me = this;
+        const self = this;
         return function (error, ...args) {
             const target = new.target;
-            return exceptionConstructor_1.default.call(me, target, error, ...args);
+            return exceptionConstructor_1.default.call(self, target, error, ...args);
         };
     },
     sibling() {
-        const me = this;
+        const self = this;
         const siblings = (SiblingTypeName) => {
-            const { __collection__: collection, } = me;
+            const { __collection__: collection, } = self;
             const sibling = collection[SiblingTypeName];
             return sibling;
         };

@@ -11,7 +11,7 @@ declare const TypesUtils: {
     getExistentAsyncStack: (existentInstance: any) => any[];
     checkTypeName: (name: string) => void;
     findParentSubType: any;
-    makeFakeModificatorType: (TypeName: string, fakeModificator?: TypeModificator<{}>) => any;
+    makeFakeModificatorType: (TypeName: string, fakeModificator?: TypeModificator<object>) => any;
     reflectPrimitiveWrappers: (_thisArg: any) => any;
 };
 export default TypesUtils;

@@ -22,6 +22,7 @@ export const invokeHook = function ( this: any, hookType: string, opts: { [ inde
 
 	const invocationResults = new Set();
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	if ( hop( self.hooks, hookType ) ) {
@@ -38,7 +39,7 @@ export const invokeHook = function ( this: any, hookType: string, opts: { [ inde
 		const hookArgs = {
 			type,
 			TypeName,
-			existentInstance: existentInstance.constructor.name === MNEMONICA ?
+			existentInstance : existentInstance.constructor.name === MNEMONICA ?
 				null : existentInstance,
 			args,
 		};
@@ -58,7 +59,8 @@ export const invokeHook = function ( this: any, hookType: string, opts: { [ inde
 			} );
 		}
 
-		this.hooks[ hookType ].forEach( ( hook: ( this: any, hookParams: typeof hookArgs ) => void ) => {
+		// eslint-disable-next-line no-shadow
+		this.hooks[ hookType ].forEach( ( hook: ( this: unknown, hookParams: typeof hookArgs ) => void ) => {
 			const result = hook.call( self, hookArgs );
 			invocationResults.add( result );
 		} );

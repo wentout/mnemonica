@@ -61,6 +61,7 @@ const invokePreHooks = function ( this: any ) {
 
 const invokePostHooks = function ( this: any ) {
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const creator = this;
 	const {
 		inheritedInstance,
@@ -90,11 +91,11 @@ const invokePostHooks = function ( this: any ) {
 
 	return {
 
-		type: type.invokeHook( hookType, hookData ),
+		type : type.invokeHook( hookType, hookData ),
 
-		collection: collection.invokeHook( hookType, hookData ),
+		collection : collection.invokeHook( hookType, hookData ),
 
-		namespace: namespace.invokeHook( hookType, hookData )
+		namespace : namespace.invokeHook( hookType, hookData )
 
 	};
 
@@ -104,17 +105,19 @@ const invokePostHooks = function ( this: any ) {
 const bindMethod = function ( this: any, instance: any, methodName: string, MethodItself: any ) {
 	odp( instance, methodName, {
 		get () {
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			const from = this;
+			// eslint-disable-next-line no-shadow, @typescript-eslint/no-explicit-any
 			return function ( this: any, ...args: any[] ) {
 				const applyTo = this !== undefined ? this : from; // || instance;
 				const exceptionReason = {
-					method: MethodItself,
+					method : MethodItself,
 					methodName,
-					this: this,
+					this   : this,
 					from,
 					instance,
 					applyTo,
-					asNew: false,
+					asNew  : false,
 					args,
 				};
 
@@ -130,8 +133,8 @@ const bindMethod = function ( this: any, instance: any, methodName: string, Meth
 					if ( answer instanceof Promise ) {
 						answer = answer.catch( ( error ) => {
 							odp( exceptionReason, 'error', {
-								value: error,
-								enumerable: true
+								value      : error,
+								enumerable : true
 							} );
 							throw bindedMethodErrorHandler( exceptionReason );
 						} );
@@ -140,19 +143,20 @@ const bindMethod = function ( this: any, instance: any, methodName: string, Meth
 					return answer;
 				} catch ( error ) {
 					odp( exceptionReason, 'error', {
-						value: error,
-						enumerable: true
+						value      : error,
+						enumerable : true
 					} );
 
 					throw bindedMethodErrorHandler( exceptionReason );
 				}
-			}
+			};
 		},
-		enumerable: true
+		enumerable : true
 	} );
 };
 
 const bindProtoMethods = function ( this: any ) {
+// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 	const {
 		inheritedInstance,
@@ -181,6 +185,7 @@ const bindProtoMethods = function ( this: any ) {
 
 const postProcessing = function ( this: any, continuationOf: any ) {
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 	const {
 		stack,
@@ -224,6 +229,7 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 
 const addThen = function ( this: any, then: any ) {
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	self.inheritedInstance = self.inheritedInstance
@@ -247,6 +253,7 @@ const addThen = function ( this: any, then: any ) {
 
 const makeWaiter = function ( this: any, type: any, then: any ) {
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	self.inheritedInstance = self.inheritedInstance
@@ -336,6 +343,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	} = config;
 
 
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	const ModificationConstructor = getModificationConstructor( useOldStyle );

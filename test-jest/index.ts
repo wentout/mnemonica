@@ -1,6 +1,7 @@
 'use strict';
 
 export {};
+// eslint-disable-next-line no-shadow
 import { beforeAll, describe, expect, it, test } from '@jest/globals';
 
 const mnemonica = require('..');
@@ -32,6 +33,7 @@ const hop = (o: unknown, p: string) => Object.prototype.hasOwnProperty.call(o, p
 // const uncaughtExceptionTest = false;
 const asyncConstructionTest = true;
 
+// eslint-disable-next-line no-debugger
 debugger;
 const {
 	define,
@@ -57,16 +59,16 @@ const {
 } = mnemonica;
 
 const USER_DATA = {
-	email: 'went.out@gmail.com',
-	password: 321
+	email    : 'went.out@gmail.com',
+	password : 321
 };
 
 type TUserData = typeof USER_DATA;
 
 const UserTypeProto = {
-	email: '',
-	password: '',
-	description: 'UserType'
+	email       : '',
+	password    : '',
+	description : 'UserType'
 };
 
 const UserType = mnemonica.define('UserType', function (this: TUserData, userData: TUserData) {
@@ -84,26 +86,26 @@ const userTypeHooksInvocations: any[] = [];
 
 UserType.registerHook('preCreation', function (this: unknown, opts: unknown) {
 	userTypeHooksInvocations.push({
-		kind: 'pre',
-		sort: 'type',
-		self: this,
+		kind : 'pre',
+		sort : 'type',
+		self : this,
 		opts
 	});
 });
 
 UserType.registerHook('postCreation', function (this: unknown, opts: unknown) {
 	userTypeHooksInvocations.push({
-		kind: 'post',
-		sort: 'type',
-		self: this,
+		kind : 'post',
+		sort : 'type',
+		self : this,
 		opts
 	});
 });
 
 
 const pl1Proto = {
-	UserTypePL1: 'UserTypePL_1',
-	UserTypePL1Extra: 'UserTypePL_1_Extra',
+	UserTypePL1      : 'UserTypePL_1',
+	UserTypePL1Extra : 'UserTypePL_1_Extra',
 };
 
 UserType.define(() => {
@@ -113,19 +115,19 @@ UserType.define(() => {
 	UserTypePL1.prototype = pl1Proto;
 	return UserTypePL1;
 }, {
-	strictChain: false,
-	submitStack: true
+	strictChain : false,
+	submitStack : true
 });
 
 const pl2Proto = {
-	UserTypePL2: 'UserTypePL_2_AlwaysIncluded'
+	UserTypePL2 : 'UserTypePL_2_AlwaysIncluded'
 };
 
 
 const shaperFactory = () => {
 	return class Shaper {
 		shape: number;
-		constructor() {
+		constructor () {
 			// const zzz = new.target;
 			// Shaper;
 			// debugger;
@@ -139,7 +141,7 @@ UserType.define(() => {
 	const Shaper = shaperFactory();
 	class UserTypePL2 extends Shaper {
 		user_pl_2_sign: string;
-		constructor() {
+		constructor () {
 			// debugger;
 			super();
 			// const zzz = new.target;
@@ -147,19 +149,20 @@ UserType.define(() => {
 			// debugger;
 			this.user_pl_2_sign = 'pl_2';
 		}
-		get UserTypePL2() {
+		get UserTypePL2 () {
 			return pl2Proto.UserTypePL2;
 		}
-		getSign() {
+		getSign () {
 			return this.user_pl_2_sign;
 		}
 	}
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	UserTypePL2.Shaper = Shaper;
 	return UserTypePL2;
 }, {
-	useOldStyle: true,
-	strictChain: false
+	useOldStyle : true,
+	strictChain : false
 });
 
 
@@ -167,8 +170,8 @@ const ProxyTyped = function (this: { str: string }, str: string) {
 	this.str = str;
 };
 ProxyTyped.prototype = {
-	proxyTyped: true,
-	SaySomething() {
+	proxyTyped : true,
+	SaySomething () {
 		return `something : ${this.proxyTyped}`;
 	}
 };
@@ -190,18 +193,18 @@ types.registerFlowChecker((opts: unknown) => {
 
 types.registerHook('preCreation', function (this: unknown, opts: unknown) {
 	typesPreCreationInvocations.push({
-		kind: 'pre',
-		sort: 'collection',
-		self: this,
+		kind : 'pre',
+		sort : 'collection',
+		self : this,
 		opts
 	});
 });
 
 types.registerHook('postCreation', function (this: unknown, opts: unknown) {
 	typesPostCreationInvocations.push({
-		kind: 'post',
-		sort: 'collection',
-		self: this,
+		kind : 'post',
+		sort : 'collection',
+		self : this,
 		opts
 	});
 });
@@ -212,29 +215,29 @@ defaultNamespace.registerFlowChecker((opts: unknown) => {
 
 defaultNamespace.registerHook('preCreation', function (this: unknown, opts: unknown) {
 	namespacePreCreationInvocations.push({
-		kind: 'pre',
-		sort: 'namespace',
-		self: this,
+		kind : 'pre',
+		sort : 'namespace',
+		self : this,
 		opts
 	});
 });
 
 defaultNamespace.registerHook('postCreation', function (this: unknown, opts: unknown) {
 	namespacePostCreationInvocations.push({
-		kind: 'pre',
-		sort: 'namespace',
-		self: this,
-		order: 'first',
+		kind  : 'pre',
+		sort  : 'namespace',
+		self  : this,
+		order : 'first',
 		opts
 	});
 });
 
 defaultNamespace.registerHook('postCreation', function (this: unknown, opts: unknown) {
 	namespacePostCreationInvocations.push({
-		kind: 'pre',
-		sort: 'namespace',
-		self: this,
-		order: 'second',
+		kind  : 'pre',
+		sort  : 'namespace',
+		self  : this,
+		order : 'second',
 		opts
 	});
 });
@@ -260,6 +263,7 @@ defaultNamespace.registerHook('postCreation', function (this: unknown, opts: unk
 // 	Object.assign(this, { check });
 // });
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
 process.TestForAddition = 'passed';
 // const anotherCollectionInstance = AnotherCollectionType.apply(process, ['check']);
@@ -287,6 +291,7 @@ const user = UserType(USER_DATA);
 // });
 
 const Main = define('Main', function (this: any) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any, no-shadow
 	this.constructNested = function (this: any) {
 		return new this.NestedConstruct();
 	};
@@ -299,44 +304,46 @@ const NestedConstruct = Main.define('NestedConstruct', function (this: any) {
 });
 NestedConstruct.define('NestedSubError', function (this: any, ...args: any[]) {
 	this.args = args;
+	// eslint-disable-next-line no-debugger
 	debugger;
 	throw new Error('Nested SubError Constructor Special Error');
 });
 
-types[SymbolConfig].bindedProto = false;
+types[ SymbolConfig ].bindedProto = false;
 const AsyncType = tsdefine('AsyncType', async function (this: any, data: unknown) {
 	return Object.assign(this, {
-		arg123: 123
+		arg123 : 123
 	}, {
 		data
 	});
 }, {
-	getThisPropMethod: function (propName: string) {
+	getThisPropMethod : function (propName: string) {
 		if (new.target) {
-			this[propName] = propName;
+			this[ propName ] = propName;
 			return this;
 		}
-		if (this[propName]) {
-			return this[propName];
+		if (this[ propName ]) {
+			return this[ propName ];
 		}
 		throw new Error('prop is missing');
 
 	},
 
-	erroredNestedConstructMethod() {
+	erroredNestedConstructMethod () {
 		// will throw RangeError : max stack size
+		// eslint-disable-next-line no-debugger
 		debugger;
 		const main = new Main();
 		main.nested = main.constructNested();
 	},
 
-	async erroredAsyncMethod(error: any) {
+	async erroredAsyncMethod (error: any) {
 		const result = error === undefined ? new Error('async error') : error;
 		throw result;
 	}
 
 }, {
-	bindedProto: true
+	bindedProto : true
 });
 
 AsyncType.SubOfAsync = function (data: unknown) {
@@ -348,11 +355,11 @@ AsyncType.SubOfAsync = function (data: unknown) {
 AsyncType.SubOfAsync.registerHook('postCreation', (hookData: any) => {
 	hookData.bindProtoMethods();
 	hookData.bindMethod('hookedMethod', function (this: any, propName: string) {
-		return this[propName];
+		return this[ propName ];
 	});
 });
 
-types[SymbolConfig].bindedProto = true;
+types[ SymbolConfig ].bindedProto = true;
 
 AsyncType.SubOfAsync.NestedAsyncType = async function (data: unknown) {
 	return Object.assign(this, {
@@ -360,7 +367,7 @@ AsyncType.SubOfAsync.NestedAsyncType = async function (data: unknown) {
 	});
 };
 AsyncType.SubOfAsync.NestedAsyncType.prototype = {
-	description: 'nested async instance'
+	description : 'nested async instance'
 };
 const { NestedAsyncType } = AsyncType.SubOfAsync;
 
@@ -369,9 +376,9 @@ const SubOfNestedAsync = NestedAsyncType.define('SubOfNestedAsync', function (th
 		data
 	});
 	this.arg123 = 456;
-}, {}, { bindedProto: false });
+}, {}, { bindedProto : false });
 
-var SubOfNestedAsyncPostHookData: any;
+let SubOfNestedAsyncPostHookData: any;
 SubOfNestedAsync.registerHook('postCreation', function (opts: unknown) {
 	SubOfNestedAsyncPostHookData = opts;
 });
@@ -384,9 +391,9 @@ describe('Main Test', () => {
 	*/
 
 	const UserTypeConstructorProto = {
-		email: '',
-		password: '',
-		description: 'UserTypeConstructor'
+		email       : '',
+		password    : '',
+		description : 'UserTypeConstructor'
 	};
 
 	// const evenMoreNecessaryProps = {
@@ -413,11 +420,11 @@ describe('Main Test', () => {
 		});
 
 	}, UserTypeConstructorProto, {
-		submitStack: true
+		submitStack : true
 	});
 
 	const WithoutPasswordProto = {
-		WithoutPasswordSign: 'WithoutPasswordSign'
+		WithoutPasswordSign : 'WithoutPasswordSign'
 	};
 
 	// debugger;
@@ -429,11 +436,11 @@ describe('Main Test', () => {
 		WithoutPassword.prototype = WithoutPasswordProto;
 		return WithoutPassword;
 	}, {
-		submitStack: true
+		submitStack : true
 	});
 
 	const WithAdditionalSignProto = {
-		WithAdditionalSignSign: 'WithAdditionalSignSign'
+		WithAdditionalSignSign : 'WithAdditionalSignSign'
 	};
 	const WithAdditionalSignTypeDef = UserWithoutPassword.define(() => {
 		const WithAdditionalSign = function (this: any, sign: string) {
@@ -442,29 +449,29 @@ describe('Main Test', () => {
 		WithAdditionalSign.prototype = WithAdditionalSignProto;
 		return WithAdditionalSign;
 	}, {
-		submitStack: true
+		submitStack : true
 	});
 
 	const MoreOverProto = {
-		MoreOverSign: 'MoreOverSign'
+		MoreOverSign : 'MoreOverSign'
 	};
 	const MoreOverTypeDef = WithAdditionalSignTypeDef.define(() => {
 		class MoreOver {
-			str: string;;
-			constructor(str: string) {
+			str: string;
+			constructor (str: string) {
 				this.str = str || 'moreover str';
 			}
-			get MoreOverSign() {
+			get MoreOverSign () {
 				return MoreOverProto.MoreOverSign;
 			}
 		}
 		return MoreOver;
 	}, {
-		submitStack: true
+		submitStack : true
 	});
 
 	const OverMoreProto = {
-		OverMoreSign: 'OverMoreSign'
+		OverMoreSign : 'OverMoreSign'
 	};
 	// debugger;
 	const OverMore = WithAdditionalSignTypeDef
@@ -472,14 +479,16 @@ describe('Main Test', () => {
 			function (this: any, str: string) {
 				this.str = str || 're-defined OverMore str';
 			}, OverMoreProto, {
-			submitStack: true
-		});
+				submitStack : true
+			});
 
 	const EvenMoreProto = {
-		EvenMoreSign: 'EvenMoreSign'
+		EvenMoreSign : 'EvenMoreSign'
 	};
 
-	//@ts-ignore
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const EvenMoreTypeDef = WithAdditionalSignTypeDef.define(`
 		MoreOver . OverMore
 	`, function () {
@@ -489,7 +498,7 @@ describe('Main Test', () => {
 		EvenMore.prototype = Object.assign({}, EvenMoreProto);
 		return EvenMore;
 	}, {}, {
-		submitStack: true
+		submitStack : true
 	});
 
 	// if (uncaughtExceptionTest) {
@@ -500,22 +509,22 @@ describe('Main Test', () => {
 	const AsyncChain1st = WithAdditionalSignTypeDef.define('AsyncChain1st', async function (this: any, opts: any) {
 		return Object.assign(this, opts);
 	}, {}, {
-		submitStack: true
+		submitStack : true
 	});
 	const AsyncChain2nd = AsyncChain1st.define('AsyncChain2nd', async function (this: any, opts: any) {
 		return Object.assign(this, opts);
 	}, {}, {
-		submitStack: true
+		submitStack : true
 	});
 	const Async2Sync2nd = AsyncChain2nd.define('Async2Sync2nd', function (this: any, opts: any) {
 		Object.assign(this, opts);
 	}, {}, {
-		submitStack: true
+		submitStack : true
 	});
 	Async2Sync2nd.define('AsyncChain3rd', async function (this: any, opts: any) {
 		return Object.assign(this, opts);
 	}, {}, {
-		submitStack: true
+		submitStack : true
 	});
 
 
@@ -643,7 +652,7 @@ describe('Main Test', () => {
 
 
 	const checkTypeDefinition = (_types: any, TypeName: string, proto: any, useOldStyle: boolean) => {
-		const parentType = _types[SymbolSubtypeCollection];
+		const parentType = _types[ SymbolSubtypeCollection ];
 		const isSubType = parentType ? true : false;
 		describe(`initial type declaration ${TypeName}`, () => {
 			const def = _types.get(TypeName);
@@ -677,17 +686,17 @@ describe('Main Test', () => {
 
 	describe('Type Definitions Tests', () => {
 		[
-			[types.subtypes, 'UserType', UserTypeProto, true],
-			[UserType.subtypes, 'UserTypePL1', pl1Proto, false],
-			[UserType.subtypes, 'UserTypePL2'],
-			[types.subtypes, 'UserTypeConstructor', UserTypeConstructorProto],
-			[types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto],
-			[UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto],
-			[WithAdditionalSignTypeDef.subtypes, 'MoreOver'],
-			[MoreOverTypeDef.subtypes, 'OverMore', OverMoreProto],
-			[OverMore.subtypes, 'EvenMore', EvenMoreProto],
+			[ types.subtypes, 'UserType', UserTypeProto, true ],
+			[ UserType.subtypes, 'UserTypePL1', pl1Proto, false ],
+			[ UserType.subtypes, 'UserTypePL2' ],
+			[ types.subtypes, 'UserTypeConstructor', UserTypeConstructorProto ],
+			[ types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto ],
+			[ UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto ],
+			[ WithAdditionalSignTypeDef.subtypes, 'MoreOver' ],
+			[ MoreOverTypeDef.subtypes, 'OverMore', OverMoreProto ],
+			[ OverMore.subtypes, 'EvenMore', EvenMoreProto ],
 		].forEach(entry => {
-			const [_types, def, proto, useOldStyle] = entry;
+			const [ _types, def, proto, useOldStyle ] = entry;
 			checkTypeDefinition(_types, def, proto, useOldStyle || false);
 		});
 	});
@@ -744,7 +753,7 @@ describe('Main Test', () => {
 			});
 			it('nested object of empty object .extract() ok', () => {
 				const sample = {
-					emptySign: filledEmptySign
+					emptySign : filledEmptySign
 				};
 				const extracted = emptySub.extract();
 				expect(extracted).toEqual(sample);
@@ -752,10 +761,10 @@ describe('Main Test', () => {
 			});
 			it('nested object of empty object .pick() ok', () => {
 				const sample = {
-					emptySign: filledEmptySign
+					emptySign : filledEmptySign
 				};
 				const pickedArg = emptySub.pick('emptySign');
-				const pickedArR = emptySub.pick(['emptySign']);
+				const pickedArR = emptySub.pick([ 'emptySign' ]);
 				expect(pickedArg).toEqual(sample);
 				expect(sample).toEqual(pickedArg);
 				expect(pickedArR).toEqual(sample);
@@ -824,9 +833,9 @@ describe('Main Test', () => {
 				});
 				it('thrown error should be ok with props', () => {
 					expect(typeof error.BaseStack).toEqual('string');
-					expect(typeof error.constructor[SymbolConstructorName])
+					expect(typeof error.constructor[ SymbolConstructorName ])
 						.toEqual('string');
-					expect(error.constructor[SymbolConstructorName])
+					expect(error.constructor[ SymbolConstructorName ])
 						.toEqual(`base of : ${MNEMONICA} : errors`);
 				});
 			}
@@ -845,9 +854,9 @@ describe('Main Test', () => {
 				});
 				it('thrown error should be ok with props', () => {
 					expect(typeof error.BaseStack).toEqual('string');
-					expect(typeof error.constructor[SymbolConstructorName])
+					expect(typeof error.constructor[ SymbolConstructorName ])
 						.toEqual('string');
-					expect(error.constructor[SymbolConstructorName])
+					expect(error.constructor[ SymbolConstructorName ])
 						.toEqual(`base of : ${MNEMONICA} : errors`);
 				});
 			}
@@ -879,6 +888,7 @@ describe('Main Test', () => {
 					expect(Array.isArray(collected)).toEqual(true);
 					// ! typeof object
 					if (idx < 9) {
+						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 						// @ts-ignore
 						expect(collected.length).toStrictEqual(0);
 					}
@@ -965,7 +975,7 @@ describe('Main Test', () => {
 
 		if (asyncConstructionTest) {
 			describe('Async Constructors Test', () => {
-				var asyncInstance: any,
+				let asyncInstance: any,
 					asyncInstanceDirect: any,
 					asyncInstanceDirectApply: any,
 					asyncInstancePromise: any,
@@ -981,7 +991,7 @@ describe('Main Test', () => {
 						asyncInstancePromise = new AsyncType('tada');
 						asyncInstance = await asyncInstancePromise;
 						asyncInstanceDirect = await AsyncType.call(process, 'dadada');
-						asyncInstanceDirectApply = await AsyncType.apply(process, ['da da da']);
+						asyncInstanceDirectApply = await AsyncType.apply(process, [ 'da da da' ]);
 						asyncSub = asyncInstance.SubOfAsync('some');
 						nestedAsyncInstance = await new asyncSub
 							.NestedAsyncType('nested');
@@ -993,6 +1003,7 @@ describe('Main Test', () => {
 
 						await (promisify((cb: CallableFunction) => {
 							const cbfork = callbackify(asyncInstance.fork);
+							// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 							// @ts-ignore
 							cbfork.call(asyncInstance, 'cb forked data', (err: never, result: unknown) => {
 								asyncInstanceForkCb = result;
@@ -1082,7 +1093,7 @@ describe('Main Test', () => {
 
 
 					Object.defineProperty(asyncSub, 'exception', {
-						get() {
+						get () {
 							return function () {
 								return null;
 							};
@@ -1103,7 +1114,7 @@ describe('Main Test', () => {
 
 					const cae = 'check additional error';
 					Object.defineProperty(nestedAsyncInstance, 'exception', {
-						get() {
+						get () {
 							return function () {
 								throw new Error(cae);
 							};
@@ -1121,8 +1132,8 @@ describe('Main Test', () => {
 					// expect(thrown2.originalError).instanceOf(Error);
 					expect(thrown4.exceptionReason).toBeInstanceOf(Object);
 					expect(thrown4.exceptionReason.methodName).toEqual('getThisPropMethod');
-					expect(thrown4.surplus[0]).toBeInstanceOf(Error);
-					expect(thrown4.surplus[0].message).toEqual(cae);
+					expect(thrown4.surplus[ 0 ]).toBeInstanceOf(Error);
+					expect(thrown4.surplus[ 0 ].message).toEqual(cae);
 
 				});
 
@@ -1144,9 +1155,11 @@ describe('Main Test', () => {
 
 
 					try {
+						// eslint-disable-next-line no-debugger
 						debugger;
 						erroredNestedConstructMethod();
 					} catch (error) {
+						// eslint-disable-next-line no-debugger
 						debugger;
 						thrown = error;
 					}
@@ -1163,7 +1176,7 @@ describe('Main Test', () => {
 						instance
 					} = thrown;
 
-					expect(args[0]).toEqual(123);
+					expect(args[ 0 ]).toEqual(123);
 					expect(instance.constructor.name).toEqual('NestedSubError');
 					const parsed = thrown.parse();
 					expect(parsed.name).toEqual('NestedSubError');
@@ -1208,6 +1221,7 @@ describe('Main Test', () => {
 						thrown = error;
 					}
 
+					// eslint-disable-next-line no-debugger
 					debugger;
 
 					expect(thrown).toBeInstanceOf(Error);
@@ -1216,7 +1230,7 @@ describe('Main Test', () => {
 					expect(thrown.message).toStrictEqual('async error');
 					expect(thrown.originalError).toBeInstanceOf(Error);
 					expect(thrown.originalError).not.toBeInstanceOf(AsyncType);
-					expect(thrown.surplus[0]).toBeInstanceOf(AsyncType);
+					expect(thrown.surplus[ 0 ]).toBeInstanceOf(AsyncType);
 
 					expect(thrown.reasons.length).toEqual(2);
 
@@ -1240,11 +1254,11 @@ describe('Main Test', () => {
 					expect(asyncInstanceFork).toBeInstanceOf(AsyncType);
 
 					expect(typeof asyncInstanceDirect.on === 'function').toEqual(true);
-					expect(ogp(ogp(asyncInstanceDirect[SymbolGaia])) === process).toEqual(true);
-					expect(asyncInstanceDirect[SymbolGaia][MNEMONICA] === URANUS).toEqual(true);
+					expect(ogp(ogp(asyncInstanceDirect[ SymbolGaia ])) === process).toEqual(true);
+					expect(asyncInstanceDirect[ SymbolGaia ][ MNEMONICA ] === URANUS).toEqual(true);
 					expect(typeof asyncInstanceDirectApply.on === 'function').toEqual(true);
-					expect(ogp(ogp(asyncInstanceDirectApply[SymbolGaia])) === process).toEqual(true);
-					expect(asyncInstanceDirectApply[SymbolGaia][MNEMONICA] === URANUS).toEqual(true);
+					expect(ogp(ogp(asyncInstanceDirectApply[ SymbolGaia ])) === process).toEqual(true);
+					expect(asyncInstanceDirectApply[ SymbolGaia ][ MNEMONICA ] === URANUS).toEqual(true);
 
 					expect(nestedAsyncInstance).toBeInstanceOf(AsyncType);
 					expect(nestedAsyncInstance).toBeInstanceOf(NestedAsyncType);
@@ -1266,7 +1280,7 @@ describe('Main Test', () => {
 				});
 
 				it('parse shouls work with async .call\'ed instances', () => {
-					const etalon = ['name', 'props', 'self', 'proto', 'joint', 'parent', 'gaia'];
+					const etalon = [ 'name', 'props', 'self', 'proto', 'joint', 'parent', 'gaia' ];
 					const keys = Object.keys(parse(asyncInstance));
 					expect(keys).toEqual(etalon);
 				});

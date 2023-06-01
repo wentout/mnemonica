@@ -73,10 +73,10 @@ const tests = (opts) => {
 		};
 
 		it('expect proper first instance in chain constructor', () => {
-			assert.equal(parsedUser.self[SymbolConstructorName], SymbolDefaultNamespace);
-			assert.equal(parsedUser.parent.self[SymbolConstructorName], SymbolDefaultNamespace);
-			assert.equal(parsedUserTC.self[SymbolConstructorName], SymbolDefaultNamespace);
-			assert.equal(parsedUserTC.parent.self[SymbolConstructorName], SymbolDefaultNamespace);
+			assert.equal(parsedUser.self[ SymbolConstructorName ], SymbolDefaultNamespace);
+			assert.equal(parsedUser.parent.self[ SymbolConstructorName ], SymbolDefaultNamespace);
+			assert.equal(parsedUserTC.self[ SymbolConstructorName ], SymbolDefaultNamespace);
+			assert.equal(parsedUserTC.parent.self[ SymbolConstructorName ], SymbolDefaultNamespace);
 		});
 
 		it('should be ok with broken constructor chain', () => {
@@ -85,18 +85,18 @@ const tests = (opts) => {
 			const oneElseEmptyProto = Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(oneElseEmpty)));
 
 			expect(() => {
-				oneElseEmptyProto[SymbolConstructorName] = undefined;
+				oneElseEmptyProto[ SymbolConstructorName ] = undefined;
 			}).to.throw;
 			expect(() => {
-				delete oneElseEmptyProto[SymbolConstructorName];
+				delete oneElseEmptyProto[ SymbolConstructorName ];
 			}).to.throw;
 		});
 
 		let count = 0;
 		const compare = (result, sample) => {
 			Object.entries(result).forEach(entry => {
-				const [name, value] = entry;
-				const sampleValue = sample[name];
+				const [ name, value ] = entry;
+				const sampleValue = sample[ name ];
 
 				if (name === 'parent') {
 					return compare(value, sampleValue);
@@ -127,7 +127,7 @@ const tests = (opts) => {
 		};
 
 		Object.keys(results).forEach(key => {
-			compare(samples[key], results[key]);
+			compare(samples[ key ], results[ key ]);
 		});
 
 		it('should have exactly 60 amount of generated results~sample parse tests', () => {

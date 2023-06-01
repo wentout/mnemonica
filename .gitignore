@@ -9,3 +9,4 @@ coveragejest
 .idea
 test/example.js
 .npmrc
+.vscode

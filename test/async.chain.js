@@ -1,6 +1,6 @@
 'use strict';
 
-const {assert, expect} = require('chai');
+const { assert, expect } = require('chai');
 
 const {
 	define,
@@ -140,13 +140,13 @@ const tests = (opts) => {
 										.WithoutPassword()
 										.WithAdditionalSign('async sign')
 
-								).AsyncChain1st({async1st : '1_1st'})
+								).AsyncChain1st({ async1st : '1_1st' })
 
 							// after promise
-							).AsyncChain2nd({async2nd : '1_2nd'})
+							).AsyncChain2nd({ async2nd : '1_2nd' })
 							// sync 2 async
-						).Async2Sync2nd({sync : '1_is'})
-					).AsyncChain3rd({async : '1_3rd'});
+						).Async2Sync2nd({ sync : '1_is' })
+					).AsyncChain3rd({ async : '1_3rd' });
 
 				// debugger;
 				// working two
@@ -158,20 +158,20 @@ const tests = (opts) => {
 						.WithoutPassword()
 						.WithAdditionalSign('async sign')
 
-				).AsyncChain1st({async1st : '2_1st'})
+				).AsyncChain1st({ async1st : '2_1st' })
 					// after promise
 					// .then(async function (instance) {
 					// return await instance.AsyncChain1st({ async1st: '2_1st' });
 					// })
 					.then(async function (instance) {
-						return await instance.AsyncChain2nd({async2nd : '2_2nd'});
+						return await instance.AsyncChain2nd({ async2nd : '2_2nd' });
 					})
 					.then(async function (instance) {
 						// sync 2 async
-						return await instance.Async2Sync2nd({sync : '2_is'});
+						return await instance.Async2Sync2nd({ sync : '2_is' });
 					})
 					.then(async function (instance) {
-						return await instance.AsyncChain3rd({async : '2_3rd'});
+						return await instance.AsyncChain3rd({ async : '2_3rd' });
 					});
 
 				// debugger;
@@ -182,11 +182,11 @@ const tests = (opts) => {
 				})
 					.WithoutPassword()
 					.WithAdditionalSign('async sign')
-					.AsyncChain1st({async1st : '1st'})
+					.AsyncChain1st({ async1st : '1st' })
 				// after promise
-					.AsyncChain2nd({async2nd : '2nd'})
-					.Async2Sync2nd({sync : 'is'})
-					.AsyncChain3rd({async : '3rd'});
+					.AsyncChain2nd({ async2nd : '2nd' })
+					.Async2Sync2nd({ sync : 'is' })
+					.AsyncChain3rd({ async : '3rd' });
 
 				// debugger;
 				done();
@@ -304,7 +304,7 @@ const tests = (opts) => {
 		var straightErrorSync = null;
 		var straightErrorAsync = null;
 
-		const argsTest = {argsTest : 123};
+		const argsTest = { argsTest : 123 };
 
 		const sleep = (time) => {
 			return new Promise((resolve) => setTimeout(resolve, time));
@@ -320,20 +320,20 @@ const tests = (opts) => {
 
 		const AsyncErroredType = SleepType.define('AsyncErroredType', async function (...args) {
 			await sleep(100);
-			const b = {...args};
+			const b = { ...args };
 			// TypeError
 			b.c.async = null;
 		});
 
 		const SyncErroredType = SleepType.define('SyncErroredType', function (...args) {
-			const b = {...args};
+			const b = { ...args };
 			// TypeError
 			b.c.sync = null;
 		});
 
 		const AsyncErroredTypeStraight = SleepType.define('AsyncErroredTypeStraight', async function (...args) {
 			await sleep(100);
-			const b = {...args};
+			const b = { ...args };
 			// TypeError
 			b.c.async = null;
 		}, {}, {
@@ -341,7 +341,7 @@ const tests = (opts) => {
 		});
 
 		const SyncErroredTypeStraight = SleepType.define('SyncErroredTypeStraight', function (...args) {
-			const b = {...args};
+			const b = { ...args };
 			// TypeError
 			b.c.sync = null;
 		}, {}, {
@@ -411,7 +411,7 @@ const tests = (opts) => {
 			expect(sleepError).instanceOf(AsyncErroredType);
 		});
 		it('sleepError expect args of SyncErroredType', () => {
-			expect(sleepError.__args__[0]).equal(argsTest);
+			expect(sleepError.__args__[ 0 ]).equal(argsTest);
 		});
 
 
@@ -479,7 +479,7 @@ const tests = (opts) => {
 			expect(syncErrorStart).instanceOf(SyncErroredType);
 		});
 		it('syncErrorEnd expect args of SyncErroredType', () => {
-			expect(syncErrorStart.__args__[0]).equal(argsTest);
+			expect(syncErrorStart.__args__[ 0 ]).equal(argsTest);
 		});
 
 		it('syncErrorEnd shold be instanceof Error', () => {
@@ -492,7 +492,7 @@ const tests = (opts) => {
 			expect(syncErrorEnd).instanceOf(SyncErroredType);
 		});
 		it('syncErrorEnd expect args of SyncErroredType', () => {
-			expect(syncErrorEnd.__args__[0]).equal(argsTest);
+			expect(syncErrorEnd.__args__[ 0 ]).equal(argsTest);
 		});
 
 

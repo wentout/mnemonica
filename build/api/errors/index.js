@@ -67,7 +67,7 @@ const constructError = (name, message) => {
 		};
 		return ${name};
 	`;
-    const ErrorConstructor = (new Function('base', body))(BASE_MNEMONICA_ERROR);
-    return ErrorConstructor;
+    const NamedErrorConstructor = (new Function('base', body))(BASE_MNEMONICA_ERROR);
+    return NamedErrorConstructor;
 };
 exports.constructError = constructError;

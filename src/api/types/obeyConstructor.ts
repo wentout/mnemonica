@@ -13,7 +13,7 @@ const {
 export const obey = ( existentInstance: any, ModificatorType: any ) => {
 	let protoConstructor: any = ModificatorType;
 	while ( protoConstructor instanceof Function ) {
-		if ( Object.prototype.hasOwnProperty.call( protoConstructor, SymbolUsed ) && protoConstructor[SymbolUsed]) {
+		if ( Object.prototype.hasOwnProperty.call( protoConstructor, SymbolUsed ) && protoConstructor[ SymbolUsed ]) {
 			const error = new PROTOTYPE_USED_TWICE( `${protoConstructor.name}.prototype > ${ModificatorType.name}` );
 			throw error;
 		}

@@ -7,14 +7,13 @@ const errorsApi = require("./api/errors");
 const descriptors_1 = require("./descriptors");
 exports.defaultTypes = descriptors_1.descriptors.defaultTypes;
 function checkThis(pointer) {
-    return pointer === exports.mnemonica ||
-        pointer === exports;
+    return pointer === exports.mnemonica || pointer === exports;
 }
-;
-exports.define = function (TypeName, constructHandler, proto, config) {
+const define = function (TypeName, constructHandler, proto, config = {}) {
     const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
     return types.define(TypeName, constructHandler, proto, config);
 };
+exports.define = define;
 const tsdefine = function (TypeName, constructHandler, proto, config) {
     return exports.defaultTypes.define(TypeName, constructHandler, proto, config);
 };

@@ -19,7 +19,7 @@ const getAdditor = ( constructors: string[] | { [ index: string ]: boolean } ) =
 };
 
 const getAccumulator = ( asSequence: boolean ) => {
-	return asSequence ? [] : {}
+	return asSequence ? [] : {};
 };
 
 export const collectConstructors = ( self: object, asSequence = false ) => {

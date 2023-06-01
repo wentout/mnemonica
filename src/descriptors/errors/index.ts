@@ -13,6 +13,7 @@ export const ErrorsTypes: { [ index: string ]: any } = {
 
 Object.entries( ErrorMessages ).forEach( entry => {
 	const [ ErrorConstructorName, message ] = entry;
+	// eslint-disable-next-line no-shadow, @typescript-eslint/no-explicit-any 
 	const ErrorConstructor: InstanceType<any> = constructError( ErrorConstructorName, message );
 	ErrorsTypes[ ErrorConstructorName ] = ErrorConstructor;
 } );

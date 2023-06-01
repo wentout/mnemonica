@@ -43,7 +43,8 @@ const proto = {
 };
 
 const TypesCollection = function ( namespace: any, config: { [ index: string ]: any } ) {
-
+	
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	const subtypes = new Map();
@@ -113,7 +114,7 @@ const TypesCollection = function ( namespace: any, config: { [ index: string ]: 
 		}
 	} );
 
-} as ConstructorFunction<{}>;
+} as ConstructorFunction<object>;
 
 
 odp( TypesCollection.prototype, MNEMONICA, {
@@ -134,7 +135,7 @@ odp( TypesCollection.prototype, 'define', {
 			return proto.define.call( this, subtypes, ...args );
 		};
 	},
-	enumerable: true
+	enumerable : true
 } );
 
 odp( TypesCollection.prototype, 'lookup', {
@@ -143,22 +144,22 @@ odp( TypesCollection.prototype, 'lookup', {
 			return proto.lookup.call( this.subtypes, ...args );
 		}.bind( this );
 	},
-	enumerable: true
+	enumerable : true
 } );
 
 odp( TypesCollection.prototype, 'registerHook', {
 	get () {
-		const proxy = this.namespace.typesCollections.get( this );
+		const proxy: unknown = this.namespace.typesCollections.get( this );
 		return function ( this: any, hookName: string, hookCallback: CallableFunction ) {
 			return proto.registerHook.call( this, hookName, hookCallback );
 		}.bind( proxy );
 	},
-	enumerable: true
+	enumerable : true
 } );
 
 odp( TypesCollection.prototype, 'invokeHook', {
 	get () {
-		const proxy = this.namespace.typesCollections.get( this );
+		const proxy: unknown = this.namespace.typesCollections.get( this );
 		return function ( this: any, hookName: string, hookCallback: CallableFunction ) {
 			return proto.invokeHook.call( this, hookName, hookCallback );
 		}.bind( proxy );
@@ -167,8 +168,8 @@ odp( TypesCollection.prototype, 'invokeHook', {
 
 odp( TypesCollection.prototype, 'registerFlowChecker', {
 	get () {
-		const proxy = this.namespace.typesCollections.get( this );
-		return function ( this: any, flowCheckerCallback: CallableFunction ) {
+		const proxy: unknown = this.namespace.typesCollections.get( this );
+		return function ( this: any, flowCheckerCallback: () => unknown ) {
 			return proto.registerFlowChecker.call( this, flowCheckerCallback );
 		}.bind( proxy );
 	}
@@ -188,10 +189,10 @@ const typesCollectionProxyHandler = {
 	// Object.prototype.hasOwnProperty.call
 	getOwnPropertyDescriptor ( target: any, prop: string ) {
 		return target.subtypes.has( prop ) ? {
-			configurable: true,
-			enumerable: true,
-			writable: false,
-			value: target.subtypes.get( prop )
+			configurable : true,
+			enumerable   : true,
+			writable     : false,
+			value        : target.subtypes.get( prop )
 		} : undefined;
 	}
 };
@@ -233,7 +234,6 @@ odp( DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 
 export const types = {
 	get createTypesCollection () {
-		// tslint:disable-next-line: only-arrow-functions
 		return function ( namespace: any, association: any, config = {} ) {
 			return createTypesCollection( namespace, association, config );
 		};

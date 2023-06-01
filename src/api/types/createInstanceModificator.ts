@@ -11,6 +11,7 @@ export default function () {
 		addProps: CallableFunction
 	) {
 
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const existentInstance = this;
 
 		// const TripleSchemeClosure = function () {
@@ -26,7 +27,7 @@ export default function () {
 			get () {
 				return ModificatorType;
 			},
-			enumerable: false
+			enumerable : false
 		} );
 
 		// modification itself
@@ -67,4 +68,4 @@ export default function () {
 
 	return CreateInstanceModificator;
 
-};
+}

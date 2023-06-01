@@ -102,7 +102,7 @@ const TypeDescriptor = function (
 
 		config,
 
-		hooks: Object.create( null )
+		hooks : Object.create( null )
 
 	} );
 
@@ -192,9 +192,9 @@ const extractNonEnumerableProps = ( _obj: object ) => {
 		const [ name, { value } ] = entry;
 		odp( obj, name, {
 			value,
-			configurable: true,
-			enumerable: true,
-			writable: true,
+			configurable : true,
+			enumerable   : true,
+			writable     : true,
 		}
 		);
 		return obj;
@@ -207,7 +207,6 @@ const defineFromFunction = function (
 	this: any,
 	subtypes: any,
 	TypeName: string,
-	// tslint:disable-next-line: only-arrow-functions no-empty
 	constructHandler = function () { },
 	proto: any,
 	config: any = {}
@@ -244,7 +243,7 @@ const defineFromFunction = function (
 
 	if ( typeof config === 'boolean' ) {
 		config = {
-			useOldStyle: config
+			useOldStyle : config
 		};
 	}
 

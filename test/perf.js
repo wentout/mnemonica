@@ -17,7 +17,7 @@ var start = process.hrtime.bigint();
 var _define = define;
 for (let i = 0; i < HowMany; i++) {
 	const its = _define(`NestedType${i}`, function () {
-		this[`nestedProp${i}`] = `nestedProp${i}`;
+		this[ `nestedProp${i}` ] = `nestedProp${i}`;
 	});
 	_define = its.define.bind(its);
 }
@@ -33,7 +33,7 @@ const NestedType0 = lookup('NestedType0');
 
 var instance = new NestedType0();
 for (let i = 1; i < HowMany; i++) {
-	instance = new instance[`NestedType${i}`]();
+	instance = new instance[ `NestedType${i}` ]();
 }
 
 end = process.hrtime.bigint();
@@ -55,11 +55,11 @@ var obj = {
 };
 var current = obj.ObjType0;
 for (let i = 1; i < HowMany; i++) {
-	current[`ObjType${i}`] = new Creator({
-		[`nestedProp${i}`] : `nestedProp${i}`
+	current[ `ObjType${i}` ] = new Creator({
+		[ `nestedProp${i}` ] : `nestedProp${i}`
 	});
-	obj[`nestedProp${i}`] = current[`ObjType${i}`][`nestedProp${i}`];
-	current = current[`ObjType${i}`];
+	obj[ `nestedProp${i}` ] = current[ `ObjType${i}` ][ `nestedProp${i}` ];
+	current = current[ `ObjType${i}` ];
 }
 
 end = process.hrtime.bigint();
@@ -72,7 +72,7 @@ console.log('Access Time');
 
 start = process.hrtime.bigint();
 // start = Date.now();
-const propI = instance['nestedProp0'];
+const propI = instance[ 'nestedProp0' ];
 console.log(propI);
 end = process.hrtime.bigint();
 // end = Date.now();
@@ -82,7 +82,7 @@ console.log('Diff 4:', diff4);
 
 start = process.hrtime.bigint();
 // start = Date.now();
-const propO = obj['nestedProp0'];
+const propO = obj[ 'nestedProp0' ];
 console.log(propO);
 end = process.hrtime.bigint();
 // end = Date.now();
@@ -113,7 +113,7 @@ start = process.hrtime.bigint();
 
 
 for (let i = 1; i < HowMany; i++) {
-	objArr.push(new Creator(Object.create({ nestedProp0 : 'nestedProp0'})));
+	objArr.push(new Creator(Object.create({ nestedProp0 : 'nestedProp0' })));
 }
 
 end = process.hrtime.bigint();

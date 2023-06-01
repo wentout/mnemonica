@@ -5,24 +5,31 @@ import { obey } from './obeyConstructor';
 export default function () {
 
 	const CreateInstanceModificatorAncient200XthWay = function (
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		this: any,
 		ModificatorType: CallableFunction,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		ModificatorTypePrototype: { [ index: string ]: any },
 		addProps: CallableFunction
 	) {
 
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const existentInstance = this;
 
 		// const PreTripleSchemeClosure = function () {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any, no-shadow
 		const TripleSchemeClosure: any = function ( this: any ) {
 
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
 			const Mnemosyne = this;
 			addProps( Mnemosyne );
 
 			// about to setup constructor property for new instance
 
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any, no-shadow
 			const Inherico: any = function ( this: any ) {
 
+				// eslint-disable-next-line @typescript-eslint/no-this-alias
 				const moreInherited = this;
 				// so now we have to copy all the inherited props
 				// to "this", leaving them untouched in future
@@ -43,7 +50,7 @@ export default function () {
 					get () {
 						return ModificatorType;
 					},
-					enumerable: false
+					enumerable : false
 				} );
 
 				obey( existentInstance, ModificatorType );
@@ -79,4 +86,4 @@ export default function () {
 
 	return CreateInstanceModificatorAncient200XthWay;
 
-};
+}

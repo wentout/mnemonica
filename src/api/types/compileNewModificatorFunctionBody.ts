@@ -50,7 +50,7 @@ const getFunctionConstructor = ( ConstructHandler: any, CreationHandler: any, ) 
 	};
 };
 
-const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass: boolean = false ) {
+const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass = false ) {
 	return function ( ConstructHandler: any, CreationHandler: any, SymbolConstructorName: symbol ): any {
 		return function () {
 			let ModificationBody: any;
@@ -61,8 +61,8 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 			}
 			ModificationBody.prototype.constructor = ModificationBody;
 			Object.defineProperty( ModificationBody.prototype.constructor, 'name', {
-				value: FunctionName,
-				writable: false
+				value    : FunctionName,
+				writable : false
 			} );
 			Object.defineProperty( ModificationBody, SymbolConstructorName, {
 				get () {

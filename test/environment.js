@@ -1,6 +1,6 @@
 'use strict';
 
-const {assert, expect} = require('chai');
+const { assert, expect } = require('chai');
 
 const mnemonica = require('..');
 
@@ -255,7 +255,7 @@ const tests = (opts) => {
 		describe('core env tests', () => {
 
 			it('Symbol Gaia', () => {
-				expect(userTC[SymbolGaia][MNEMONICA] === GAIA).is.true;
+				expect(userTC[ SymbolGaia ][ MNEMONICA ] === GAIA).is.true;
 			});
 			it('.SubTypes definition is correct Regular', () => {
 				expect(hop(userTC, 'WithoutPassword')).is.false;
@@ -288,7 +288,7 @@ const tests = (opts) => {
 					.and.equal(SymbolDefaultNamespace);
 			});
 			it('SymbolDefaultTypesCollection shoud be default', () => {
-				expect(types[SymbolDefaultTypesCollection]).equal(true);
+				expect(types[ SymbolDefaultTypesCollection ]).equal(true);
 			});
 			it('MNEMONICA shoud be defined', () => {
 				expect(MNEMONICA).to.be.a('string').and.equal('Mnemonica');
@@ -362,7 +362,7 @@ const tests = (opts) => {
 					});
 				}
 				try {
-					UserType[''] = function () {};
+					UserType[ '' ] = function () {};
 				} catch (error) {
 					it('should respect the rules', () => {
 						expect(error).instanceOf(Error);
@@ -390,7 +390,7 @@ const tests = (opts) => {
 
 		describe('sibling test', () => {
 			const UserTypePtr1 = user.sibling('UserType');
-			const {UserType: UserTypePtr2} = user.sibling;
+			const { UserType: UserTypePtr2 } = user.sibling;
 			it('direct sibling works', () => {
 				expect(UserType).equal(UserTypePtr1);
 			});
@@ -479,7 +479,7 @@ const tests = (opts) => {
 				// .equal(96);
 			});
 			it('thrown error.stack should have seekable definition without Error.captureStackTrace', () => {
-				const {captureStackTrace} = Error;
+				const { captureStackTrace } = Error;
 				Error.captureStackTrace = null;
 				const errored1 = new BadType({});
 				Error.captureStackTrace = captureStackTrace;
@@ -551,42 +551,42 @@ const tests = (opts) => {
 
 		describe('should throw with wrong definition', () => {
 			[
-				['wrong type definition : expect prototype to be an object', () => {
+				[ 'wrong type definition : expect prototype to be an object', () => {
 					define('Wrong', function () {}, true);
-				}, errors.WRONG_TYPE_DEFINITION],
-				['wrong type definition : TypeName should start with Uppercase Letter', () => {
+				}, errors.WRONG_TYPE_DEFINITION ],
+				[ 'wrong type definition : TypeName should start with Uppercase Letter', () => {
 					// next line same as 
 					// define('wrong', function () { /* ... */ });
 					types.wrong = function () {};
-				}, errors.WRONG_TYPE_DEFINITION],
-				['wrong type definition : TypeName of reserved keyword', () => {
-					types[MNEMONICA] = function () {};
-				}, errors.WRONG_TYPE_DEFINITION],
-				['wrong type definition : definition is not provided', () => {
+				}, errors.WRONG_TYPE_DEFINITION ],
+				[ 'wrong type definition : TypeName of reserved keyword', () => {
+					types[ MNEMONICA ] = function () {};
+				}, errors.WRONG_TYPE_DEFINITION ],
+				[ 'wrong type definition : definition is not provided', () => {
 					define();
-				}, errors.WRONG_TYPE_DEFINITION],
-				['handler must be a function', () => {
+				}, errors.WRONG_TYPE_DEFINITION ],
+				[ 'handler must be a function', () => {
 					define('NoConstructFunctionType', NaN, '', 'false');
-				}, errors.HANDLER_MUST_BE_A_FUNCTION],
-				['handler must be a function', () => {
+				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
+				[ 'handler must be a function', () => {
 					define(() => {
 						return {
 							name : null
 						};
 					});
-				}, errors.HANDLER_MUST_BE_A_FUNCTION],
-				['this type has already been declared', () => {
+				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
+				[ 'this type has already been declared', () => {
 					define('UserTypeConstructor', () => {
 						return function WithoutPassword () {};
 					});
-				}, errors.ALREADY_DECLARED],
-				['typename must be a string', () => {
+				}, errors.ALREADY_DECLARED ],
+				[ 'typename must be a string', () => {
 					define('UserType.UserTypePL1', () => {
 						return function () {};
 					});
-				}, errors.TYPENAME_MUST_BE_A_STRING],
+				}, errors.TYPENAME_MUST_BE_A_STRING ],
 			].forEach(entry => {
-				const [errorMessage, fn, err] = entry;
+				const [ errorMessage, fn, err ] = entry;
 				it(`check throw with : '${ errorMessage }'`, () => {
 					expect(fn).throw();
 					try {
@@ -635,7 +635,7 @@ const tests = (opts) => {
 			});
 			it('Instance circular .toJSON works', () => {
 				const circularExtracted = JSON.parse(toJSON(oneElseCollectionInstance));
-				const {description} = circularExtracted.self;
+				const { description } = circularExtracted.self;
 				expect(description).equal('This value type is not supported by JSON.stringify');
 			});
 			it('Instance circular .toJSON works', () => {
@@ -647,10 +647,10 @@ const tests = (opts) => {
 					constructor: {
 						name,
 						prototype: {
-							[SymbolConstructorName]: protoConstructSymbol
+							[ SymbolConstructorName ]: protoConstructSymbol
 						}
 					},
-					[SymbolConstructorName]: namespaceName
+					[ SymbolConstructorName ]: namespaceName
 				} = proto;
 				expect(name).equal(MNEMONICA);
 				expect(protoConstructSymbol).equal(MNEMONICA);
@@ -865,15 +865,15 @@ const tests = (opts) => {
 		const goodNamespaceDescription = 'good config namespace';
 		const goodNamespace = createNamespace('good_config_namespace', goodNamespaceDescription);
 		it('namespace with string instead of config should have description', () => {
-			expect(goodNamespace[SymbolConfig].description).is.equal(goodNamespaceDescription);
+			expect(goodNamespace[ SymbolConfig ].description).is.equal(goodNamespaceDescription);
 		});
 
 		const goodNamespaceTC = goodNamespace.createTypesCollection('good namespace types collection', {
 			useOldStyle : true
 		});
 		it('namespace types collection creation check', () => {
-			expect(goodNamespaceTC[SymbolConfig].useOldStyle).is.equal(true);
-			expect(goodNamespaceTC[SymbolConfig].strictChain).is.equal(true);
+			expect(goodNamespaceTC[ SymbolConfig ].useOldStyle).is.equal(true);
+			expect(goodNamespaceTC[ SymbolConfig ].strictChain).is.equal(true);
 		});
 
 	});
@@ -899,9 +899,9 @@ const tests = (opts) => {
 			expect(errorInstance.instance).equal(someADTCInstance);
 		});
 		it('.exception() should have nice .args property', () => {
-			expect(errorInstance.args[0]).equal(1);
-			expect(errorInstance.args[1]).equal(2);
-			expect(errorInstance.args[2]).equal(3);
+			expect(errorInstance.args[ 0 ]).equal(1);
+			expect(errorInstance.args[ 1 ]).equal(2);
+			expect(errorInstance.args[ 2 ]).equal(3);
 		});
 
 		it('.exception() .extract() works property', () => {
@@ -955,9 +955,9 @@ const tests = (opts) => {
 			expect(wrongErrorInstanceIsNotAnError.error).equal('asdf');
 		});
 		it('wrong .exception() .args should be given args', () => {
-			expect(wrongErrorInstanceIsNotAnError.args[0]).equal(1);
-			expect(wrongErrorInstanceIsNotAnError.args[1]).equal(2);
-			expect(wrongErrorInstanceIsNotAnError.args[2]).equal(3);
+			expect(wrongErrorInstanceIsNotAnError.args[ 0 ]).equal(1);
+			expect(wrongErrorInstanceIsNotAnError.args[ 1 ]).equal(2);
+			expect(wrongErrorInstanceIsNotAnError.args[ 2 ]).equal(3);
 		});
 
 

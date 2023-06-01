@@ -4,7 +4,7 @@ export declare const hooks: {
         [index: string]: any;
     }) => Set<unknown>;
     registerHook: (this: any, hookType: string, cb: CallableFunction) => void;
-    registerFlowChecker: (this: any, cb: Function) => void;
+    registerFlowChecker: (this: any, cb: () => unknown) => void;
 };
 export declare const types: {
     define: any;
