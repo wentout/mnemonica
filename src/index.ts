@@ -35,7 +35,7 @@ type Proto <P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
 
 interface IDefinitor<P, IN extends string> {
 	// <T, N extends Proto<P, T>, M extends N, S extends string> (
-	<T, M extends Proto<P, T>> (
+	<T, M extends Proto<P, T>, S extends Record<IN, new() => unknown> & M> (
 		this: unknown,
 		TypeName: IN,
 		constructHandler: IDEF<T>,
@@ -47,7 +47,9 @@ interface IDefinitor<P, IN extends string> {
 		// 		new(): unknown
 		// 	}
 		// }
-		new(): Record<IN, new() => unknown> & M
+		new(): {
+			[key in keyof S]: S[key]
+		}
 		// InstanceType<ReturnType<IDefinitor<M, ID>>>>
 		define: IDefinitor<M, IN>
 		// ID: IDEF<T>
@@ -55,7 +57,7 @@ interface IDefinitor<P, IN extends string> {
 }
 
 // export const define = function <T, P extends object, N extends Proto<P, T>, ID extends string, S extends string, M extends N> (
-export const define = function <T, P extends object, N extends Proto<P, T>, ID extends string> (
+export const define = function <T, P extends object, N extends Proto<P, T>, ID extends string, S extends Record<ID, new() => unknown> & N> (
 	this: unknown,
 	TypeName: string,
 	constructHandler: IDEF<T>,
@@ -71,7 +73,9 @@ export const define = function <T, P extends object, N extends Proto<P, T>, ID e
 	// 	}
 	// }
 	// new(): Record<ID, new() => InstanceType<ReturnType<IDefinitor<N, ID>>>> & N
-	new(): Record<ID, new() => unknown> & N
+	new(): {
+		[key in keyof S]: S[key]
+	}
 	define: IDefinitor<N, ID>
 } {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
