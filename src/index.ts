@@ -57,7 +57,7 @@ interface IDefinitor<P, IN extends string> {
 }
 
 // export const define = function <T, P extends object, N extends Proto<P, T>, ID extends string, S extends string, M extends N> (
-export const define = function <T, P extends object, N extends Proto<P, T>, ID extends string, S extends Record<ID, new() => unknown> & N> (
+export const define = function <T, P extends object, N extends Proto<P, T>, ID extends string, S extends Record<ID, new () => unknown> & N> (
 	this: unknown,
 	TypeName: string,
 	constructHandler: IDEF<T>,
