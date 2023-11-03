@@ -42,7 +42,7 @@ module.exports = {
 				allow: [],
 			},
 		],
-		'array-bracket-spacing': ['error', 'always'],
+		'array-bracket-spacing': ['warn', 'always'],
 		'computed-property-spacing': ['error', 'always'],
 		'object-curly-spacing': ['error', 'always'],
 		'space-before-function-paren': [

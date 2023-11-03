@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
 import { ConstructorFunction } from '../../types';
@@ -109,7 +110,8 @@ const bindMethod = function ( this: any, instance: any, methodName: string, Meth
 			const from = this;
 			// eslint-disable-next-line no-shadow, @typescript-eslint/no-explicit-any
 			return function ( this: any, ...args: any[] ) {
-				const applyTo = this !== undefined ? this : from; // || instance;
+				// || instance;
+				const applyTo = this !== undefined ? this : from;
 				const exceptionReason = {
 					method : MethodItself,
 					methodName,
@@ -327,6 +329,8 @@ const InstanceCreatorPrototype = {
 	throwModificationError
 };
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 export const InstanceCreator = function ( this: any, type: any, existentInstance: any, args: any[], chained: boolean ) {
 
 	const {
@@ -371,7 +375,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	} );
 
 	if ( submitStack || chained ) {
-		const stackAddition = chained ? self.getExistentAsyncStack( existentInstance ) : [];
+		const stackAddition: string[] = chained ? self.getExistentAsyncStack( existentInstance ) : [];
 		const title = `\n<-- creation of [ ${TypeName} ] traced -->`;
 		if ( submitStack ) {
 			getStack.call( self, title, stackAddition );

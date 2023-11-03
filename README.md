@@ -10,10 +10,8 @@ abstract technique that aids information retention : instance inheritance system
 
 # shortcuts
 
-* ?. : state : **mad science**
 * ?. : type : **asynchronous monad descriptor** => this
 * ?. : prod ready : **we wonder about**
-* ?. : typescript : **yes, some, starting from 0.9.77**
 * ?. : example : **git clone && npm run example**
 
 ---
@@ -28,17 +26,6 @@ abstract technique that aids information retention : instance inheritance system
 
 ---
 
-# TypeScript note
-
-If you are TypeScript user we have good news for you:
-* there is more than one way to annotate the code
-* we provide support with some limitations
-* and you can help to do better
-
-Please visit [Mnemonica TypeScript](https://github.com/wentout/mnemonica/blob/master/TypeScript.md) page for explanations.
-
----
-
 
 # core concept
 
@@ -47,6 +34,13 @@ This lib might help to create some sort of order or sequence or precedence of ho
 * [Inheritance in JavaScript : Factory of Constructors with Prototype Chain](https://github.com/mythographica/stash/blob/master/inheritance.md)
 * [Architecture of Prototype Inheritance in JavaScript](https://dev.to/wentout/architecture-of-prototype-inheritance-in-javascript-ce6)
 * [Dead Simple type checker for JavaScript](https://dev.to/wentout/dead-simple-type-checker-for-javascript-4l40)
+
+
+## TypeScript note
+
+**define** function now fully supports TypeScript definitions
+
+for more easy types writing nested~sub constructors might be applied using just direct apply, call or bind functions
 
 
 ## Factory of Constructors
@@ -642,6 +636,39 @@ const usingReactAsProto = ReactDOOMed.call(ReactDOM);
 
 const root = document.getElementById("root");
 usingReactAsProto.render("just works", root);
+
+```
+
+
+# call, apply & bind ( existent, ItsNestedType, ...args)
+
+mostly for TypeScript purpose you may do this
+
+```js
+const SomeType = define('SomeType', function () {
+	// ...
+});
+
+
+const SomeSubType = SomeType
+	.define('SomeSubType', function (...args) {
+		// ...
+	});
+
+const someInstance = new SomeType;
+
+const someSubInstance = call(
+	someInstance, SomeSubType, ...args);
+
+// or for array of args
+const someSubInstance = apply(
+	someInstance, SomeSubType, args);
+
+// or for delayed construction
+const someSubInstanceConstructor = 
+	bind( someInstance, SomeSubType );
+
+const someSubInstance = someSubInstanceConstructor(...args);
 
 ```
 

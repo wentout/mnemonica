@@ -22,7 +22,7 @@ const {
 } = utils;
 
 
-const CreationHandler = function ( this: any, constructionAnswer: any ) {
+const CreationHandler = function ( this: unknown, constructionAnswer: unknown ) {
 	// standard says :
 	// if constructor returns something
 	// then this is a toy
@@ -46,19 +46,20 @@ const getModificationConstructor = ( useOldStyle: boolean ) => {
 	return ( useOldStyle ? oldMC : newMC )();
 };
 
-const checkProto = ( proto: any ) => {
+const checkProto = ( proto: unknown ) => {
 	if ( !( proto instanceof Object ) ) {
 		throw new WRONG_TYPE_DEFINITION( 'expect prototype to be an object' );
 	}
 };
 
 const getTypeChecker = ( TypeName: string ) => {
-	const seeker: any = ( instance: object ) => {
+	const seeker: unknown = ( instance: object ) => {
 
 		if ( typeof instance !== 'object' ) {
 			return false;
 		}
 
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		if ( !instance!.constructor ) {
 			return false;
 		}
@@ -71,7 +72,11 @@ const getTypeChecker = ( TypeName: string ) => {
 			return instance[ SymbolConstructorName ] === TypeName;
 		}
 
-		const constructors: any = collectConstructors( instance );
+		const constructors: {
+			string : new () => unknown
+		} = collectConstructors( instance );
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
 		return constructors[ TypeName ] || false;
 
 	};
@@ -88,7 +93,15 @@ const getTypeSplitPath = ( path: string ) => {
 	return split;
 };
 
-const getExistentAsyncStack = ( existentInstance: any ) => {
+export type asyncStack = {
+	__stack__?: string
+	__type__: {
+		isSubType: boolean
+	}
+	parent: () => asyncStack
+}
+
+const getExistentAsyncStack = ( existentInstance: asyncStack ): unknown => {
 
 	const stack = [];
 	let proto = existentInstance;
@@ -147,7 +160,14 @@ const checkTypeName = ( name: string ) => {
 
 };
 
-const findParentSubType: any = ( instance: any, prop: string ) => {
+type parentSub = {
+	__type__: {
+		subtypes: Map<string, parentSub>
+	}
+	__parent__: parentSub
+}
+
+const findParentSubType = ( instance: parentSub, prop: string ): parentSub => {
 	let subtype = null;
 
 	// if (!instance.__subtypes__) {
@@ -162,6 +182,8 @@ const findParentSubType: any = ( instance: any, prop: string ) => {
 
 	if ( instance.__type__.subtypes.has( prop ) ) {
 		subtype = instance.__type__.subtypes.get( prop );
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
 		return subtype;
 	}
 	return findParentSubType( instance.__parent__, prop );
@@ -186,14 +208,13 @@ const isClass = ( fn: CallableFunction ) => {
 	if ( fn.prototype.constructor !== fn ) {
 		return false;
 	}
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 	return Reflect.getOwnPropertyDescriptor( fn, 'prototype' )!.writable === false;
 };
 
-import { TypeModificator } from '../../types';
-
 const makeFakeModificatorType = (
 	TypeName: string,
-	fakeModificator = function () { } as TypeModificator<object>
+	fakeModificator = function () { }
 ) => {
 
 	const modificatorBody = compileNewModificatorFunctionBody( TypeName );
@@ -208,7 +229,7 @@ const makeFakeModificatorType = (
 
 };
 
-const reflectPrimitiveWrappers = ( _thisArg: any ) => {
+const reflectPrimitiveWrappers = ( _thisArg: unknown ) => {
 	let thisArg = _thisArg;
 
 	if ( _thisArg === null ) {

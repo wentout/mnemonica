@@ -37,7 +37,6 @@ const asyncConstructionTest = true;
 debugger;
 const {
 	define,
-	tsdefine,
 	defaultTypes: types,
 	// createNamespace,
 	// createTypesCollection,
@@ -310,7 +309,7 @@ NestedConstruct.define('NestedSubError', function (this: any, ...args: any[]) {
 });
 
 types[ SymbolConfig ].bindedProto = false;
-const AsyncType = tsdefine('AsyncType', async function (this: any, data: unknown) {
+const AsyncType = define('AsyncType', async function (this: any, data: unknown) {
 	return Object.assign(this, {
 		arg123 : 123
 	}, {

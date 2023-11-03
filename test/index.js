@@ -20,7 +20,9 @@ const mnemonica = require('..');
 
 const {
 	define,
-	tsdefine,
+	apply,
+	call,
+	bind,
 	defaultTypes: types,
 	createNamespace,
 	createTypesCollection,
@@ -232,6 +234,18 @@ const SomeADTCType = adtcDefine('SomeADTCType', function () {
 
 const someADTCInstance = new SomeADTCType();
 
+const SubOfSomeADTCType = SomeADTCType.define('SubOfSomeADTCType', function (...args) {
+	this.sub_test = 321;
+	this.args = args;
+});
+
+const subOfSomeADTCInstanceA = apply(someADTCInstance, SubOfSomeADTCType, [ 1, 2, 3 ]);
+
+const subOfSomeADTCInstanceC = call(someADTCInstance, SubOfSomeADTCType, 1, 2, 3);
+
+const subOfSomeADTCInstanceB = bind(someADTCInstance, SubOfSomeADTCType)(1, 2, 3);
+
+
 const anotherNamespace = createNamespace('anotherNamespace');
 const anotherTypesCollection = createTypesCollection(anotherNamespace, 'another types collection');
 const oneElseTypesCollection = createTypesCollection(anotherNamespace);
@@ -251,6 +265,7 @@ const oneElseCollectionInstance = new OneElseCollectionType();
 const user = UserType(USER_DATA);
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
+
 
 try {
 	var userPL_1_2 = new userPL1.UserTypePL2();
@@ -283,7 +298,7 @@ NestedConstruct.define('NestedSubError', function (...args) {
 });
 
 types[ SymbolConfig ].bindedProto = false;
-const AsyncType = tsdefine('AsyncType', async function (data) {
+const AsyncType = define('AsyncType', async function (data) {
 	return Object.assign(this, {
 		arg123 : 123
 	}, {
@@ -579,6 +594,9 @@ describe('Main Test', () => {
 		moreOver,
 		anotherDefaultTypesCollection,
 		someADTCInstance,
+		subOfSomeADTCInstanceA,
+		subOfSomeADTCInstanceC,
+		subOfSomeADTCInstanceB,
 		anotherNamespace,
 		anotherTypesCollection,
 		oneElseTypesCollection,

@@ -1,6 +1,6 @@
 'use strict';
 
-import { ITypeClass, TypeLookup, IDEF } from './types';
+import { TypeLookup, IDEF } from './types';
 
 import { constants } from './constants';
 const { odp } = constants;
@@ -20,64 +20,54 @@ function checkThis (pointer: typeof mnemonica | typeof exports | unknown): boole
 
 type Proto <P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
 
-// interface IDefinitor {
-// 	<P extends object, T, N extends Proto<P, T>, ID extends string> (
-// 		this: unknown,
-// 		TypeName: ID,
-// 		constructHandler: IDEF<T>,
-// 		proto?: P,
-// 		config?: object,
-// 	): {
-// 		new(): N
-// 		define: INDefinitor<N>
-// 	}
-// }
+// type Narrowable =
+//   string | number | boolean | symbol | object | undefined | void | null | [];
+type RN = Record<string|symbol, unknown>
+type SN = Record<string|symbol, new() => unknown>
 
-interface IDefinitor<P, IN extends string> {
-	// <T, N extends Proto<P, T>, M extends N, S extends string> (
-	<T, M extends Proto<P, T>, S extends Record<IN, new() => unknown> & M> (
-		this: unknown,
-		TypeName: IN,
-		constructHandler: IDEF<T>,
-		proto?: P,
-		config?: object,
-	): {
-		// new(): M & {
-		// 	[key in PropertyKey] : {
-		// 		new(): unknown
-		// 	}
-		// }
+interface IDefinitorInstance<N extends RN, S> {
 		new(): {
 			[key in keyof S]: S[key]
 		}
-		// InstanceType<ReturnType<IDefinitor<M, ID>>>>
-		define: IDefinitor<M, IN>
-		// ID: IDEF<T>
-	}
+		define: IDefinitor<N, string>
 }
 
-// export const define = function <T, P extends object, N extends Proto<P, T>, ID extends string, S extends string, M extends N> (
-export const define = function <T, P extends object, N extends Proto<P, T>, ID extends string, S extends Record<ID, new () => unknown> & N> (
+interface IDefinitor<P extends RN, SubTypeName extends string> {
+	<PP extends RN, T extends RN, M extends Proto<P, Proto<PP, T>>, S extends SN & M> (
+		this: unknown,
+		TypeName: SubTypeName,
+		constructHandler: IDEF<T>,
+		proto?: PP,
+		config?: object,
+	): IDefinitorInstance<M, S>
+}
+
+export const define = function <
+	T extends RN,
+	// R extends IDEF<T>,
+	// H extends ThisType<IDEF<T>>,
+	P extends RN,
+	N extends Proto<P, T>,
+	SubTypeName extends string,
+	// so S it just basically allows nested constructors
+	// and gives extracted props from constructHandler & proto
+	// then it goes to new() keyword of define output
+	NC extends SN,
+	S extends NC & N,
+	R extends {
+		new (): {
+			[key in keyof S]: S[key]
+		}
+		define: IDefinitor<N, SubTypeName>
+	},
+> (
 	this: unknown,
 	TypeName: string,
+	// constructHandler: R,
 	constructHandler: IDEF<T>,
 	proto?: P,
 	config = {},
-): {
-	// new(): T & P // s → never
-	// new(): P & T // s → never
-	// new(): T
-	// new(): N & {
-	// 	[key in PropertyKey] : {
-	// 		new(): unknown
-	// 	}
-	// }
-	// new(): Record<ID, new() => InstanceType<ReturnType<IDefinitor<N, ID>>>> & N
-	new(): {
-		[key in keyof S]: S[key]
-	}
-	define: IDefinitor<N, ID>
-} {
+): R {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	return types.define(TypeName, constructHandler, proto, config);
 };
@@ -101,22 +91,10 @@ export const define = function <T, P extends object, N extends Proto<P, T>, ID e
 // s.s = 123;
 // s.z = '123';
 
-export const tsdefine = function <T> (
-	this: unknown,
-	TypeName: string,
-	constructHandler: IDEF<T>,
-	proto?: object,
-	config?: object,
-): ITypeClass<T> {
-	return defaultTypes.define(TypeName, constructHandler, proto, config);
-};
-
-
 export const lookup = function (TypeNestedPath) {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	return types.lookup(TypeNestedPath);
 } as TypeLookup;
-
 
 export const mnemonica = Object.entries({
 
@@ -167,3 +145,32 @@ export const errors = descriptors.ErrorsTypes;
 
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
+
+export function apply <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, args: unknown[]): {
+	[key in keyof S]: S[key]
+} {
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	const result = Constructor.apply(entity, args);
+	return result;
+}
+
+export function call <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, ...args: unknown[]): {
+	[key in keyof S]: S[key]
+} {
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	const result = Constructor.call(entity, ...args);
+	return result;
+}
+
+export function bind <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>): (...args: unknown[]) => {
+	[key in keyof S]: S[key]
+} {
+	return (...args) => {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
+		const result = Constructor.call(entity, ...args);
+		return result;
+	};
+}
