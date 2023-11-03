@@ -46,6 +46,9 @@ const tests = (opts) => {
 		moreOver,
 		anotherDefaultTypesCollection,
 		someADTCInstance,
+		subOfSomeADTCInstanceA,
+		subOfSomeADTCInstanceC,
+		subOfSomeADTCInstanceB,
 		anotherNamespace,
 		anotherTypesCollection,
 		oneElseTypesCollection,
@@ -91,9 +94,11 @@ const tests = (opts) => {
 				'errors',
 				'utils',
 				'define',
-				'tsdefine',
 				'lookup',
 				'mnemonica',
+				'apply',
+				'call',
+				'bind',
 			];
 
 			const mnemonica_keys = Object.keys(mnemonica);
@@ -339,6 +344,23 @@ const tests = (opts) => {
 			it('should create instances for in anotherDefaultTypesCollection', () => {
 				expect(someADTCInstance.test).equal(123);
 			});
+
+			it('apply & call works correctly', () => {
+
+				expect(subOfSomeADTCInstanceA.test).equal(123);
+				expect(subOfSomeADTCInstanceA.sub_test).equal(321);
+				expect(subOfSomeADTCInstanceA.args).deep.to.equal([ 1, 2, 3 ]);
+
+				expect(subOfSomeADTCInstanceC.test).equal(123);
+				expect(subOfSomeADTCInstanceC.sub_test).equal(321);
+				expect(subOfSomeADTCInstanceC.args).deep.to.equal([ 1, 2, 3 ]);
+
+				expect(subOfSomeADTCInstanceB.test).equal(123);
+				expect(subOfSomeADTCInstanceB.sub_test).equal(321);
+				expect(subOfSomeADTCInstanceB.args).deep.to.equal([ 1, 2, 3 ]);
+
+			});
+
 			describe('should create type from Proxy.set()', () => {
 				it('type creation from Proxy.set()', () => {
 					const userProxyTyped = user.ProxyTyped('aha');
@@ -362,7 +384,7 @@ const tests = (opts) => {
 					});
 				}
 				try {
-					UserType[ '' ] = function () {};
+					UserType[ '' ] = function () { };
 				} catch (error) {
 					it('should respect the rules', () => {
 						expect(error).instanceOf(Error);
@@ -422,7 +444,7 @@ const tests = (opts) => {
 			const BadBadType = define('BadBadType', function () {
 				return null;
 			}, {
-				constructor () {}
+				constructor () { }
 			}, {
 				submitStack : true
 			});
@@ -526,7 +548,7 @@ const tests = (opts) => {
 		});
 
 		describe('subtype property inside type re-definition', () => {
-			const BadTypeReInConstruct = define('BadTypeReInConstruct', function () {});
+			const BadTypeReInConstruct = define('BadTypeReInConstruct', function () { });
 			BadTypeReInConstruct.define('ExistentConstructor', function () {
 				this.ExistentConstructor = undefined;
 			});
@@ -545,22 +567,22 @@ const tests = (opts) => {
 
 		describe('should define through typesCollection proxy', () => {
 			it('check typesCollection proxified creation', () => {
-				types.ProxifiedCreation = function () {};
+				types.ProxifiedCreation = function () { };
 			});
 		});
 
 		describe('should throw with wrong definition', () => {
 			[
 				[ 'wrong type definition : expect prototype to be an object', () => {
-					define('Wrong', function () {}, true);
+					define('Wrong', function () { }, true);
 				}, errors.WRONG_TYPE_DEFINITION ],
 				[ 'wrong type definition : TypeName should start with Uppercase Letter', () => {
 					// next line same as 
 					// define('wrong', function () { /* ... */ });
-					types.wrong = function () {};
+					types.wrong = function () { };
 				}, errors.WRONG_TYPE_DEFINITION ],
 				[ 'wrong type definition : TypeName of reserved keyword', () => {
-					types[ MNEMONICA ] = function () {};
+					types[ MNEMONICA ] = function () { };
 				}, errors.WRONG_TYPE_DEFINITION ],
 				[ 'wrong type definition : definition is not provided', () => {
 					define();
@@ -577,17 +599,17 @@ const tests = (opts) => {
 				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
 				[ 'this type has already been declared', () => {
 					define('UserTypeConstructor', () => {
-						return function WithoutPassword () {};
+						return function WithoutPassword () { };
 					});
 				}, errors.ALREADY_DECLARED ],
 				[ 'typename must be a string', () => {
 					define('UserType.UserTypePL1', () => {
-						return function () {};
+						return function () { };
 					});
 				}, errors.TYPENAME_MUST_BE_A_STRING ],
 			].forEach(entry => {
 				const [ errorMessage, fn, err ] = entry;
-				it(`check throw with : '${ errorMessage }'`, () => {
+				it(`check throw with : '${errorMessage}'`, () => {
 					expect(fn).throw();
 					try {
 						fn();
@@ -668,7 +690,7 @@ const tests = (opts) => {
 				});
 			}
 			try {
-				defaultNamespace.registerFlowChecker(() => {});
+				defaultNamespace.registerFlowChecker(() => { });
 			} catch (error) {
 				it('Thrown with Re-Definition', () => {
 					expect(error).instanceOf(Error);
@@ -676,7 +698,7 @@ const tests = (opts) => {
 				});
 			}
 			try {
-				defaultNamespace.registerHook('WrongHookType', () => {});
+				defaultNamespace.registerHook('WrongHookType', () => { });
 			} catch (error) {
 				it('Thrown with Re-Definition', () => {
 					expect(error).instanceOf(Error);
@@ -737,7 +759,7 @@ const tests = (opts) => {
 				}
 			});
 			describe('wrong A 2', () => {
-				const Cstr = function () {};
+				const Cstr = function () { };
 				Cstr.prototype.clone = Object.create({});
 				const d = new Cstr();
 				try {
@@ -826,7 +848,7 @@ const tests = (opts) => {
 		}
 
 		const ErroredShapePtr = UserType.define(() => {
-			return class ShapeMyError extends DelayedErrorShape {};
+			return class ShapeMyError extends DelayedErrorShape { };
 		});
 
 		const esi = new ErroredShapePtr;

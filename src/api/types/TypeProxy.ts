@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
 import { ConstructorFunction } from '../../types';
@@ -142,6 +143,8 @@ const makeSubTypeProxy = function ( subtype: any, inheritedInstance: any ) {
 
 			let existentInstance = reflectPrimitiveWrappers( thisArg );
 
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-ignore
 			if ( !existentInstance[ SymbolGaia ] ) {
 				const gaia = new Mnemosyne( subtype.namespace, new Gaia( existentInstance ) );
 				existentInstance = new Proxy( gaia, {

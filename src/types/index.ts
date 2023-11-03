@@ -1,13 +1,15 @@
 'use strict';
 /* eslint no-unused-vars: "off" */
 
+type RN = Record<string|symbol, unknown>
+
+export type IDEF<T extends RN> = {	new(): T } | { (this: T): void };
+
 export interface ConstructorFunction<ConstructorInstance extends object> {
 	new( ...args: unknown[] ): ConstructorInstance;
 	( this: ConstructorInstance, ...args: unknown[] ): ConstructorInstance;
 	prototype: ConstructorInstance;
 }
-
-export type TypeModificator<T extends object> = ( ...args: unknown[] ) => ConstructorFunction<T>;
 
 export type TypeLookup = ( this: Map<string, unknown>, TypeNestedPath: string ) => TypeClass;
 // export type TypeLookup = ( this: Map<string, unknown>, TypeNestedPath: string ) => TypeClass<object>;
@@ -28,9 +30,7 @@ export type TypeAbsorber = (
 	config?: object
 ) => TypeClass;
 
-export type IDEF<T> = {	new(): T } | { (this: T): void };
-
-export type ITypeAbsorber<T> = (
+export type ITypeAbsorber<T extends RN> = (
 	this: unknown,
 	TypeName: string,
 	constructHandler: IDEF<T>,
@@ -38,7 +38,7 @@ export type ITypeAbsorber<T> = (
 	config?: object
 ) => ITypeClass<T>;
 
-export interface ITypeClass<T> {
+export interface ITypeClass<T extends RN> {
 	// construct
 	new( ...args: unknown[] ): T;
 	// define, lookup, registerHook
@@ -49,4 +49,3 @@ export interface ITypeClass<T> {
 	lookup: TypeLookup,
 	registerHook: ( type: 'preCreation' | 'postCreation' | 'creationError', hook: CallableFunction ) => unknown;
 }
-

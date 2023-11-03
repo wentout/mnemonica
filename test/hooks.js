@@ -24,14 +24,20 @@ const tests = (opts) => {
 		it('check invocations test', () => {
 			const { namespaceFlowCheckerSample } = require('./hookSamples');
 			namespaceFlowCheckerInvocations.forEach((el, idx) => {
-				assert.equal(namespaceFlowCheckerSample[ idx ], el.TypeName);
+				const nst = namespaceFlowCheckerSample[ idx ];
+				const elt = el.TypeName;
+				// if (nst != elt) {
+				// 	console.log(idx);
+				// 	debugger;
+				// }
+				assert.equal(nst, elt);
 			});
 		});
 		it('check invocations count', () => {
 			assert.equal(8, userTypeHooksInvocations.length);
 			debugger;
 			// +2
-			assert.equal(171, namespaceFlowCheckerInvocations.length);
+			assert.equal(177, namespaceFlowCheckerInvocations.length);
 			// +2
 			assert.equal(169, typesFlowCheckerInvocations.length);
 			// +1
@@ -42,10 +48,10 @@ const tests = (opts) => {
 			// +1
 			assert.equal(77, typesPostCreationInvocations.length);
 			// +1
-			assert.equal(93, namespacePreCreationInvocations.length);
+			assert.equal(96, namespacePreCreationInvocations.length);
 			// there are two registered Hooks, that is why
 			// +2
-			assert.equal(156, namespacePostCreationInvocations.length);
+			assert.equal(162, namespacePostCreationInvocations.length);
 		});
 	});
 
@@ -59,7 +65,7 @@ const tests = (opts) => {
 				sort,
 				kind,
 			} = entry;
-			it(`'this' for ${ kind }-hook of ${ sort } should refer to type ${ type.TypeName }`, () => {
+			it(`'this' for ${kind}-hook of ${sort} should refer to type ${type.TypeName}`, () => {
 				assert.equal(self, type);
 			});
 		});
@@ -69,7 +75,7 @@ const tests = (opts) => {
 				sort,
 				kind,
 			} = entry;
-			it(`'this' for ${ kind }-hook of ${ sort } should refer to type defaultTypes`, () => {
+			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultTypes`, () => {
 				assert.equal(self, types);
 			});
 		});
@@ -79,7 +85,7 @@ const tests = (opts) => {
 				sort,
 				kind,
 			} = entry;
-			it(`'this' for ${ kind }-hook of ${ sort } should refer to type defaultTypes`, () => {
+			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultTypes`, () => {
 				assert.equal(self, types);
 			});
 		});
@@ -89,7 +95,7 @@ const tests = (opts) => {
 				sort,
 				kind,
 			} = entry;
-			it(`'this' for ${ kind }-hook of ${ sort } should refer to type defaultNamespace`, () => {
+			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultNamespace`, () => {
 				assert.equal(self, defaultNamespace);
 			});
 		});
@@ -99,7 +105,7 @@ const tests = (opts) => {
 				sort,
 				kind,
 			} = entry;
-			it(`'this' for ${ kind }-hook of ${ sort } should refer to type defaultNamespace`, () => {
+			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultNamespace`, () => {
 				assert.equal(self, defaultNamespace);
 			});
 		});

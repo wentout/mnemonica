@@ -1,6 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.defineStackCleaner = exports.utils = exports.errors = exports.defaultCollection = exports.createTypesCollection = exports.defaultNamespace = exports.namespaces = exports.createNamespace = exports.ErrorMessages = exports.TYPE_TITLE_PREFIX = exports.URANUS = exports.GAIA = exports.MNEMOSYNE = exports.MNEMONICA = exports.SymbolConfig = exports.SymbolDefaultTypesCollection = exports.SymbolDefaultNamespace = exports.SymbolReplaceGaia = exports.SymbolGaia = exports.SymbolConstructorName = exports.SymbolSubtypeCollection = exports.mnemonica = exports.lookup = exports.tsdefine = exports.define = exports.defaultTypes = void 0;
+exports.bind = exports.call = exports.apply = exports.defineStackCleaner = exports.utils = exports.errors = exports.defaultCollection = exports.createTypesCollection = exports.defaultNamespace = exports.namespaces = exports.createNamespace = exports.ErrorMessages = exports.TYPE_TITLE_PREFIX = exports.URANUS = exports.GAIA = exports.MNEMOSYNE = exports.MNEMONICA = exports.SymbolConfig = exports.SymbolDefaultTypesCollection = exports.SymbolDefaultNamespace = exports.SymbolReplaceGaia = exports.SymbolGaia = exports.SymbolConstructorName = exports.SymbolSubtypeCollection = exports.mnemonica = exports.lookup = exports.define = exports.defaultTypes = void 0;
 const constants_1 = require("./constants");
 const { odp } = constants_1.constants;
 const errorsApi = require("./api/errors");
@@ -14,10 +14,6 @@ const define = function (TypeName, constructHandler, proto, config = {}) {
     return types.define(TypeName, constructHandler, proto, config);
 };
 exports.define = define;
-const tsdefine = function (TypeName, constructHandler, proto, config) {
-    return exports.defaultTypes.define(TypeName, constructHandler, proto, config);
-};
-exports.tsdefine = tsdefine;
 exports.lookup = function (TypeNestedPath) {
     const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
     return types.lookup(TypeNestedPath);
@@ -40,3 +36,20 @@ var utils_1 = require("./utils");
 Object.defineProperty(exports, "utils", { enumerable: true, get: function () { return utils_1.utils; } });
 var utils_2 = require("./utils");
 Object.defineProperty(exports, "defineStackCleaner", { enumerable: true, get: function () { return utils_2.defineStackCleaner; } });
+function apply(entity, Constructor, args) {
+    const result = Constructor.apply(entity, args);
+    return result;
+}
+exports.apply = apply;
+function call(entity, Constructor, ...args) {
+    const result = Constructor.call(entity, ...args);
+    return result;
+}
+exports.call = call;
+function bind(entity, Constructor) {
+    return (...args) => {
+        const result = Constructor.call(entity, ...args);
+        return result;
+    };
+}
+exports.bind = bind;
