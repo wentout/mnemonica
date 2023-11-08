@@ -85,10 +85,41 @@ export const lookup = function (TypeNestedPath) {
 	return types.lookup(TypeNestedPath);
 } as TypeLookup;
 
+export const apply = function <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, args?: unknown[]): {
+	[key in keyof S]: S[key]
+} {
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	const result = Constructor.apply(entity, args);
+	return result;
+};
+
+export const call = function <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, ...args: unknown[]): {
+	[key in keyof S]: S[key]
+} {
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	const result = Constructor.call(entity, ...args);
+	return result;
+};
+
+export const bind = function <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>): (...args: unknown[]) => {
+	[key in keyof S]: S[key]
+} {
+	return (...args) => {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
+		const result = Constructor.call(entity, ...args);
+		return result;
+	};
+};
 export const mnemonica = Object.entries({
 
 	define,
 	lookup,
+	apply,
+	call,
+	bind,
 
 	...descriptors,
 
@@ -134,32 +165,3 @@ export const errors = descriptors.ErrorsTypes;
 
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
-
-export function apply <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, args?: unknown[]): {
-	[key in keyof S]: S[key]
-} {
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore
-	const result = Constructor.apply(entity, args);
-	return result;
-}
-
-export function call <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, ...args: unknown[]): {
-	[key in keyof S]: S[key]
-} {
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore
-	const result = Constructor.call(entity, ...args);
-	return result;
-}
-
-export function bind <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>): (...args: unknown[]) => {
-	[key in keyof S]: S[key]
-} {
-	return (...args) => {
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
-		const result = Constructor.call(entity, ...args);
-		return result;
-	};
-}

@@ -18,6 +18,9 @@ export declare const define: <T extends RN, P extends object, N extends Proto<P,
     define: IDefinitor<N, SubTypeName>;
 }>(this: unknown, TypeName?: string, constructHandler?: IDEF<T> | undefined, proto?: P | undefined, config?: {}) => R;
 export declare const lookup: TypeLookup;
+export declare const apply: <E extends RN, T extends RN, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
+export declare const call: <E extends RN, T extends RN, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, ...args: unknown[]) => { [key in keyof S]: S[key]; };
+export declare const bind: <E extends RN, T extends RN, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>) => (...args: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const mnemonica: {
     [index: string]: unknown;
 };
@@ -26,12 +29,3 @@ export declare const defaultCollection: any;
 export declare const errors: any;
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
-export declare function apply<E extends RN, T extends RN, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]): {
-    [key in keyof S]: S[key];
-};
-export declare function call<E extends RN, T extends RN, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, ...args: unknown[]): {
-    [key in keyof S]: S[key];
-};
-export declare function bind<E extends RN, T extends RN, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>): (...args: unknown[]) => {
-    [key in keyof S]: S[key];
-};

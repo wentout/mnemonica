@@ -1,6 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.bind = exports.call = exports.apply = exports.defineStackCleaner = exports.utils = exports.errors = exports.defaultCollection = exports.createTypesCollection = exports.defaultNamespace = exports.namespaces = exports.createNamespace = exports.ErrorMessages = exports.TYPE_TITLE_PREFIX = exports.URANUS = exports.GAIA = exports.MNEMOSYNE = exports.MNEMONICA = exports.SymbolConfig = exports.SymbolDefaultTypesCollection = exports.SymbolDefaultNamespace = exports.SymbolReplaceGaia = exports.SymbolGaia = exports.SymbolConstructorName = exports.SymbolSubtypeCollection = exports.mnemonica = exports.lookup = exports.define = exports.defaultTypes = void 0;
+exports.defineStackCleaner = exports.utils = exports.errors = exports.defaultCollection = exports.createTypesCollection = exports.defaultNamespace = exports.namespaces = exports.createNamespace = exports.ErrorMessages = exports.TYPE_TITLE_PREFIX = exports.URANUS = exports.GAIA = exports.MNEMOSYNE = exports.MNEMONICA = exports.SymbolConfig = exports.SymbolDefaultTypesCollection = exports.SymbolDefaultNamespace = exports.SymbolReplaceGaia = exports.SymbolGaia = exports.SymbolConstructorName = exports.SymbolSubtypeCollection = exports.mnemonica = exports.bind = exports.call = exports.apply = exports.lookup = exports.define = exports.defaultTypes = void 0;
 const constants_1 = require("./constants");
 const { odp } = constants_1.constants;
 const errorsApi = require("./api/errors");
@@ -18,8 +18,28 @@ exports.lookup = function (TypeNestedPath) {
     const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
     return types.lookup(TypeNestedPath);
 };
+const apply = function (entity, Constructor, args) {
+    const result = Constructor.apply(entity, args);
+    return result;
+};
+exports.apply = apply;
+const call = function (entity, Constructor, ...args) {
+    const result = Constructor.call(entity, ...args);
+    return result;
+};
+exports.call = call;
+const bind = function (entity, Constructor) {
+    return (...args) => {
+        const result = Constructor.call(entity, ...args);
+        return result;
+    };
+};
+exports.bind = bind;
 exports.mnemonica = Object.entries(Object.assign(Object.assign(Object.assign({ define: exports.define,
-    lookup: exports.lookup }, descriptors_1.descriptors), errorsApi), constants_1.constants)).reduce((acc, entry) => {
+    lookup: exports.lookup,
+    apply: exports.apply,
+    call: exports.call,
+    bind: exports.bind }, descriptors_1.descriptors), errorsApi), constants_1.constants)).reduce((acc, entry) => {
     const [name, code] = entry;
     odp(acc, name, {
         get() {
@@ -36,20 +56,3 @@ var utils_1 = require("./utils");
 Object.defineProperty(exports, "utils", { enumerable: true, get: function () { return utils_1.utils; } });
 var utils_2 = require("./utils");
 Object.defineProperty(exports, "defineStackCleaner", { enumerable: true, get: function () { return utils_2.defineStackCleaner; } });
-function apply(entity, Constructor, args) {
-    const result = Constructor.apply(entity, args);
-    return result;
-}
-exports.apply = apply;
-function call(entity, Constructor, ...args) {
-    const result = Constructor.call(entity, ...args);
-    return result;
-}
-exports.call = call;
-function bind(entity, Constructor) {
-    return (...args) => {
-        const result = Constructor.call(entity, ...args);
-        return result;
-    };
-}
-exports.bind = bind;
