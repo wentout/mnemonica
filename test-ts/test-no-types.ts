@@ -1,6 +1,6 @@
 'use strict';
 
-import { define, apply } from '..';
+import { define, apply, bind, call } from '..';
 
 const SomeType = define( 'SomeType', function (this: {
 	one: string,
@@ -80,3 +80,9 @@ console.log( '{ x, y, z }: ', { x, y, z } );
 
 const aSub = apply(first, SomeSubType);
 console.log(aSub);
+const bSub = bind(first, SomeSubType)();
+console.log(bSub);
+const cSub = call(first, SomeSubType);
+console.log(cSub);
+
+

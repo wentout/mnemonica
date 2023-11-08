@@ -23,7 +23,7 @@ type Proto <P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
 // type Narrowable =
 //   string | number | boolean | symbol | object | undefined | void | null | [];
 type RN = Record<string|symbol, unknown>
-type SN = Record<string|symbol, new() => unknown>
+type SN = Record<string, new() => unknown>
 
 interface IDefinitorInstance<N extends RN, S> {
 		new(): {
@@ -33,7 +33,7 @@ interface IDefinitorInstance<N extends RN, S> {
 }
 
 interface IDefinitor<P extends RN, SubTypeName extends string> {
-	<PP extends RN, T extends RN, M extends Proto<P, Proto<PP, T>>, S extends SN & M> (
+	<PP extends object, T extends RN, M extends Proto<P, Proto<PP, T>>, S extends SN & M> (
 		this: unknown,
 		TypeName: SubTypeName,
 		constructHandler: IDEF<T>,
@@ -44,52 +44,41 @@ interface IDefinitor<P extends RN, SubTypeName extends string> {
 
 export const define = function <
 	T extends RN,
-	// R extends IDEF<T>,
+	// K extends IDEF<T>,
 	// H extends ThisType<IDEF<T>>,
-	P extends RN,
+	P extends object,
 	N extends Proto<P, T>,
 	SubTypeName extends string,
 	// so S it just basically allows nested constructors
 	// and gives extracted props from constructHandler & proto
 	// then it goes to new() keyword of define output
-	NC extends SN,
-	S extends NC & N,
+	S extends SN & N,
 	R extends {
 		new (): {
 			[key in keyof S]: S[key]
-		}
+		} 
 		define: IDefinitor<N, SubTypeName>
 	},
 > (
 	this: unknown,
-	TypeName: string,
-	// constructHandler: R,
-	constructHandler: IDEF<T>,
+	TypeName?: string,
+	constructHandler?: IDEF<T>,
 	proto?: P,
 	config = {},
 ): R {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
+	// if (typeof constructHandler !== 'function') {
+	// 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// 	// @ts-ignore
+	// 	// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-unused-vars
+	// 	return function (decoratorConstructHandler: Function, y: unknown) {
+	// 		if (typeof decoratorConstructHandler === 'function') {
+	// 			types.define(decoratorConstructHandler.name, decoratorConstructHandler, proto, config);
+	// 		}
+	// 	};
+	// }
 	return types.define(TypeName, constructHandler, proto, config);
 };
-
-// const SSS = define('MyType', function (this: { s: number }) {
-// 	this.s = 123;
-// }, { m : '321', s : '321'});
-
-// const SSS = define('MyType', class MyType {
-// 	s: number;
-// 	constructor () {
-// 		this.s = 123;
-// 	}
-// }, { m : '321', s : '321'});
-
-// const s = new SSS;
-// type ss = typeof s.s;
-// const z: ss = s.s;
-// console.log(z);
-// s.m = '123';
-// s.s = 123;
-// s.z = '123';
 
 export const lookup = function (TypeNestedPath) {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
@@ -146,7 +135,7 @@ export const errors = descriptors.ErrorsTypes;
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
 
-export function apply <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, args: unknown[]): {
+export function apply <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, args?: unknown[]): {
 	[key in keyof S]: S[key]
 } {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
