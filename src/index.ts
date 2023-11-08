@@ -22,18 +22,18 @@ type Proto <P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
 
 // type Narrowable =
 //   string | number | boolean | symbol | object | undefined | void | null | [];
-type RN = Record<string|symbol, unknown>
+// type RN = Record<string|symbol, unknown>
 type SN = Record<string, new() => unknown>
 
-interface IDefinitorInstance<N extends RN, S> {
+interface IDefinitorInstance<N extends object, S> {
 		new(): {
 			[key in keyof S]: S[key]
 		}
 		define: IDefinitor<N, string>
 }
 
-interface IDefinitor<P extends RN, SubTypeName extends string> {
-	<PP extends object, T extends RN, M extends Proto<P, Proto<PP, T>>, S extends SN & M> (
+interface IDefinitor<P extends object, SubTypeName extends string> {
+	<PP extends object, T, M extends Proto<P, Proto<PP, T>>, S extends SN & M> (
 		this: unknown,
 		TypeName: SubTypeName,
 		constructHandler: IDEF<T>,
@@ -43,7 +43,7 @@ interface IDefinitor<P extends RN, SubTypeName extends string> {
 }
 
 export const define = function <
-	T extends RN,
+	T,
 	// K extends IDEF<T>,
 	// H extends ThisType<IDEF<T>>,
 	P extends object,
@@ -85,7 +85,7 @@ export const lookup = function (TypeNestedPath) {
 	return types.lookup(TypeNestedPath);
 } as TypeLookup;
 
-export const apply = function <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, args?: unknown[]): {
+export const apply = function <E extends object, T extends object, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, args?: unknown[]): {
 	[key in keyof S]: S[key]
 } {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -94,7 +94,7 @@ export const apply = function <E extends RN, T extends RN, S extends Proto<E, T>
 	return result;
 };
 
-export const call = function <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, ...args: unknown[]): {
+export const call = function <E extends object, T extends object, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, ...args: unknown[]): {
 	[key in keyof S]: S[key]
 } {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -103,7 +103,7 @@ export const call = function <E extends RN, T extends RN, S extends Proto<E, T>>
 	return result;
 };
 
-export const bind = function <E extends RN, T extends RN, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>): (...args: unknown[]) => {
+export const bind = function <E extends object, T extends object, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>): (...args: unknown[]) => {
 	[key in keyof S]: S[key]
 } {
 	return (...args) => {

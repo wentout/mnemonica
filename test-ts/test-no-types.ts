@@ -36,15 +36,16 @@ first.q = 'one';	// hinting is correct !
 first.l = '111';	// hinting is correct !
 first.x = 543;		// hinting is NOT VERY correct !
 
-const FinalType = SomeSubType.define( 'FinalType', function (this: {
-	one: string,
-	q: number,
-	three: string
-}) {
-	this.one = 'final one';
-	this.three = 'FinalType';
-	this.q = 123;
-} );
+const FinalType = SomeSubType.define( 'FinalType', class {
+	one: string;
+	q: number;
+	three: string;
+	constructor () {
+		this.one = 'final one';
+		this.three = 'FinalType';
+		this.q = 123;
+	}
+});
 
 type SomeSubTypeInstance = InstanceType<typeof SomeSubType>;
 const second = new first.SomeSubType() as SomeSubTypeInstance;
