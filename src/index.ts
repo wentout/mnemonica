@@ -42,6 +42,17 @@ interface IDefinitor<P extends object, SubTypeName extends string> {
 	): IDefinitorInstance<M, S>
 }
 
+type hooksTypes = 'preCreation' | 'postCreation' | 'creationError'
+type hooksOpts = {
+	TypeName: string,
+	args: unknown[],
+	existentInstance: object,
+	inheritedInstance: object,
+}
+type hook = {
+	(opts: hooksOpts): void
+}
+
 export const define = function <
 	T,
 	// K extends IDEF<T>,
@@ -58,6 +69,7 @@ export const define = function <
 			[key in keyof S]: S[key]
 		} 
 		define: IDefinitor<N, SubTypeName>
+		registerHook: (hookType: hooksTypes, cb: hook) => void
 	},
 > (
 	this: unknown,

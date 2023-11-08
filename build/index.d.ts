@@ -12,9 +12,20 @@ interface IDefinitorInstance<N extends object, S> {
 interface IDefinitor<P extends object, SubTypeName extends string> {
     <PP extends object, T, M extends Proto<P, Proto<PP, T>>, S extends SN & M>(this: unknown, TypeName: SubTypeName, constructHandler: IDEF<T>, proto?: PP, config?: object): IDefinitorInstance<M, S>;
 }
+type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
+type hooksOpts = {
+    TypeName: string;
+    args: unknown[];
+    existentInstance: object;
+    inheritedInstance: object;
+};
+type hook = {
+    (opts: hooksOpts): void;
+};
 export declare const define: <T, P extends object, N extends Proto<P, T>, SubTypeName extends string, S extends SN & N, R extends {
     new (): { [key in keyof S]: S[key]; };
     define: IDefinitor<N, SubTypeName>;
+    registerHook: (hookType: hooksTypes, cb: hook) => void;
 }>(this: unknown, TypeName?: string, constructHandler?: IDEF<T> | undefined, proto?: P | undefined, config?: {}) => R;
 export declare const lookup: TypeLookup;
 export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
