@@ -1,6 +1,6 @@
 {
 	"name": "mnemonica",
-	"version": "0.9.955",
+	"version": "0.9.957",
 	"description": "abstract technique that aids information retention : instance inheritance system",
 	"type": "commonjs",
 	"main": "./build/index.js",
@@ -63,12 +63,12 @@
 	},
 	"homepage": "https://github.com/wentout/mnemonica#readme",
 	"devDependencies": {
-		"@types/jest": "^29.5.7",
-		"@types/node": "^18.18.8",
+		"@types/jest": "^29.5.8",
+		"@types/node": "^18.18.9",
 		"@typescript-eslint/eslint-plugin": "^5.62.0",
 		"@typescript-eslint/parser": "^5.62.0",
 		"chai": "^4.3.10",
-		"eslint": "^8.52.0",
+		"eslint": "^8.53.0",
 		"eslint-plugin-import": "^2.29.0",
 		"eslint-plugin-mocha": "^10.2.0",
 		"eslint-plugin-no-arrow-this": "^1.2.0",
