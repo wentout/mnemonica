@@ -92,7 +92,7 @@ export const lookup = function (TypeNestedPath) {
 	return types.lookup(TypeNestedPath);
 } as TypeLookup;
 
-export const apply = function <E extends object, T extends object, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, args?: unknown[]): {
+export const apply = function <E extends object, T extends object, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, args: unknown[] = []): {
 	[key in keyof S]: S[key]
 } {
 	// const result = Constructor.apply(entity, args);

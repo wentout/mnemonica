@@ -249,6 +249,7 @@ SubOfSomeADTCType.registerHook('postCreation', (opts) => {
 });
 
 // debugger;
+const subOfSomeADTCInstanceANoArgs = apply(someADTCInstance, SubOfSomeADTCType);
 const subOfSomeADTCInstanceA = apply(someADTCInstance, SubOfSomeADTCType, [ 1, 2, 3 ]);
 
 // debugger;
@@ -608,6 +609,7 @@ describe('Main Test', () => {
 		someADTCInstance,
 		SubOfSomeADTCTypePre,
 		SubOfSomeADTCTypePost,
+		subOfSomeADTCInstanceANoArgs,
 		subOfSomeADTCInstanceA,
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,

@@ -18,7 +18,7 @@ exports.lookup = function (TypeNestedPath) {
     const types = checkThis(this) ? exports.defaultTypes : this || exports.defaultTypes;
     return types.lookup(TypeNestedPath);
 };
-const apply = function (entity, Constructor, args) {
+const apply = function (entity, Constructor, args = []) {
     const result = new entity[Constructor.TypeName](...args);
     return result;
 };

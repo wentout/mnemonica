@@ -49,6 +49,7 @@ const tests = (opts) => {
 		SubOfSomeADTCTypePre,
 		SubOfSomeADTCTypePost,
 		subOfSomeADTCInstanceA,
+		subOfSomeADTCInstanceANoArgs,
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,
 		anotherNamespace,
@@ -351,7 +352,9 @@ const tests = (opts) => {
 
 				expect(SubOfSomeADTCTypePre.existentInstance).equal(someADTCInstance);
 				expect(SubOfSomeADTCTypePost.existentInstance).equal(someADTCInstance);
+				expect(subOfSomeADTCInstanceANoArgs.test).equal(123);
 				expect(subOfSomeADTCInstanceA.test).equal(123);
+				expect(subOfSomeADTCInstanceANoArgs.sub_test).equal(321);
 				expect(subOfSomeADTCInstanceA.sub_test).equal(321);
 				expect(subOfSomeADTCInstanceA.args).deep.to.equal([ 1, 2, 3 ]);
 
