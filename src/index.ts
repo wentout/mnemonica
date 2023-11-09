@@ -18,6 +18,17 @@ function checkThis (pointer: typeof mnemonica | typeof exports | unknown): boole
 	return pointer === mnemonica || pointer === exports;
 }
 
+type hooksTypes = 'preCreation' | 'postCreation' | 'creationError'
+type hooksOpts = {
+	TypeName: string,
+	args: unknown[],
+	existentInstance: object,
+	inheritedInstance: object,
+}
+type hook = {
+	(opts: hooksOpts): void
+}
+
 type Proto <P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
 
 // type Narrowable =
@@ -30,6 +41,7 @@ interface IDefinitorInstance<N extends object, S> {
 			[key in keyof S]: S[key]
 		}
 		define: IDefinitor<N, string>
+		registerHook: (hookType: hooksTypes, cb: hook) => void
 }
 
 interface IDefinitor<P extends object, SubTypeName extends string> {
@@ -42,35 +54,17 @@ interface IDefinitor<P extends object, SubTypeName extends string> {
 	): IDefinitorInstance<M, S>
 }
 
-type hooksTypes = 'preCreation' | 'postCreation' | 'creationError'
-type hooksOpts = {
-	TypeName: string,
-	args: unknown[],
-	existentInstance: object,
-	inheritedInstance: object,
-}
-type hook = {
-	(opts: hooksOpts): void
-}
-
 export const define = function <
 	T,
 	// K extends IDEF<T>,
 	// H extends ThisType<IDEF<T>>,
 	P extends object,
 	N extends Proto<P, T>,
-	SubTypeName extends string,
 	// so S it just basically allows nested constructors
 	// and gives extracted props from constructHandler & proto
 	// then it goes to new() keyword of define output
 	S extends SN & N,
-	R extends {
-		new (): {
-			[key in keyof S]: S[key]
-		} 
-		define: IDefinitor<N, SubTypeName>
-		registerHook: (hookType: hooksTypes, cb: hook) => void
-	},
+	R extends IDefinitorInstance<N, S>
 > (
 	this: unknown,
 	TypeName?: string,

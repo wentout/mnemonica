@@ -1,17 +1,6 @@
 import { TypeLookup, IDEF } from './types';
 export type { IDEF } from './types';
 export declare const defaultTypes: any;
-type Proto<P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
-type SN = Record<string, new () => unknown>;
-interface IDefinitorInstance<N extends object, S> {
-    new (): {
-        [key in keyof S]: S[key];
-    };
-    define: IDefinitor<N, string>;
-}
-interface IDefinitor<P extends object, SubTypeName extends string> {
-    <PP extends object, T, M extends Proto<P, Proto<PP, T>>, S extends SN & M>(this: unknown, TypeName: SubTypeName, constructHandler: IDEF<T>, proto?: PP, config?: object): IDefinitorInstance<M, S>;
-}
 type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
 type hooksOpts = {
     TypeName: string;
@@ -22,11 +11,19 @@ type hooksOpts = {
 type hook = {
     (opts: hooksOpts): void;
 };
-export declare const define: <T, P extends object, N extends Proto<P, T>, SubTypeName extends string, S extends SN & N, R extends {
-    new (): { [key in keyof S]: S[key]; };
-    define: IDefinitor<N, SubTypeName>;
+type Proto<P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
+type SN = Record<string, new () => unknown>;
+interface IDefinitorInstance<N extends object, S> {
+    new (): {
+        [key in keyof S]: S[key];
+    };
+    define: IDefinitor<N, string>;
     registerHook: (hookType: hooksTypes, cb: hook) => void;
-}>(this: unknown, TypeName?: string, constructHandler?: IDEF<T> | undefined, proto?: P | undefined, config?: {}) => R;
+}
+interface IDefinitor<P extends object, SubTypeName extends string> {
+    <PP extends object, T, M extends Proto<P, Proto<PP, T>>, S extends SN & M>(this: unknown, TypeName: SubTypeName, constructHandler: IDEF<T>, proto?: PP, config?: object): IDefinitorInstance<M, S>;
+}
+export declare const define: <T, P extends object, N extends Proto<P, T>, S extends SN & N, R extends IDefinitorInstance<N, S>>(this: unknown, TypeName?: string, constructHandler?: IDEF<T> | undefined, proto?: P | undefined, config?: {}) => R;
 export declare const lookup: TypeLookup;
 export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, ...args: unknown[]) => { [key in keyof S]: S[key]; };
