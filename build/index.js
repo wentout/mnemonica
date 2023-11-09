@@ -19,18 +19,18 @@ exports.lookup = function (TypeNestedPath) {
     return types.lookup(TypeNestedPath);
 };
 const apply = function (entity, Constructor, args) {
-    const result = Constructor.apply(entity, args);
+    const result = new entity[Constructor.TypeName](...args);
     return result;
 };
 exports.apply = apply;
 const call = function (entity, Constructor, ...args) {
-    const result = Constructor.call(entity, ...args);
+    const result = new entity[Constructor.TypeName](...args);
     return result;
 };
 exports.call = call;
 const bind = function (entity, Constructor) {
     return (...args) => {
-        const result = Constructor.call(entity, ...args);
+        const result = new entity[Constructor.TypeName](...args);
         return result;
     };
 };

@@ -1,3 +1,4 @@
+/* eslint-disable new-cap */
 'use strict';
 
 import { TypeLookup, IDEF } from './types';
@@ -94,9 +95,10 @@ export const lookup = function (TypeNestedPath) {
 export const apply = function <E extends object, T extends object, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, args?: unknown[]): {
 	[key in keyof S]: S[key]
 } {
+	// const result = Constructor.apply(entity, args);
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	const result = Constructor.apply(entity, args);
+	const result = new entity[ Constructor.TypeName ](...args);
 	return result;
 };
 
@@ -105,7 +107,8 @@ export const call = function <E extends object, T extends object, S extends Prot
 } {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	const result = Constructor.call(entity, ...args);
+	// const result = Constructor.call(entity, ...args);
+	const result = new entity[ Constructor.TypeName ](...args);
 	return result;
 };
 
@@ -113,9 +116,10 @@ export const bind = function <E extends object, T extends object, S extends Prot
 	[key in keyof S]: S[key]
 } {
 	return (...args) => {
+		// const result = Constructor.call(entity, ...args);
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
-		const result = Constructor.call(entity, ...args);
+		const result = new entity[ Constructor.TypeName ](...args);
 		return result;
 	};
 };
@@ -171,3 +175,4 @@ export const errors = descriptors.ErrorsTypes;
 
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
+/* eslint-enable new-cap */
