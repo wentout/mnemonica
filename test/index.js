@@ -234,15 +234,27 @@ const SomeADTCType = adtcDefine('SomeADTCType', function () {
 
 const someADTCInstance = new SomeADTCType();
 
+let SubOfSomeADTCTypePre = null;
+let SubOfSomeADTCTypePost = null;
 const SubOfSomeADTCType = SomeADTCType.define('SubOfSomeADTCType', function (...args) {
 	this.sub_test = 321;
 	this.args = args;
 });
 
+SubOfSomeADTCType.registerHook('preCreation', (opts) => {
+	SubOfSomeADTCTypePre = opts;
+});
+SubOfSomeADTCType.registerHook('postCreation', (opts) => {
+	SubOfSomeADTCTypePost = opts;
+});
+
+// debugger;
 const subOfSomeADTCInstanceA = apply(someADTCInstance, SubOfSomeADTCType, [ 1, 2, 3 ]);
 
+// debugger;
 const subOfSomeADTCInstanceC = call(someADTCInstance, SubOfSomeADTCType, 1, 2, 3);
 
+// debugger;
 const subOfSomeADTCInstanceB = bind(someADTCInstance, SubOfSomeADTCType)(1, 2, 3);
 
 
@@ -594,6 +606,8 @@ describe('Main Test', () => {
 		moreOver,
 		anotherDefaultTypesCollection,
 		someADTCInstance,
+		SubOfSomeADTCTypePre,
+		SubOfSomeADTCTypePost,
 		subOfSomeADTCInstanceA,
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,

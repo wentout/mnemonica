@@ -46,6 +46,8 @@ const tests = (opts) => {
 		moreOver,
 		anotherDefaultTypesCollection,
 		someADTCInstance,
+		SubOfSomeADTCTypePre,
+		SubOfSomeADTCTypePost,
 		subOfSomeADTCInstanceA,
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,
@@ -347,6 +349,8 @@ const tests = (opts) => {
 
 			it('apply & call works correctly', () => {
 
+				expect(SubOfSomeADTCTypePre.existentInstance).equal(someADTCInstance);
+				expect(SubOfSomeADTCTypePost.existentInstance).equal(someADTCInstance);
 				expect(subOfSomeADTCInstanceA.test).equal(123);
 				expect(subOfSomeADTCInstanceA.sub_test).equal(321);
 				expect(subOfSomeADTCInstanceA.args).deep.to.equal([ 1, 2, 3 ]);
