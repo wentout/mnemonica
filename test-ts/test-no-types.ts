@@ -13,6 +13,7 @@ const SomeType = define( 'SomeType', function (this: {
 }, {
 	l : 12345
 });
+SomeType.registerHook('preCreation', () => { console.log('SomeType'); });
 
 const SomeSubType = SomeType.define( 'SomeSubType', function ( this: {
 	one: undefined,
@@ -28,7 +29,7 @@ const SomeSubType = SomeType.define( 'SomeSubType', function ( this: {
 });
 
 const first = new SomeType();
-
+SomeSubType.registerHook('preCreation', () => { console.log('SomeSubType'); });
 
 const x = first.one;
 first.one = 123;	// hinting is correct !
