@@ -7,6 +7,8 @@ const namespaceFlowCheckerSample = [
 	'SubOfSomeADTCType',
 	'SubOfSomeADTCType',
 	'SubOfSomeADTCType',
+	'SubOfSomeADTCType',
+	'SubOfSomeADTCType',
 	'UserType',
 	'UserType',
 	'UserTypePL1',
