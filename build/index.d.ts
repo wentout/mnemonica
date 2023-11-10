@@ -14,7 +14,7 @@ type hook = {
 type Proto<P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
 type SN = Record<string, new () => unknown>;
 interface IDefinitorInstance<N extends object, S> {
-    new (): {
+    new (...arg: unknown[]): {
         [key in keyof S]: S[key];
     };
     define: IDefinitor<N, string>;
