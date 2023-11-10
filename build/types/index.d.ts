@@ -1,7 +1,7 @@
 export type IDEF<T> = {
-    new (...args: unknown[]): T;
+    new (): T;
 } | {
-    (this: T, ...args: unknown[]): void;
+    (this: T, ...args: any[]): void;
 };
 export interface ConstructorFunction<ConstructorInstance extends object> {
     new (...args: unknown[]): ConstructorInstance;

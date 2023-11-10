@@ -3,8 +3,10 @@
 
 // type RN = Record<string|symbol, unknown>
 
+// type narrowable = string | number | boolean | symbol | object | undefined | void | null | [];
 // export type IDEF<T extends RN> = {	new(): T } | { (this: T): void };
-export type IDEF<T> = {	new(...args: unknown[]): T } | { (this: T, ...args: unknown[]): void };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type IDEF<T> = {	new(): T } | { (this: T, ...args: any[]): void };
 
 export interface ConstructorFunction<ConstructorInstance extends object> {
 	new( ...args: unknown[] ): ConstructorInstance;
