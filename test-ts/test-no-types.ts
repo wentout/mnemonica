@@ -4,11 +4,11 @@ import { define, apply, bind, call } from '..';
 
 const SomeType = define( 'SomeType', function (this: {
 	one: string,
-	check: 321,
+	check: number,
 	q: number
-}, gather: string ) {
+}, gather: string, check: number ) {
 	this.one = gather;
-	this.check = 321;
+	this.check = check;
 	this.q = 123;
 }, {
 	l : 12345
