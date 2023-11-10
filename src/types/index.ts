@@ -4,7 +4,7 @@
 // type RN = Record<string|symbol, unknown>
 
 // export type IDEF<T extends RN> = {	new(): T } | { (this: T): void };
-export type IDEF<T> = {	new(): T } | { (this: T): void };
+export type IDEF<T> = {	new(...args: unknown[]): T } | { (this: T, ...args: unknown[]): void };
 
 export interface ConstructorFunction<ConstructorInstance extends object> {
 	new( ...args: unknown[] ): ConstructorInstance;
