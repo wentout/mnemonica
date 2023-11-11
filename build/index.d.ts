@@ -12,12 +12,12 @@ type hook = {
     (opts: hooksOpts): void;
 };
 type constructorOptions = {
-    useOldStyle: boolean;
-    strictChain: boolean;
-    blockErrors: boolean;
-    submitStack: boolean;
-    awaitReturn: boolean;
-    bindedProto: boolean;
+    useOldStyle?: boolean;
+    strictChain?: boolean;
+    blockErrors?: boolean;
+    submitStack?: boolean;
+    awaitReturn?: boolean;
+    bindedProto?: boolean;
 };
 type Proto<P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
 type SN = Record<string, new () => unknown>;

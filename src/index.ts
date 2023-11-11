@@ -37,34 +37,34 @@ type constructorOptions = {
 	// e.g. with prototype described with:
 	//    createInstanceModificator200XthWay
 	// or more general with: createInstanceModificator
-	useOldStyle : boolean,
+	useOldStyle? : boolean,
 
 	// shall or not we use strict checking
 	// for creation sub-instances Only from current type
 	// or we might use up-nested sub-instances from chain
-	strictChain : boolean,
+	strictChain? : boolean,
 
 	// should we use forced errors checking
 	// to make all inherited types errored
 	// if there is an error somewhere in chain
 	// disallow instance construction
 	// if there is an error in prototype chain
-	blockErrors : boolean,
+	blockErrors? : boolean,
 
 	// if it is necessary to collect stack
 	// as a __stack__ prototype property
 	// during the process of instance creation
-	submitStack : boolean,
+	submitStack? : boolean,
 
 	// await new Constructor()
 	// must return value
 	// optional ./issues/106
-	awaitReturn : boolean,
+	awaitReturn? : boolean,
 
 	// instance methods calls
 	// are binded by default
 	// with instance itself
-	bindedProto : boolean,
+	bindedProto? : boolean,
 
 }
 
