@@ -11,6 +11,14 @@ type hooksOpts = {
 type hook = {
     (opts: hooksOpts): void;
 };
+type constructorOptions = {
+    useOldStyle: boolean;
+    strictChain: boolean;
+    blockErrors: boolean;
+    submitStack: boolean;
+    awaitReturn: boolean;
+    bindedProto: boolean;
+};
 type Proto<P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
 type SN = Record<string, new () => unknown>;
 interface IDefinitorInstance<N extends object, S> {
@@ -21,9 +29,9 @@ interface IDefinitorInstance<N extends object, S> {
     registerHook: (hookType: hooksTypes, cb: hook) => void;
 }
 interface IDefinitor<P extends object, SubTypeName extends string> {
-    <PP extends object, T, M extends Proto<P, Proto<PP, T>>, S extends SN & M>(this: unknown, TypeName: SubTypeName, constructHandler: IDEF<T>, proto?: PP, config?: object): IDefinitorInstance<M, S>;
+    <PP extends object, T, M extends Proto<P, Proto<PP, T>>, S extends SN & M>(this: unknown, TypeName: SubTypeName, constructHandler: IDEF<T>, proto?: PP, config?: constructorOptions): IDefinitorInstance<M, S>;
 }
-export declare const define: <T, P extends object, N extends Proto<P, T>, S extends SN & N, R extends IDefinitorInstance<N, S>>(this: unknown, TypeName?: string, constructHandler?: IDEF<T> | undefined, proto?: P | undefined, config?: {}) => R;
+export declare const define: <T, P extends object, N extends Proto<P, T>, S extends SN & N, R extends IDefinitorInstance<N, S>>(this: unknown, TypeName?: string, constructHandler?: IDEF<T> | undefined, proto?: P | undefined, config?: constructorOptions) => R;
 export declare const lookup: TypeLookup;
 export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, ...args: unknown[]) => { [key in keyof S]: S[key]; };

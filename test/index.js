@@ -230,7 +230,7 @@ const {
 
 const SomeADTCType = adtcDefine('SomeADTCType', function () {
 	this.test = 123;
-});
+}, {}, { strictChain : false });
 
 const someADTCInstance = new SomeADTCType();
 
@@ -239,7 +239,7 @@ let SubOfSomeADTCTypePost = null;
 const SubOfSomeADTCType = SomeADTCType.define('SubOfSomeADTCType', function (...args) {
 	this.sub_test = 321;
 	this.args = args;
-});
+}, {}, { strictChain : false });
 
 SubOfSomeADTCType.registerHook('preCreation', (opts) => {
 	SubOfSomeADTCTypePre = opts;
@@ -248,9 +248,13 @@ SubOfSomeADTCType.registerHook('postCreation', (opts) => {
 	SubOfSomeADTCTypePost = opts;
 });
 
+
 // debugger;
 const subOfSomeADTCInstanceANoArgs = apply(someADTCInstance, SubOfSomeADTCType);
 const subOfSomeADTCInstanceA = apply(someADTCInstance, SubOfSomeADTCType, [ 1, 2, 3 ]);
+
+// debugger;
+const backSub = new subOfSomeADTCInstanceA.SubOfSomeADTCType;
 
 // debugger;
 const subOfSomeADTCInstanceC = call(someADTCInstance, SubOfSomeADTCType, 1, 2, 3);
@@ -611,6 +615,7 @@ describe('Main Test', () => {
 		SubOfSomeADTCTypePost,
 		subOfSomeADTCInstanceANoArgs,
 		subOfSomeADTCInstanceA,
+		backSub,
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,
 		anotherNamespace,

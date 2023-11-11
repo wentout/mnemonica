@@ -37,7 +37,7 @@ const tests = (opts) => {
 			assert.equal(8, userTypeHooksInvocations.length);
 			debugger;
 			// +2
-			assert.equal(179, namespaceFlowCheckerInvocations.length);
+			assert.equal(181, namespaceFlowCheckerInvocations.length);
 			// +2
 			assert.equal(169, typesFlowCheckerInvocations.length);
 			// +1
@@ -48,10 +48,10 @@ const tests = (opts) => {
 			// +1
 			assert.equal(77, typesPostCreationInvocations.length);
 			// +1
-			assert.equal(97, namespacePreCreationInvocations.length);
+			assert.equal(98, namespacePreCreationInvocations.length);
 			// there are two registered Hooks, that is why
 			// +2
-			assert.equal(164, namespacePostCreationInvocations.length);
+			assert.equal(166, namespacePostCreationInvocations.length);
 		});
 	});
 
