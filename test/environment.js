@@ -49,6 +49,7 @@ const tests = (opts) => {
 		SubOfSomeADTCTypePre,
 		SubOfSomeADTCTypePost,
 		subOfSomeADTCInstanceA,
+		backSub,
 		subOfSomeADTCInstanceANoArgs,
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,
@@ -365,6 +366,16 @@ const tests = (opts) => {
 				expect(subOfSomeADTCInstanceB.test).equal(123);
 				expect(subOfSomeADTCInstanceB.sub_test).equal(321);
 				expect(subOfSomeADTCInstanceB.args).deep.to.equal([ 1, 2, 3 ]);
+
+			});
+
+			it('non strict chain works correctly', () => {
+
+				expect(backSub.sub_test).equal(321);
+				expect(backSub.constructor.name).equal('SubOfSomeADTCType');
+				expect(backSub.__parent__.constructor.name).equal('SubOfSomeADTCType');
+				expect(backSub.__parent__.__parent__.constructor.name).equal('SomeADTCType');
+				expect(backSub.__parent__.__parent__.__parent__.constructor.name).equal('Mnemonica');
 
 			});
 

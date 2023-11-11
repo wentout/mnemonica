@@ -30,6 +30,45 @@ type hook = {
 	(opts: hooksOpts): void
 }
 
+type constructorOptions = {
+
+	// explicit declaration we wish use
+	// an old style based constructors
+	// e.g. with prototype described with:
+	//    createInstanceModificator200XthWay
+	// or more general with: createInstanceModificator
+	useOldStyle : boolean,
+
+	// shall or not we use strict checking
+	// for creation sub-instances Only from current type
+	// or we might use up-nested sub-instances from chain
+	strictChain : boolean,
+
+	// should we use forced errors checking
+	// to make all inherited types errored
+	// if there is an error somewhere in chain
+	// disallow instance construction
+	// if there is an error in prototype chain
+	blockErrors : boolean,
+
+	// if it is necessary to collect stack
+	// as a __stack__ prototype property
+	// during the process of instance creation
+	submitStack : boolean,
+
+	// await new Constructor()
+	// must return value
+	// optional ./issues/106
+	awaitReturn : boolean,
+
+	// instance methods calls
+	// are binded by default
+	// with instance itself
+	bindedProto : boolean,
+
+}
+
+
 type Proto <P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
 
 // type Narrowable =
@@ -51,7 +90,7 @@ interface IDefinitor<P extends object, SubTypeName extends string> {
 		TypeName: SubTypeName,
 		constructHandler: IDEF<T>,
 		proto?: PP,
-		config?: object,
+		config?: constructorOptions,
 	): IDefinitorInstance<M, S>
 }
 
@@ -71,7 +110,7 @@ export const define = function <
 	TypeName?: string,
 	constructHandler?: IDEF<T>,
 	proto?: P,
-	config = {},
+	config?: constructorOptions,
 ): R {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// if (typeof constructHandler !== 'function') {
