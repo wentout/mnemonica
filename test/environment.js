@@ -53,6 +53,7 @@ const tests = (opts) => {
 		subOfSomeADTCInstanceANoArgs,
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,
+		myDecoratedSubInstance,
 		anotherNamespace,
 		anotherTypesCollection,
 		oneElseTypesCollection,
@@ -103,6 +104,9 @@ const tests = (opts) => {
 				'apply',
 				'call',
 				'bind',
+				'decorate',
+				'registerHook',
+
 			];
 
 			const mnemonica_keys = Object.keys(mnemonica);
@@ -347,6 +351,11 @@ const tests = (opts) => {
 			});
 			it('should create instances for in anotherDefaultTypesCollection', () => {
 				expect(someADTCInstance.test).equal(123);
+			});
+
+			it('decorate works correctly', () => {
+				expect(myDecoratedSubInstance.sub_field).equal(321);
+				expect(myDecoratedSubInstance.field).equal(123);
 			});
 
 			it('apply & call works correctly', () => {
