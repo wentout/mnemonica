@@ -1,4 +1,4 @@
-/* eslint-disable new-cap */
+/* eslint-disable @typescript-eslint/ban-ts-comment, indent, new-cap, space-before-function-paren */
 'use strict';
 
 import { TypeLookup, IDEF } from './types';
@@ -113,16 +113,6 @@ export const define = function <
 	config?: constructorOptions,
 ): R {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	// if (typeof constructHandler !== 'function') {
-	// 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// 	// @ts-ignore
-	// 	// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-unused-vars
-	// 	return function (decoratorConstructHandler: Function, y: unknown) {
-	// 		if (typeof decoratorConstructHandler === 'function') {
-	// 			types.define(decoratorConstructHandler.name, decoratorConstructHandler, proto, config);
-	// 		}
-	// 	};
-	// }
 	return types.define(TypeName, constructHandler, proto, config);
 };
 
@@ -134,8 +124,6 @@ export const lookup = function (TypeNestedPath) {
 export const apply = function <E extends object, T extends object, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, args: unknown[] = []): {
 	[key in keyof S]: S[key]
 } {
-	// const result = Constructor.apply(entity, args);
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	const result = new entity[ Constructor.TypeName ](...args);
 	return result;
@@ -144,9 +132,7 @@ export const apply = function <E extends object, T extends object, S extends Pro
 export const call = function <E extends object, T extends object, S extends Proto<E, T>> (entity: E, Constructor: IDEF<T>, ...args: unknown[]): {
 	[key in keyof S]: S[key]
 } {
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	// const result = Constructor.call(entity, ...args);
 	const result = new entity[ Constructor.TypeName ](...args);
 	return result;
 };
@@ -155,13 +141,28 @@ export const bind = function <E extends object, T extends object, S extends Prot
 	[key in keyof S]: S[key]
 } {
 	return (...args) => {
-		// const result = Constructor.call(entity, ...args);
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
 		const result = new entity[ Constructor.TypeName ](...args);
 		return result;
 	};
 };
+
+export const decorate = function (parentClass: unknown = undefined, proto?: object, config?: constructorOptions ) {
+	const decorator = function<T extends { new(): unknown }>(cstr: T, s: ClassDecoratorContext<T>): T {
+		if (parentClass === undefined ) {
+			return define(s.name, cstr, proto, config) as unknown as typeof cstr;
+		}
+		// @ts-ignore
+		return parentClass.define(s.name, cstr, proto, config) as unknown as typeof cstr;
+	};
+	return decorator;
+};
+
+export const registerHook = function <T extends object> (Constructor: IDEF<T>, hookType: hooksTypes, cb: hook): void {
+	// @ts-ignore
+	Constructor.registerHook(hookType, cb);
+};
+
 export const mnemonica = Object.entries({
 
 	define,
@@ -169,6 +170,8 @@ export const mnemonica = Object.entries({
 	apply,
 	call,
 	bind,
+	decorate,
+	registerHook,
 
 	...descriptors,
 
@@ -214,4 +217,4 @@ export const errors = descriptors.ErrorsTypes;
 
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
-/* eslint-enable new-cap */
+/* eslint-enable @typescript-eslint/ban-ts-comment, indent, new-cap, space-before-function-paren */

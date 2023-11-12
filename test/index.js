@@ -18,11 +18,14 @@ const asyncConstructionTest = true;
 
 const mnemonica = require('..');
 
+const { myDecoratedSubInstance } = require('./decorate');
+
 const {
 	define,
 	apply,
 	call,
 	bind,
+	registerHook,
 	defaultTypes: types,
 	createNamespace,
 	createTypesCollection,
@@ -67,7 +70,7 @@ const UserType = mnemonica.define('UserType', function (userData) {
 
 const userTypeHooksInvocations = [];
 
-UserType.registerHook('preCreation', function (opts) {
+registerHook(UserType, 'preCreation', function (opts) {
 	userTypeHooksInvocations.push({
 		kind : 'pre',
 		sort : 'type',
@@ -387,8 +390,6 @@ SubOfNestedAsync.registerHook('postCreation', function (opts) {
 	SubOfNestedAsyncPostHookData = opts;
 });
 
-
-
 // debugger;
 describe('Main Test', () => {
 
@@ -618,6 +619,7 @@ describe('Main Test', () => {
 		backSub,
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,
+		myDecoratedSubInstance,
 		anotherNamespace,
 		anotherTypesCollection,
 		oneElseTypesCollection,

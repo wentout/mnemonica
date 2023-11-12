@@ -1,6 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.defineStackCleaner = exports.utils = exports.errors = exports.defaultCollection = exports.createTypesCollection = exports.defaultNamespace = exports.namespaces = exports.createNamespace = exports.ErrorMessages = exports.TYPE_TITLE_PREFIX = exports.URANUS = exports.GAIA = exports.MNEMOSYNE = exports.MNEMONICA = exports.SymbolConfig = exports.SymbolDefaultTypesCollection = exports.SymbolDefaultNamespace = exports.SymbolReplaceGaia = exports.SymbolGaia = exports.SymbolConstructorName = exports.SymbolSubtypeCollection = exports.mnemonica = exports.bind = exports.call = exports.apply = exports.lookup = exports.define = exports.defaultTypes = void 0;
+exports.defineStackCleaner = exports.utils = exports.errors = exports.defaultCollection = exports.createTypesCollection = exports.defaultNamespace = exports.namespaces = exports.createNamespace = exports.ErrorMessages = exports.TYPE_TITLE_PREFIX = exports.URANUS = exports.GAIA = exports.MNEMOSYNE = exports.MNEMONICA = exports.SymbolConfig = exports.SymbolDefaultTypesCollection = exports.SymbolDefaultNamespace = exports.SymbolReplaceGaia = exports.SymbolGaia = exports.SymbolConstructorName = exports.SymbolSubtypeCollection = exports.mnemonica = exports.registerHook = exports.decorate = exports.bind = exports.call = exports.apply = exports.lookup = exports.define = exports.defaultTypes = void 0;
 const constants_1 = require("./constants");
 const { odp } = constants_1.constants;
 const errorsApi = require("./api/errors");
@@ -35,11 +35,27 @@ const bind = function (entity, Constructor) {
     };
 };
 exports.bind = bind;
+const decorate = function (parentClass = undefined, proto, config) {
+    const decorator = function (cstr, s) {
+        if (parentClass === undefined) {
+            return (0, exports.define)(s.name, cstr, proto, config);
+        }
+        return parentClass.define(s.name, cstr, proto, config);
+    };
+    return decorator;
+};
+exports.decorate = decorate;
+const registerHook = function (Constructor, hookType, cb) {
+    Constructor.registerHook(hookType, cb);
+};
+exports.registerHook = registerHook;
 exports.mnemonica = Object.entries(Object.assign(Object.assign(Object.assign({ define: exports.define,
     lookup: exports.lookup,
     apply: exports.apply,
     call: exports.call,
-    bind: exports.bind }, descriptors_1.descriptors), errorsApi), constants_1.constants)).reduce((acc, entry) => {
+    bind: exports.bind,
+    decorate: exports.decorate,
+    registerHook: exports.registerHook }, descriptors_1.descriptors), errorsApi), constants_1.constants)).reduce((acc, entry) => {
     const [name, code] = entry;
     odp(acc, name, {
         get() {

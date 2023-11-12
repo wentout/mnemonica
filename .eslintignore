@@ -1,3 +1,4 @@
 test/example.js
+test/decorate.js
 build/**/*.d.ts
 .eslintrc.js
