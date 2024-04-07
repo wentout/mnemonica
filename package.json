@@ -1,6 +1,6 @@
 {
 	"name": "mnemonica",
-	"version": "0.9.981",
+	"version": "0.9.982",
 	"description": "abstract technique that aids information retention : instance inheritance system",
 	"type": "commonjs",
 	"main": "./build/index.js",
@@ -83,7 +83,7 @@
 		"typescript": "^5.3.3"
 	},
 	"engines": {
-		"node": ">=14"
+		"node": ">=16"
 	},
 	"husky": {
 		"hooks": {
