@@ -522,6 +522,7 @@ const tests = (opts) => {
 				assert.equal(errored.message, 'wrong modification pattern : should inherit from mnemonica instance');
 			});
 			it('thrown error.stack should have seekable definition without stack cleaner', () => {
+				debugger;
 				expect(errored.stack.indexOf(stackstart)).equal(1);
 				expect(errored.stack
 					.indexOf('environment.js') > 0).is.true;
