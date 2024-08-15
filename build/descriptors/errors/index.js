@@ -12,3 +12,4 @@ Object.entries(ErrorMessages).forEach(entry => {
     const ErrorConstructor = (0, errors_1.constructError)(ErrorConstructorName, message);
     exports.ErrorsTypes[ErrorConstructorName] = ErrorConstructor;
 });
+//# sourceMappingURL=index.js.map

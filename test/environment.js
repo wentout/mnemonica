@@ -521,6 +521,9 @@ const tests = (opts) => {
 				expect(errored.message).exist.and.is.a('string');
 				assert.equal(errored.message, 'wrong modification pattern : should inherit from mnemonica instance');
 			});
+			it('thrown error should have own .stack property', () => {
+				assert.equal(hop(errored, 'stack'), true);
+			});
 			it('thrown error.stack should have seekable definition without stack cleaner', () => {
 				debugger;
 				expect(errored.stack.indexOf(stackstart)).equal(1);
@@ -936,6 +939,14 @@ const tests = (opts) => {
 		} catch (error) {
 			errorInstance = error;
 		}
+		it('.exception() shoud have own stack property', () => {
+			expect(hop(errorInstance, 'stack')).equal(true);
+			// console.log(errorInstance.stack.indexOf('<-- of constructor definitions stack -->'), '!!!!!!!!!!!!!');
+			// expect(errorInstance.stack.indexOf('<-- of constructor definitions stack -->')).equal(1985); v20
+			// expect(errorInstance.stack.indexOf('<-- of constructor definitions stack -->')).equal(2126); v22
+			expect(errorInstance.stack.indexOf('<-- of constructor definitions stack -->') > 1000).equal(true);
+			// process.exit(0);
+		});
 		it('.exception() shoud create instanceof Error', () => {
 			expect(errorInstance).instanceOf(Error);
 		});

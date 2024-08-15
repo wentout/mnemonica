@@ -11,3 +11,4 @@ const defineStackCleaner = (regexp) => {
     errors_2.stackCleaners.push(regexp);
 };
 exports.defineStackCleaner = defineStackCleaner;
+//# sourceMappingURL=defineStackCleaner.js.map

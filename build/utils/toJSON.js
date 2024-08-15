@@ -28,3 +28,4 @@ const toJSON = (instance) => {
         .replace(/,$/, '}');
 };
 exports.toJSON = toJSON;
+//# sourceMappingURL=toJSON.js.map

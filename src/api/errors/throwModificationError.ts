@@ -115,7 +115,18 @@ export const throwModificationError = function ( this: any, error: any ) {
 
 	}
 
-	erroredInstance.stack = cleanupStack( stack ).join( '\n' );
+	const erroredInstanceStack = cleanupStack( stack ).join( '\n' );
+
+	// starting from Node.js v22 we should define this property through odp
+	// that was unnecessary for v20, though seems new v8 optimized compiler
+	// is gathering value from deep chain and while comparing it with 
+	// assignment operator, then it will not create this property 
+	// so we need direct property declaration here ...
+	odp ( erroredInstance, 'stack', {
+		get () {
+			return erroredInstanceStack;
+		}
+	});
 
 	self.inheritedInstance = erroredInstance;
 

@@ -72,3 +72,4 @@ var utils_1 = require("./utils");
 Object.defineProperty(exports, "utils", { enumerable: true, get: function () { return utils_1.utils; } });
 var utils_2 = require("./utils");
 Object.defineProperty(exports, "defineStackCleaner", { enumerable: true, get: function () { return utils_2.defineStackCleaner; } });
+//# sourceMappingURL=index.js.map

@@ -1,5 +1,5 @@
 import { ConstructorFunction } from '../../types';
-export declare const InstanceCreator: ConstructorFunction<{
+declare const InstanceCreatorPrototype: {
     getExistentAsyncStack: (existentInstance: import("../utils").asyncStack) => unknown;
     postProcessing: (this: any, continuationOf: any) => void;
     bindMethod: (this: any, instance: any, methodName: string, MethodItself: any) => void;
@@ -14,4 +14,6 @@ export declare const InstanceCreator: ConstructorFunction<{
         namespace: any;
     };
     throwModificationError: (this: any, error: any) => void;
-}>;
+};
+export declare const InstanceCreator: ConstructorFunction<typeof InstanceCreatorPrototype>;
+export {};

@@ -181,3 +181,4 @@ const lookup = function (TypeNestedPath) {
     return exports.lookup.call(type.subtypes, NextNestedPath);
 };
 exports.lookup = lookup;
+//# sourceMappingURL=index.js.map

@@ -260,3 +260,4 @@ exports.InstanceCreator = function (type, existentInstance, args, chained) {
     return self.inheritedInstance;
 };
 Object.assign(exports.InstanceCreator.prototype, InstanceCreatorPrototype);
+//# sourceMappingURL=InstanceCreator.js.map

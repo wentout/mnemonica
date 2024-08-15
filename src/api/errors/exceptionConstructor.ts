@@ -141,7 +141,13 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 	stack.push( '\n<-- of constructor definitions stack -->' );
 	stack.push( ...typeStack );
 
-	exception.stack = cleanupStack( stack ).join( '\n' );
+	const exceptionStack = cleanupStack( stack ).join( '\n' );
+
+	odp( exception, 'stack', {
+		get () {
+			return exceptionStack;
+		}
+	});
 
 	return exception;
 

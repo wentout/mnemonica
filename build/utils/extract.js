@@ -18,3 +18,4 @@ const extract = (instance) => {
     return extracted;
 };
 exports.extract = extract;
+//# sourceMappingURL=extract.js.map

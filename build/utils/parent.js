@@ -19,3 +19,4 @@ const parent = (instance, path) => {
         p : (0, exports.parent)(p, path);
 };
 exports.parent = parent;
+//# sourceMappingURL=parent.js.map

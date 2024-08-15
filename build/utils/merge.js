@@ -17,3 +17,4 @@ const merge = (a, b, ...args) => {
     return aa;
 };
 exports.merge = merge;
+//# sourceMappingURL=merge.js.map

@@ -136,3 +136,4 @@ exports.default = {
         return Object.keys(MnemonicaProtoProps);
     }
 };
+//# sourceMappingURL=Mnemosyne.js.map

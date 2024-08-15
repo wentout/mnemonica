@@ -1,5 +1,6 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = default_1;
 const obeyConstructor_1 = require("./obeyConstructor");
 function default_1() {
     const CreateInstanceModificator = function (ModificatorType, ModificatorTypePrototype, addProps) {
@@ -26,4 +27,4 @@ function default_1() {
     };
     return CreateInstanceModificator;
 }
-exports.default = default_1;
+//# sourceMappingURL=createInstanceModificator.js.map

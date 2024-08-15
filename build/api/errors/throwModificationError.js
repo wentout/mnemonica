@@ -62,7 +62,12 @@ const throwModificationError = function (error) {
         stack.push('\n<-- of constructor definitions stack -->');
         stack.push(...typeStack);
     }
-    erroredInstance.stack = (0, _1.cleanupStack)(stack).join('\n');
+    const erroredInstanceStack = (0, _1.cleanupStack)(stack).join('\n');
+    odp(erroredInstance, 'stack', {
+        get() {
+            return erroredInstanceStack;
+        }
+    });
     self.inheritedInstance = erroredInstance;
     const results = self.invokePostHooks();
     const { type, collection, namespace } = results;
@@ -101,3 +106,4 @@ const throwModificationError = function (error) {
     throw erroredInstance;
 };
 exports.throwModificationError = throwModificationError;
+//# sourceMappingURL=throwModificationError.js.map
