@@ -14,3 +14,4 @@ const registerFlowChecker = function (cb) {
     exports.flowCheckers.set(this, cb);
 };
 exports.registerFlowChecker = registerFlowChecker;
+//# sourceMappingURL=flowCheckers.js.map

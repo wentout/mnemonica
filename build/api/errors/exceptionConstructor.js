@@ -83,7 +83,12 @@ const exceptionConsctructHandler = function (opts) {
     });
     stack.push('\n<-- of constructor definitions stack -->');
     stack.push(...typeStack);
-    exception.stack = (0, errors_2.cleanupStack)(stack).join('\n');
+    const exceptionStack = (0, errors_2.cleanupStack)(stack).join('\n');
+    odp(exception, 'stack', {
+        get() {
+            return exceptionStack;
+        }
+    });
     return exception;
 };
 const prepareException = function (target, error, ...args) {
@@ -108,3 +113,4 @@ const prepareException = function (target, error, ...args) {
     return new ExceptionCreator.InstanceModificator();
 };
 exports.default = prepareException;
+//# sourceMappingURL=exceptionConstructor.js.map

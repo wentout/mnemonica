@@ -23,3 +23,4 @@ const pick = (instance, ...args) => {
     return picked;
 };
 exports.pick = pick;
+//# sourceMappingURL=pick.js.map

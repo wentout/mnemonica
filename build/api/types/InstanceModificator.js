@@ -11,3 +11,4 @@ const makeInstanceModificator = (self) => {
     return result;
 };
 exports.makeInstanceModificator = makeInstanceModificator;
+//# sourceMappingURL=InstanceModificator.js.map

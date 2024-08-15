@@ -28,3 +28,4 @@ const obey = (existentInstance, ModificatorType) => {
     Reflect.setPrototypeOf(protoConstructor, existentInstance.constructor);
 };
 exports.obey = obey;
+//# sourceMappingURL=obeyConstructor.js.map

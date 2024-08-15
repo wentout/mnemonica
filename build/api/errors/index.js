@@ -71,3 +71,4 @@ const constructError = (name, message) => {
     return NamedErrorConstructor;
 };
 exports.constructError = constructError;
+//# sourceMappingURL=index.js.map

@@ -39,3 +39,4 @@ const compileNewModificatorFunctionBody = function (FunctionName, asClass = fals
     };
 };
 exports.default = compileNewModificatorFunctionBody;
+//# sourceMappingURL=compileNewModificatorFunctionBody.js.map

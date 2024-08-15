@@ -154,3 +154,4 @@ exports.TypeProxy.prototype.construct = function (__, args) {
     const instance = new InstanceCreator_1.InstanceCreator(type, gaiaProxy, args);
     return instance;
 };
+//# sourceMappingURL=TypeProxy.js.map

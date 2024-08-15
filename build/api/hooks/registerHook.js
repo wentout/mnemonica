@@ -23,3 +23,4 @@ const registerHook = function (hookType, cb) {
     }
 };
 exports.registerHook = registerHook;
+//# sourceMappingURL=registerHook.js.map

@@ -25,6 +25,7 @@ const tests = (opts) => {
 					expect(error).instanceOf(Error);
 					expect(error).instanceOf(TypeError);
 					expect(error).instanceOf(ThrowTypeError);
+					expect(Object.hasOwnProperty.call(error, 'stack'), true);
 					// debugger;
 					console.log(error.stack);
 					passedCb();

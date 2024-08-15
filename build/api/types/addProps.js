@@ -66,3 +66,4 @@ exports.addProps = addProps;
 module.exports = {
     addProps: exports.addProps
 };
+//# sourceMappingURL=addProps.js.map

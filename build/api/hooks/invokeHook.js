@@ -48,3 +48,4 @@ const invokeHook = function (hookType, opts) {
     return invocationResults;
 };
 exports.invokeHook = invokeHook;
+//# sourceMappingURL=invokeHook.js.map
