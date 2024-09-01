@@ -20,7 +20,7 @@ module.exports = {
 		'@typescript-eslint'
 	],
 	rules: {
-		indent: ['error', 'tab'],
+		'indent': ['error', 'tab'],
 		'key-spacing': [
 			'warn',
 			{
@@ -30,8 +30,8 @@ module.exports = {
 			},
 		],
 		'linebreak-style': ['error', 'unix'],
-		quotes: ['error', 'single'],
-		semi: ['error', 'always'],
+		'quotes': ['error', 'single'],
+		'semi': ['error', 'always'],
 		'no-unused-vars': 'off',
 		'@typescript-eslint/no-unused-vars': 'error',
 		'no-shadow': [
@@ -42,11 +42,11 @@ module.exports = {
 				allow: [],
 			},
 		],
-		'array-bracket-spacing': ['warn', 'always'],
+		'array-bracket-spacing': ['error', 'always'],
 		'computed-property-spacing': ['error', 'always'],
 		'object-curly-spacing': ['error', 'always'],
 		'space-before-function-paren': [
-			'warn', {
+			'error', {
 				'anonymous': 'always',
 				'named': 'always',
 				'asyncArrow': 'always'
@@ -84,6 +84,7 @@ module.exports = {
 		],
 		'@typescript-eslint/no-var-requires': 'off',
 		'@typescript-eslint/no-empty-function': 'off',
+		'@typescript-eslint/no-explicit-any': 'off',
 		yoda: 'warn',
 	},
 	overrides: [{

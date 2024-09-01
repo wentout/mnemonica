@@ -92,11 +92,11 @@ const invokePostHooks = function ( this: any ) {
 
 	return {
 
-		type : type.invokeHook( hookType, hookData ),
+		type: type.invokeHook( hookType, hookData ),
 
-		collection : collection.invokeHook( hookType, hookData ),
+		collection: collection.invokeHook( hookType, hookData ),
 
-		namespace : namespace.invokeHook( hookType, hookData )
+		namespace: namespace.invokeHook( hookType, hookData )
 
 	};
 
@@ -113,13 +113,13 @@ const bindMethod = function ( this: any, instance: any, methodName: string, Meth
 				// || instance;
 				const applyTo = this !== undefined ? this : from;
 				const exceptionReason = {
-					method : MethodItself,
+					method: MethodItself,
 					methodName,
-					this   : this,
+					this: this,
 					from,
 					instance,
 					applyTo,
-					asNew  : false,
+					asNew: false,
 					args,
 				};
 
@@ -135,8 +135,8 @@ const bindMethod = function ( this: any, instance: any, methodName: string, Meth
 					if ( answer instanceof Promise ) {
 						answer = answer.catch( ( error ) => {
 							odp( exceptionReason, 'error', {
-								value      : error,
-								enumerable : true
+								value: error,
+								enumerable: true
 							} );
 							throw bindedMethodErrorHandler( exceptionReason );
 						} );
@@ -145,20 +145,20 @@ const bindMethod = function ( this: any, instance: any, methodName: string, Meth
 					return answer;
 				} catch ( error ) {
 					odp( exceptionReason, 'error', {
-						value      : error,
-						enumerable : true
+						value: error,
+						enumerable: true
 					} );
 
 					throw bindedMethodErrorHandler( exceptionReason );
 				}
 			};
 		},
-		enumerable : true
+		enumerable: true
 	} );
 };
 
 const bindProtoMethods = function ( this: any ) {
-// eslint-disable-next-line @typescript-eslint/no-this-alias
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 	const {
 		inheritedInstance,
@@ -402,7 +402,9 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 
 		try {
 
-			self.inheritedInstance = new self.InstanceModificator( ...args );
+			const answer = new self.InstanceModificator( ...args );
+			// debugger;
+			self.inheritedInstance = answer;
 
 		} catch ( error ) {
 
@@ -412,7 +414,9 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 
 	} else {
 
-		self.inheritedInstance = new self.InstanceModificator( ...args );
+		const answer = new self.InstanceModificator( ...args );
+		// debugger;
+		self.inheritedInstance = answer;
 
 	}
 

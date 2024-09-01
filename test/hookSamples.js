@@ -87,6 +87,8 @@ const namespaceFlowCheckerSample = [
 	'UserTypeConstructor',
 	'UserTypeConstructor',
 	'UserTypeConstructor',
+	'NullishReturn',
+	'NullishReturn',
 	'NamedFunction',
 	'BadBadType',
 	'BadBadType',

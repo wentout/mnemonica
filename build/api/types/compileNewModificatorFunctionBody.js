@@ -9,8 +9,18 @@ const getClassConstructor = (ConstructHandler, CreationHandler) => {
     };
 };
 const getFunctionConstructor = (ConstructHandler, CreationHandler) => {
+    const newable = Object.hasOwnProperty.call(ConstructHandler, 'prototype');
     return function (...args) {
-        const answer = ConstructHandler.call(this, ...args);
+        let answer;
+        if (!newable) {
+            answer = ConstructHandler.call(this, ...args);
+        }
+        else {
+            const _proto = ConstructHandler.prototype;
+            ConstructHandler.prototype = this.constructor.prototype;
+            answer = new ConstructHandler(...args);
+            ConstructHandler.prototype = _proto;
+        }
         return CreationHandler.call(this, answer);
     };
 };

@@ -1,13 +1,13 @@
 'use strict';
 
-const { assert } = require('chai');
+const { assert } = require( 'chai' );
 
 const {
 	defaultTypes: types,
 	defaultNamespace,
-} = require('..');
+} = require( '..' );
 
-const tests = (opts) => {
+const tests = ( opts ) => {
 
 	const {
 		userTypeHooksInvocations,
@@ -20,43 +20,43 @@ const tests = (opts) => {
 	} = opts;
 
 
-	describe('Hooks Tests', () => {
-		it('check invocations test', () => {
-			const { namespaceFlowCheckerSample } = require('./hookSamples');
-			namespaceFlowCheckerInvocations.forEach((el, idx) => {
+	describe( 'Hooks Tests', () => {
+		it( 'check invocations test', () => {
+			const { namespaceFlowCheckerSample } = require( './hookSamples' );
+			namespaceFlowCheckerInvocations.forEach( ( el, idx ) => {
 				const nst = namespaceFlowCheckerSample[ idx ];
 				const elt = el.TypeName;
-				// if (nst != elt) {
-				// 	console.log(idx);
-				// 	debugger;
-				// }
-				assert.equal(nst, elt);
-			});
-		});
-		it('check invocations count', () => {
-			assert.equal(8, userTypeHooksInvocations.length);
+				if ( nst != elt ) {
+					console.log( idx, nst, elt );
+					debugger;
+				}
+				assert.equal( nst, elt );
+			} );
+		} );
+		it( 'check invocations count', () => {
+			assert.equal( 8, userTypeHooksInvocations.length );
 			debugger;
 			// +2
-			assert.equal(181, namespaceFlowCheckerInvocations.length);
+			assert.equal( 183, namespaceFlowCheckerInvocations.length );
 			// +2
-			assert.equal(169, typesFlowCheckerInvocations.length);
+			assert.equal( 171, typesFlowCheckerInvocations.length );
 			// +1
-			assert.equal(92, typesPreCreationInvocations.length);
+			assert.equal( 93, typesPreCreationInvocations.length );
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
 			// +1
-			assert.equal(77, typesPostCreationInvocations.length);
+			assert.equal( 78, typesPostCreationInvocations.length );
 			// +1
-			assert.equal(98, namespacePreCreationInvocations.length);
+			assert.equal( 99, namespacePreCreationInvocations.length );
 			// there are two registered Hooks, that is why
 			// +2
-			assert.equal(166, namespacePostCreationInvocations.length);
-		});
-	});
+			assert.equal( 168, namespacePostCreationInvocations.length );
+		} );
+	} );
 
-	describe('check invocations of "this"', () => {
-		userTypeHooksInvocations.forEach(entry => {
+	describe( 'check invocations of "this"', () => {
+		userTypeHooksInvocations.forEach( entry => {
 			const {
 				self,
 				opts: {
@@ -65,51 +65,51 @@ const tests = (opts) => {
 				sort,
 				kind,
 			} = entry;
-			it(`'this' for ${kind}-hook of ${sort} should refer to type ${type.TypeName}`, () => {
-				assert.equal(self, type);
-			});
-		});
-		typesPreCreationInvocations.forEach(entry => {
+			it( `'this' for ${kind}-hook of ${sort} should refer to type ${type.TypeName}`, () => {
+				assert.equal( self, type );
+			} );
+		} );
+		typesPreCreationInvocations.forEach( entry => {
 			const {
 				self,
 				sort,
 				kind,
 			} = entry;
-			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultTypes`, () => {
-				assert.equal(self, types);
-			});
-		});
-		typesPostCreationInvocations.forEach(entry => {
+			it( `'this' for ${kind}-hook of ${sort} should refer to type defaultTypes`, () => {
+				assert.equal( self, types );
+			} );
+		} );
+		typesPostCreationInvocations.forEach( entry => {
 			const {
 				self,
 				sort,
 				kind,
 			} = entry;
-			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultTypes`, () => {
-				assert.equal(self, types);
-			});
-		});
-		namespacePreCreationInvocations.forEach(entry => {
+			it( `'this' for ${kind}-hook of ${sort} should refer to type defaultTypes`, () => {
+				assert.equal( self, types );
+			} );
+		} );
+		namespacePreCreationInvocations.forEach( entry => {
 			const {
 				self,
 				sort,
 				kind,
 			} = entry;
-			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultNamespace`, () => {
-				assert.equal(self, defaultNamespace);
-			});
-		});
-		namespacePostCreationInvocations.forEach(entry => {
+			it( `'this' for ${kind}-hook of ${sort} should refer to type defaultNamespace`, () => {
+				assert.equal( self, defaultNamespace );
+			} );
+		} );
+		namespacePostCreationInvocations.forEach( entry => {
 			const {
 				self,
 				sort,
 				kind,
 			} = entry;
-			it(`'this' for ${kind}-hook of ${sort} should refer to type defaultNamespace`, () => {
-				assert.equal(self, defaultNamespace);
-			});
-		});
-	});
+			it( `'this' for ${kind}-hook of ${sort} should refer to type defaultNamespace`, () => {
+				assert.equal( self, defaultNamespace );
+			} );
+		} );
+	} );
 
 };
 

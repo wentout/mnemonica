@@ -300,20 +300,33 @@ const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () { }, {}, {
 	awaitReturn : false
 });
 
+const constructNested = function () {
+	const DoNestedConstruct = this.NestedConstruct;
+	return new DoNestedConstruct();
+};
+
+var new_targets = [];
+
 const Main = define('Main', function () {
-	this.constructNested = function () {
-		return new this.NestedConstruct();
-	};
+	if (new.target) {
+		new_targets.push(this.constructor.name);
+	}
+	this.constructNested = constructNested;
 });
 const NestedConstruct = Main.define('NestedConstruct', function () {
+	if (new.target) {
+		new_targets.push(this.constructor.name);
+	}
 	// 1. direct
 	// throw new Error('Nested Constructor Special Error');
 	// 2. sub
 	this.nested = new this.NestedSubError(123);
 });
 NestedConstruct.define('NestedSubError', function (...args) {
+	if (new.target) {
+		new_targets.push(this.constructor.name);
+	}
 	this.args = args;
-	debugger;
 	throw new Error('Nested SubError Constructor Special Error');
 });
 
@@ -339,7 +352,6 @@ const AsyncType = define('AsyncType', async function (data) {
 
 	erroredNestedConstructMethod () {
 		// will throw RangeError : max stack size
-		debugger;
 		const main = new Main();
 		main.nested = main.constructNested();
 	},
@@ -1160,7 +1172,7 @@ describe('Main Test', () => {
 					} = asyncInstanceClone;
 					let thrown;
 
-
+					new_targets = [];
 					try {
 						debugger;
 						erroredNestedConstructMethod();
@@ -1168,6 +1180,10 @@ describe('Main Test', () => {
 						debugger;
 						thrown = error;
 					}
+
+					expect(new_targets[ 0 ]).equal('Main');
+					expect(new_targets[ 1 ]).equal('NestedConstruct');
+					expect(new_targets[ 2 ]).equal('NestedSubError');
 
 					expect(thrown).instanceOf(Error);
 					expect(thrown).not.instanceOf(AsyncType);
@@ -1180,9 +1196,9 @@ describe('Main Test', () => {
 						args,
 						instance
 					} = thrown;
-
 					assert.equal(args[ 0 ], 123);
 					assert.equal(instance.constructor.name, 'NestedSubError');
+					debugger;
 					const parsed = thrown.parse();
 					assert.equal(parsed.name, 'NestedSubError');
 
