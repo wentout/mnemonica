@@ -34,7 +34,7 @@
 
 const getClassConstructor = ( ConstructHandler: any, CreationHandler: any, ) => {
 	return class extends ConstructHandler {
-		constructor ( ...args: any[] ) {
+		constructor( ...args: any[] ) {
 			const answer = super( ...args );
 			// debugger;
 			return CreationHandler.call( this, answer );
@@ -43,9 +43,22 @@ const getClassConstructor = ( ConstructHandler: any, CreationHandler: any, ) => 
 };
 
 const getFunctionConstructor = ( ConstructHandler: any, CreationHandler: any, ) => {
+	const newable = Object.hasOwnProperty.call( ConstructHandler, 'prototype' );
+	// const hasReturnStatement = ConstructHandler.toString().indexOf('return') > -1;
 	return function ( this: any, ...args: any[] ) {
-		const answer = ConstructHandler.call( this, ...args );
-		// debugger;
+		let answer;
+		// if (!new.target) {
+		// 	debugger;
+		// }
+		// if (hasReturnStatement || !newable) {
+		if ( !newable ) {
+			answer = ConstructHandler.call( this, ...args );
+		} else {
+			const _proto = ConstructHandler.prototype;
+			ConstructHandler.prototype = this.constructor.prototype;
+			answer = new ConstructHandler( ...args );
+			ConstructHandler.prototype = _proto;
+		}
 		return CreationHandler.call( this, answer );
 	};
 };
@@ -57,12 +70,15 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 			if ( asClass ) {
 				ModificationBody = getClassConstructor( ConstructHandler, CreationHandler );
 			} else {
+				// const ReNamedConstructHandler = {} as any;
+				// ReNamedConstructHandler[FunctionName] = ConstructHandler;
+				// ModificationBody = getFunctionConstructor(ReNamedConstructHandler[FunctionName], CreationHandler);
 				ModificationBody = getFunctionConstructor( ConstructHandler, CreationHandler );
 			}
 			ModificationBody.prototype.constructor = ModificationBody;
 			Object.defineProperty( ModificationBody.prototype.constructor, 'name', {
-				value    : FunctionName,
-				writable : false
+				value: FunctionName,
+				writable: false
 			} );
 			Object.defineProperty( ModificationBody, SymbolConstructorName, {
 				get () {

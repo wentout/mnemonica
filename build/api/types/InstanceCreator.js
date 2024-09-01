@@ -238,14 +238,16 @@ exports.InstanceCreator = function (type, existentInstance, args, chained) {
     self.InstanceModificator = (0, InstanceModificator_1.makeInstanceModificator)(self);
     if (blockErrors) {
         try {
-            self.inheritedInstance = new self.InstanceModificator(...args);
+            const answer = new self.InstanceModificator(...args);
+            self.inheritedInstance = answer;
         }
         catch (error) {
             self.throwModificationError(error);
         }
     }
     else {
-        self.inheritedInstance = new self.InstanceModificator(...args);
+        const answer = new self.InstanceModificator(...args);
+        self.inheritedInstance = answer;
     }
     if (self.inheritedInstance instanceof Promise) {
         const waiter = self.makeWaiter(type);
