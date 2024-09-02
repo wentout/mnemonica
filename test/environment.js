@@ -85,7 +85,6 @@ const tests = ( opts ) => {
 			 to do so to override the normal object creation process.)
 			*/
 			const NullishReturn = define( 'NullishReturn', () => {
-				debugger;
 				return null;
 			} );
 
@@ -942,11 +941,12 @@ const tests = ( opts ) => {
 			expect( goodNamespace[ SymbolConfig ].description ).is.equal( goodNamespaceDescription );
 		} );
 
+		const ModificationConstructor = require( './createInstanceModificator200XthWay' );
 		const goodNamespaceTC = goodNamespace.createTypesCollection( 'good namespace types collection', {
-			useOldStyle : true
+			ModificationConstructor
 		} );
 		it( 'namespace types collection creation check', () => {
-			expect( goodNamespaceTC[ SymbolConfig ].useOldStyle ).is.equal( true );
+			expect( goodNamespaceTC[ SymbolConfig ].ModificationConstructor ).is.equal( ModificationConstructor );
 			expect( goodNamespaceTC[ SymbolConfig ].strictChain ).is.equal( true );
 		} );
 

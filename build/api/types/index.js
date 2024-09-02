@@ -86,7 +86,6 @@ const defineFromType = function (subtypes, constructHandlerGetter, config) {
     };
     if (typeof config === 'object') {
         config = Object.assign({}, config);
-        config.useOldStyle = false;
     }
     else {
         config = {};
@@ -125,13 +124,13 @@ const defineFromFunction = function (subtypes, TypeName, constructHandler = func
     if (asClass) {
         proto = extractNonEnumerableProps(proto);
     }
-    if (typeof config === 'object') {
-        config = Object.assign({}, config);
-    }
-    if (typeof config === 'boolean') {
+    if (config instanceof Function) {
         config = {
-            useOldStyle: config
+            ModificationConstructor: config
         };
+    }
+    if (typeof config !== 'object') {
+        config = {};
     }
     config.asClass = asClass;
     return new TypeDescriptor(this, subtypes, TypeName, makeConstructHandler, proto, config);

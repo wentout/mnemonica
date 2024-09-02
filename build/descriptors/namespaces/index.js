@@ -7,8 +7,9 @@ const errors_1 = require("../../descriptors/errors");
 const { OPTIONS_ERROR, } = errors_1.ErrorsTypes;
 const hooksAPI = require("../../api/hooks");
 const __1 = require("../");
+const createInstanceModificator_1 = require("../../api/types/createInstanceModificator");
 const defaultOptions = {
-    useOldStyle: false,
+    ModificationConstructor: createInstanceModificator_1.default,
     strictChain: true,
     blockErrors: true,
     submitStack: false,

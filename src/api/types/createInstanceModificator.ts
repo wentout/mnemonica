@@ -1,8 +1,6 @@
 'use strict';
 
-import { obey } from './obeyConstructor';
-
-export default function () {
+export default function ( obey: CallableFunction ) {
 
 	const CreateInstanceModificator = function (
 		this: any,

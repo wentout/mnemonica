@@ -39,13 +39,6 @@ const CreationHandler = function ( this: unknown, constructionAnswer: unknown ) 
 
 import compileNewModificatorFunctionBody from '../types/compileNewModificatorFunctionBody';
 
-import oldMC from '../types/createInstanceModificator200XthWay';
-import newMC from '../types/createInstanceModificator';
-
-const getModificationConstructor = ( useOldStyle: boolean ) => {
-	return ( useOldStyle ? oldMC : newMC )();
-};
-
 const checkProto = ( proto: unknown ) => {
 	if ( !( proto instanceof Object ) ) {
 		throw new WRONG_TYPE_DEFINITION( 'expect prototype to be an object' );
@@ -73,7 +66,7 @@ const getTypeChecker = ( TypeName: string ) => {
 		}
 
 		const constructors: {
-			string : new () => unknown
+			string: new () => unknown
 		} = collectConstructors( instance );
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
@@ -263,7 +256,6 @@ const reflectPrimitiveWrappers = ( _thisArg: unknown ) => {
 const TypesUtils = {
 	isClass,
 	CreationHandler,
-	getModificationConstructor,
 	checkProto,
 	getTypeChecker,
 	getTypeSplitPath,

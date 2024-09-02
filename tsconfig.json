@@ -26,10 +26,12 @@
 		"isolatedModules": true,
 		"removeComments": true,
 		"forceConsistentCasingInFileNames": true,
-		"types": ["node"]
+		"types": [
+			"node"
+		]
 	},
 	"include": [
-		"./src/**/*.ts"
+		"./src/**/*.ts",
 	],
 	"exclude": [
 		"./build/**/*",

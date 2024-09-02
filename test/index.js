@@ -57,6 +57,8 @@ const UserTypeProto = {
 	description : 'UserType'
 };
 
+const mc = require( './createInstanceModificator200XthWay' );
+
 const UserType = mnemonica.define( 'UserType', function ( userData ) {
 	const {
 		email,
@@ -65,7 +67,7 @@ const UserType = mnemonica.define( 'UserType', function ( userData ) {
 	this.email = email;
 	this.password = password;
 	return this;
-}, UserTypeProto, true );
+}, UserTypeProto, mc );
 // debugger;
 
 const userTypeHooksInvocations = [];
@@ -143,8 +145,8 @@ UserType.define( () => {
 	UserTypePL2.Shaper = Shaper;
 	return UserTypePL2;
 }, {
-	useOldStyle : true,
-	strictChain : false
+	ModificationConstructor : mc,
+	strictChain             : false
 } );
 
 
@@ -272,7 +274,7 @@ const oneElseTypesCollection = createTypesCollection( anotherNamespace );
 
 const AnotherCollectionType = anotherTypesCollection.define( 'AnotherCollectionType', function ( check ) {
 	Object.assign( this, { check } );
-} );
+}, {}, false );
 
 process.TestForAddition = 'passed';
 const anotherCollectionInstance = AnotherCollectionType.apply( process, [ 'check' ] );
@@ -671,42 +673,52 @@ describe( 'Main Test', () => {
 	}
 
 
-	const checkTypeDefinition = ( _types, TypeName, proto, useOldStyle ) => {
-		const parentType = _types[ SymbolSubtypeCollection ];
-		const isSubType = parentType ? true : false;
-		describe( `initial type declaration ${TypeName}`, () => {
-			const def = _types.get( TypeName );
-			it( 'should exist', () => {
-				assert.isDefined( def );
-			} );
-			it( 'and have proper name', () => {
-				assert.ok( def.TypeName === TypeName );
-			} );
-			it( '.subtypes must be Map', () => {
-				assert.isTrue( def.subtypes instanceof Map );
-			} );
-			if ( proto ) {
-				it( '.proto must be equal with definition', () => {
-					assert.deepEqual( def.proto, proto );
-					assert.deepEqual( proto, def.proto );
-				} );
-			}
-			it( `and declared as proper SubType : ${def.isSubType} `, () => {
-				assert.equal( def.isSubType, isSubType );
-			} );
-			it( `will force use of proper style contructor for ${TypeName} as: ${useOldStyle}`, () => {
-				assert.equal( def.config.useOldStyle, useOldStyle );
-			} );
-			it( 'contructor exists', () => {
-				assert.isFunction( def.constructHandler );
-			} );
-		} );
-	};
-
 	describe( 'Type Definitions Tests', () => {
+		const checkTypeDefinition = ( _types, TypeName, proto ) => {
+			const parentType = _types[ SymbolSubtypeCollection ];
+			const isSubType = parentType ? true : false;
+			describe( `initial type declaration ${TypeName}`, () => {
+				const def = _types.get( TypeName );
+				it( 'should exist', () => {
+					assert.isDefined( def );
+				} );
+				it( 'and have proper name', () => {
+					assert.ok( def.TypeName === TypeName );
+				} );
+				it( '.subtypes must be Map', () => {
+					assert.isTrue( def.subtypes instanceof Map );
+				} );
+				if ( proto ) {
+					it( '.proto must be equal with definition', () => {
+						assert.deepEqual( def.proto, proto );
+						assert.deepEqual( proto, def.proto );
+					} );
+				}
+				it( `and declared as proper SubType : ${def.isSubType} `, () => {
+					assert.equal( def.isSubType, isSubType );
+				} );
+				it( 'contructor exists', () => {
+					assert.isFunction( def.constructHandler );
+				} );
+			} );
+		};
+
+		it( 'userPL2 uses default errored and used constructor', () => {
+			expect( userPL1.goneToFallback ).instanceOf( Error );
+		} );
+		it( 'userPL2 uses default errored and used constructor', () => {
+			expect( userPL2.goneToFallback ).instanceOf( Error );
+		} );
+		it( 'userPL2 uses default errored and used constructor', () => {
+			expect( userPL_1_2.goneToFallback ).instanceOf( Error );
+		} );
+		it( 'userPL2 uses default errored and used constructor', () => {
+			expect( userPL_NoNew.goneToFallback ).instanceOf( Error );
+		} );
+
 		[
-			[ types.subtypes, 'UserType', UserTypeProto, true ],
-			[ UserType.subtypes, 'UserTypePL1', pl1Proto, false ],
+			[ types.subtypes, 'UserType', UserTypeProto ],
+			[ UserType.subtypes, 'UserTypePL1', pl1Proto ],
 			[ UserType.subtypes, 'UserTypePL2' ],
 			[ types.subtypes, 'UserTypeConstructor', UserTypeConstructorProto ],
 			[ types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto ],
@@ -715,8 +727,8 @@ describe( 'Main Test', () => {
 			[ MoreOverTypeDef.subtypes, 'OverMore', OverMoreProto ],
 			[ OverMore.subtypes, 'EvenMore', EvenMoreProto ],
 		].forEach( entry => {
-			const [ _types, def, proto, useOldStyle ] = entry;
-			checkTypeDefinition( _types, def, proto, useOldStyle || false );
+			const [ _types, def, proto ] = entry;
+			checkTypeDefinition( _types, def, proto );
 		} );
 	} );
 

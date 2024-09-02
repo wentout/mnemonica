@@ -17,7 +17,6 @@ const {
 
 import TypesUtils from '../utils';
 const {
-	getModificationConstructor,
 	getExistentAsyncStack,
 	makeFakeModificatorType,
 } = TypesUtils;
@@ -29,6 +28,10 @@ import { bindedMethodErrorHandler } from '../errors/bindedMethodErrorHandler';
 import { addProps } from './addProps';
 
 import { makeInstanceModificator } from './InstanceModificator';
+
+import { obey } from './obeyConstructor';
+
+import defaultMC from './createInstanceModificator';
 
 const invokePreHooks = function ( this: any ) {
 
@@ -341,16 +344,15 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	} = type;
 
 	const {
-		useOldStyle,
+		ModificationConstructor: mc,
 		blockErrors,
 		submitStack
 	} = config;
 
+	const ModificationConstructor = mc( obey, defaultMC );
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
-
-	const ModificationConstructor = getModificationConstructor( useOldStyle );
 
 	const ModificatorType = constructHandler();
 

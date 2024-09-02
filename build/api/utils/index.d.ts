@@ -14,9 +14,6 @@ type parentSub = {
 declare const TypesUtils: {
     isClass: (fn: CallableFunction) => boolean;
     CreationHandler: (this: unknown, constructionAnswer: unknown) => unknown;
-    getModificationConstructor: (useOldStyle: boolean) => (this: any, ModificatorType: CallableFunction, ModificatorTypePrototype: {
-        [index: string]: any;
-    }, addProps: CallableFunction) => any;
     checkProto: (proto: unknown) => void;
     getTypeChecker: (TypeName: string) => unknown;
     getTypeSplitPath: (path: string) => string[];

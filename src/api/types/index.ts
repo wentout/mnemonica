@@ -170,7 +170,6 @@ const defineFromType = function ( this: any, subtypes: any, constructHandlerGett
 
 	if ( typeof config === 'object' ) {
 		config = Object.assign( {}, config );
-		config.useOldStyle = false;
 	} else {
 		config = {};
 	}
@@ -237,15 +236,16 @@ const defineFromFunction = function (
 		proto = extractNonEnumerableProps( proto );
 	}
 
-	if ( typeof config === 'object' ) {
-		config = Object.assign( {}, config );
-	}
-
-	if ( typeof config === 'boolean' ) {
+	if ( config instanceof Function ) {
 		config = {
-			useOldStyle : config
+			ModificationConstructor : config
 		};
 	}
+
+	if ( typeof config !== 'object' ) {
+		config = {};
+	}
+
 
 	config.asClass = asClass;
 

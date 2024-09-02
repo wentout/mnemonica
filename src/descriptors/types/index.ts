@@ -42,7 +42,7 @@ const proto = {
 	...hooksAPI
 };
 
-const TypesCollection = function ( namespace: any, config: { [ index: string ]: any } ) {
+const TypesCollection = function ( namespace: any, config: { [ index: string ]: unknown } ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
@@ -51,7 +51,7 @@ const TypesCollection = function ( namespace: any, config: { [ index: string ]: 
 
 	// namespace config is less important than types collection config
 	config = defaultOptionsKeys.reduce( ( o: { [ index: string ]: any }, key: string ) => {
-		if ( typeof config[ key ] === 'boolean' ) {
+		if ( typeof config[ key ] === typeof namespace[ SymbolConfig ][ key ] ) {
 			o[ key ] = config[ key ];
 		} else {
 			o[ key ] = namespace[ SymbolConfig ][ key ];
