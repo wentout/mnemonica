@@ -151,14 +151,7 @@ exports.TypeProxy.prototype.construct = function (__, args) {
     const gaiaProxy = new Proxy(gaia, {
         get: gaiaProxyHandlerGet
     });
-    if (args[0] === 'NullishReturn') {
-        debugger;
-    }
     const instance = new InstanceCreator_1.InstanceCreator(type, gaiaProxy, args);
-    if (args[0] === 'NullishReturn') {
-        instance;
-        debugger;
-    }
     return instance;
 };
 //# sourceMappingURL=TypeProxy.js.map

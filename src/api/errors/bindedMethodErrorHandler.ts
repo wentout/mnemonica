@@ -47,6 +47,7 @@ export const bindedMethodErrorHandler = ( exceptionReason: any ) => {
 	if ( applyTo && applyTo.exception instanceof Function ) {
 		let preparedException = error;
 		try {
+			// eslint-disable-next-line new-cap
 			preparedException = new applyTo.exception( error, {
 				args,
 				exceptionReasonMethod : method,

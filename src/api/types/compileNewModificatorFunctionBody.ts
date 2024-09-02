@@ -34,7 +34,7 @@
 
 const getClassConstructor = ( ConstructHandler: any, CreationHandler: any, ) => {
 	return class extends ConstructHandler {
-		constructor( ...args: any[] ) {
+		constructor ( ...args: any[] ) {
 			const answer = super( ...args );
 			// debugger;
 			return CreationHandler.call( this, answer );
@@ -77,8 +77,8 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 			}
 			ModificationBody.prototype.constructor = ModificationBody;
 			Object.defineProperty( ModificationBody.prototype.constructor, 'name', {
-				value: FunctionName,
-				writable: false
+				value    : FunctionName,
+				writable : false
 			} );
 			Object.defineProperty( ModificationBody, SymbolConstructorName, {
 				get () {
@@ -92,14 +92,15 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 
 export default compileNewModificatorFunctionBody;
 
+
 /*
 
 // however, for better understanding of what is going on here
 // I'd like to provide 
 
-const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass: boolean = false ) {
-	
-	const dt = `${Date.now()}_${`${Math.random()}`.split('.')[1]}`;
+const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass = false ) {
+
+	const dt = `${Date.now()}_${`${Math.random()}`.split( '.' )[ 1 ]}`;
 
 	const modString = asClass ?
 
@@ -113,8 +114,17 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 		:
 
 		`const ${FunctionName} = function (...args) {
-			const answer = ConstructHandler_${dt}.call(this, ...args);
-			return CreationHandler_${dt}.call(this, answer);
+			const newable = Object.hasOwnProperty.call( ConstructHandler_${dt}, 'prototype' );
+			let answer;
+			if ( !newable ) {
+				answer = ConstructHandler_${dt}.call( this, ...args );
+			} else {
+				const _proto = ConstructHandler_${dt}.prototype;
+				ConstructHandler_${dt}.prototype = this.constructor.prototype;
+				answer = new ConstructHandler_${dt}( ...args );
+				ConstructHandler_${dt}.prototype = _proto;
+			}
+			return CreationHandler_${dt}.call( this, answer );
 		};`;
 
 	return new Function( `ConstructHandler_${dt}`, `CreationHandler_${dt}`, 'SymbolConstructorName',
@@ -137,5 +147,3 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 export default compileNewModificatorFunctionBody;
 
 */
-
-

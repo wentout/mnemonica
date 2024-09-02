@@ -1,6 +1,6 @@
 {
 	"name": "mnemonica",
-	"version": "0.9.985",
+	"version": "0.9.986",
 	"description": "abstract technique that aids information retention : instance inheritance system",
 	"type": "commonjs",
 	"main": "./build/index.js",
@@ -29,7 +29,7 @@
 		"Goodluckhf <Goodluckhf@yandex.ru>"
 	],
 	"scripts": {
-		"build": "rm -rf ./build && npx tsc --pretty && npm run lint && npm run lint:test",
+		"build": "rm -rf ./build && npx tsc --pretty && npm run lint && npm run lint:src && npm run lint:test",
 		"example": "npm run build && node ./test/example.js",
 		"example:ts": "npx tsc ./test-ts/*.ts && npx eslint --fix ./test-ts/*.js && node ./test-ts/test-no-types.js && node ./test-ts/test-with-types.js",
 		"lint": "npx eslint --fix",
