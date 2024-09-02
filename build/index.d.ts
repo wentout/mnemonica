@@ -12,7 +12,7 @@ type hook = {
     (opts: hooksOpts): void;
 };
 type constructorOptions = {
-    useOldStyle?: boolean;
+    ModificationConstructor?: CallableFunction;
     strictChain?: boolean;
     blockErrors?: boolean;
     submitStack?: boolean;

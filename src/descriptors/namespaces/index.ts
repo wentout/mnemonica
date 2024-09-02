@@ -22,14 +22,11 @@ import * as hooksAPI from '../../api/hooks';
 
 import { descriptors } from '../';
 
+import ModificationConstructor from '../../api/types/createInstanceModificator';
+
 const defaultOptions = {
 
-	// explicit declaration we wish use
-	// an old style based constructors
-	// e.g. with prototype described with:
-	//    createInstanceModificator200XthWay
-	// or more general with: createInstanceModificator
-	useOldStyle : false,
+	ModificationConstructor,
 
 	// shall or not we use strict checking
 	// for creation sub-instances Only from current type

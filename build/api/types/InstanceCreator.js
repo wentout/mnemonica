@@ -6,12 +6,14 @@ const { odp, SymbolConstructorName, } = constants_1.constants;
 const errors_1 = require("../../descriptors/errors");
 const { WRONG_MODIFICATION_PATTERN, } = errors_1.ErrorsTypes;
 const utils_1 = require("../utils");
-const { getModificationConstructor, getExistentAsyncStack, makeFakeModificatorType, } = utils_1.default;
+const { getExistentAsyncStack, makeFakeModificatorType, } = utils_1.default;
 const errors_2 = require("../errors");
 const throwModificationError_1 = require("../errors/throwModificationError");
 const bindedMethodErrorHandler_1 = require("../errors/bindedMethodErrorHandler");
 const addProps_1 = require("./addProps");
 const InstanceModificator_1 = require("./InstanceModificator");
+const obeyConstructor_1 = require("./obeyConstructor");
+const createInstanceModificator_1 = require("./createInstanceModificator");
 const invokePreHooks = function () {
     const { type, existentInstance, args, InstanceModificator } = this;
     const { namespace, collection, } = type;
@@ -203,9 +205,9 @@ const InstanceCreatorPrototype = {
 };
 exports.InstanceCreator = function (type, existentInstance, args, chained) {
     const { constructHandler, proto, config, TypeName } = type;
-    const { useOldStyle, blockErrors, submitStack } = config;
+    const { ModificationConstructor: mc, blockErrors, submitStack } = config;
+    const ModificationConstructor = mc(obeyConstructor_1.obey, createInstanceModificator_1.default);
     const self = this;
-    const ModificationConstructor = getModificationConstructor(useOldStyle);
     const ModificatorType = constructHandler();
     Object.assign(self, {
         type,

@@ -16,7 +16,7 @@ const TypesCollection = function (namespace, config) {
     const self = this;
     const subtypes = new Map();
     config = defaultOptionsKeys.reduce((o, key) => {
-        if (typeof config[key] === 'boolean') {
+        if (typeof config[key] === typeof namespace[SymbolConfig][key]) {
             o[key] = config[key];
         }
         else {
