@@ -43,7 +43,7 @@ const proto = {
 };
 
 const TypesCollection = function ( namespace: any, config: { [ index: string ]: any } ) {
-	
+
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 

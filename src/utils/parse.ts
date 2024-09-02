@@ -23,12 +23,12 @@ export const parse = ( self: any ): any => {
 
 	const proto = Reflect.getPrototypeOf( self ) as object;
 
-	if ( self.constructor.name !== proto.constructor.name ) {
+	if ( self.constructor.name.toString() !== proto.constructor.name.toString() ) {
 		throw new WRONG_ARGUMENTS_USED( `have to use "instance" itself: '${self.constructor.name}' vs '${proto.constructor.name}'` );
 	}
 
 	const protoProto: any = Reflect.getPrototypeOf( proto );
-	if ( protoProto && proto.constructor.name !== protoProto.constructor.name ) {
+	if ( protoProto && proto.constructor.name.toString() !== protoProto.constructor.name.toString() ) {
 		throw new WRONG_ARGUMENTS_USED( `have to use "instance" itself: '${proto.constructor.name}' vs '${protoProto.constructor.name}'` );
 	}
 
@@ -37,11 +37,11 @@ export const parse = ( self: any ): any => {
 
 	const { name } = proto.constructor;
 
-	const props:any = extract( { ...self } );
+	const props: any = extract( { ...self } );
 	// props.constructor = undefined;
 	delete props.constructor;
 
-	const joint:any = extract( Object.assign( {}, proto ) );
+	const joint: any = extract( Object.assign( {}, proto ) );
 	delete joint.constructor;
 
 	let parent;

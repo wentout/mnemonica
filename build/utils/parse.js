@@ -12,11 +12,11 @@ const parse = (self) => {
         throw new WRONG_MODIFICATION_PATTERN;
     }
     const proto = Reflect.getPrototypeOf(self);
-    if (self.constructor.name !== proto.constructor.name) {
+    if (self.constructor.name.toString() !== proto.constructor.name.toString()) {
         throw new WRONG_ARGUMENTS_USED(`have to use "instance" itself: '${self.constructor.name}' vs '${proto.constructor.name}'`);
     }
     const protoProto = Reflect.getPrototypeOf(proto);
-    if (protoProto && proto.constructor.name !== protoProto.constructor.name) {
+    if (protoProto && proto.constructor.name.toString() !== protoProto.constructor.name.toString()) {
         throw new WRONG_ARGUMENTS_USED(`have to use "instance" itself: '${proto.constructor.name}' vs '${protoProto.constructor.name}'`);
     }
     const { name } = proto.constructor;

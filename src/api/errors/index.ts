@@ -71,10 +71,17 @@ export class BASE_MNEMONICA_ERROR extends Error {
 	}
 
 	static get [ SymbolConstructorName ] () {
-		return `base of : ${MNEMONICA} : errors`;
+		return new String( `base of : ${MNEMONICA} : errors` );
 	}
 
 }
+
+Object.defineProperty( BASE_MNEMONICA_ERROR.prototype.constructor, 'name', {
+	get () {
+		return new String( 'BASE_MNEMONICA_ERROR' );
+	}
+} );
+
 
 export const constructError = ( name: string, message: string ) => {
 	const NamedErrorConstructor = class extends BASE_MNEMONICA_ERROR {
@@ -94,7 +101,7 @@ export const constructError = ( name: string, message: string ) => {
 	reNamer[ name ] = NamedErrorConstructor;
 	Object.defineProperty( reNamer[ name ].prototype.constructor, 'name', {
 		get () {
-			return name;
+			return new String( name );
 		}
 	} );
 	return reNamer[ name ];
