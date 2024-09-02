@@ -50,10 +50,15 @@ class BASE_MNEMONICA_ERROR extends Error {
         this.stack = stack.join('\n');
     }
     static get [SymbolConstructorName]() {
-        return `base of : ${MNEMONICA} : errors`;
+        return new String(`base of : ${MNEMONICA} : errors`);
     }
 }
 exports.BASE_MNEMONICA_ERROR = BASE_MNEMONICA_ERROR;
+Object.defineProperty(BASE_MNEMONICA_ERROR.prototype.constructor, 'name', {
+    get() {
+        return new String('BASE_MNEMONICA_ERROR');
+    }
+});
 const constructError = (name, message) => {
     const NamedErrorConstructor = class extends BASE_MNEMONICA_ERROR {
         constructor(addition, stack) {
@@ -65,7 +70,7 @@ const constructError = (name, message) => {
     reNamer[name] = NamedErrorConstructor;
     Object.defineProperty(reNamer[name].prototype.constructor, 'name', {
         get() {
-            return name;
+            return new String(name);
         }
     });
     return reNamer[name];

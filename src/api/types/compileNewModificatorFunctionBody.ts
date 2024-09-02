@@ -82,6 +82,7 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 			} );
 			Object.defineProperty( ModificationBody, SymbolConstructorName, {
 				get () {
+					// return new String( FunctionName );
 					return FunctionName;
 				}
 			} );
@@ -134,7 +135,7 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 
 			Object.defineProperty(${FunctionName}, SymbolConstructorName, {
 				get () {
-					return '${FunctionName}';
+					return new String( '${FunctionName}' );
 				}
 			});
 

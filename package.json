@@ -36,7 +36,7 @@
 		"lint:src": "npx eslint --fix ./src",
 		"lint:test": "npx eslint --fix ./test",
 		"test": "npm run build && mocha --allow-uncaught test/index.js",
-		"test:cov": "npm run build && nyc --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
+		"test:cov": "npm run build && nyc --reporter=text-summary --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
 		"test:debug": "npx tsc --pretty --sourceMap && npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
 		"test:jest": "npx jest",
 		"test:jest:cov": "npx jest --collectCoverage",
