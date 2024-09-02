@@ -4,4 +4,8 @@ export declare const getStack: (this: any, title: string, stackAddition: string[
 export declare class BASE_MNEMONICA_ERROR extends Error {
     constructor(message: string | undefined, additionalStack: string[]);
 }
-export declare const constructError: (name: string, message: string) => any;
+export declare const constructError: (name: string, message: string) => {
+    prototype: {
+        constructor: CallableFunction;
+    };
+};

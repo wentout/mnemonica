@@ -39,7 +39,7 @@ export const getStack = function ( this: any, title: string, stackAddition: stri
 	this.stack = cleanupStack( this.stack );
 
 	this.stack.unshift( title );
-	if ( Array.isArray(stackAddition) && stackAddition.length ) {
+	if ( Array.isArray( stackAddition ) && stackAddition.length ) {
 		this.stack.push( ...stackAddition );
 	}
 	this.stack.push( '\n' );
@@ -77,22 +77,25 @@ export class BASE_MNEMONICA_ERROR extends Error {
 }
 
 export const constructError = ( name: string, message: string ) => {
-	const body = `
-		class ${name} extends base {
-			constructor (addition, stack) {
-				super(addition ?
-					\`${message} : $\{addition}\` :
-						'${message}',
-					stack
-				);
+	const NamedErrorConstructor = class extends BASE_MNEMONICA_ERROR {
+		constructor ( addition: string, stack: string[] ) {
+			const saying = addition ? `${message} : ${addition}` : `${message}`;
+			super( saying, stack );
+		}
+	};
+
+	const reNamer = {} as {
+		[ key: string ]: {
+			prototype: {
+				constructor: CallableFunction
 			}
-		};
-		return ${name};
-	`;
-
-	const NamedErrorConstructor = (
-		new Function( 'base', body )
-	)( BASE_MNEMONICA_ERROR );
-
-	return NamedErrorConstructor;
+		},
+	};
+	reNamer[ name ] = NamedErrorConstructor;
+	Object.defineProperty( reNamer[ name ].prototype.constructor, 'name', {
+		get () {
+			return name;
+		}
+	} );
+	return reNamer[ name ];
 };

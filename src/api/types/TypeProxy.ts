@@ -148,7 +148,7 @@ const makeSubTypeProxy = function ( subtype: any, inheritedInstance: any ) {
 			if ( !existentInstance[ SymbolGaia ] ) {
 				const gaia = new Mnemosyne( subtype.namespace, new Gaia( existentInstance ) );
 				existentInstance = new Proxy( gaia, {
-					get: gaiaProxyHandlerGet
+					get : gaiaProxyHandlerGet
 				} );
 			}
 
@@ -276,18 +276,10 @@ TypeProxy.prototype.construct = function ( __: any, args: any[] ) {
 	const uranus = reflectPrimitiveWrappers( Uranus );
 	const gaia = new Mnemosyne( type.namespace, new Gaia( uranus ) );
 	const gaiaProxy = new Proxy( gaia, {
-		get: gaiaProxyHandlerGet
+		get : gaiaProxyHandlerGet
 	} );
 
-	if ( args[ 0 ] === 'NullishReturn' ) {
-		debugger;
-	}
 	const instance = new InstanceCreator( type, gaiaProxy, args );
-	if ( args[ 0 ] === 'NullishReturn' ) {
-		instance;
-		debugger;
-	}
-
 	return instance;
 
 };

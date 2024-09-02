@@ -55,20 +55,20 @@ class BASE_MNEMONICA_ERROR extends Error {
 }
 exports.BASE_MNEMONICA_ERROR = BASE_MNEMONICA_ERROR;
 const constructError = (name, message) => {
-    const body = `
-		class ${name} extends base {
-			constructor (addition, stack) {
-				super(addition ?
-					\`${message} : $\{addition}\` :
-						'${message}',
-					stack
-				);
-			}
-		};
-		return ${name};
-	`;
-    const NamedErrorConstructor = (new Function('base', body))(BASE_MNEMONICA_ERROR);
-    return NamedErrorConstructor;
+    const NamedErrorConstructor = class extends BASE_MNEMONICA_ERROR {
+        constructor(addition, stack) {
+            const saying = addition ? `${message} : ${addition}` : `${message}`;
+            super(saying, stack);
+        }
+    };
+    const reNamer = {};
+    reNamer[name] = NamedErrorConstructor;
+    Object.defineProperty(reNamer[name].prototype.constructor, 'name', {
+        get() {
+            return name;
+        }
+    });
+    return reNamer[name];
 };
 exports.constructError = constructError;
 //# sourceMappingURL=index.js.map
