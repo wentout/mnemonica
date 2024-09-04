@@ -17,7 +17,6 @@ type constructorOptions = {
     blockErrors?: boolean;
     submitStack?: boolean;
     awaitReturn?: boolean;
-    bindedProto?: boolean;
 };
 type Proto<P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
 type SN = Record<string, new () => unknown>;

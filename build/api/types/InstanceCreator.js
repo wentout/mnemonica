@@ -9,7 +9,6 @@ const utils_1 = require("../utils");
 const { getExistentAsyncStack, makeFakeModificatorType, } = utils_1.default;
 const errors_2 = require("../errors");
 const throwModificationError_1 = require("../errors/throwModificationError");
-const bindedMethodErrorHandler_1 = require("../errors/bindedMethodErrorHandler");
 const addProps_1 = require("./addProps");
 const InstanceModificator_1 = require("./InstanceModificator");
 const obeyConstructor_1 = require("./obeyConstructor");
@@ -47,71 +46,9 @@ const invokePostHooks = function () {
         namespace: namespace.invokeHook(hookType, hookData)
     };
 };
-const bindMethod = function (instance, methodName, MethodItself) {
-    odp(instance, methodName, {
-        get() {
-            const from = this;
-            return function (...args) {
-                const applyTo = this !== undefined ? this : from;
-                const exceptionReason = {
-                    method: MethodItself,
-                    methodName,
-                    this: this,
-                    from,
-                    instance,
-                    applyTo,
-                    asNew: false,
-                    args,
-                };
-                try {
-                    let answer;
-                    if (new.target) {
-                        exceptionReason.asNew = true;
-                        answer = new MethodItself(...args);
-                    }
-                    else {
-                        answer = MethodItself.call(applyTo, ...args);
-                    }
-                    if (answer instanceof Promise) {
-                        answer = answer.catch((error) => {
-                            odp(exceptionReason, 'error', {
-                                value: error,
-                                enumerable: true
-                            });
-                            throw (0, bindedMethodErrorHandler_1.bindedMethodErrorHandler)(exceptionReason);
-                        });
-                    }
-                    return answer;
-                }
-                catch (error) {
-                    odp(exceptionReason, 'error', {
-                        value: error,
-                        enumerable: true
-                    });
-                    throw (0, bindedMethodErrorHandler_1.bindedMethodErrorHandler)(exceptionReason);
-                }
-            };
-        },
-        enumerable: true
-    });
-};
-const bindProtoMethods = function () {
-    const self = this;
-    const { inheritedInstance, proto, } = self;
-    const protoPointer = Reflect.getPrototypeOf(inheritedInstance);
-    Object.entries(protoPointer).forEach((entry) => {
-        const [mayBeMethodName, MayBeMethodFunction] = entry;
-        if (mayBeMethodName === 'constructor') {
-            return;
-        }
-        if (MayBeMethodFunction instanceof Function && proto[mayBeMethodName] instanceof Function) {
-            bindMethod(protoPointer, mayBeMethodName, MayBeMethodFunction);
-        }
-    });
-};
 const postProcessing = function (continuationOf) {
     const self = this;
-    const { stack, config: { bindedProto }, } = self;
+    const { stack, } = self;
     if (!self.inheritedInstance.constructor) {
         const msg = 'should inherit from mnemonica instance';
         self.throwModificationError(new WRONG_MODIFICATION_PATTERN(msg, stack));
@@ -131,9 +68,6 @@ const postProcessing = function (continuationOf) {
         }
     });
     self.invokePostHooks();
-    if (bindedProto) {
-        self.bindProtoMethods();
-    }
 };
 const addThen = function (then) {
     const self = this;
@@ -194,8 +128,6 @@ const makeWaiter = function (type, then) {
 const InstanceCreatorPrototype = {
     getExistentAsyncStack,
     postProcessing,
-    bindMethod,
-    bindProtoMethods,
     makeWaiter,
     addProps: addProps_1.addProps,
     addThen,

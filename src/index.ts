@@ -61,11 +61,6 @@ type constructorOptions = {
 	// optional ./issues/106
 	awaitReturn?: boolean,
 
-	// instance methods calls
-	// are binded by default
-	// with instance itself
-	bindedProto?: boolean,
-
 }
 
 
