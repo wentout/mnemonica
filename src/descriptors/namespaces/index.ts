@@ -50,11 +50,6 @@ const defaultOptions = {
 	// optional ./issues/106
 	awaitReturn : true,
 
-	// instance methods calls
-	// are binded by default
-	// with instance itself
-	bindedProto : true,
-
 };
 
 // namespace storage

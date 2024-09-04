@@ -21,12 +21,6 @@ const invokeHook = function (hookType, opts) {
         if (typeof inheritedInstance === 'object') {
             Object.assign(hookArgs, {
                 inheritedInstance,
-                bindMethod(name, method) {
-                    creator.bindMethod(inheritedInstance, name, method);
-                },
-                bindProtoMethods() {
-                    creator.bindProtoMethods();
-                },
                 throwModificationError(error) {
                     creator.throwModificationError(error);
                 }

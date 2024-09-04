@@ -1,11 +1,10 @@
 'use strict';
 
-import { constants } from '../../constants';
-const {
-	odp,
-} = constants;
+const odp = ( o, p, attributes ) => {
+	return Object.defineProperty( o, p, attributes );
+};
 
-export const bindedMethodErrorHandler = ( exceptionReason: any ) => {
+module.exports.bindedMethodErrorHandler = ( exceptionReason ) => {
 
 	const {
 		applyTo,
@@ -27,14 +26,14 @@ export const bindedMethodErrorHandler = ( exceptionReason: any ) => {
 			},
 			enumerable : true
 		} );
-		const reasons: any[ typeof exceptionReason ] = [ exceptionReason ];
+		const reasons = [ exceptionReason ];
 		odp( error, 'reasons', {
 			get () {
 				return reasons;
 			},
 			enumerable : true
 		} );
-		const surplus: any[ typeof exceptionReason ] = [];
+		const surplus = [];
 		odp( error, 'surplus', {
 			get () {
 				return surplus;

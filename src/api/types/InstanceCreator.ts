@@ -23,7 +23,6 @@ const {
 
 import { getStack } from '../errors';
 import { throwModificationError } from '../errors/throwModificationError';
-import { bindedMethodErrorHandler } from '../errors/bindedMethodErrorHandler';
 
 import { addProps } from './addProps';
 
@@ -105,99 +104,12 @@ const invokePostHooks = function ( this: any ) {
 
 };
 
-
-const bindMethod = function ( this: any, instance: any, methodName: string, MethodItself: any ) {
-	odp( instance, methodName, {
-		get () {
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
-			const from = this;
-			// eslint-disable-next-line no-shadow, @typescript-eslint/no-explicit-any
-			return function ( this: any, ...args: any[] ) {
-				// || instance;
-				const applyTo = this !== undefined ? this : from;
-				const exceptionReason = {
-					method : MethodItself,
-					methodName,
-					this   : this,
-					from,
-					instance,
-					applyTo,
-					asNew  : false,
-					args,
-				};
-
-				try {
-					let answer;
-					if ( new.target ) {
-						exceptionReason.asNew = true;
-						answer = new MethodItself( ...args );
-					} else {
-						answer = MethodItself.call( applyTo, ...args );
-					}
-
-					if ( answer instanceof Promise ) {
-						answer = answer.catch( ( error ) => {
-							odp( exceptionReason, 'error', {
-								value      : error,
-								enumerable : true
-							} );
-							throw bindedMethodErrorHandler( exceptionReason );
-						} );
-					}
-
-					return answer;
-				} catch ( error ) {
-					odp( exceptionReason, 'error', {
-						value      : error,
-						enumerable : true
-					} );
-
-					throw bindedMethodErrorHandler( exceptionReason );
-				}
-			};
-		},
-		enumerable : true
-	} );
-};
-
-const bindProtoMethods = function ( this: any ) {
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
-	const self = this;
-	const {
-		inheritedInstance,
-		// existentInstance,
-		proto,
-	} = self;
-	const protoPointer = Reflect.getPrototypeOf( inheritedInstance );
-	Object.entries( protoPointer as object ).forEach( ( entry: [ string, any ] ) => {
-		const [ mayBeMethodName, MayBeMethodFunction ] = entry;
-		if ( mayBeMethodName === 'constructor' ) {
-			return;
-		}
-		if ( MayBeMethodFunction instanceof Function && proto[ mayBeMethodName ] instanceof Function ) {
-			// if (!hop(inheritedInstance, mayBeMethodName)) {
-			bindMethod( protoPointer, mayBeMethodName, MayBeMethodFunction );
-			// }
-		}
-	} );
-	// Object.entries( existentInstance ).forEach( ( entry: [ string, any ] ) => {
-	// 	const [ name, MayBeMethodFunction ] = entry;
-	// 	if ( MayBeMethodFunction instanceof Function ) {
-	// 		bindMethod( inheritedInstance, name, MayBeMethodFunction );
-	// 	}
-	// } );
-};
-
 const postProcessing = function ( this: any, continuationOf: any ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 	const {
 		stack,
-		config: {
-			bindedProto
-		},
-
 	} = self;
 
 	if ( !self.inheritedInstance.constructor ) {
@@ -225,10 +137,6 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 	} );
 
 	self.invokePostHooks();
-	if ( bindedProto ) {
-		self.bindProtoMethods();
-	}
-
 
 };
 
@@ -322,8 +230,6 @@ const makeWaiter = function ( this: any, type: any, then: any ) {
 const InstanceCreatorPrototype = {
 	getExistentAsyncStack,
 	postProcessing,
-	bindMethod,
-	bindProtoMethods,
 	makeWaiter,
 	addProps,
 	addThen,

@@ -5,6 +5,8 @@ const { assert, expect } = require( 'chai' );
 const ogp = Object.getPrototypeOf;
 const hop = ( o, p ) => Object.prototype.hasOwnProperty.call( o, p );
 
+const { bindMethod, bindProtoMethods } = require( './bindProtoMethods' );
+
 const {
 	inspect,
 	callbackify,
@@ -34,7 +36,6 @@ const {
 	SymbolSubtypeCollection,
 	SymbolConstructorName,
 	SymbolGaia,
-	SymbolConfig,
 	defaultNamespace,
 	utils: {
 		extract,
@@ -332,7 +333,7 @@ NestedConstruct.define( 'NestedSubError', function ( ...args ) {
 	throw new Error( 'Nested SubError Constructor Special Error' );
 } );
 
-types[ SymbolConfig ].bindedProto = false;
+
 const AsyncType = define( 'AsyncType', async function ( data ) {
 	return Object.assign( this, {
 		arg123 : 123
@@ -348,7 +349,8 @@ const AsyncType = define( 'AsyncType', async function ( data ) {
 		if ( this[ propName ] ) {
 			return this[ propName ];
 		}
-		throw new Error( 'prop is missing' );
+		debugger;
+		throw new Error( `prop is missing: ${propName}` );
 
 	},
 
@@ -363,8 +365,10 @@ const AsyncType = define( 'AsyncType', async function ( data ) {
 		throw result;
 	}
 
-}, {
-	bindedProto : true
+} );
+
+AsyncType.registerHook( 'postCreation', ( hookData ) => {
+	bindProtoMethods( hookData );
 } );
 
 AsyncType.SubOfAsync = function ( data ) {
@@ -374,13 +378,14 @@ AsyncType.SubOfAsync = function ( data ) {
 	} );
 };
 AsyncType.SubOfAsync.registerHook( 'postCreation', ( hookData ) => {
-	hookData.bindProtoMethods();
-	hookData.bindMethod( 'hookedMethod', function ( propName ) {
+	const {
+		inheritedInstance,
+	} = hookData;
+	bindProtoMethods( hookData );
+	bindMethod( hookData, inheritedInstance, 'hookedMethod', function ( propName ) {
 		return this[ propName ];
 	} );
 } );
-
-types[ SymbolConfig ].bindedProto = true;
 
 AsyncType.SubOfAsync.NestedAsyncType = async function ( data ) {
 	return Object.assign( this, {
@@ -397,11 +402,12 @@ const SubOfNestedAsync = NestedAsyncType.define( 'SubOfNestedAsync', function ( 
 		data
 	} );
 	this.arg123 = 456;
-}, {}, { bindedProto : false } );
+}, {} );
 
 var SubOfNestedAsyncPostHookData;
-SubOfNestedAsync.registerHook( 'postCreation', function ( opts ) {
-	SubOfNestedAsyncPostHookData = opts;
+SubOfNestedAsync.registerHook( 'postCreation', function ( hookData ) {
+	bindProtoMethods( hookData );
+	SubOfNestedAsyncPostHookData = hookData;
 } );
 
 // debugger;
@@ -1025,6 +1031,7 @@ describe( 'Main Test', () => {
 						asyncInstance = await asyncInstancePromise;
 						asyncInstanceDirect = await AsyncType.call( process, 'dadada' );
 						asyncInstanceDirectApply = await AsyncType.apply( process, [ 'da da da' ] );
+
 						asyncSub = asyncInstance.SubOfAsync( 'some' );
 						nestedAsyncInstance = await new asyncSub
 							.NestedAsyncType( 'nested' );
@@ -1063,11 +1070,11 @@ describe( 'Main Test', () => {
 					expect( result4.arg123 ).equal( 'arg123' );
 
 					const getThisPropMethod1 = asyncSub.getThisPropMethod;
-					const result5 = getThisPropMethod1( 'arg123' );
+					const result5 = getThisPropMethod1.call( asyncSub, 'arg123' );
 					expect( result5 ).equal( 321 );
 
 					const { getThisPropMethod } = asyncSub;
-					const result6 = getThisPropMethod( 'arg123' );
+					const result6 = getThisPropMethod.call( asyncSub, 'arg123' );
 					expect( result6 ).equal( 321 );
 
 					const result7 = new getThisPropMethod( 'arg123' );
@@ -1085,10 +1092,10 @@ describe( 'Main Test', () => {
 						hookedMethod
 					} = nestedAsyncSub;
 
-					const result10 = getThisPropMethod2( 'arg123' );
+					const result10 = getThisPropMethod2.call( nestedAsyncSub, 'arg123' );
 					expect( result10 ).equal( 456 );
 
-					const result11 = hookedMethod( 'getThisPropMethod' )( 'arg123' );
+					const result11 = hookedMethod.call( nestedAsyncSub, 'getThisPropMethod' ).call( nestedAsyncSub, 'arg123' );
 					expect( result11 ).equal( 456 );
 				} );
 
@@ -1099,19 +1106,20 @@ describe( 'Main Test', () => {
 
 					let thrown;
 					try {
-						hookedMethod( 'getThisPropMethod' )( 'missingProp' );
+						hookedMethod.call( nestedAsyncSub, 'getThisPropMethod' ).call( nestedAsyncSub, 'missingProp' );
 					} catch ( error ) {
 						thrown = error;
 					}
 					expect( thrown ).instanceOf( Error );
 					expect( thrown ).instanceOf( SubOfNestedAsync );
 					expect( thrown.message ).exist.and.is.a( 'string' );
-					assert.equal( thrown.message, 'prop is missing' );
+					assert.equal( thrown.message, 'prop is missing: missingProp' );
 					expect( thrown.originalError ).instanceOf( Error );
 					expect( thrown.originalError ).not.instanceOf( SubOfNestedAsync );
 
 					let thrown2;
 					try {
+						debugger;
 						hookedMethod.call( null, 'getThisPropMethod' );
 					} catch ( error ) {
 						thrown2 = error;
@@ -1133,7 +1141,7 @@ describe( 'Main Test', () => {
 
 					let thrown3;
 					try {
-						hookedMethod( 'getThisPropMethod' )( 'missingProp' );
+						hookedMethod.call( nestedAsyncSub, 'getThisPropMethod' ).call( nestedAsyncSub, 'missingProp' );
 					} catch ( error ) {
 						thrown3 = error;
 					}
@@ -1154,7 +1162,7 @@ describe( 'Main Test', () => {
 
 					let thrown4;
 					try {
-						hookedMethod( 'getThisPropMethod' )( 'missingProp' );
+						hookedMethod.call( nestedAsyncSub, 'getThisPropMethod' ).call( nestedAsyncSub, 'missingProp' );
 					} catch ( error ) {
 						thrown4 = error;
 					}
@@ -1226,7 +1234,7 @@ describe( 'Main Test', () => {
 
 					let thrown;
 					try {
-						await erroredAsyncMethod();
+						await erroredAsyncMethod.call( asyncInstanceClone );
 					} catch ( error ) {
 						thrown = error;
 					}
@@ -1249,7 +1257,7 @@ describe( 'Main Test', () => {
 
 					let thrown;
 					try {
-						await erroredAsyncMethod( thrownForReThrow );
+						await erroredAsyncMethod.call( asyncInstanceClone, thrownForReThrow );
 					} catch ( error ) {
 						thrown = error;
 					}

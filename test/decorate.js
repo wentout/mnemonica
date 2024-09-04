@@ -40,7 +40,6 @@ var __setFunctionName = (this && this.__setFunctionName) || function (f, name, p
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.myDecoratedSubInstance = exports.myDecoratedInstance = void 0;
 var __1 = require("..");
-debugger;
 var MyDecoratedClass = function () {
     var _classDecorators = [(0, __1.decorate)(undefined, {}, { strictChain: false })];
     var _classDescriptor;
@@ -62,7 +61,6 @@ var MyDecoratedClass = function () {
     })();
     return MyDecoratedClass = _classThis;
 }();
-debugger;
 var MyDecoratedSubClass = function () {
     var _classDecorators = [(0, __1.decorate)(MyDecoratedClass)];
     var _classDescriptor;

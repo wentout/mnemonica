@@ -1,8 +1,7 @@
-import { decorate, apply }from '..';
+import { decorate, apply } from '..';
 
 
-debugger;
-@decorate(undefined, {}, { strictChain : false })
+@decorate( undefined, {}, { strictChain : false } )
 class MyDecoratedClass {
 	field: number;
 	constructor () {
@@ -10,8 +9,7 @@ class MyDecoratedClass {
 	}
 }
 
-debugger;
-@decorate(MyDecoratedClass)
+@decorate( MyDecoratedClass )
 class MyDecoratedSubClass {
 	sub_field: number;
 	constructor () {
@@ -20,4 +18,4 @@ class MyDecoratedSubClass {
 }
 
 export const myDecoratedInstance = new MyDecoratedClass;
-export const myDecoratedSubInstance = apply(myDecoratedInstance, MyDecoratedSubClass);
+export const myDecoratedSubInstance = apply( myDecoratedInstance, MyDecoratedSubClass );
