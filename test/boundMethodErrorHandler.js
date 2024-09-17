@@ -4,7 +4,7 @@ const odp = ( o, p, attributes ) => {
 	return Object.defineProperty( o, p, attributes );
 };
 
-module.exports.bindedMethodErrorHandler = ( exceptionReason ) => {
+module.exports.boundMethodErrorHandler = ( exceptionReason ) => {
 
 	const {
 		applyTo,

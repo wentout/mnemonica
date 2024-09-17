@@ -9,7 +9,7 @@ const odp = ( obj, prop, attributes ) => {
 	}
 };
 
-const { bindedMethodErrorHandler } = require( './bindedMethodErrorHandler' );
+const { boundMethodErrorHandler } = require( './boundMethodErrorHandler' );
 
 const bindMethod = function ( hookData, instance, methodName, MethodItself ) {
 	const from = hookData;
@@ -47,7 +47,7 @@ const bindMethod = function ( hookData, instance, methodName, MethodItself ) {
 								value      : error,
 								enumerable : true
 							} );
-							throw bindedMethodErrorHandler( exceptionReason );
+							throw boundMethodErrorHandler( exceptionReason );
 						} );
 					}
 
@@ -58,7 +58,7 @@ const bindMethod = function ( hookData, instance, methodName, MethodItself ) {
 						enumerable : true
 					} );
 
-					throw bindedMethodErrorHandler( exceptionReason );
+					throw boundMethodErrorHandler( exceptionReason );
 				}
 			};
 		},
