@@ -9,7 +9,6 @@ declare const InstanceCreatorPrototype: {
     invokePostHooks: (this: any) => {
         type: any;
         collection: any;
-        namespace: any;
     };
     throwModificationError: (this: any, error: any) => void;
 };

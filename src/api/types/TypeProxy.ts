@@ -146,7 +146,7 @@ const makeSubTypeProxy = function ( subtype: any, inheritedInstance: any ) {
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			if ( !existentInstance[ SymbolGaia ] ) {
-				const gaia = new Mnemosyne( subtype.namespace, new Gaia( existentInstance ) );
+				const gaia = new Mnemosyne( new Gaia( existentInstance ) );
 				existentInstance = new Proxy( gaia, {
 					get : gaiaProxyHandlerGet
 				} );
@@ -176,7 +176,6 @@ const MnemonicaInstanceProps = [
 	'__stack__',
 
 	'__collection__',
-	'__namespace__',
 	'__timestamp__',
 
 	'__creator__'
@@ -274,7 +273,7 @@ TypeProxy.prototype.construct = function ( __: any, args: any[] ) {
 	// constructs new Gaia -> new Mnemosyne
 	// 2 build the first instance in chain
 	const uranus = reflectPrimitiveWrappers( Uranus );
-	const gaia = new Mnemosyne( type.namespace, new Gaia( uranus ) );
+	const gaia = new Mnemosyne( new Gaia( uranus ) );
 	const gaiaProxy = new Proxy( gaia, {
 		get : gaiaProxyHandlerGet
 	} );

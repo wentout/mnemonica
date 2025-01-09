@@ -1,7 +1,17 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, indent, new-cap, space-before-function-paren */
 'use strict';
 
-import { TypeLookup, IDEF } from './types';
+import {
+	TypeLookup,
+	IDEF,
+	hook,
+	hooksTypes,
+	constructorOptions,
+	Proto,
+	SN,
+	IDefinitorInstance
+} from './types';
+export type { IDEF } from './types';
 
 import { constants } from './constants';
 const { odp } = constants;
@@ -9,84 +19,12 @@ const { odp } = constants;
 import * as errorsApi from './api/errors';
 import { descriptors } from './descriptors';
 
-export type { IDEF } from './types';
-
 export const {
 	defaultTypes,
 } = descriptors;
 
 function checkThis ( pointer: typeof mnemonica | typeof exports | unknown ): boolean {
 	return pointer === mnemonica || pointer === exports;
-}
-
-type hooksTypes = 'preCreation' | 'postCreation' | 'creationError'
-type hooksOpts = {
-	TypeName: string,
-	args: unknown[],
-	existentInstance: object,
-	inheritedInstance: object,
-}
-type hook = {
-	( opts: hooksOpts ): void
-}
-
-type constructorOptions = {
-
-	// explicit declaration we wish use
-	// an old style based constructors
-	// e.g. with prototype described with:
-	//    createInstanceModificator200XthWay
-	// or more general with: createInstanceModificator
-	ModificationConstructor?: CallableFunction,
-
-	// shall or not we use strict checking
-	// for creation sub-instances Only from current type
-	// or we might use up-nested sub-instances from chain
-	strictChain?: boolean,
-
-	// should we use forced errors checking
-	// to make all inherited types errored
-	// if there is an error somewhere in chain
-	// disallow instance construction
-	// if there is an error in prototype chain
-	blockErrors?: boolean,
-
-	// if it is necessary to collect stack
-	// as a __stack__ prototype property
-	// during the process of instance creation
-	submitStack?: boolean,
-
-	// await new Constructor()
-	// must return value
-	// optional ./issues/106
-	awaitReturn?: boolean,
-
-}
-
-
-type Proto<P, T> = Pick<P, Exclude<keyof P, keyof T>> & T;
-
-// type Narrowable =
-//   string | number | boolean | symbol | object | undefined | void | null | [];
-// type RN = Record<string|symbol, unknown>
-type SN = Record<string, new () => unknown>
-
-interface IDefinitorInstance<N extends object, S> {
-	new( ...arg: unknown[] ): {
-		[ key in keyof S ]: S[ key ]
-	}
-	define: IDefinitor<N, string>
-	registerHook: ( hookType: hooksTypes, cb: hook ) => void
-}
-
-interface IDefinitor<P extends object, SubTypeName extends string> {
-	<PP extends object, T, M extends Proto<P, Proto<PP, T>>, S extends SN & M> (
-		this: unknown,
-		TypeName: SubTypeName,
-		constructHandler: IDEF<T>,
-		proto?: PP,
-		config?: constructorOptions,
-	): IDefinitorInstance<M, S>
 }
 
 export const define = function <
@@ -186,11 +124,10 @@ export const mnemonica = Object.entries( {
 
 export const {
 
-	SymbolSubtypeCollection,
+	SymbolParentType,
 	SymbolConstructorName,
 	SymbolGaia,
 	SymbolReplaceGaia,
-	SymbolDefaultNamespace,
 	SymbolDefaultTypesCollection,
 	SymbolConfig,
 	MNEMONICA,
@@ -199,9 +136,6 @@ export const {
 	URANUS,
 	TYPE_TITLE_PREFIX,
 	ErrorMessages,
-	createNamespace,
-	namespaces,
-	defaultNamespace,
 	createTypesCollection,
 
 } = mnemonica;

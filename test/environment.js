@@ -10,11 +10,8 @@ const {
 	define,
 	defaultTypes: types,
 	defaultCollection,
-	defaultNamespace,
-	namespaces,
-	SymbolDefaultNamespace,
 	SymbolDefaultTypesCollection,
-	SymbolSubtypeCollection,
+	SymbolParentType,
 	SymbolConstructorName,
 	SymbolGaia,
 	SymbolConfig,
@@ -22,7 +19,6 @@ const {
 	MNEMOSYNE,
 	GAIA,
 	createTypesCollection,
-	createNamespace,
 	utils: {
 		toJSON,
 		merge,
@@ -44,7 +40,6 @@ const tests = ( opts ) => {
 		UserType,
 		overMore,
 		moreOver,
-		anotherDefaultTypesCollection,
 		someADTCInstance,
 		SubOfSomeADTCTypePre,
 		SubOfSomeADTCTypePost,
@@ -54,7 +49,6 @@ const tests = ( opts ) => {
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,
 		myDecoratedSubInstance,
-		anotherNamespace,
 		anotherTypesCollection,
 		oneElseTypesCollection,
 		anotherCollectionInstance,
@@ -96,11 +90,10 @@ const tests = ( opts ) => {
 		describe( 'interface test', () => {
 
 			const interface_keys = [
-				'SymbolSubtypeCollection',
+				'SymbolParentType',
 				'SymbolConstructorName',
 				'SymbolGaia',
 				'SymbolReplaceGaia',
-				'SymbolDefaultNamespace',
 				'SymbolDefaultTypesCollection',
 				'SymbolConfig',
 				'MNEMONICA',
@@ -110,9 +103,6 @@ const tests = ( opts ) => {
 				'TYPE_TITLE_PREFIX',
 				'ErrorMessages',
 				'defineStackCleaner',
-				'createNamespace',
-				'namespaces',
-				'defaultNamespace',
 				'createTypesCollection',
 				'defaultTypes',
 				'defaultCollection',
@@ -311,15 +301,6 @@ const tests = ( opts ) => {
 				// expect(Object.getPrototypeOf(Object.getPrototypeOf(moreOver)).hasOwnProperty('OverMore')).is.true;
 			} );
 
-			it( 'namespaces shoud be defined', () => {
-				expect( namespaces ).exist.and.is.a( 'map' );
-			} );
-			it( 'defaultNamespace shoud be defined', () => {
-				expect( defaultNamespace ).to.be.an( 'object' )
-					.and.equal( namespaces.get( SymbolDefaultNamespace ) );
-				expect( defaultNamespace.name ).to.be.a( 'symbol' )
-					.and.equal( SymbolDefaultNamespace );
-			} );
 			it( 'SymbolDefaultTypesCollection shoud be default', () => {
 				expect( types[ SymbolDefaultTypesCollection ] ).equal( true );
 			} );
@@ -329,8 +310,8 @@ const tests = ( opts ) => {
 			it( 'MNEMOSYNE shoud be defined', () => {
 				expect( MNEMOSYNE ).to.be.a( 'string' ).and.equal( 'Mnemosyne' );
 			} );
-			it( 'SymbolSubtypeCollection shoud be defined', () => {
-				expect( SymbolSubtypeCollection ).to.be.a( 'symbol' );
+			it( 'SymbolParentType shoud be defined', () => {
+				expect( SymbolParentType ).to.be.a( 'symbol' );
 			} );
 			it( 'SymbolConstructorName shoud be defined', () => {
 				expect( SymbolConstructorName ).to.be.a( 'symbol' );
@@ -341,33 +322,11 @@ const tests = ( opts ) => {
 				expect( Object.create( null ) instanceof UserType ).to.be.false;
 			} );
 
-			try {
-				createTypesCollection( {} );
-			} catch ( error ) {
-				it( 'should register types collection for proper namespace', () => {
-					expect( error.message ).is.equal( ErrorMessages.NAMESPACE_DOES_NOT_EXIST );
-				} );
-			}
-
-			try {
-				createTypesCollection( anotherNamespace, 'another types collection' );
-			} catch ( error ) {
-				it( 'should dismiss register types collection with the same name', () => {
-					expect( error.message ).is.equal( ErrorMessages.ASSOCIATION_EXISTS );
-				} );
-			}
-
 			it( 'should refer defaultCollection from defaultTypes.subtypes', () => {
 				expect( types.subtypes ).equal( defaultCollection );
 			} );
 			it( 'should refer defaultCollection from defaultTypes.subtypes', () => {
 				expect( defaultCollection ).instanceof( Map );
-			} );
-			it( 'should refer defaultTypes from defaultNamespace', () => {
-				expect( defaultNamespace.typesCollections.has( types ) ).is.true;
-			} );
-			it( 'should create collections in defaultNamespace by default', () => {
-				expect( anotherDefaultTypesCollection.namespace ).equal( defaultNamespace );
 			} );
 			it( 'should create instances for in anotherDefaultTypesCollection', () => {
 				expect( someADTCInstance.test ).equal( 123 );
@@ -520,10 +479,7 @@ const tests = ( opts ) => {
 				hookInstance = _hookInstance;
 				return true;
 			} );
-			// try {
-			// debugger;
 			const errored = new BadType( {} );
-			// } catch (error) {
 			const stackstart = '<-- creation of [ BadType ] traced -->';
 			it( 'should respect the rules', () => {
 				expect( errored ).instanceOf( Error );
@@ -545,11 +501,9 @@ const tests = ( opts ) => {
 				assert.equal( hop( errored, 'stack' ), true );
 			} );
 			it( 'thrown error.stack should have seekable definition without stack cleaner', () => {
-				debugger;
 				expect( errored.stack.indexOf( stackstart ) ).equal( 1 );
 				expect( errored.stack
 					.indexOf( 'environment.js' ) > 0 ).is.true;
-				// .equal(96);
 			} );
 			it( 'thrown error.stack should have seekable definition without Error.captureStackTrace', () => {
 				const { captureStackTrace } = Error;
@@ -675,12 +629,8 @@ const tests = ( opts ) => {
 			} );
 		} );
 
-		describe( 'another namespace instances', () => {
-			it( 'Another Nnamespace has both defined collections', () => {
-				expect( anotherNamespace.typesCollections.has( anotherTypesCollection ) ).is.true;
-				expect( anotherNamespace.typesCollections.has( oneElseTypesCollection ) ).is.true;
-			} );
-			it( 'Another Nnamespace typesCollections gather types', () => {
+		describe( 'another instances', () => {
+			it( 'Another typesCollections gather types', () => {
 				// expect(anotherTypesCollection).hasOwnProperty('AnotherCollectionType');
 				expect( hop( anotherTypesCollection, 'AnotherCollectionType' ) ).is.true;
 				// expect(oneElseTypesCollection).hasOwnProperty('OneElseCollectionType');
@@ -689,7 +639,7 @@ const tests = ( opts ) => {
 				expect( hop( oneElseTypesCollection, 'SomethingThatDoesNotExist' ) ).is.false;
 			} );
 
-			it( 'Instance Of Another Nnamespace and AnotherCollectionType', () => {
+			it( 'Instance Of Another and AnotherCollectionType', () => {
 				expect( anotherCollectionInstance ).instanceOf( AnotherCollectionType );
 			} );
 			it( 'anotherCollectionInstance.TestForAddition pass gaia proxy', () => {
@@ -703,7 +653,7 @@ const tests = ( opts ) => {
 				expect( check ).equal( 'check' );
 				expect( on ).equal( process.on );
 			} );
-			it( 'Instance Of OneElse Nnamespace and OneElseCollectionType', () => {
+			it( 'Instance Of OneElse and OneElseCollectionType', () => {
 				expect( oneElseCollectionInstance ).instanceOf( OneElseCollectionType );
 			} );
 			it( 'Instance circular .toJSON works', () => {
@@ -723,47 +673,12 @@ const tests = ( opts ) => {
 							[ SymbolConstructorName ]: protoConstructSymbol
 						}
 					},
-					[ SymbolConstructorName ]: namespaceName
+					[ SymbolConstructorName ]: CstrName
 				} = proto;
 				expect( name ).equal( MNEMONICA );
 				expect( protoConstructSymbol ).equal( MNEMONICA );
-				expect( namespaceName ).equal( 'anotherNamespace' );
+				expect( CstrName ).equal( 'Mnemonica' );
 			} );
-		} );
-
-		describe( 'hooks environment', () => {
-			try {
-				defaultNamespace.registerFlowChecker();
-			} catch ( error ) {
-				it( 'Thrown with Missing Callback', () => {
-					expect( error ).instanceOf( Error );
-					expect( error ).instanceOf( errors.MISSING_CALLBACK_ARGUMENT );
-				} );
-			}
-			try {
-				defaultNamespace.registerFlowChecker( () => { } );
-			} catch ( error ) {
-				it( 'Thrown with Re-Definition', () => {
-					expect( error ).instanceOf( Error );
-					expect( error ).instanceOf( errors.FLOW_CHECKER_REDEFINITION );
-				} );
-			}
-			try {
-				defaultNamespace.registerHook( 'WrongHookType', () => { } );
-			} catch ( error ) {
-				it( 'Thrown with Re-Definition', () => {
-					expect( error ).instanceOf( Error );
-					expect( error ).instanceOf( errors.WRONG_HOOK_TYPE );
-				} );
-			}
-			try {
-				defaultNamespace.registerHook( 'postCreation' );
-			} catch ( error ) {
-				it( 'Thrown with Re-Definition', () => {
-					expect( error ).instanceOf( Error );
-					expect( error ).instanceOf( errors.MISSING_HOOK_CALLBACK );
-				} );
-			}
 		} );
 
 		describe( 'strict chain test', () => {
@@ -925,27 +840,13 @@ const tests = ( opts ) => {
 		} );
 	} );
 
-	describe( 'wrong namespace creation', () => {
-
-		try {
-			createNamespace( 'wrong config namespace', true );
-		} catch ( error ) {
-			it( 'should avoid namespace creation with wrong config', () => {
-				expect( error.message ).is.equal( ErrorMessages.OPTIONS_ERROR );
-			} );
-		}
-
-		const goodNamespaceDescription = 'good config namespace';
-		const goodNamespace = createNamespace( 'good_config_namespace', goodNamespaceDescription );
-		it( 'namespace with string instead of config should have description', () => {
-			expect( goodNamespace[ SymbolConfig ].description ).is.equal( goodNamespaceDescription );
-		} );
+	describe( 'wrong creation', () => {
 
 		const ModificationConstructor = require( './createInstanceModificator200XthWay' );
-		const goodNamespaceTC = goodNamespace.createTypesCollection( 'good namespace types collection', {
+		const goodNamespaceTC = createTypesCollection( {
 			ModificationConstructor
 		} );
-		it( 'namespace types collection creation check', () => {
+		it( 'types collection creation check', () => {
 			expect( goodNamespaceTC[ SymbolConfig ].ModificationConstructor ).is.equal( ModificationConstructor );
 			expect( goodNamespaceTC[ SymbolConfig ].strictChain ).is.equal( true );
 		} );

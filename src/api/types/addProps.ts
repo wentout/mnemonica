@@ -6,7 +6,7 @@ const {
 	odp,
 } = constants;
 
-export const addProps = function (this: any): any {
+export const addProps = function ( this: any ): any {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
@@ -22,74 +22,67 @@ export const addProps = function (this: any): any {
 	} = self;
 
 	const {
-		namespace,
 		collection,
 		subtypes,
 	} = type;
 
-	odp(proto, '__proto_proto__', {
+	odp( proto, '__proto_proto__', {
 		get () {
 			return proto;
 		}
-	});
+	} );
 
-	odp(proto, '__args__', {
+	odp( proto, '__args__', {
 		get () {
 			return args;
 		}
-	});
+	} );
 
-	odp(proto, '__collection__', {
+	odp( proto, '__collection__', {
 		get () {
 			return collection;
 		}
-	});
+	} );
 
-	odp(proto, '__namespace__', {
-		get () {
-			return namespace;
-		}
-	});
-
-	odp(proto, '__subtypes__', {
+	odp( proto, '__subtypes__', {
 		get () {
 			return subtypes;
 		}
-	});
+	} );
 
-	odp(proto, '__type__', {
+	odp( proto, '__type__', {
 		get () {
 			return type;
 		}
-	});
+	} );
 
-	odp(proto, '__parent__', {
+	odp( proto, '__parent__', {
 		get () {
 			return existentInstance;
 		}
-	});
+	} );
 
-	if (submitStack) {
+	if ( submitStack ) {
 		const { stack } = this;
-		odp(proto, '__stack__', {
+		odp( proto, '__stack__', {
 			get () {
-				return stack.join('\n');
+				return stack.join( '\n' );
 			}
-		});
+		} );
 	}
 
-	odp(proto, '__creator__', {
+	odp( proto, '__creator__', {
 		get () {
 			return self;
 		}
-	});
+	} );
 
 	const timestamp = Date.now();
-	odp(proto, '__timestamp__', {
+	odp( proto, '__timestamp__', {
 		get () {
 			return timestamp;
 		}
-	});
+	} );
 
 };
 module.exports = {

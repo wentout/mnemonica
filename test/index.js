@@ -28,15 +28,13 @@ const {
 	call,
 	bind,
 	registerHook,
-	defaultTypes: types,
-	createNamespace,
+	defaultTypes,
 	createTypesCollection,
 	MNEMONICA,
 	URANUS,
-	SymbolSubtypeCollection,
+	SymbolParentType,
 	SymbolConstructorName,
 	SymbolGaia,
-	defaultNamespace,
 	utils: {
 		extract,
 		pick,
@@ -69,7 +67,6 @@ const UserType = mnemonica.define( 'UserType', function ( userData ) {
 	this.password = password;
 	return this;
 }, UserTypeProto, mc );
-// debugger;
 
 const userTypeHooksInvocations = [];
 
@@ -118,7 +115,6 @@ const shaperFactory = () => {
 		constructor () {
 			// const zzz = new.target;
 			// Shaper;
-			// debugger;
 			this.shape = 123;
 		}
 	};
@@ -129,11 +125,9 @@ UserType.define( () => {
 	const Shaper = shaperFactory( false );
 	class UserTypePL2 extends Shaper {
 		constructor () {
-			// debugger;
 			super();
 			// const zzz = new.target;
 			// Shaper;
-			// debugger;
 			this.user_pl_2_sign = 'pl_2';
 		}
 		get UserTypePL2 () {
@@ -168,65 +162,45 @@ Object.assign( UserType, {
 const typesFlowCheckerInvocations = [];
 const typesPreCreationInvocations = [];
 const typesPostCreationInvocations = [];
-const namespaceFlowCheckerInvocations = [];
-const namespacePreCreationInvocations = [];
-const namespacePostCreationInvocations = [];
 
-types.registerFlowChecker( ( opts ) => {
+defaultTypes.registerFlowChecker( ( opts ) => {
 	typesFlowCheckerInvocations.push( opts );
 } );
 
-types.registerHook( 'preCreation', function ( opts ) {
+defaultTypes.registerHook( 'preCreation', function ( opts ) {
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	const self = this;
 	typesPreCreationInvocations.push( {
 		kind : 'pre',
 		sort : 'collection',
-		self : this,
+		self,
 		opts
 	} );
 } );
 
-types.registerHook( 'postCreation', function ( opts ) {
+defaultTypes.registerHook( 'postCreation', function ( opts ) {
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	const self = this;
 	typesPostCreationInvocations.push( {
-		kind : 'post',
-		sort : 'collection',
-		self : this,
-		opts
-	} );
-} );
-
-defaultNamespace.registerFlowChecker( ( opts ) => {
-	namespaceFlowCheckerInvocations.push( opts );
-} );
-
-defaultNamespace.registerHook( 'preCreation', function ( opts ) {
-	namespacePreCreationInvocations.push( {
-		kind : 'pre',
-		sort : 'namespace',
-		self : this,
-		opts
-	} );
-} );
-
-defaultNamespace.registerHook( 'postCreation', function ( opts ) {
-	namespacePostCreationInvocations.push( {
-		kind  : 'pre',
-		sort  : 'namespace',
-		self  : this,
+		kind  : 'post',
+		sort  : 'collection',
 		order : 'first',
+		self,
 		opts
 	} );
 } );
 
-defaultNamespace.registerHook( 'postCreation', function ( opts ) {
-	namespacePostCreationInvocations.push( {
-		kind  : 'pre',
-		sort  : 'namespace',
-		self  : this,
+defaultTypes.registerHook( 'postCreation', function ( opts ) {
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	const self = this;
+	typesPostCreationInvocations.push( {
+		kind  : 'post',
+		sort  : 'collection',
 		order : 'second',
+		self,
 		opts
 	} );
 } );
-
 
 const anotherDefaultTypesCollection = createTypesCollection();
 
@@ -255,23 +229,18 @@ SubOfSomeADTCType.registerHook( 'postCreation', ( opts ) => {
 } );
 
 
-// debugger;
 const subOfSomeADTCInstanceANoArgs = apply( someADTCInstance, SubOfSomeADTCType );
 const subOfSomeADTCInstanceA = apply( someADTCInstance, SubOfSomeADTCType, [ 1, 2, 3 ] );
 
-// debugger;
 const backSub = new subOfSomeADTCInstanceA.SubOfSomeADTCType;
 
-// debugger;
 const subOfSomeADTCInstanceC = call( someADTCInstance, SubOfSomeADTCType, 1, 2, 3 );
 
-// debugger;
 const subOfSomeADTCInstanceB = bind( someADTCInstance, SubOfSomeADTCType )( 1, 2, 3 );
 
 
-const anotherNamespace = createNamespace( 'anotherNamespace' );
-const anotherTypesCollection = createTypesCollection( anotherNamespace, 'another types collection' );
-const oneElseTypesCollection = createTypesCollection( anotherNamespace );
+const anotherTypesCollection = createTypesCollection();
+const oneElseTypesCollection = createTypesCollection();
 
 const AnotherCollectionType = anotherTypesCollection.define( 'AnotherCollectionType', function ( check ) {
 	Object.assign( this, { check } );
@@ -349,7 +318,6 @@ const AsyncType = define( 'AsyncType', async function ( data ) {
 		if ( this[ propName ] ) {
 			return this[ propName ];
 		}
-		debugger;
 		throw new Error( `prop is missing: ${propName}` );
 
 	},
@@ -410,7 +378,6 @@ SubOfNestedAsync.registerHook( 'postCreation', function ( hookData ) {
 	SubOfNestedAsyncPostHookData = hookData;
 } );
 
-// debugger;
 describe( 'Main Test', () => {
 
 	/*
@@ -454,9 +421,7 @@ describe( 'Main Test', () => {
 		WithoutPasswordSign : 'WithoutPasswordSign'
 	};
 
-	// debugger;
-
-	const UserWithoutPassword = types.UserTypeConstructor.define( () => {
+	const UserWithoutPassword = defaultTypes.UserTypeConstructor.define( () => {
 		const WithoutPassword = function () {
 			this.password = undefined;
 		};
@@ -499,7 +464,6 @@ describe( 'Main Test', () => {
 	const OverMoreProto = {
 		OverMoreSign : 'OverMoreSign'
 	};
-	// debugger;
 	const OverMore = WithAdditionalSignTypeDef
 		.define( 'MoreOver.OverMore',
 			function ( str ) {
@@ -558,7 +522,7 @@ describe( 'Main Test', () => {
 	// *****************************************************
 
 
-	// const userTC = new types.UserTypeConstructor(USER_DATA);
+	// const userTC = new defaultTypes.UserTypeConstructor(USER_DATA);
 	const userTC = new UserTypeConstructor( USER_DATA );
 
 	const FORK_CALL_DATA = {
@@ -577,7 +541,6 @@ describe( 'Main Test', () => {
 	const unchainedUserWithoutPassword = new UserWithoutPassword();
 
 	const userWithoutPassword = new userTC.WithoutPassword();
-	// debugger;
 	const userWithoutPassword_2 = new userTC.WithoutPassword();
 
 	const sign2add = 'userWithoutPassword_2.WithAdditionalSign';
@@ -640,7 +603,6 @@ describe( 'Main Test', () => {
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,
 		myDecoratedSubInstance,
-		anotherNamespace,
 		anotherTypesCollection,
 		oneElseTypesCollection,
 		anotherCollectionInstance,
@@ -669,19 +631,16 @@ describe( 'Main Test', () => {
 	if ( hooksTest ) {
 		require( './hooks' )( {
 			userTypeHooksInvocations,
-			namespaceFlowCheckerInvocations,
 			typesFlowCheckerInvocations,
 			typesPreCreationInvocations,
 			typesPostCreationInvocations,
-			namespacePreCreationInvocations,
-			namespacePostCreationInvocations,
 		} );
 	}
 
 
 	describe( 'Type Definitions Tests', () => {
 		const checkTypeDefinition = ( _types, TypeName, proto ) => {
-			const parentType = _types[ SymbolSubtypeCollection ];
+			const parentType = _types[ SymbolParentType ];
 			const isSubType = parentType ? true : false;
 			describe( `initial type declaration ${TypeName}`, () => {
 				const def = _types.get( TypeName );
@@ -723,11 +682,11 @@ describe( 'Main Test', () => {
 		} );
 
 		[
-			[ types.subtypes, 'UserType', UserTypeProto ],
+			[ defaultTypes.subtypes, 'UserType', UserTypeProto ],
 			[ UserType.subtypes, 'UserTypePL1', pl1Proto ],
 			[ UserType.subtypes, 'UserTypePL2' ],
-			[ types.subtypes, 'UserTypeConstructor', UserTypeConstructorProto ],
-			[ types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto ],
+			[ defaultTypes.subtypes, 'UserTypeConstructor', UserTypeConstructorProto ],
+			[ defaultTypes.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto ],
 			[ UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto ],
 			[ WithAdditionalSignTypeDef.subtypes, 'MoreOver' ],
 			[ MoreOverTypeDef.subtypes, 'OverMore', OverMoreProto ],
@@ -742,12 +701,12 @@ describe( 'Main Test', () => {
 	describe( 'Instance Constructors Tests', () => {
 
 		it( 'type constructor itself is correct', () => {
-			assert.instanceOf( user, types.UserType );
-			assert.equal( types.UserType.__type__, UserType.__type__ );
+			assert.instanceOf( user, defaultTypes.UserType );
+			assert.equal( defaultTypes.UserType.__type__, UserType.__type__ );
 		} );
 		it( 'actually do construction', () => {
 			assert.instanceOf( user, UserType );
-			assert.instanceOf( user, types.UserType );
+			assert.instanceOf( user, defaultTypes.UserType );
 		} );
 		it( '.constructor.name is correct', () => {
 			assert.equal( user.constructor.name, 'UserType' );
@@ -1119,7 +1078,6 @@ describe( 'Main Test', () => {
 
 					let thrown2;
 					try {
-						debugger;
 						hookedMethod.call( null, 'getThisPropMethod' );
 					} catch ( error ) {
 						thrown2 = error;
@@ -1177,7 +1135,6 @@ describe( 'Main Test', () => {
 				} );
 
 				// it('should be able to throw on returned after invocations', () => {
-				// 	debugger;
 				// 	hookedMethod.call({
 				// 		getThisPropMethod (arg) {
 				// 			return this[arg];
@@ -1194,10 +1151,8 @@ describe( 'Main Test', () => {
 
 					new_targets = [];
 					try {
-						debugger;
 						erroredNestedConstructMethod();
 					} catch ( error ) {
-						debugger;
 						thrown = error;
 					}
 
@@ -1218,7 +1173,6 @@ describe( 'Main Test', () => {
 					} = thrown;
 					assert.equal( args[ 0 ], 123 );
 					assert.equal( instance.constructor.name, 'NestedSubError' );
-					debugger;
 					const parsed = thrown.parse();
 					assert.equal( parsed.name, 'NestedSubError' );
 
@@ -1261,8 +1215,6 @@ describe( 'Main Test', () => {
 					} catch ( error ) {
 						thrown = error;
 					}
-
-					debugger;
 
 					expect( thrown ).instanceOf( Error );
 					expect( thrown ).instanceOf( AsyncType );

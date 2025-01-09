@@ -42,7 +42,6 @@ const invokePreHooks = function ( this: any ) {
 	} = this;
 
 	const {
-		namespace,
 		collection,
 	} = type;
 
@@ -52,8 +51,6 @@ const invokePreHooks = function ( this: any ) {
 		args,
 		InstanceModificator
 	};
-
-	namespace.invokeHook( 'preCreation', hookData );
 
 	collection.invokeHook( 'preCreation', hookData );
 
@@ -77,7 +74,6 @@ const invokePostHooks = function ( this: any ) {
 	} = inheritedInstance;
 
 	const {
-		namespace,
 		collection,
 	} = type;
 
@@ -97,8 +93,6 @@ const invokePostHooks = function ( this: any ) {
 		type : type.invokeHook( hookType, hookData ),
 
 		collection : collection.invokeHook( hookType, hookData ),
-
-		namespace : namespace.invokeHook( hookType, hookData )
 
 	};
 

@@ -6,7 +6,7 @@ const { odp, } = constants_1.constants;
 const addProps = function () {
     const self = this;
     const { type, existentInstance, args, config: { submitStack }, __proto_proto__: proto } = self;
-    const { namespace, collection, subtypes, } = type;
+    const { collection, subtypes, } = type;
     odp(proto, '__proto_proto__', {
         get() {
             return proto;
@@ -20,11 +20,6 @@ const addProps = function () {
     odp(proto, '__collection__', {
         get() {
             return collection;
-        }
-    });
-    odp(proto, '__namespace__', {
-        get() {
-            return namespace;
         }
     });
     odp(proto, '__subtypes__', {

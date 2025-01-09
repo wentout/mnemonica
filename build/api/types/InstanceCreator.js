@@ -15,14 +15,13 @@ const obeyConstructor_1 = require("./obeyConstructor");
 const createInstanceModificator_1 = require("./createInstanceModificator");
 const invokePreHooks = function () {
     const { type, existentInstance, args, InstanceModificator } = this;
-    const { namespace, collection, } = type;
+    const { collection, } = type;
     const hookData = {
         type,
         existentInstance,
         args,
         InstanceModificator
     };
-    namespace.invokeHook('preCreation', hookData);
     collection.invokeHook('preCreation', hookData);
     type.invokeHook('preCreation', hookData);
 };
@@ -30,7 +29,7 @@ const invokePostHooks = function () {
     const creator = this;
     const { inheritedInstance, } = creator;
     const { __type__: type, __parent__: existentInstance, __args__: args, } = inheritedInstance;
-    const { namespace, collection, } = type;
+    const { collection, } = type;
     const hookType = inheritedInstance instanceof Error ?
         'creationError' : 'postCreation';
     const hookData = {
@@ -43,7 +42,6 @@ const invokePostHooks = function () {
     return {
         type: type.invokeHook(hookType, hookData),
         collection: collection.invokeHook(hookType, hookData),
-        namespace: namespace.invokeHook(hookType, hookData)
     };
 };
 const postProcessing = function (continuationOf) {

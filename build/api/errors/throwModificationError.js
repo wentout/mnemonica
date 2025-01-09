@@ -70,8 +70,8 @@ const throwModificationError = function (error) {
     });
     self.inheritedInstance = erroredInstance;
     const results = self.invokePostHooks();
-    const { type, collection, namespace } = results;
-    if (type.has(true) || collection.has(true) || namespace.has(true)) {
+    const { type, collection, } = results;
+    if (type.has(true) || collection.has(true)) {
         return;
     }
     odp(erroredInstance, 'args', {

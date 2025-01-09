@@ -155,12 +155,12 @@ const MnemonicaProtoProps = {
 
 };
 
-const Mnemosyne = function ( namespace: any, gaia: any ) {
+const Mnemosyne = function ( gaia: any ) {
 
 	const Mnemonica: any = function ( this: any ) {
 		odp( this, SymbolConstructorName, {
 			get () {
-				return namespace.name;
+				return MNEMONICA;
 			}
 		} );
 	};
