@@ -1,60 +1,51 @@
 'use strict';
 
-// 1. init default namespace
-// 2. create default namespace in types
-
-import { hop } from '../../utils/hop';
-
-import { ConstructorFunction } from '../../types';
+import {
+	ConstructorFunction
+} from '../../types';
 
 import { constants } from '../../constants';
 const {
 	odp,
 	SymbolConstructorName,
-	SymbolDefaultNamespace,
 	SymbolDefaultTypesCollection,
 	SymbolConfig,
+	defaultOptions,
+	defaultOptionsKeys,
 	MNEMONICA,
 	MNEMOSYNE,
 } = constants;
-
-import { ErrorsTypes } from '../../descriptors/errors';
-const {
-	NAMESPACE_DOES_NOT_EXIST,
-	ASSOCIATION_EXISTS,
-} = ErrorsTypes;
-
-import { namespaces } from '../namespaces';
-
-const {
-	[ SymbolDefaultNamespace ]: defaultNamespace,
-	defaultOptionsKeys
-} = namespaces;
 
 // here is TypesCollection.define() method
 import { define, lookup } from '../../api/types';
 
 import * as hooksAPI from '../../api/hooks';
 
-const proto = {
-	define,
-	lookup,
-	...hooksAPI
-};
+const {
+	registerHook,
+	invokeHook,
+	registerFlowChecker,
+} = hooksAPI;
 
-const TypesCollection = function ( namespace: any, config: { [ index: string ]: unknown } ) {
+const typesCollections = new Map();
+
+const TypesCollection = function ( _config: Record<string, unknown> ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	const subtypes = new Map();
 
-	// namespace config is less important than types collection config
-	config = defaultOptionsKeys.reduce( ( o: { [ index: string ]: any }, key: string ) => {
-		if ( typeof config[ key ] === typeof namespace[ SymbolConfig ][ key ] ) {
-			o[ key ] = config[ key ];
+	// default config is less important than types collection config
+	const config = defaultOptionsKeys.reduce( ( o: Record<string, unknown>, key: string ) => {
+		const value = _config[ key ];
+		const option = defaultOptions[ key ];
+		const t_conf = typeof value;
+		const t_opts = typeof option;
+		if ( t_conf === t_opts ) {
+			o[ key ] = value;
 		} else {
-			o[ key ] = namespace[ SymbolConfig ][ key ];
+			o[ key ] = option;
 		}
 		return o;
 	}, {} );
@@ -68,7 +59,7 @@ const TypesCollection = function ( namespace: any, config: { [ index: string ]: 
 	odp( this, Symbol.hasInstance, {
 		get () {
 			return ( instance: any ) => {
-				return instance[ SymbolConstructorName ] === namespace.name;
+				return instance[ SymbolConstructorName ] === MNEMONICA;
 			};
 		}
 	} );
@@ -83,7 +74,7 @@ const TypesCollection = function ( namespace: any, config: { [ index: string ]: 
 	odp( subtypes, MNEMOSYNE, {
 		get () {
 			// returning proxy
-			return namespace.typesCollections.get( self );
+			return typesCollections.get( self );
 		}
 	} );
 
@@ -91,19 +82,7 @@ const TypesCollection = function ( namespace: any, config: { [ index: string ]: 
 	odp( this, MNEMOSYNE, {
 		get () {
 			// returning proxy
-			return namespace.typesCollections.get( self );
-		}
-	} );
-
-	odp( this, 'namespace', {
-		get () {
-			return namespace;
-		}
-	} );
-
-	odp( subtypes, 'namespace', {
-		get () {
-			return namespace;
+			return typesCollections.get( self );
 		}
 	} );
 
@@ -116,12 +95,9 @@ const TypesCollection = function ( namespace: any, config: { [ index: string ]: 
 
 } as ConstructorFunction<object>;
 
-
 odp( TypesCollection.prototype, MNEMONICA, {
 	get () {
-		// returning proxy
-		return this.namespace.typesCollections.get( this );
-		// return this;
+		return typesCollections.get( this );
 	}
 } );
 
@@ -132,7 +108,7 @@ odp( TypesCollection.prototype, 'define', {
 		} = this;
 		return function ( this: any, ...args: any[] ) {
 			// this - define function of mnemonica interface
-			return proto.define.call( this, subtypes, ...args );
+			return define.call( this, subtypes, ...args );
 		};
 	},
 	enumerable : true
@@ -141,7 +117,7 @@ odp( TypesCollection.prototype, 'define', {
 odp( TypesCollection.prototype, 'lookup', {
 	get () {
 		return function ( this: any, ...args: any[] ) {
-			return proto.lookup.call( this.subtypes, ...args );
+			return lookup.call( this.subtypes, ...args );
 		}.bind( this );
 	},
 	enumerable : true
@@ -149,29 +125,34 @@ odp( TypesCollection.prototype, 'lookup', {
 
 odp( TypesCollection.prototype, 'registerHook', {
 	get () {
-		const proxy: unknown = this.namespace.typesCollections.get( this );
-		return function ( this: any, hookName: string, hookCallback: CallableFunction ) {
-			return proto.registerHook.call( this, hookName, hookCallback );
-		}.bind( proxy );
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		const self = this;
+		return function ( this: unknown, hookName: string, hookCallback: CallableFunction ) {
+			// return proto.registerHook.call( typesCollections.get( self ), hookName, hookCallback );
+			return registerHook.call( self, hookName, hookCallback );
+		}.bind( this );
 	},
 	enumerable : true
 } );
 
 odp( TypesCollection.prototype, 'invokeHook', {
 	get () {
-		const proxy: unknown = this.namespace.typesCollections.get( this );
-		return function ( this: any, hookName: string, hookCallback: CallableFunction ) {
-			return proto.invokeHook.call( this, hookName, hookCallback );
-		}.bind( proxy );
+		return function ( this: unknown, hookName: string, hookCallback: CallableFunction ) {
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			const self = this;
+			// return proto.invokeHook.call( typesCollections.get( self ), hookName, hookCallback );
+			return invokeHook.call( typesCollections.get( self ), hookName, hookCallback );
+		}.bind( this );
 	}
 } );
 
 odp( TypesCollection.prototype, 'registerFlowChecker', {
 	get () {
-		const proxy: unknown = this.namespace.typesCollections.get( this );
-		return function ( this: any, flowCheckerCallback: () => unknown ) {
-			return proto.registerFlowChecker.call( this, flowCheckerCallback );
-		}.bind( proxy );
+		return function ( this: unknown, flowCheckerCallback: () => unknown ) {
+			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			const self = this;
+			return registerFlowChecker.call( typesCollections.get( self ), flowCheckerCallback );
+		}.bind( this );
 	}
 } );
 
@@ -197,35 +178,18 @@ const typesCollectionProxyHandler = {
 	}
 };
 
-const createTypesCollection = ( namespace = defaultNamespace, association: any, config = {} ) => {
+const createTypesCollection = ( config = {} ) => {
 
-	if (
-		!( namespace instanceof Object ) ||
-		!hop( namespace, 'name' ) ||
-		!namespaces.namespaces.has( namespace.name )
-	) {
-		throw new NAMESPACE_DOES_NOT_EXIST;
-	}
-
-	if ( namespace.typesCollections.has( association ) ) {
-		throw new ASSOCIATION_EXISTS;
-	}
-
-	const typesCollection = new TypesCollection( namespace, config );
+	const typesCollection = new TypesCollection( config );
 	const typesCollectionProxy = new Proxy( typesCollection, typesCollectionProxyHandler );
 
-	namespace.typesCollections.set( typesCollection, typesCollectionProxy );
-	namespace.typesCollections.set( typesCollectionProxy, typesCollection );
-
-	if ( association ) {
-		namespace.typesCollections.set( association, typesCollectionProxy );
-	}
+	typesCollections.set( typesCollection, typesCollectionProxy );
 
 	return typesCollectionProxy;
 
 };
 
-const DEFAULT_TYPES = createTypesCollection( defaultNamespace, SymbolDefaultTypesCollection );
+const DEFAULT_TYPES = createTypesCollection();
 odp( DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 	get () {
 		return true;
@@ -234,8 +198,8 @@ odp( DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 
 export const types = {
 	get createTypesCollection () {
-		return function ( namespace: any, association: any, config = {} ) {
-			return createTypesCollection( namespace, association, config );
+		return function ( config = {} ) {
+			return createTypesCollection( config );
 		};
 	},
 	get defaultTypes () {

@@ -90,11 +90,11 @@ const MnemonicaProtoProps = {
         });
     }
 };
-const Mnemosyne = function (namespace, gaia) {
+const Mnemosyne = function (gaia) {
     const Mnemonica = function () {
         odp(this, SymbolConstructorName, {
             get() {
-                return namespace.name;
+                return MNEMONICA;
             }
         });
     };

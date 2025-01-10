@@ -1,9 +1,8 @@
 export declare const constants: {
-    readonly SymbolSubtypeCollection: symbol;
+    readonly SymbolParentType: symbol;
     readonly SymbolConstructorName: symbol;
     readonly SymbolGaia: symbol;
     readonly SymbolReplaceGaia: symbol;
-    readonly SymbolDefaultNamespace: symbol;
     readonly SymbolDefaultTypesCollection: symbol;
     readonly SymbolConfig: symbol;
     readonly SymbolUsed: symbol;
@@ -12,6 +11,8 @@ export declare const constants: {
     readonly GAIA: string;
     readonly URANUS: string;
     readonly odp: (o: any, p: PropertyKey, attributes: PropertyDescriptor & ThisType<any>) => any;
+    readonly defaultOptions: Record<string, unknown>;
+    readonly defaultOptionsKeys: string[];
     TYPE_TITLE_PREFIX: string;
     ErrorMessages: {
         BASE_ERROR_MESSAGE: string;
@@ -26,8 +27,6 @@ export declare const constants: {
         MISSING_HOOK_CALLBACK: string;
         MISSING_CALLBACK_ARGUMENT: string;
         FLOW_CHECKER_REDEFINITION: string;
-        NAMESPACE_DOES_NOT_EXIST: string;
-        ASSOCIATION_EXISTS: string;
         OPTIONS_ERROR: string;
         WRONG_STACK_CLEANER: string;
         PROTOTYPE_USED_TWICE: string;

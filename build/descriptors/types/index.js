@@ -1,26 +1,25 @@
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.types = void 0;
-const hop_1 = require("../../utils/hop");
 const constants_1 = require("../../constants");
-const { odp, SymbolConstructorName, SymbolDefaultNamespace, SymbolDefaultTypesCollection, SymbolConfig, MNEMONICA, MNEMOSYNE, } = constants_1.constants;
-const errors_1 = require("../../descriptors/errors");
-const { NAMESPACE_DOES_NOT_EXIST, ASSOCIATION_EXISTS, } = errors_1.ErrorsTypes;
-const namespaces_1 = require("../namespaces");
-const { [SymbolDefaultNamespace]: defaultNamespace, defaultOptionsKeys } = namespaces_1.namespaces;
+const { odp, SymbolConstructorName, SymbolDefaultTypesCollection, SymbolConfig, defaultOptions, defaultOptionsKeys, MNEMONICA, MNEMOSYNE, } = constants_1.constants;
 const types_1 = require("../../api/types");
 const hooksAPI = require("../../api/hooks");
-const proto = Object.assign({ define: types_1.define,
-    lookup: types_1.lookup }, hooksAPI);
-const TypesCollection = function (namespace, config) {
+const { registerHook, invokeHook, registerFlowChecker, } = hooksAPI;
+const typesCollections = new Map();
+const TypesCollection = function (_config) {
     const self = this;
     const subtypes = new Map();
-    config = defaultOptionsKeys.reduce((o, key) => {
-        if (typeof config[key] === typeof namespace[SymbolConfig][key]) {
-            o[key] = config[key];
+    const config = defaultOptionsKeys.reduce((o, key) => {
+        const value = _config[key];
+        const option = defaultOptions[key];
+        const t_conf = typeof value;
+        const t_opts = typeof option;
+        if (t_conf === t_opts) {
+            o[key] = value;
         }
         else {
-            o[key] = namespace[SymbolConfig][key];
+            o[key] = option;
         }
         return o;
     }, {});
@@ -32,7 +31,7 @@ const TypesCollection = function (namespace, config) {
     odp(this, Symbol.hasInstance, {
         get() {
             return (instance) => {
-                return instance[SymbolConstructorName] === namespace.name;
+                return instance[SymbolConstructorName] === MNEMONICA;
             };
         }
     });
@@ -43,22 +42,12 @@ const TypesCollection = function (namespace, config) {
     });
     odp(subtypes, MNEMOSYNE, {
         get() {
-            return namespace.typesCollections.get(self);
+            return typesCollections.get(self);
         }
     });
     odp(this, MNEMOSYNE, {
         get() {
-            return namespace.typesCollections.get(self);
-        }
-    });
-    odp(this, 'namespace', {
-        get() {
-            return namespace;
-        }
-    });
-    odp(subtypes, 'namespace', {
-        get() {
-            return namespace;
+            return typesCollections.get(self);
         }
     });
     const hooks = Object.create(null);
@@ -70,14 +59,14 @@ const TypesCollection = function (namespace, config) {
 };
 odp(TypesCollection.prototype, MNEMONICA, {
     get() {
-        return this.namespace.typesCollections.get(this);
+        return typesCollections.get(this);
     }
 });
 odp(TypesCollection.prototype, 'define', {
     get() {
         const { subtypes } = this;
         return function (...args) {
-            return proto.define.call(this, subtypes, ...args);
+            return types_1.define.call(this, subtypes, ...args);
         };
     },
     enumerable: true
@@ -85,34 +74,34 @@ odp(TypesCollection.prototype, 'define', {
 odp(TypesCollection.prototype, 'lookup', {
     get() {
         return function (...args) {
-            return proto.lookup.call(this.subtypes, ...args);
+            return types_1.lookup.call(this.subtypes, ...args);
         }.bind(this);
     },
     enumerable: true
 });
 odp(TypesCollection.prototype, 'registerHook', {
     get() {
-        const proxy = this.namespace.typesCollections.get(this);
+        const self = this;
         return function (hookName, hookCallback) {
-            return proto.registerHook.call(this, hookName, hookCallback);
-        }.bind(proxy);
+            return registerHook.call(self, hookName, hookCallback);
+        }.bind(this);
     },
     enumerable: true
 });
 odp(TypesCollection.prototype, 'invokeHook', {
     get() {
-        const proxy = this.namespace.typesCollections.get(this);
         return function (hookName, hookCallback) {
-            return proto.invokeHook.call(this, hookName, hookCallback);
-        }.bind(proxy);
+            const self = this;
+            return invokeHook.call(typesCollections.get(self), hookName, hookCallback);
+        }.bind(this);
     }
 });
 odp(TypesCollection.prototype, 'registerFlowChecker', {
     get() {
-        const proxy = this.namespace.typesCollections.get(this);
         return function (flowCheckerCallback) {
-            return proto.registerFlowChecker.call(this, flowCheckerCallback);
-        }.bind(proxy);
+            const self = this;
+            return registerFlowChecker.call(typesCollections.get(self), flowCheckerCallback);
+        }.bind(this);
     }
 });
 const typesCollectionProxyHandler = {
@@ -134,25 +123,13 @@ const typesCollectionProxyHandler = {
         } : undefined;
     }
 };
-const createTypesCollection = (namespace = defaultNamespace, association, config = {}) => {
-    if (!(namespace instanceof Object) ||
-        !(0, hop_1.hop)(namespace, 'name') ||
-        !namespaces_1.namespaces.namespaces.has(namespace.name)) {
-        throw new NAMESPACE_DOES_NOT_EXIST;
-    }
-    if (namespace.typesCollections.has(association)) {
-        throw new ASSOCIATION_EXISTS;
-    }
-    const typesCollection = new TypesCollection(namespace, config);
+const createTypesCollection = (config = {}) => {
+    const typesCollection = new TypesCollection(config);
     const typesCollectionProxy = new Proxy(typesCollection, typesCollectionProxyHandler);
-    namespace.typesCollections.set(typesCollection, typesCollectionProxy);
-    namespace.typesCollections.set(typesCollectionProxy, typesCollection);
-    if (association) {
-        namespace.typesCollections.set(association, typesCollectionProxy);
-    }
+    typesCollections.set(typesCollection, typesCollectionProxy);
     return typesCollectionProxy;
 };
-const DEFAULT_TYPES = createTypesCollection(defaultNamespace, SymbolDefaultTypesCollection);
+const DEFAULT_TYPES = createTypesCollection();
 odp(DEFAULT_TYPES, SymbolDefaultTypesCollection, {
     get() {
         return true;
@@ -160,8 +137,8 @@ odp(DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 });
 exports.types = {
     get createTypesCollection() {
-        return function (namespace, association, config = {}) {
-            return createTypesCollection(namespace, association, config);
+        return function (config = {}) {
+            return createTypesCollection(config);
         };
     },
     get defaultTypes() {

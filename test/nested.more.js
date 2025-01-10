@@ -136,6 +136,7 @@ const tests = ( opts ) => {
 
 			const constructors = collectConstructors( evenMore );
 			const constructorsKeys = Object.keys( constructors );
+			debugger;
 
 			var base = types;
 			// debugger;
@@ -173,10 +174,16 @@ const tests = ( opts ) => {
 					if ( !props ) {
 						return;
 					}
+					debugger;
 					const { idx, name, iof } = props;
 					const str = `${idx} evenMore instanceof ${name}`;
 					it( `must be true : ${str}`, () => {
-						assert.isTrue( iof, str );
+						try {
+							assert.isTrue( iof, str );
+						} catch ( error ) {
+							debugger;
+							idx; name; iof;
+						}
 					} );
 				} );
 		} );

@@ -13,11 +13,9 @@ const MNEMOSYNE = 'Mnemosyne';
 const GAIA = 'Gaia';
 const URANUS = 'Uranus';
 
-
 // symbols
-const SymbolDefaultNamespace = Symbol( `default ${MNEMONICA} namespace` );
 const SymbolDefaultTypesCollection = Symbol( `default ${MNEMONICA} types collection` );
-const SymbolSubtypeCollection = Symbol( 'SubType Collection' );
+const SymbolParentType = Symbol( 'Parent of this SubType Collection' );
 const SymbolConstructorName = Symbol( 'Defined Constructor Name' );
 const SymbolGaia = Symbol( 'Defined Gaia Constructor' );
 const SymbolReplaceGaia = Symbol( 'Defined Method Name to Replace Gaia' );
@@ -44,17 +42,55 @@ const ErrorMessages = {
 	MISSING_HOOK_CALLBACK      : 'hook definition requires callback',
 	MISSING_CALLBACK_ARGUMENT  : 'callback is required argument',
 	FLOW_CHECKER_REDEFINITION  : 'attempt to re-define flow checker callback',
-	NAMESPACE_DOES_NOT_EXIST   : 'namespace does not exits',
-	ASSOCIATION_EXISTS         : 'association is already made',
 	OPTIONS_ERROR              : 'options must be an object or a string',
 	WRONG_STACK_CLEANER        : 'wrong stack cleaner instanceof',
 	PROTOTYPE_USED_TWICE       : '.prototype used twice',
 };
 
+import ModificationConstructor from '../api/types/createInstanceModificator';
+
+const defaultOptions = {
+
+	get ModificationConstructor () {
+		return ModificationConstructor;
+	},
+
+	// shall or not we use strict checking
+	// for creation sub-instances Only from current type
+	// or we might use up-nested sub-instances from chain
+	get strictChain () {
+		return true;
+	},
+
+	// should we use forced errors checking
+	// to make all inherited types errored
+	// if there is an error somewhere in chain
+	// disallow instance construction
+	// if there is an error in prototype chain
+	get blockErrors () {
+		return true;
+	},
+
+	// if it is necessary to collect stack
+	// as a __stack__ prototype property
+	// during the process of instance creation
+	get submitStack () {
+		return false;
+	},
+
+	// await new Constructor()
+	// must return value
+	// optional ./issues/106
+	get awaitReturn () {
+		return true;
+	},
+
+} as Record<string, unknown>;
+
 export const constants = {
 
-	get 'SymbolSubtypeCollection' () {
-		return SymbolSubtypeCollection;
+	get 'SymbolParentType' () {
+		return SymbolParentType;
 	},
 
 	get 'SymbolConstructorName' () {
@@ -67,10 +103,6 @@ export const constants = {
 
 	get 'SymbolReplaceGaia' () {
 		return SymbolReplaceGaia;
-	},
-
-	get 'SymbolDefaultNamespace' () {
-		return SymbolDefaultNamespace;
 	},
 
 	get 'SymbolDefaultTypesCollection' () {
@@ -102,6 +134,14 @@ export const constants = {
 		return ( o: any, p: PropertyKey, attributes: PropertyDescriptor & ThisType<any> ): any => {
 			return Object.defineProperty( o, p, attributes );
 		};
+	},
+
+	get 'defaultOptions' () {
+		return defaultOptions;
+	},
+
+	get 'defaultOptionsKeys' () {
+		return Object.keys( defaultOptions );
 	},
 
 	TYPE_TITLE_PREFIX,

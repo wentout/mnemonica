@@ -5,9 +5,8 @@ const MNEMONICA = 'Mnemonica';
 const MNEMOSYNE = 'Mnemosyne';
 const GAIA = 'Gaia';
 const URANUS = 'Uranus';
-const SymbolDefaultNamespace = Symbol(`default ${MNEMONICA} namespace`);
 const SymbolDefaultTypesCollection = Symbol(`default ${MNEMONICA} types collection`);
-const SymbolSubtypeCollection = Symbol('SubType Collection');
+const SymbolParentType = Symbol('Parent of this SubType Collection');
 const SymbolConstructorName = Symbol('Defined Constructor Name');
 const SymbolGaia = Symbol('Defined Gaia Constructor');
 const SymbolReplaceGaia = Symbol('Defined Method Name to Replace Gaia');
@@ -27,15 +26,31 @@ const ErrorMessages = {
     MISSING_HOOK_CALLBACK: 'hook definition requires callback',
     MISSING_CALLBACK_ARGUMENT: 'callback is required argument',
     FLOW_CHECKER_REDEFINITION: 'attempt to re-define flow checker callback',
-    NAMESPACE_DOES_NOT_EXIST: 'namespace does not exits',
-    ASSOCIATION_EXISTS: 'association is already made',
     OPTIONS_ERROR: 'options must be an object or a string',
     WRONG_STACK_CLEANER: 'wrong stack cleaner instanceof',
     PROTOTYPE_USED_TWICE: '.prototype used twice',
 };
+const createInstanceModificator_1 = require("../api/types/createInstanceModificator");
+const defaultOptions = {
+    get ModificationConstructor() {
+        return createInstanceModificator_1.default;
+    },
+    get strictChain() {
+        return true;
+    },
+    get blockErrors() {
+        return true;
+    },
+    get submitStack() {
+        return false;
+    },
+    get awaitReturn() {
+        return true;
+    },
+};
 exports.constants = {
-    get 'SymbolSubtypeCollection'() {
-        return SymbolSubtypeCollection;
+    get 'SymbolParentType'() {
+        return SymbolParentType;
     },
     get 'SymbolConstructorName'() {
         return SymbolConstructorName;
@@ -45,9 +60,6 @@ exports.constants = {
     },
     get 'SymbolReplaceGaia'() {
         return SymbolReplaceGaia;
-    },
-    get 'SymbolDefaultNamespace'() {
-        return SymbolDefaultNamespace;
     },
     get 'SymbolDefaultTypesCollection'() {
         return SymbolDefaultTypesCollection;
@@ -74,6 +86,12 @@ exports.constants = {
         return (o, p, attributes) => {
             return Object.defineProperty(o, p, attributes);
         };
+    },
+    get 'defaultOptions'() {
+        return defaultOptions;
+    },
+    get 'defaultOptionsKeys'() {
+        return Object.keys(defaultOptions);
     },
     TYPE_TITLE_PREFIX,
     ErrorMessages,

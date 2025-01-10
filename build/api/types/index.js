@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.lookup = exports.define = void 0;
 const hop_1 = require("../../utils/hop");
 const constants_1 = require("../../constants");
-const { odp, SymbolSubtypeCollection, SymbolConstructorName, SymbolConfig, TYPE_TITLE_PREFIX, MNEMOSYNE, } = constants_1.constants;
+const { odp, SymbolParentType, SymbolConstructorName, SymbolConfig, TYPE_TITLE_PREFIX, MNEMOSYNE, } = constants_1.constants;
 const errors_1 = require("../../descriptors/errors");
 const { ALREADY_DECLARED, WRONG_TYPE_DEFINITION, TYPENAME_MUST_BE_A_STRING, HANDLER_MUST_BE_A_FUNCTION, } = errors_1.ErrorsTypes;
 const hooksApi = require("../hooks");
@@ -13,9 +13,8 @@ const utils_1 = require("../utils");
 const { checkProto, getTypeChecker, CreationHandler, getTypeSplitPath, checkTypeName, isClass, } = utils_1.default;
 const errors_2 = require("../errors");
 const TypeDescriptor = function (defineOrigin, types, TypeName, constructHandler, proto, config) {
-    const parentType = types[SymbolSubtypeCollection] || null;
+    const parentType = types[SymbolParentType] || null;
     const isSubType = parentType ? true : false;
-    const namespace = isSubType ? parentType.namespace : types.namespace;
     const collection = isSubType ? parentType.collection : types[MNEMOSYNE];
     if (types.has(TypeName)) {
         throw new ALREADY_DECLARED;
@@ -33,14 +32,13 @@ const TypeDescriptor = function (defineOrigin, types, TypeName, constructHandler
         isSubType,
         subtypes,
         parentType,
-        namespace,
         collection,
         title,
         config,
         hooks: Object.create(null)
     });
     errors_2.getStack.call(this, `Definition of [ ${TypeName} ] made at:`, [], defineOrigin);
-    odp(subtypes, SymbolSubtypeCollection, {
+    odp(subtypes, SymbolParentType, {
         get() {
             return type;
         }

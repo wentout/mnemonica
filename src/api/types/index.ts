@@ -1,13 +1,13 @@
 'use strict';
 
-import { ConstructorFunction } from '../../types';
+import { ConstructorFunction, TypeDescriptorInstance } from '../../types';
 
 import { hop } from '../../utils/hop';
 
 import { constants } from '../../constants';
 const {
 	odp,
-	SymbolSubtypeCollection,
+	SymbolParentType,
 	SymbolConstructorName,
 	SymbolConfig,
 
@@ -17,6 +17,8 @@ const {
 } = constants;
 
 import { ErrorsTypes } from '../../descriptors/errors';
+// import { descriptors } from '../../descriptors';
+
 const {
 	ALREADY_DECLARED,
 	WRONG_TYPE_DEFINITION,
@@ -44,12 +46,6 @@ const {
 
 import { getStack } from '../errors';
 
-type TypeDescriptorInstance = {
-	define: CallableFunction;
-	lookup: CallableFunction;
-	subtypes: object;
-};
-
 const TypeDescriptor = function (
 	this: any,
 	defineOrigin: CallableFunction,
@@ -60,13 +56,12 @@ const TypeDescriptor = function (
 	config: { [ index: string ]: any },
 ) {
 
-	// here "types" refers to types collection object {}
+	// here "types" refers to subtypes of type or collection object {}
 
-	const parentType = types[ SymbolSubtypeCollection ] || null;
+	const parentType = types[ SymbolParentType ] || null;
 
 	const isSubType = parentType ? true : false;
 
-	const namespace = isSubType ? parentType.namespace : types.namespace;
 	const collection = isSubType ? parentType.collection : types[ MNEMOSYNE ];
 
 	if ( types.has( TypeName ) ) {
@@ -75,6 +70,7 @@ const TypeDescriptor = function (
 
 	checkProto( proto );
 
+	// const subtypes = descriptors.createTypesCollection();
 	const subtypes = new Map();
 
 	const title = `${TYPE_TITLE_PREFIX}${TypeName}`;
@@ -95,7 +91,6 @@ const TypeDescriptor = function (
 		subtypes,
 		parentType,
 
-		namespace,
 		collection,
 
 		title,
@@ -108,7 +103,7 @@ const TypeDescriptor = function (
 
 	getStack.call( this, `Definition of [ ${TypeName} ] made at:`, [], defineOrigin );
 
-	odp( subtypes, SymbolSubtypeCollection, {
+	odp( subtypes, SymbolParentType, {
 		get () {
 			return type;
 		}

@@ -28,7 +28,6 @@ export const invokeHook = function ( this: any, hookType: string, opts: { [ inde
 	if ( hop( self.hooks, hookType ) ) {
 
 		// "this" referes to
-		// namespace, if called from namespaces
 		// type, if called from types
 
 		const {

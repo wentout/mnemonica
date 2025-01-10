@@ -122,11 +122,11 @@ export const throwModificationError = function ( this: any, error: any ) {
 	// is gathering value from deep chain and while comparing it with 
 	// assignment operator, then it will not create this property 
 	// so we need direct property declaration here ...
-	odp ( erroredInstance, 'stack', {
+	odp( erroredInstance, 'stack', {
 		get () {
 			return erroredInstanceStack;
 		}
-	});
+	} );
 
 	self.inheritedInstance = erroredInstance;
 
@@ -135,10 +135,9 @@ export const throwModificationError = function ( this: any, error: any ) {
 	const {
 		type,
 		collection,
-		namespace
 	} = results;
 
-	if ( type.has( true ) || collection.has( true ) || namespace.has( true ) ) {
+	if ( type.has( true ) || collection.has( true ) ) {
 		return;
 	}
 	// if hooks had some interception: stop

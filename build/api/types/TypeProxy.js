@@ -80,7 +80,7 @@ const makeSubTypeProxy = function (subtype, inheritedInstance) {
         apply(Target, thisArg = inheritedInstance, _args) {
             let existentInstance = reflectPrimitiveWrappers(thisArg);
             if (!existentInstance[SymbolGaia]) {
-                const gaia = new Mnemosyne(subtype.namespace, new Gaia(existentInstance));
+                const gaia = new Mnemosyne(new Gaia(existentInstance));
                 existentInstance = new Proxy(gaia, {
                     get: gaiaProxyHandlerGet
                 });
@@ -100,7 +100,6 @@ const MnemonicaInstanceProps = [
     '__subtypes__',
     '__stack__',
     '__collection__',
-    '__namespace__',
     '__timestamp__',
     '__creator__'
 ].concat(MnemosynePrototypeKeys);
@@ -147,7 +146,7 @@ const gaiaProxyHandlerGet = (target, prop, receiver) => {
 exports.TypeProxy.prototype.construct = function (__, args) {
     const { __type__: type, Uranus } = this;
     const uranus = reflectPrimitiveWrappers(Uranus);
-    const gaia = new Mnemosyne(type.namespace, new Gaia(uranus));
+    const gaia = new Mnemosyne(new Gaia(uranus));
     const gaiaProxy = new Proxy(gaia, {
         get: gaiaProxyHandlerGet
     });
