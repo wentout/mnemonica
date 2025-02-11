@@ -45,18 +45,18 @@ jobs:
     - name: Test
       run: npm run test:cov
 
-    - name: Coveralls Parallel
+    - name: Coveralls Start Parallel Build
       uses: coverallsapp/github-action@master
       with:
-        github-token: ${{ secrets.github_token }}
-        parallel: false
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        parallel: true
 
   finish:
     needs: test
     runs-on: ubuntu-latest
     steps:
-    - name: Coveralls Finished
+    - name: Coveralls Finish Build
       uses: coverallsapp/github-action@master
       with:
-        github-token: ${{ secrets.github_token }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         parallel-finished: true
