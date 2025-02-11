@@ -90,6 +90,7 @@ const MnemonicaProtoProps = {
         });
     }
 };
+const TypesRoots = new WeakMap;
 const Mnemosyne = function (gaia) {
     const Mnemonica = function () {
         odp(this, SymbolConstructorName, {
@@ -100,7 +101,6 @@ const Mnemosyne = function (gaia) {
     };
     const mnemonica = Reflect.getPrototypeOf(gaia);
     Reflect.setPrototypeOf(Mnemonica.prototype, mnemonica);
-    Mnemonica.prototype.constructor = Mnemonica;
     Object.entries(MnemonicaProtoProps).forEach(([name, method]) => {
         odp(Mnemonica.prototype, name, {
             get() {
@@ -127,6 +127,7 @@ const Mnemosyne = function (gaia) {
         }
     });
     const proto = new Mnemonica();
+    TypesRoots.set(this, proto);
     Reflect.setPrototypeOf(this, proto);
 };
 exports.default = {

@@ -20,7 +20,7 @@ module.exports = {
 		'@typescript-eslint'
 	],
 	rules: {
-		'indent': ['error', 'tab'],
+		'indent': [ 'error', 'tab' ],
 		'key-spacing': [
 			'warn',
 			{
@@ -29,9 +29,9 @@ module.exports = {
 				align: 'colon',
 			},
 		],
-		'linebreak-style': ['error', 'unix'],
-		'quotes': ['error', 'single'],
-		'semi': ['error', 'always'],
+		'linebreak-style': [ 'error', 'unix' ],
+		'quotes': [ 'error', 'single' ],
+		'semi': [ 'error', 'always' ],
 		'no-unused-vars': 'off',
 		'@typescript-eslint/no-unused-vars': 'error',
 		'no-shadow': [
@@ -42,9 +42,9 @@ module.exports = {
 				allow: [],
 			},
 		],
-		'array-bracket-spacing': ['error', 'always'],
-		'computed-property-spacing': ['error', 'always'],
-		'object-curly-spacing': ['error', 'always'],
+		'array-bracket-spacing': [ 'error', 'always' ],
+		'computed-property-spacing': [ 'error', 'always' ],
+		'object-curly-spacing': [ 'error', 'always' ],
 		'space-before-function-paren': [
 			'error', {
 				'anonymous': 'always',
@@ -87,12 +87,13 @@ module.exports = {
 		'@typescript-eslint/no-explicit-any': 'off',
 		yoda: 'warn',
 	},
-	overrides: [{
-		files: ['build/**/*.js'],
+	overrides: [ {
+		files: [ 'build/**/*.js' ],
 		rules: {
 			'no-multi-assign': 0,
+			'@typescript-eslint/no-this-alias': 0,
 			'prefer-destructuring': 0,
 			'new-cap': 0
 		}
-	}]
+	} ]
 };

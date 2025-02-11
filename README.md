@@ -391,107 +391,6 @@ GoneToTheDataBase
 
 ```
 
-For sure registering hooks for each defined type is boring, so now we see we have to use Namespaces for Instances.
-
-# Namespaces
-
-By default `define` utilise services of Default Namespace which is always hidden, but always exist. You can lend them using the following technique:
-
-```js
-
-const {
-	namespaces,
-	SymbolDefaultNamespace
-} = require('mnemonica');
-
-const defaultNamespace = namespaces.get(SymbolDefaultNamespace);
-
-```
-
-**Silly joke, isn't it?** ... sure, you can just use:
-
-```js
-
-const {
-	defaultNamespace
-} = require('mnemonica');
-
-```
-
-And here you can play much more joyfull play with hooks:
-
-```js
-
-defaultNamespace
-	.registerHook(
-		'preCreation', preCreationNamespaceCallback);
-		
-defaultNamespace
-	.registerHook(
-		'postCreation', postCreationNamespaceCallback);
-
-```
-
-So, now all instances crafted from this namespace will call that hooks. The difference between hooks defined using type modificator and hooks defined using namespace is in the following execution order of hooks invocations:
-
-```js
-
-// 1.
-namespace.invokeHook('preCreation', // ...
-
-// 2.
-type.invokeHook('preCreation', // ...
-
-// 3. instance creation is here
-
-// 4.
-type.invokeHook('postCreation', // ...
-
-// 5.
-namespace.invokeHook('postCreation', // ...
-
-```
-
-It is important, yes, but not as much as we can expect... because of ... nevermind. 
-
-Finally, you can craft your own namespaces:
-
-```js
-
-const {
-	createNamespace
-} = require('mnemonica');
-
-const anotherNamespace =
-	createNamespace('Another Namespace Name');
-
-```
-
-And there also is one important thing. For example you have to build type modificator with the same name. You can do this, because you can craft as much types modificators collecttions, as you need. Even inside of the same namespace:
-
-```js
-
-const {
-	createTypesCollection
-} = require('mnemonica');
-
-const otherOneTypesCollectionOfDefaultNamespace = 
-	createTypesCollection(defaultNamespace);
-
-const defineOfAnother = 
-	otherOneTypesCollectionOfDefaultNamespace
-		// another define method -> another ref
-		.define;
-
-const anotherTypesCollectionOfAnotherNamespace = 
-	createTypesCollection(anotherNamespace);
-
-const defineOfAnotherAnother = 
-	anotherTypesCollectionOfAnotherNamespace
-		// and another define method -> another ref
-		.define;
-
-```
 
 And even more. You can use Hooks with Types Collections also (starting from v0.3.1). For doing this just grab referer to collection somewhere, for example:
 
@@ -512,33 +411,28 @@ defaultTypes
 
 ```
 
-'Pre' hooks for Types Collections invoked after Namespace Hooks invocation, but before Type Hook invocation. 'Post' hooks for Types Collections invoked after Namespace Type Hook invocation, but before Namespace Hooks invocation. So, actually it looks like:
+'Pre' hooks for Types Collections invoked before Type Hook invocation. 'Post' hooks for Types Collections invoked after Type Hook invocation. So, actually it looks like:
 
 ```js
 
 // 1.
-namespace.invokeHook('preCreation', // ...
-
-// 2.
 typecollection.invokeHook('preCreation', // ...
 
-// 3.
+// 2.
 type.invokeHook('preCreation', // ...
 
-// 4. instance creation is here
+// 3. instance creation is here
 
-// 5.
+// 4.
 type.invokeHook('postCreation', // ...
 
-// 6.
+// 5.
 typecollection.invokeHook('postCreation', // ...
 
-// 7.
-namespace.invokeHook('postCreation', // ...
 
 ```
 
-As we can see, type hooks are closest one to the type itself. For sure, there can be situations, when you have to register some common hooks, but not for `typecollection` or `namespace`. Assume you have some friendly types, might be from different collections, and you have to register the same hooks definitions for them. And the plase where you wish to do this is the file, other than files you defined that types. There you can use:
+As we can see, type hooks are closest one to the type itself. For sure, there can be situations, when you have to register some common hooks, but not for `typecollection`. Assume you have some friendly types, might be from different collections, and you have to register the same hooks definitions for them. And the plase where you wish to do this is the file, other than files you defined that types. There you can use:
 
 # .lookup('TypeName')
 
@@ -837,10 +731,6 @@ What you can craft from this instance accordingly with it's defined Type, the sa
 ## `.__collection__`
 Collection of types where `__type__` was defined.
 
-## `.__namespace__`
-Namespace where `__collection__` was defined.
-
-
 # `instance.clone`
 Returns cloned instance, with the following condition `instance !== instance.clone`. Cloning includes all the inheritance, with hooks invocations and so on. Therfore cloned instance is not the same as instance, but both made from the same `.__parent__` instance.
 
@@ -914,7 +804,7 @@ define('SomeType', function () {}, {}, {
 })
 ```
 
-Also you can override default config options for Types Collection or Namespace. Keep in mind, that TypesCollection options override namespace options. Therefore if you will override namespace options all previously created types collections would not update. For example, after doing so all types that have no own config will fall without any error:
+Also you can override default config options for Types Collection. For example, after doing so all types that have no own config will fall without any error:
 
 ```js
 import {

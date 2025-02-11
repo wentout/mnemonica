@@ -20,7 +20,7 @@ const asyncConstructionTest = true;
 
 const mnemonica = require( '..' );
 
-const { myDecoratedSubInstance } = require( './decorate' );
+const { myDecoratedSubInstance, myDecoratedSubSubInstance, myOtherInstance } = require( './decorate' );
 
 const {
 	define,
@@ -603,6 +603,8 @@ describe( 'Main Test', () => {
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,
 		myDecoratedSubInstance,
+		myDecoratedSubSubInstance,
+		myOtherInstance,
 		anotherTypesCollection,
 		oneElseTypesCollection,
 		anotherCollectionInstance,

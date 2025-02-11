@@ -104,7 +104,7 @@ TypeProxy.prototype.set = function ( __: any, name: string, value: any ) {
 };
 
 
-TypeProxy.prototype.apply = function ( __: any, Uranus: any, args: any[] ) {
+TypeProxy.prototype.apply = function ( __: unknown, Uranus: unknown, args: unknown[] ) {
 	const type = this.__type__;
 	let instance = null;
 	if ( Uranus ) {

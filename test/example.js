@@ -47,7 +47,6 @@ UserType.define( () => {
 	return UserTypePL2;
 } );
 
-debugger;
 const UserTypeConstructor = define( () => {
 
 	const UserTypeConstructor = function ( userData ) {

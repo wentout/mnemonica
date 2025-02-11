@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InstanceCreator = void 0;
 const constants_1 = require("../../constants");
-const { odp, SymbolConstructorName, } = constants_1.constants;
+const { odp, SymbolConstructorName, defaultOptions: { ModificationConstructor: defaultMC } } = constants_1.constants;
 const errors_1 = require("../../descriptors/errors");
 const { WRONG_MODIFICATION_PATTERN, } = errors_1.ErrorsTypes;
 const utils_1 = require("../utils");
@@ -12,7 +12,6 @@ const throwModificationError_1 = require("../errors/throwModificationError");
 const addProps_1 = require("./addProps");
 const InstanceModificator_1 = require("./InstanceModificator");
 const obeyConstructor_1 = require("./obeyConstructor");
-const createInstanceModificator_1 = require("./createInstanceModificator");
 const invokePreHooks = function () {
     const { type, existentInstance, args, InstanceModificator } = this;
     const { collection, } = type;
@@ -76,7 +75,7 @@ const addThen = function (then) {
         return self.inheritedInstance;
     });
 };
-const makeWaiter = function (type, then) {
+const makeAwaiter = function (type, then) {
     const self = this;
     self.inheritedInstance = self.inheritedInstance
         .then((instance) => {
@@ -113,7 +112,7 @@ const makeWaiter = function (type, then) {
     }
     type.subtypes.forEach((subtype, name) => {
         self.inheritedInstance[name] = (...args) => {
-            self.inheritedInstance = self.makeWaiter(subtype, {
+            self.inheritedInstance = self.makeAwaiter(subtype, {
                 name,
                 subtype,
                 args,
@@ -126,7 +125,7 @@ const makeWaiter = function (type, then) {
 const InstanceCreatorPrototype = {
     getExistentAsyncStack,
     postProcessing,
-    makeWaiter,
+    makeAwaiter,
     addProps: addProps_1.addProps,
     addThen,
     invokePreHooks,
@@ -135,8 +134,8 @@ const InstanceCreatorPrototype = {
 };
 exports.InstanceCreator = function (type, existentInstance, args, chained) {
     const { constructHandler, proto, config, TypeName } = type;
-    const { ModificationConstructor: mc, blockErrors, submitStack } = config;
-    const ModificationConstructor = mc(obeyConstructor_1.obey, createInstanceModificator_1.default);
+    const { ModificationConstructor, blockErrors, submitStack } = config;
+    const mc = ModificationConstructor(obeyConstructor_1.obey, defaultMC);
     const self = this;
     const ModificatorType = constructHandler();
     Object.assign(self, {
@@ -146,7 +145,7 @@ exports.InstanceCreator = function (type, existentInstance, args, chained) {
         get args() {
             return args;
         },
-        ModificationConstructor,
+        ModificationConstructor: mc,
         ModificatorType,
         config,
         proto
@@ -182,7 +181,7 @@ exports.InstanceCreator = function (type, existentInstance, args, chained) {
         self.inheritedInstance = answer;
     }
     if (self.inheritedInstance instanceof Promise) {
-        const waiter = self.makeWaiter(type);
+        const waiter = self.makeAwaiter(type);
         odp(waiter, SymbolConstructorName, {
             get() {
                 return TypeName;

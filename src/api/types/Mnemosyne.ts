@@ -155,6 +155,8 @@ const MnemonicaProtoProps = {
 
 };
 
+const TypesRoots = new WeakMap;
+
 const Mnemosyne = function ( gaia: any ) {
 
 	const Mnemonica: any = function ( this: any ) {
@@ -168,7 +170,6 @@ const Mnemosyne = function ( gaia: any ) {
 	const mnemonica = Reflect.getPrototypeOf( gaia );
 
 	Reflect.setPrototypeOf( Mnemonica.prototype, mnemonica );
-	Mnemonica.prototype.constructor = Mnemonica;
 
 	Object.entries( MnemonicaProtoProps ).forEach( ( [ name, method ]: [ string, any ] ) => {
 		odp( Mnemonica.prototype, name, {
@@ -203,7 +204,9 @@ const Mnemosyne = function ( gaia: any ) {
 	} );
 
 	const proto = new Mnemonica();
-
+	
+	TypesRoots.set(this, proto);
+	
 	Reflect.setPrototypeOf( this, proto );
 
 } as ConstructorFunction<typeof MnemonicaProtoProps>;
