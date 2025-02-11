@@ -43,7 +43,7 @@
     "test:jest:debug": "npx --node-arg=--inspect-brk jest",
     "test:mjs": "npm run build && node --experimental-modules ./test/test.mjs",
     "watch": "npx tsc --pretty -w",
-    "prepare": "husky"
+    "husky:prepare": "husky"
   },
   "repository": {
     "type": "git",
