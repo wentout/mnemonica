@@ -95,7 +95,7 @@ const tests = ( opts ) => {
 				'SymbolParentType',
 				'SymbolConstructorName',
 				'SymbolGaia',
-				'SymbolReplaceGaia',
+				'SymbolReplaceUranus',
 				'SymbolDefaultTypesCollection',
 				'SymbolConfig',
 				'MNEMONICA',

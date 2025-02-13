@@ -19,7 +19,7 @@ import TypesUtils from '../utils';
 const {
 	checkProto,
 	getTypeChecker,
-	findParentSubType,
+	findSubTypeFromParent,
 	reflectPrimitiveWrappers,
 } = TypesUtils;
 
@@ -137,7 +137,7 @@ const makeSubTypeProxy = function ( subtype: any, inheritedInstance: any ) {
 
 		apply ( Target, thisArg = inheritedInstance, _args ) {
 
-			// if we would make new keyword obligatory
+			// TODO: if we would make new keyword obligatory
 			// then we should avoid it here, with throw Error
 
 
@@ -199,7 +199,7 @@ const staticProps = [
 	'once',
 	'off',
 
-	// mocha + chai => bug: ./utils.js .findParentSubType 'inspect'
+	// mocha + chai => bug: ./utils.js .findSubTypeFromParent 'inspect'
 	'inspect',
 	'showDiff',
 
@@ -256,7 +256,7 @@ const gaiaProxyHandlerGet = ( target: any, prop: string, receiver: any ) => {
 		subtypes.get( prop ) :
 		strictChain ?
 			undefined :
-			findParentSubType( instance, prop );
+			findSubTypeFromParent( instance, prop );
 
 	return subtype ? makeSubTypeProxy( subtype, receiver ) : result;
 };
@@ -271,7 +271,7 @@ TypeProxy.prototype.construct = function ( __: any, args: any[] ) {
 	} = this;
 
 	// constructs new Gaia -> new Mnemosyne
-	// 2 build the first instance in chain
+	// to build the first instance in chain
 	const uranus = reflectPrimitiveWrappers( Uranus );
 	const gaia = new Mnemosyne( new Gaia( uranus ) );
 	const gaiaProxy = new Proxy( gaia, {

@@ -48,6 +48,7 @@ export const parse = ( self: any ): any => {
 	let gaia;
 	if ( hop( protoProto, SymbolGaia ) ) {
 		parent = protoProto;
+		// SymbolGaia means we are reached prototype chain root
 		gaia = self[ SymbolGaia ];
 	} else {
 		parent = parse( Reflect.getPrototypeOf( protoProto ) );

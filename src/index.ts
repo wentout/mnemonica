@@ -127,7 +127,7 @@ export const {
 	SymbolParentType,
 	SymbolConstructorName,
 	SymbolGaia,
-	SymbolReplaceGaia,
+	SymbolReplaceUranus,
 	SymbolDefaultTypesCollection,
 	SymbolConfig,
 	MNEMONICA,

@@ -160,7 +160,7 @@ type parentSub = {
 	__parent__: parentSub
 }
 
-const findParentSubType = ( instance: parentSub, prop: string ): parentSub => {
+const findSubTypeFromParent = ( instance: parentSub, subType: string ): parentSub => {
 	let subtype = null;
 
 	// if (!instance.__subtypes__) {
@@ -173,13 +173,13 @@ const findParentSubType = ( instance: parentSub, prop: string ): parentSub => {
 	// 	return null;
 	// }
 
-	if ( instance.__type__.subtypes.has( prop ) ) {
-		subtype = instance.__type__.subtypes.get( prop );
+	if ( instance.__type__.subtypes.has( subType ) ) {
+		subtype = instance.__type__.subtypes.get( subType );
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
 		return subtype;
 	}
-	return findParentSubType( instance.__parent__, prop );
+	return findSubTypeFromParent( instance.__parent__, subType );
 };
 
 // const isClass = ( functionPointer: CallableFunction ) => {
@@ -261,7 +261,7 @@ const TypesUtils = {
 	getTypeSplitPath,
 	getExistentAsyncStack,
 	checkTypeName,
-	findParentSubType,
+	findSubTypeFromParent,
 	makeFakeModificatorType,
 	reflectPrimitiveWrappers
 };

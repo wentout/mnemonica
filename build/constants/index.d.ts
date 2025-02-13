@@ -2,7 +2,7 @@ export declare const constants: {
     readonly SymbolParentType: symbol;
     readonly SymbolConstructorName: symbol;
     readonly SymbolGaia: symbol;
-    readonly SymbolReplaceGaia: symbol;
+    readonly SymbolReplaceUranus: symbol;
     readonly SymbolDefaultTypesCollection: symbol;
     readonly SymbolConfig: symbol;
     readonly SymbolUsed: symbol;

@@ -13,7 +13,7 @@ export declare const registerHook: <T extends object>(Constructor: IDEF<T>, hook
 export declare const mnemonica: {
     [index: string]: unknown;
 };
-export declare const SymbolParentType: unknown, SymbolConstructorName: unknown, SymbolGaia: unknown, SymbolReplaceGaia: unknown, SymbolDefaultTypesCollection: unknown, SymbolConfig: unknown, MNEMONICA: unknown, MNEMOSYNE: unknown, GAIA: unknown, URANUS: unknown, TYPE_TITLE_PREFIX: unknown, ErrorMessages: unknown, createTypesCollection: unknown;
+export declare const SymbolParentType: unknown, SymbolConstructorName: unknown, SymbolGaia: unknown, SymbolReplaceUranus: unknown, SymbolDefaultTypesCollection: unknown, SymbolConfig: unknown, MNEMONICA: unknown, MNEMOSYNE: unknown, GAIA: unknown, URANUS: unknown, TYPE_TITLE_PREFIX: unknown, ErrorMessages: unknown, createTypesCollection: unknown;
 export declare const defaultCollection: any;
 export declare const errors: {
     [index: string]: any;

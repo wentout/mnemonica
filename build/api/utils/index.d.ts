@@ -19,7 +19,7 @@ declare const TypesUtils: {
     getTypeSplitPath: (path: string) => string[];
     getExistentAsyncStack: (existentInstance: asyncStack) => unknown;
     checkTypeName: (name: string) => void;
-    findParentSubType: (instance: parentSub, prop: string) => parentSub;
+    findSubTypeFromParent: (instance: parentSub, subType: string) => parentSub;
     makeFakeModificatorType: (TypeName: string, fakeModificator?: () => void) => any;
     reflectPrimitiveWrappers: (_thisArg: unknown) => unknown;
 };

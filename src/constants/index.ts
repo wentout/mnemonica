@@ -17,8 +17,10 @@ const URANUS = 'Uranus';
 const SymbolDefaultTypesCollection = Symbol( `default ${MNEMONICA} types collection` );
 const SymbolParentType = Symbol( 'Parent of this SubType Collection' );
 const SymbolConstructorName = Symbol( 'Defined Constructor Name' );
+
+// SymbolGaia means we are reached prototype chain root
 const SymbolGaia = Symbol( 'Defined Gaia Constructor' );
-const SymbolReplaceGaia = Symbol( 'Defined Method Name to Replace Gaia' );
+const SymbolReplaceUranus = Symbol( 'Defined Method Name to Replace Gaia' );
 
 const SymbolConfig = Symbol( 'Mnemonica Config Data' );
 const SymbolUsed = Symbol( '.prototype used twice' );
@@ -45,6 +47,7 @@ const ErrorMessages = {
 	OPTIONS_ERROR              : 'options must be an object or a string',
 	WRONG_STACK_CLEANER        : 'wrong stack cleaner instanceof',
 	PROTOTYPE_USED_TWICE       : '.prototype used twice',
+
 };
 
 import ModificationConstructor from '../api/types/createInstanceModificator';
@@ -101,8 +104,8 @@ export const constants = {
 		return SymbolGaia;
 	},
 
-	get 'SymbolReplaceGaia' () {
-		return SymbolReplaceGaia;
+	get 'SymbolReplaceUranus' () {
+		return SymbolReplaceUranus;
 	},
 
 	get 'SymbolDefaultTypesCollection' () {

@@ -3,7 +3,7 @@
 import { constants } from '../../constants';
 const {
 	odp,
-	SymbolReplaceGaia,
+	SymbolReplaceUranus,
 	// SymbolConstructorName
 } = constants;
 
@@ -85,7 +85,7 @@ export const throwModificationError = function ( this: any, error: any ) {
 	// Constructor Invocation Itself
 	const erroredInstance = new self.InstanceModificator();
 
-	erroredInstance[ SymbolReplaceGaia ]( error );
+	erroredInstance[ SymbolReplaceUranus ]( error );
 
 	const stack: string[] = [];
 
