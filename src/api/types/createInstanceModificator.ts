@@ -3,9 +3,9 @@
 export default function ( obey: CallableFunction ) {
 
 	const CreateInstanceModificator = function (
-		this: any,
+		this: object,
 		ModificatorType: CallableFunction,
-		ModificatorTypePrototype: { [ index: string ]: any },
+		ModificatorTypePrototype: { [ index: string ]: unknown },
 		addProps: CallableFunction
 	) {
 

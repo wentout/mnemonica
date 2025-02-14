@@ -28,7 +28,7 @@ const checkThrowArgs = ( instance: any, target: any, error: Error, args: any[] )
 
 	let wrongThrow;
 
-	/* unreacheble, cus instance binded inside of Mnemosyne
+	/* unreacheble, cus instance bound inside of Mnemosyne
 	if (instance !== Object(instance)) {
 		wrongThrow = new WRONG_ARGUMENTS_USED('"this" must be an object');
 	}

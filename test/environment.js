@@ -49,6 +49,8 @@ const tests = ( opts ) => {
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,
 		myDecoratedSubInstance,
+		myDecoratedSubSubInstance,
+		myOtherInstance,
 		anotherTypesCollection,
 		oneElseTypesCollection,
 		anotherCollectionInstance,
@@ -93,7 +95,7 @@ const tests = ( opts ) => {
 				'SymbolParentType',
 				'SymbolConstructorName',
 				'SymbolGaia',
-				'SymbolReplaceGaia',
+				'SymbolReplaceUranus',
 				'SymbolDefaultTypesCollection',
 				'SymbolConfig',
 				'MNEMONICA',
@@ -335,6 +337,10 @@ const tests = ( opts ) => {
 			it( 'decorate works correctly', () => {
 				expect( myDecoratedSubInstance.sub_field ).equal( 321 );
 				expect( myDecoratedSubInstance.field ).equal( 123 );
+				expect( myOtherInstance.prop ).equal( 321 );
+				expect( myDecoratedSubSubInstance.sub_sub_field ).equal( 321 );
+				expect( myDecoratedSubSubInstance.sub_field ).equal( 321 );
+				expect( myDecoratedSubSubInstance.field ).equal( 123 );
 			} );
 
 			it( 'apply & call works correctly', () => {

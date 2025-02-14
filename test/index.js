@@ -20,7 +20,7 @@ const asyncConstructionTest = true;
 
 const mnemonica = require( '..' );
 
-const { myDecoratedSubInstance } = require( './decorate' );
+const { myDecoratedSubInstance, myDecoratedSubSubInstance, myOtherInstance } = require( './decorate' );
 
 const {
 	define,
@@ -258,7 +258,7 @@ const user = UserType( USER_DATA );
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
 
-
+debugger;
 try {
 	var userPL_1_2 = new userPL1.UserTypePL2();
 } catch ( err ) { console.error( err ); }
@@ -603,6 +603,8 @@ describe( 'Main Test', () => {
 		subOfSomeADTCInstanceC,
 		subOfSomeADTCInstanceB,
 		myDecoratedSubInstance,
+		myDecoratedSubSubInstance,
+		myOtherInstance,
 		anotherTypesCollection,
 		oneElseTypesCollection,
 		anotherCollectionInstance,

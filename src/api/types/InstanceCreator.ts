@@ -3,11 +3,16 @@
 
 import { ConstructorFunction } from '../../types';
 
-import { constants } from '../../constants';
+import {
+	constants
+} from '../../constants';
 
 const {
 	odp,
 	SymbolConstructorName,
+	defaultOptions: {
+		ModificationConstructor: defaultMC
+	}
 } = constants;
 
 import { ErrorsTypes } from '../../descriptors/errors';
@@ -29,8 +34,6 @@ import { addProps } from './addProps';
 import { makeInstanceModificator } from './InstanceModificator';
 
 import { obey } from './obeyConstructor';
-
-import defaultMC from './createInstanceModificator';
 
 const invokePreHooks = function ( this: any ) {
 
@@ -158,7 +161,7 @@ const addThen = function ( this: any, then: any ) {
 };
 
 
-const makeWaiter = function ( this: any, type: any, then: any ) {
+const makeAwaiter = function ( this: any, type: any, then: any ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
@@ -208,7 +211,7 @@ const makeWaiter = function ( this: any, type: any, then: any ) {
 
 	type.subtypes.forEach( ( subtype: any, name: string ) => {
 		self.inheritedInstance[ name ] = ( ...args: any[] ) => {
-			self.inheritedInstance = self.makeWaiter( subtype, {
+			self.inheritedInstance = self.makeAwaiter( subtype, {
 				name,
 				subtype,
 				args,
@@ -224,7 +227,7 @@ const makeWaiter = function ( this: any, type: any, then: any ) {
 const InstanceCreatorPrototype = {
 	getExistentAsyncStack,
 	postProcessing,
-	makeWaiter,
+	makeAwaiter,
 	addProps,
 	addThen,
 	invokePreHooks,
@@ -244,12 +247,13 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	} = type;
 
 	const {
-		ModificationConstructor: mc,
+		ModificationConstructor,
 		blockErrors,
 		submitStack
 	} = config;
 
-	const ModificationConstructor = mc( obey, defaultMC );
+	// eslint-disable-next-line new-cap
+	const mc = ModificationConstructor( obey, defaultMC );
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
@@ -267,7 +271,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 			return args;
 		},
 
-		ModificationConstructor,
+		ModificationConstructor : mc,
 		ModificatorType,
 
 		config,
@@ -303,7 +307,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	if ( blockErrors ) {
 
 		try {
-
+			// Constructor Invocation Itself
 			const answer = new self.InstanceModificator( ...args );
 			// debugger;
 			self.inheritedInstance = answer;
@@ -316,6 +320,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 
 	} else {
 
+		// Constructor Invocation Itself
 		const answer = new self.InstanceModificator( ...args );
 		// debugger;
 		self.inheritedInstance = answer;
@@ -325,7 +330,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 
 	if ( self.inheritedInstance instanceof Promise ) {
 
-		const waiter = self.makeWaiter( type );
+		const waiter = self.makeAwaiter( type );
 
 		odp( waiter, SymbolConstructorName, {
 			get () {

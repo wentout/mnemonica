@@ -11,7 +11,7 @@ import {
 	SN,
 	IDefinitorInstance
 } from './types';
-export type { IDEF } from './types';
+export type { IDEF, ConstructorFunction } from './types';
 
 import { constants } from './constants';
 const { odp } = constants;
@@ -83,10 +83,10 @@ export const bind = function <E extends object, T extends object, S extends Prot
 export const decorate = function ( parentClass: unknown = undefined, proto?: object, config?: constructorOptions ) {
 	const decorator = function <T extends { new(): unknown }> ( cstr: T, s: ClassDecoratorContext<T> ): T {
 		if ( parentClass === undefined ) {
-			return define( s.name, cstr, proto, config ) as unknown as typeof cstr;
+			return define( s.name, cstr, proto, config ) as unknown as T ;
 		}
 		// @ts-ignore
-		return parentClass.define( s.name, cstr, proto, config ) as unknown as typeof cstr;
+		return parentClass.define( s.name, cstr, proto, config ) as unknown as T;
 	};
 	return decorator;
 };
@@ -127,7 +127,7 @@ export const {
 	SymbolParentType,
 	SymbolConstructorName,
 	SymbolGaia,
-	SymbolReplaceGaia,
+	SymbolReplaceUranus,
 	SymbolDefaultTypesCollection,
 	SymbolConfig,
 	MNEMONICA,

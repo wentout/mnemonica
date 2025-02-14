@@ -52,8 +52,8 @@ const TypeDescriptor = function (
 	types: any,
 	TypeName: string,
 	constructHandler: CallableFunction,
-	proto: { [ index: string ]: any },
-	config: { [ index: string ]: any },
+	proto: { [ index: string ]: unknown },
+	config: { [ index: string ]: unknown },
 ) {
 
 	// here "types" refers to subtypes of type or collection object {}

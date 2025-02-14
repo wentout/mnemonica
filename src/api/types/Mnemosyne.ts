@@ -6,7 +6,7 @@ const {
 	odp,
 	SymbolConstructorName,
 	SymbolGaia,
-	SymbolReplaceGaia,
+	SymbolReplaceUranus,
 
 	MNEMONICA,
 	GAIA,
@@ -110,7 +110,7 @@ const MnemonicaProtoProps = {
 		};
 	},
 
-	[ SymbolReplaceGaia ] () {
+	[ SymbolReplaceUranus ] () {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		return function ( this: any, uranus: any ) {
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -155,7 +155,12 @@ const MnemonicaProtoProps = {
 
 };
 
+const TypesRoots = new WeakMap;
+
 const Mnemosyne = function ( gaia: any ) {
+	
+	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	const instance = this;
 
 	const Mnemonica: any = function ( this: any ) {
 		odp( this, SymbolConstructorName, {
@@ -168,7 +173,6 @@ const Mnemosyne = function ( gaia: any ) {
 	const mnemonica = Reflect.getPrototypeOf( gaia );
 
 	Reflect.setPrototypeOf( Mnemonica.prototype, mnemonica );
-	Mnemonica.prototype.constructor = Mnemonica;
 
 	Object.entries( MnemonicaProtoProps ).forEach( ( [ name, method ]: [ string, any ] ) => {
 		odp( Mnemonica.prototype, name, {
@@ -203,8 +207,10 @@ const Mnemosyne = function ( gaia: any ) {
 	} );
 
 	const proto = new Mnemonica();
-
-	Reflect.setPrototypeOf( this, proto );
+	
+	TypesRoots.set( instance, proto );
+	
+	Reflect.setPrototypeOf( instance, proto );
 
 } as ConstructorFunction<typeof MnemonicaProtoProps>;
 
