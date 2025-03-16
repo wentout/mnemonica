@@ -122,7 +122,7 @@ const shaperFactory = () => {
 
 UserType.define( () => {
 	// const Shaper = shaperFactory(true);
-	const Shaper = shaperFactory( false );
+	const Shaper = shaperFactory();
 	class UserTypePL2 extends Shaper {
 		constructor () {
 			super();
@@ -212,6 +212,8 @@ const SomeADTCType = adtcDefine( 'SomeADTCType', function () {
 	this.test = 123;
 }, {}, { strictChain : false } );
 
+
+debugger;
 const someADTCInstance = new SomeADTCType();
 
 let SubOfSomeADTCTypePre = null;
@@ -253,6 +255,13 @@ const OneElseCollectionType = oneElseTypesCollection.define( 'OneElseCollectionT
 	this.self = this;
 } );
 const oneElseCollectionInstance = new OneElseCollectionType();
+
+// debugger;
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// const OneHackCollectionType = oneElseTypesCollection.define( function OneHackCollectionType () {
+// 	this.self = this;
+// } );
+
 
 const user = UserType( USER_DATA );
 const userPL1 = new user.UserTypePL1();
@@ -562,8 +571,11 @@ describe( 'Main Test', () => {
 	const strForkOfFork = 'fork of fork of evenMore';
 
 	const overMoreFork = overMore.fork();
-
+	
+	debugger;
 	const overMoreCallEvenMoreUndefined = overMore.EvenMore.call( undefined );
+	
+	debugger;
 	const overMoreCallEvenMoreNull = overMore.EvenMore.call( null );
 	const overMoreCallEvenMoreNumber = overMore.EvenMore.call( new Number( 5 ) );
 	const overMoreCallEvenMoreString = overMore.EvenMore.call( new String( 5 ) );
@@ -1248,10 +1260,10 @@ describe( 'Main Test', () => {
 					expect( asyncInstanceFork ).instanceof( AsyncType );
 
 					expect( typeof asyncInstanceDirect.on === 'function' ).is.true;
-					expect( ogp( ogp( asyncInstanceDirect[ SymbolGaia ] ) ) === process ).is.true;
+					expect( ogp( ogp( ogp( asyncInstanceDirect[ SymbolGaia ] ) ) ) === process ).is.true;
 					expect( asyncInstanceDirect[ SymbolGaia ][ MNEMONICA ] === URANUS ).is.true;
 					expect( typeof asyncInstanceDirectApply.on === 'function' ).is.true;
-					expect( ogp( ogp( asyncInstanceDirectApply[ SymbolGaia ] ) ) === process ).is.true;
+					expect( ogp( ogp( ogp( asyncInstanceDirectApply[ SymbolGaia ] ) ) ) === process ).is.true;
 					expect( asyncInstanceDirectApply[ SymbolGaia ][ MNEMONICA ] === URANUS ).is.true;
 
 					expect( nestedAsyncInstance ).instanceof( AsyncType );

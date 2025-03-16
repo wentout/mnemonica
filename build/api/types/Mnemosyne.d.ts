@@ -1,20 +1,8 @@
 import { ConstructorFunction } from '../../types';
 declare const _default: {
     Gaia: ConstructorFunction<object>;
-    Mnemosyne: ConstructorFunction<{
-        [x: symbol]: (() => (this: any, uranus: any) => void) | (() => string);
-        extract(): (this: any) => {
-            [index: string]: any;
-        };
-        pick(): (this: any, ...args: any[]) => {
-            [index: string]: any;
-        };
-        parent(): (this: any, constructorLookupPath: string) => any;
-        clone(this: any): any;
-        fork(this: any): (this: any, ...forkArgs: any[]) => any;
-        exception(): (error: Error, ...args: any[]) => any;
-        sibling(): (SiblingTypeName: string) => any;
-    }>;
+    readonly createMnemosyne: (Uranus: unknown) => any;
     readonly MnemosynePrototypeKeys: string[];
+    readonly TypesRoots: WeakMap<object, any>;
 };
 export default _default;

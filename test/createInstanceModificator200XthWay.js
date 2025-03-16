@@ -1,6 +1,10 @@
 'use strict';
 
-module.exports = function ( obey, defaultBehaviour ) {
+
+const { mnemonica } = require('..');
+const { defaultOptions: { ModificationConstructor } } = mnemonica;
+
+module.exports = function (obey) {
 
 	const CreateInstanceModificatorAncient200XthWay = function (
 		ModificatorType,
@@ -17,7 +21,7 @@ module.exports = function ( obey, defaultBehaviour ) {
 
 				// eslint-disable-next-line @typescript-eslint/no-this-alias
 				const Mnemosyne = this;
-				addProps( Mnemosyne );
+				addProps(Mnemosyne);
 
 				// about to setup constructor property for new instance
 
@@ -36,19 +40,19 @@ module.exports = function ( obey, defaultBehaviour ) {
 					ModificatorType.prototype = moreInherited;
 
 
-					Object.assign( ModificatorType.prototype, ModificatorTypePrototype );
+					Object.assign(ModificatorType.prototype, ModificatorTypePrototype);
 
 					// 2. Object.defineProperty below is done
 					//    to make "constructor" property non enumerable
 					//    cause we did it enumerable at "1." below
-					Object.defineProperty( ModificatorType.prototype, 'constructor', {
+					Object.defineProperty(ModificatorType.prototype, 'constructor', {
 						get () {
 							return ModificatorType;
 						},
 						enumerable : false
-					} );
+					});
 
-					obey( existentInstance, ModificatorType );
+					obey(existentInstance, ModificatorType);
 
 					return ModificatorType;
 
@@ -76,24 +80,24 @@ module.exports = function ( obey, defaultBehaviour ) {
 			// };
 			// PreTripleSchemeClosure.prototype = existentInstance;
 			// return new PreTripleSchemeClosure();
-		} catch ( error ) {
+		} catch (error) {
 
 			try {
-				if ( !existentInstance.goneToFallback ) {
-					Object.defineProperty( existentInstance, 'goneToFallback', {
+				if (!existentInstance.goneToFallback) {
+					Object.defineProperty(existentInstance, 'goneToFallback', {
 						get () {
 							return error;
 						}
-					} );
+					});
 				}
-			} catch ( err ) {
+			} catch (err) {
 				debugger;
-				console.error( err );
-				process.exit( 1 );
+				console.error(err);
+				process.exit(1);
 			}
 
 
-			return defaultBehaviour( obey )
+			return ModificationConstructor(obey)
 				.call(
 					existentInstance,
 					ModificatorType,

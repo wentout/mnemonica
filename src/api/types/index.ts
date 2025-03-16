@@ -131,7 +131,7 @@ odp( TypeDescriptor.prototype, Symbol.hasInstance, {
 	}
 } );
 
-const defineFromType = function ( this: any, subtypes: any, constructHandlerGetter: CallableFunction, config: any ) {
+const defineUsingType = function ( this: any, subtypes: any, constructHandlerGetter: CallableFunction, config: any ) {
 	// we need this to extract TypeName
 	const type = constructHandlerGetter();
 
@@ -197,7 +197,7 @@ const extractNonEnumerableProps = ( _obj: object ) => {
 };
 
 
-const defineFromFunction = function (
+const defineUsingFunction = function (
 	this: any,
 	subtypes: any,
 	TypeName: string,
@@ -262,7 +262,7 @@ export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: 
 		if ( TypeOrTypeName.name ) {
 			return define.call( this, subtypes, TypeOrTypeName.name, TypeOrTypeName, constructHandlerOrConfig || TypeOrTypeName.prototype, config );
 		} else {
-			return defineFromType.call( this, subtypes, TypeOrTypeName, constructHandlerOrConfig );
+			return defineUsingType.call( this, subtypes, TypeOrTypeName, constructHandlerOrConfig );
 		}
 	}
 
@@ -277,7 +277,7 @@ export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: 
 		if ( !Type ) {
 
 			if ( split.length === 1 ) {
-				return defineFromFunction.call( this, subtypes, TypeOrTypeName, constructHandlerOrConfig, proto, config );
+				return defineUsingFunction.call( this, subtypes, TypeOrTypeName, constructHandlerOrConfig, proto, config );
 			}
 
 			throw new WRONG_TYPE_DEFINITION( `${split[ 0 ]} definition is not yet exists` );
@@ -290,7 +290,7 @@ export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: 
 		}
 
 		// so, here we go with
-		// defineFromType.call
+		// defineUsingType.call
 		// from the next step
 		return define.call( this, Type.subtypes, constructHandlerOrConfig, proto, config );
 

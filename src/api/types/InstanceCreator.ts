@@ -9,10 +9,7 @@ import {
 
 const {
 	odp,
-	SymbolConstructorName,
-	defaultOptions: {
-		ModificationConstructor: defaultMC
-	}
+	SymbolConstructorName
 } = constants;
 
 import { ErrorsTypes } from '../../descriptors/errors';
@@ -253,7 +250,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	} = config;
 
 	// eslint-disable-next-line new-cap
-	const mc = ModificationConstructor( obey, defaultMC );
+	const mc = ModificationConstructor( obey );
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;

@@ -58,7 +58,7 @@ odp(TypeDescriptor.prototype, Symbol.hasInstance, {
         return getTypeChecker(this.TypeName);
     }
 });
-const defineFromType = function (subtypes, constructHandlerGetter, config) {
+const defineUsingType = function (subtypes, constructHandlerGetter, config) {
     const type = constructHandlerGetter();
     if (typeof type !== 'function') {
         throw new HANDLER_MUST_BE_A_FUNCTION;
@@ -104,7 +104,7 @@ const extractNonEnumerableProps = (_obj) => {
     }, {});
     return extracted;
 };
-const defineFromFunction = function (subtypes, TypeName, constructHandler = function () { }, proto, config = {}) {
+const defineUsingFunction = function (subtypes, TypeName, constructHandler = function () { }, proto, config = {}) {
     if (typeof constructHandler !== 'function') {
         throw new HANDLER_MUST_BE_A_FUNCTION;
     }
@@ -139,7 +139,7 @@ const define = function (subtypes, TypeOrTypeName, constructHandlerOrConfig, pro
             return exports.define.call(this, subtypes, TypeOrTypeName.name, TypeOrTypeName, constructHandlerOrConfig || TypeOrTypeName.prototype, config);
         }
         else {
-            return defineFromType.call(this, subtypes, TypeOrTypeName, constructHandlerOrConfig);
+            return defineUsingType.call(this, subtypes, TypeOrTypeName, constructHandlerOrConfig);
         }
     }
     if (typeof TypeOrTypeName === 'string') {
@@ -148,7 +148,7 @@ const define = function (subtypes, TypeOrTypeName, constructHandlerOrConfig, pro
         const Type = exports.lookup.call(subtypes, split[0]);
         if (!Type) {
             if (split.length === 1) {
-                return defineFromFunction.call(this, subtypes, TypeOrTypeName, constructHandlerOrConfig, proto, config);
+                return defineUsingFunction.call(this, subtypes, TypeOrTypeName, constructHandlerOrConfig, proto, config);
             }
             throw new WRONG_TYPE_DEFINITION(`${split[0]} definition is not yet exists`);
         }

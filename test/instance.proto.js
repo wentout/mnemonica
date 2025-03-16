@@ -249,7 +249,7 @@ const tests = ( opts ) => {
 
 		it( 'instance.ConstructorName.call(process) should work', () => {
 			const gaia = overMoreCallEvenMoreProcess[ SymbolGaia ];
-			const gaiaProto = gof( gaia );
+			const gaiaProto = gof(gof( gaia ));
 			expect( gof( gaiaProto ) ).equal( process );
 
 			expect( overMoreCallEvenMoreProcess ).instanceof( overMore.EvenMore );

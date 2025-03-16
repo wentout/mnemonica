@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InstanceCreator = void 0;
 const constants_1 = require("../../constants");
-const { odp, SymbolConstructorName, defaultOptions: { ModificationConstructor: defaultMC } } = constants_1.constants;
+const { odp, SymbolConstructorName } = constants_1.constants;
 const errors_1 = require("../../descriptors/errors");
 const { WRONG_MODIFICATION_PATTERN, } = errors_1.ErrorsTypes;
 const utils_1 = require("../utils");
@@ -135,7 +135,7 @@ const InstanceCreatorPrototype = {
 exports.InstanceCreator = function (type, existentInstance, args, chained) {
     const { constructHandler, proto, config, TypeName } = type;
     const { ModificationConstructor, blockErrors, submitStack } = config;
-    const mc = ModificationConstructor(obeyConstructor_1.obey, defaultMC);
+    const mc = ModificationConstructor(obeyConstructor_1.obey);
     const self = this;
     const ModificatorType = constructHandler();
     Object.assign(self, {
