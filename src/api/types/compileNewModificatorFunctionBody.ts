@@ -56,6 +56,7 @@ const getFunctionConstructor = ( ConstructHandler: any, CreationHandler: any, ) 
 		} else {
 			const _proto = ConstructHandler.prototype;
 			ConstructHandler.prototype = this.constructor.prototype;
+			// Object.setPrototypeOf(ConstructHandler.prototype, Object.create(this.constructor.prototype));
 			answer = new ConstructHandler( ...args );
 			ConstructHandler.prototype = _proto;
 		}

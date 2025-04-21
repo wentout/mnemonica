@@ -241,7 +241,6 @@ const makeSubTypeProxy = function (subtype: any, inheritedInstance: any) {
 			// TODO: if we would make new keyword obligatory
 			// then we should avoid it here, with throw Error
 
-
 			let existentInstance = reflectPrimitiveWrappers(thisArg);
 
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment

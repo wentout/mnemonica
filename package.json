@@ -29,20 +29,21 @@
     "Goodluckhf <Goodluckhf@yandex.ru>"
   ],
   "scripts": {
-    "build": "rm -rf ./build && npx tsc --pretty && npm run lint && npm run lint:src && npm run lint:test",
+    "build": "rm -rf ./build && npx tsc --pretty --project tsconfig.json && npm run lint && npm run lint:src && npm run lint:test",
     "example": "npm run build && node ./test/example.js",
     "example:ts": "npx tsc ./test-ts/*.ts && npx eslint --fix ./test-ts/*.js && node ./test-ts/test-no-types.js && node ./test-ts/test-with-types.js",
+    "deopt": "node --trace-deopt --trace-opt ./node_modules/mocha/bin/mocha.js ./test/index.js",
     "lint": "npx eslint --fix",
     "lint:src": "npx eslint --fix ./src",
     "lint:test": "npx eslint --fix ./test",
     "test": "mocha --allow-uncaught test/index.js",
     "test:cov": "npm run build && nyc --reporter=text-summary --reporter=lcov mocha --allow-uncaught --ui bdd --reporter spec ./test/index.js",
-    "test:debug": "npx tsc --pretty --sourceMap && npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
+    "test:debug": "npx tsc --pretty --sourceMap --project tsconfig.json && npx mocha --allow-uncaught --reporter spec --inspect-brk test/index",
     "test:jest": "npx jest",
     "test:jest:cov": "npx jest --collectCoverage",
     "test:jest:debug": "npx --node-arg=--inspect-brk jest",
     "test:mjs": "npm run build && node --experimental-modules ./test/test.mjs",
-    "watch": "npx tsc --pretty -w",
+    "watch": "npx tsc --pretty --project tsconfig.json -w",
     "prepare": "husky"
   },
   "repository": {
