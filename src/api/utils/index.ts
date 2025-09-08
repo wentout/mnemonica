@@ -21,7 +21,7 @@ const {
 	collectConstructors
 } = utils;
 
-import { getProps, Props } from '../types/addProps';
+import { _getProps, Props } from '../types/Props';
 
 
 const CreationHandler = function ( this: unknown, constructionAnswer: unknown ) {
@@ -103,7 +103,7 @@ const getExistentAsyncStack = ( existentInstance: asyncStack ): unknown => {
 
 	while ( proto ) {
 
-		const props = getProps(proto) as Props;
+		const props = _getProps(proto) as Props;
 
 		if ( !props.__stack__ ) {
 			break;
@@ -121,7 +121,7 @@ const getExistentAsyncStack = ( existentInstance: asyncStack ): unknown => {
 
 		proto = proto.parent();
 
-		const protoProps = getProps(proto) as Props;
+		const protoProps = _getProps(proto) as Props;
 
 		if ( proto && protoProps && protoProps.__type__ ) {
 
@@ -179,7 +179,7 @@ const findSubTypeFromParent = ( instance: parentSub, subType: string ): parentSu
 	// 	return null;
 	// }
 
-	const props = getProps(instance) as Props;
+	const props = _getProps(instance) as Props;
 
 	if ( props.__type__.subtypes.has( subType ) ) {
 		subtype = props.__type__.subtypes.get( subType );

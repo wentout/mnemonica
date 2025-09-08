@@ -6,9 +6,9 @@ const {
 	odp,
 } = constants;
 
-const props = new WeakMap();
+const __props__ = new WeakMap();
 
-export const addProps = function (this: any): any {
+export const _addProps = function (this: any): any {
 
 	// eslint-disable-next-line no-debugger
 	// debugger;
@@ -91,7 +91,7 @@ export const addProps = function (this: any): any {
 		}
 	});
 
-	props.set(proto, value);
+	__props__.set(proto, value);
 
 };
 
@@ -131,25 +131,71 @@ export type Props = {
 	__stack__?: string,
 	__creator__: TypeDef,
 	__timestamp__: number,
+	__self__?: {
+		extract: CallableFunction
+		[key: string]: unknown
+	}
 }
 
-export const getProps = (instance: object, base?: object): Props | undefined => {
+export const _getProps = (instance: object, base?: object): Props | undefined => {
 	const proto = Reflect.getPrototypeOf(instance) as object;
 	if (base !== undefined && (base.constructor !== proto.constructor)) {
 		// here we got rid of unnecessary chain dive
 		return undefined;
 	}
-	const result = props.get(proto);
+	const result = __props__.get(proto);
 	if (result === undefined) {
 		if (base === undefined) {
 			base = instance;
 		}
-		return getProps(proto, base);
+		return _getProps(proto, base);
 	}
 	return result;
 };
 
+export const _setSelf = (instance: object): void => {
+	const props = _getProps(instance);
+	Object.defineProperty(props, '__self__', {
+		get () {
+			return instance;
+		}
+	});
+	__props__.set(instance, props);
+};
+
+export const getProps = (instance: object): Props | undefined => {
+
+	const props = _getProps(instance);
+	if (props) {
+		const additions = __props__.get(props);
+		if (additions instanceof Object) {
+			const descriptors = Object.getOwnPropertyDescriptors(props);
+			const answer = { ...additions };
+			Object.defineProperties(additions, descriptors);
+			return answer;
+		} else {
+			return props;
+		}
+	}
+	return undefined;
+
+};
+
+export const setProps = (instance: object, values: object): boolean => {
+
+	const props = _getProps(instance);
+	if (props) {
+		__props__.set(props, values);
+		return true;
+	}
+	return false;
+
+};
+
 module.exports = {
-	addProps,
-	getProps
+	_addProps,
+	_getProps,
+	_setSelf,
+	getProps,
+	setProps
 };

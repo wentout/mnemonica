@@ -120,6 +120,7 @@ const tests = ( opts ) => {
 				'decorate',
 				'registerHook',
 				'getProps',
+				'setProps',
 			];
 
 			const mnemonica_keys = Object.keys( mnemonica );

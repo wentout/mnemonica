@@ -6,7 +6,7 @@ export default function (obey: CallableFunction) {
 		this: object,
 		ModificatorType: CallableFunction,
 		ModificatorTypePrototype: { [index: string]: unknown },
-		addProps: CallableFunction
+		_addProps: CallableFunction
 	) {
 
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -17,7 +17,7 @@ export default function (obey: CallableFunction) {
 
 		const Mnemosyne = {};
 		Reflect.setPrototypeOf(Mnemosyne, existentInstance);
-		addProps(Mnemosyne);
+		_addProps(Mnemosyne);
 
 		// about to setup constructor property for new instance
 		// Object.defineProperty(inherited, 'constructor', {

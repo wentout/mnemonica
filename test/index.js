@@ -214,7 +214,7 @@ const SomeADTCType = adtcDefine( 'SomeADTCType', function () {
 }, {}, { strictChain : false } );
 
 
-debugger;
+// debugger;
 const someADTCInstance = new SomeADTCType();
 
 let SubOfSomeADTCTypePre = null;
@@ -268,7 +268,7 @@ const user = UserType( USER_DATA );
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
 
-debugger;
+// debugger;
 try {
 	var userPL_1_2 = new userPL1.UserTypePL2();
 } catch ( err ) { console.error( err ); }
@@ -573,10 +573,10 @@ describe( 'Main Test', () => {
 
 	const overMoreFork = overMore.fork();
 	
-	debugger;
+	// debugger;
 	const overMoreCallEvenMoreUndefined = overMore.EvenMore.call( undefined );
 	
-	debugger;
+	// debugger;
 	const overMoreCallEvenMoreNull = overMore.EvenMore.call( null );
 	const overMoreCallEvenMoreNumber = overMore.EvenMore.call( new Number( 5 ) );
 	const overMoreCallEvenMoreString = overMore.EvenMore.call( new String( 5 ) );
@@ -1196,6 +1196,7 @@ describe( 'Main Test', () => {
 					const parsed = thrown.parse();
 					assert.equal( parsed.name, 'NestedSubError' );
 
+					debugger;
 					const extracted = thrown.extract();
 					assert.equal( typeof extracted.constructNested, 'function' );
 

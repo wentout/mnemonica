@@ -29,7 +29,7 @@ import exceptionConstructor from '../errors/exceptionConstructor';
 
 import { InstanceCreator } from './InstanceCreator';
 
-import { getProps, Props } from './addProps';
+import { _getProps, Props } from './Props';
 
 const InstanceRoots = new WeakMap;
 
@@ -80,22 +80,20 @@ const MnemonicaProtoProps = {
 
 	fork (this: any) {
 
-		const props = getProps(this) as Props;
+		const props = _getProps(this) as Props;
 
 		const {
 			__type__: type,
 			__collection__: collection,
 			__parent__: existentInstance,
 			__args__,
+			__self__,
 		} = props;
 
 		const {
 			isSubType,
 			TypeName
 		} = type;
-
-
-		const { __self__ } = this;
 
 		// 'function', cause might be called with 'new'
 		// eslint-disable-next-line no-shadow, @typescript-eslint/no-explicit-any
@@ -149,7 +147,7 @@ const MnemonicaProtoProps = {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias, @typescript-eslint/no-explicit-any
 		const siblings = (SiblingTypeName: string) => {
 
-			const props = getProps(this) as Props;
+			const props = _getProps(this) as Props;
 			const {
 				__collection__: collection,
 			} = props;
@@ -168,28 +166,6 @@ const MnemonicaProtoProps = {
 	}
 
 };
-
-const MnemosynePrototypeKeys = Object.keys(MnemonicaProtoProps);
-
-const MnemonicaInstanceProps = [
-	'__proto_proto__',
-
-	'__type__',
-	'__self__',
-
-	'__args__',
-
-	'__parent__',
-	'__subtypes__',
-
-	'__stack__',
-
-	'__collection__',
-	'__timestamp__',
-
-	'__creator__'
-
-].concat(MnemosynePrototypeKeys);
 
 const staticProps = [
 
@@ -213,7 +189,7 @@ const staticProps = [
 	'showDiff',
 
 ]
-	.concat(MnemonicaInstanceProps)
+	.concat(Object.keys(MnemonicaProtoProps))
 	.concat(Object.getOwnPropertyNames(Object.prototype))
 	.concat(Object.getOwnPropertyNames(Function.prototype))
 	.reduce((obj, key) => {
@@ -302,7 +278,7 @@ const mnemosyneProxyHandlerGet = (target: any, prop: string, receiver: any) => {
 	// prototype of proxy
 	const instance: any = Reflect.getPrototypeOf(receiver);
 
-	const props = getProps(instance) as Props;
+	const props = _getProps(instance) as Props;
 	const {
 		__type__: {
 			config: {

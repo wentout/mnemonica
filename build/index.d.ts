@@ -1,6 +1,6 @@
 import { TypeLookup, IDEF, hook, hooksTypes, constructorOptions, Proto, SN, IDefinitorInstance } from './types';
 export type { IDEF, ConstructorFunction } from './types';
-export { getProps } from './api/types/addProps';
+export { getProps, setProps } from './api/types/Props';
 export declare const defaultTypes: any;
 export declare const define: <T, P extends object, N extends Proto<P, T>, S extends SN & N, R extends IDefinitorInstance<N, S>>(this: unknown, TypeName?: string, constructHandler?: IDEF<T>, proto?: P, config?: constructorOptions) => R;
 export declare const lookup: TypeLookup;

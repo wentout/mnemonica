@@ -26,7 +26,7 @@ const {
 import { getStack } from '../errors';
 import { throwModificationError } from '../errors/throwModificationError';
 
-import { addProps, getProps, Props } from './addProps';
+import { _getProps, _setSelf, Props } from './Props';
 
 import { makeInstanceModificator } from './InstanceModificator';
 
@@ -67,7 +67,7 @@ const invokePostHooks = function ( this: any ) {
 		inheritedInstance,
 	} = creator;
 
-	const props = getProps(inheritedInstance) as Props;
+	const props = _getProps(inheritedInstance) as Props;
 
 	const {
 		__type__: type,
@@ -126,11 +126,7 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 		// throw new WRONG_MODIFICATION_PATTERN(msg, self.stack);
 	}
 
-	odp( self.inheritedInstance, '__self__', {
-		get () {
-			return self.inheritedInstance;
-		}
-	} );
+	_setSelf(self.inheritedInstance);
 
 	self.invokePostHooks();
 
@@ -186,7 +182,9 @@ const makeAwaiter = function ( this: any, type: any, then: any ) {
 
 			self.inheritedInstance = instance;
 
-			if ( self.inheritedInstance.__self__ !== self.inheritedInstance ) {
+			const props = _getProps(self.inheritedInstance) as Props;
+
+			if ( props.__self__ !== self.inheritedInstance ) {
 				// it was async instance,
 				// so we have to add all the stuff
 				// for sync instances it was done already
@@ -227,7 +225,6 @@ const InstanceCreatorPrototype = {
 	getExistentAsyncStack,
 	postProcessing,
 	makeAwaiter,
-	addProps,
 	addThen,
 	invokePreHooks,
 	invokePostHooks,
