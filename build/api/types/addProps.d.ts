@@ -33,4 +33,4 @@ export type Props = {
     __creator__: TypeDef;
     __timestamp__: number;
 };
-export declare const getProps: (instance: object | null, base?: unknown) => Props | undefined;
+export declare const getProps: (instance: object, base?: object) => Props | undefined;

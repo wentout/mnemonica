@@ -133,26 +133,12 @@ export type Props = {
 	__timestamp__: number,
 }
 
-// const isOjectKind = (item: unknown) => {
-// 	return (item instanceof Object) || (typeof item === 'object') || false;
-// };
-
-export const getProps = (instance: object | null, base?: unknown): Props | undefined => {
-	// if (!isOjectKind(instance)) {
-	// 	return undefined;
-	// }
-	if (instance === null) {
-		// eslint-disable-next-line no-debugger
-		// debugger;
-		// here we may see base, that is why it exists
+export const getProps = (instance: object, base?: object): Props | undefined => {
+	const proto = Reflect.getPrototypeOf(instance) as object;
+	if (base !== undefined && (base.constructor !== proto.constructor)) {
+		// here we got rid of unnecessary chain dive
 		return undefined;
 	}
-	const proto = Reflect.getPrototypeOf(instance);
-	// if (!isOjectKind(proto)) {
-	// 	return undefined;
-	// }
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	//@ts-expect-error
 	const result = props.get(proto);
 	if (result === undefined) {
 		if (base === undefined) {

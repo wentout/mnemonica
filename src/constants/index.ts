@@ -23,7 +23,6 @@ const SymbolGaia = Symbol( 'Defined Gaia Constructor' );
 const SymbolReplaceUranus = Symbol( 'Defined Method Name to Replace Gaia' );
 
 const SymbolConfig = Symbol( 'Mnemonica Config Data' );
-const SymbolUsed = Symbol( '.prototype used twice' );
 
 // etc...
 const TYPE_TITLE_PREFIX = 'modificator of : ';
@@ -114,10 +113,6 @@ export const constants = {
 
 	get 'SymbolConfig' () {
 		return SymbolConfig;
-	},
-
-	get 'SymbolUsed' () {
-		return SymbolUsed;
 	},
 
 	// constants
