@@ -16,7 +16,6 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"declaration": false,
-		"sourceMap": true,
 		"traceResolution": false,
 		"removeComments": true,
 		"experimentalDecorators": true,

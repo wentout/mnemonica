@@ -9,10 +9,7 @@ import {
 
 const {
 	odp,
-	SymbolConstructorName,
-	defaultOptions: {
-		ModificationConstructor: defaultMC
-	}
+	SymbolConstructorName
 } = constants;
 
 import { ErrorsTypes } from '../../descriptors/errors';
@@ -29,7 +26,7 @@ const {
 import { getStack } from '../errors';
 import { throwModificationError } from '../errors/throwModificationError';
 
-import { addProps } from './addProps';
+import { addProps, getProps, Props } from './addProps';
 
 import { makeInstanceModificator } from './InstanceModificator';
 
@@ -70,11 +67,13 @@ const invokePostHooks = function ( this: any ) {
 		inheritedInstance,
 	} = creator;
 
+	const props = getProps(inheritedInstance) as Props;
+
 	const {
 		__type__: type,
 		__parent__: existentInstance,
 		__args__: args,
-	} = inheritedInstance;
+	} = props;
 
 	const {
 		collection,
@@ -253,7 +252,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	} = config;
 
 	// eslint-disable-next-line new-cap
-	const mc = ModificationConstructor( obey, defaultMC );
+	const mc = ModificationConstructor( obey );
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;

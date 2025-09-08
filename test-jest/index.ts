@@ -58,16 +58,16 @@ const {
 } = mnemonica;
 
 const USER_DATA = {
-	email: 'went.out@gmail.com',
-	password: 321
+	email    : 'went.out@gmail.com',
+	password : 321
 };
 
 type TUserData = typeof USER_DATA;
 
 const UserTypeProto = {
-	email: '',
-	password: '',
-	description: 'UserType'
+	email       : '',
+	password    : '',
+	description : 'UserType'
 };
 
 const mc = require( './createInstanceModificator200XthWay' );
@@ -87,26 +87,26 @@ const userTypeHooksInvocations: any[] = [];
 
 UserType.registerHook( 'preCreation', function ( this: unknown, opts: unknown ) {
 	userTypeHooksInvocations.push( {
-		kind: 'pre',
-		sort: 'type',
-		self: this,
+		kind : 'pre',
+		sort : 'type',
+		self : this,
 		opts
 	} );
 } );
 
 UserType.registerHook( 'postCreation', function ( this: unknown, opts: unknown ) {
 	userTypeHooksInvocations.push( {
-		kind: 'post',
-		sort: 'type',
-		self: this,
+		kind : 'post',
+		sort : 'type',
+		self : this,
 		opts
 	} );
 } );
 
 
 const pl1Proto = {
-	UserTypePL1: 'UserTypePL_1',
-	UserTypePL1Extra: 'UserTypePL_1_Extra',
+	UserTypePL1      : 'UserTypePL_1',
+	UserTypePL1Extra : 'UserTypePL_1_Extra',
 };
 
 UserType.define( () => {
@@ -116,19 +116,19 @@ UserType.define( () => {
 	UserTypePL1.prototype = pl1Proto;
 	return UserTypePL1;
 }, {
-	strictChain: false,
-	submitStack: true
+	strictChain : false,
+	submitStack : true
 } );
 
 const pl2Proto = {
-	UserTypePL2: 'UserTypePL_2_AlwaysIncluded'
+	UserTypePL2 : 'UserTypePL_2_AlwaysIncluded'
 };
 
 
 const shaperFactory = () => {
 	return class Shaper {
 		shape: number;
-		constructor() {
+		constructor () {
 			// const zzz = new.target;
 			// Shaper;
 			// debugger;
@@ -142,7 +142,7 @@ UserType.define( () => {
 	const Shaper = shaperFactory();
 	class UserTypePL2 extends Shaper {
 		user_pl_2_sign: string;
-		constructor() {
+		constructor () {
 			// debugger;
 			super();
 			// const zzz = new.target;
@@ -162,8 +162,8 @@ UserType.define( () => {
 	UserTypePL2.Shaper = Shaper;
 	return UserTypePL2;
 }, {
-	ModificationConstructor: mc,
-	strictChain: false
+	ModificationConstructor : mc,
+	strictChain             : false
 } );
 
 
@@ -171,7 +171,7 @@ const ProxyTyped = function ( this: { str: string }, str: string ) {
 	this.str = str;
 };
 ProxyTyped.prototype = {
-	proxyTyped: true,
+	proxyTyped : true,
 	SaySomething () {
 		return `something : ${this.proxyTyped}`;
 	}
@@ -194,18 +194,18 @@ types.registerFlowChecker( ( opts: unknown ) => {
 
 types.registerHook( 'preCreation', function ( this: unknown, opts: unknown ) {
 	typesPreCreationInvocations.push( {
-		kind: 'pre',
-		sort: 'collection',
-		self: this,
+		kind : 'pre',
+		sort : 'collection',
+		self : this,
 		opts
 	} );
 } );
 
 types.registerHook( 'postCreation', function ( this: unknown, opts: unknown ) {
 	typesPostCreationInvocations.push( {
-		kind: 'post',
-		sort: 'collection',
-		self: this,
+		kind : 'post',
+		sort : 'collection',
+		self : this,
 		opts
 	} );
 } );
@@ -216,29 +216,29 @@ defaultNamespace.registerFlowChecker( ( opts: unknown ) => {
 
 defaultNamespace.registerHook( 'preCreation', function ( this: unknown, opts: unknown ) {
 	namespacePreCreationInvocations.push( {
-		kind: 'pre',
-		sort: 'namespace',
-		self: this,
+		kind : 'pre',
+		sort : 'namespace',
+		self : this,
 		opts
 	} );
 } );
 
 defaultNamespace.registerHook( 'postCreation', function ( this: unknown, opts: unknown ) {
 	namespacePostCreationInvocations.push( {
-		kind: 'pre',
-		sort: 'namespace',
-		self: this,
-		order: 'first',
+		kind  : 'pre',
+		sort  : 'namespace',
+		self  : this,
+		order : 'first',
 		opts
 	} );
 } );
 
 defaultNamespace.registerHook( 'postCreation', function ( this: unknown, opts: unknown ) {
 	namespacePostCreationInvocations.push( {
-		kind: 'pre',
-		sort: 'namespace',
-		self: this,
-		order: 'second',
+		kind  : 'pre',
+		sort  : 'namespace',
+		self  : this,
+		order : 'second',
 		opts
 	} );
 } );
@@ -313,12 +313,12 @@ NestedConstruct.define( 'NestedSubError', function ( this: any, ...args: any[] )
 types[ SymbolConfig ].bindedProto = false;
 const AsyncType = define( 'AsyncType', async function ( this: any, data: unknown ) {
 	return Object.assign( this, {
-		arg123: 123
+		arg123 : 123
 	}, {
 		data
 	} );
 }, {
-	getThisPropMethod: function ( propName: string ) {
+	getThisPropMethod : function ( propName: string ) {
 		if ( new.target ) {
 			this[ propName ] = propName;
 			return this;
@@ -344,7 +344,7 @@ const AsyncType = define( 'AsyncType', async function ( this: any, data: unknown
 	}
 
 }, {
-	bindedProto: true
+	bindedProto : true
 } );
 
 AsyncType.SubOfAsync = function ( data: unknown ) {
@@ -368,7 +368,7 @@ AsyncType.SubOfAsync.NestedAsyncType = async function ( data: unknown ) {
 	} );
 };
 AsyncType.SubOfAsync.NestedAsyncType.prototype = {
-	description: 'nested async instance'
+	description : 'nested async instance'
 };
 const { NestedAsyncType } = AsyncType.SubOfAsync;
 
@@ -377,7 +377,7 @@ const SubOfNestedAsync = NestedAsyncType.define( 'SubOfNestedAsync', function ( 
 		data
 	} );
 	this.arg123 = 456;
-}, {}, { bindedProto: false } );
+}, {}, { bindedProto : false } );
 
 let SubOfNestedAsyncPostHookData: any;
 SubOfNestedAsync.registerHook( 'postCreation', function ( opts: unknown ) {
@@ -392,9 +392,9 @@ describe( 'Main Test', () => {
 	*/
 
 	const UserTypeConstructorProto = {
-		email: '',
-		password: '',
-		description: 'UserTypeConstructor'
+		email       : '',
+		password    : '',
+		description : 'UserTypeConstructor'
 	};
 
 	// const evenMoreNecessaryProps = {
@@ -421,11 +421,11 @@ describe( 'Main Test', () => {
 		} );
 
 	}, UserTypeConstructorProto, {
-		submitStack: true
+		submitStack : true
 	} );
 
 	const WithoutPasswordProto = {
-		WithoutPasswordSign: 'WithoutPasswordSign'
+		WithoutPasswordSign : 'WithoutPasswordSign'
 	};
 
 	// debugger;
@@ -437,11 +437,11 @@ describe( 'Main Test', () => {
 		WithoutPassword.prototype = WithoutPasswordProto;
 		return WithoutPassword;
 	}, {
-		submitStack: true
+		submitStack : true
 	} );
 
 	const WithAdditionalSignProto = {
-		WithAdditionalSignSign: 'WithAdditionalSignSign'
+		WithAdditionalSignSign : 'WithAdditionalSignSign'
 	};
 	const WithAdditionalSignTypeDef = UserWithoutPassword.define( () => {
 		const WithAdditionalSign = function ( this: any, sign: string ) {
@@ -450,16 +450,16 @@ describe( 'Main Test', () => {
 		WithAdditionalSign.prototype = WithAdditionalSignProto;
 		return WithAdditionalSign;
 	}, {
-		submitStack: true
+		submitStack : true
 	} );
 
 	const MoreOverProto = {
-		MoreOverSign: 'MoreOverSign'
+		MoreOverSign : 'MoreOverSign'
 	};
 	const MoreOverTypeDef = WithAdditionalSignTypeDef.define( () => {
 		class MoreOver {
 			str: string;
-			constructor( str: string ) {
+			constructor ( str: string ) {
 				this.str = str || 'moreover str';
 			}
 			get MoreOverSign () {
@@ -468,11 +468,11 @@ describe( 'Main Test', () => {
 		}
 		return MoreOver;
 	}, {
-		submitStack: true
+		submitStack : true
 	} );
 
 	const OverMoreProto = {
-		OverMoreSign: 'OverMoreSign'
+		OverMoreSign : 'OverMoreSign'
 	};
 	// debugger;
 	const OverMore = WithAdditionalSignTypeDef
@@ -480,11 +480,11 @@ describe( 'Main Test', () => {
 			function ( this: any, str: string ) {
 				this.str = str || 're-defined OverMore str';
 			}, OverMoreProto, {
-			submitStack: true
-		} );
+				submitStack : true
+			} );
 
 	const EvenMoreProto = {
-		EvenMoreSign: 'EvenMoreSign'
+		EvenMoreSign : 'EvenMoreSign'
 	};
 
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -499,7 +499,7 @@ describe( 'Main Test', () => {
 		EvenMore.prototype = Object.assign( {}, EvenMoreProto );
 		return EvenMore;
 	}, {}, {
-		submitStack: true
+		submitStack : true
 	} );
 
 	// if (uncaughtExceptionTest) {
@@ -510,22 +510,22 @@ describe( 'Main Test', () => {
 	const AsyncChain1st = WithAdditionalSignTypeDef.define( 'AsyncChain1st', async function ( this: any, opts: any ) {
 		return Object.assign( this, opts );
 	}, {}, {
-		submitStack: true
+		submitStack : true
 	} );
 	const AsyncChain2nd = AsyncChain1st.define( 'AsyncChain2nd', async function ( this: any, opts: any ) {
 		return Object.assign( this, opts );
 	}, {}, {
-		submitStack: true
+		submitStack : true
 	} );
 	const Async2Sync2nd = AsyncChain2nd.define( 'Async2Sync2nd', function ( this: any, opts: any ) {
 		Object.assign( this, opts );
 	}, {}, {
-		submitStack: true
+		submitStack : true
 	} );
 	Async2Sync2nd.define( 'AsyncChain3rd', async function ( this: any, opts: any ) {
 		return Object.assign( this, opts );
 	}, {}, {
-		submitStack: true
+		submitStack : true
 	} );
 
 
@@ -652,7 +652,7 @@ describe( 'Main Test', () => {
 	// }
 
 
-	const checkTypeDefinition = ( _types: any, TypeName: string, proto: any, useOldStyle: boolean ) => {
+	const checkTypeDefinition = ( _types: any, TypeName: string, proto: any ) => {
 		const parentType = _types[ SymbolSubtypeCollection ];
 		const isSubType = parentType ? true : false;
 		describe( `initial type declaration ${TypeName}`, () => {
@@ -694,8 +694,8 @@ describe( 'Main Test', () => {
 			[ MoreOverTypeDef.subtypes, 'OverMore', OverMoreProto ],
 			[ OverMore.subtypes, 'EvenMore', EvenMoreProto ],
 		].forEach( entry => {
-			const [ _types, def, proto, useOldStyle ] = entry;
-			checkTypeDefinition( _types, def, proto, useOldStyle || false );
+			const [ _types, def, proto ] = entry;
+			checkTypeDefinition( _types, def, proto );
 		} );
 	} );
 
@@ -751,7 +751,7 @@ describe( 'Main Test', () => {
 			} );
 			it( 'nested object of empty object .extract() ok', () => {
 				const sample = {
-					emptySign: filledEmptySign
+					emptySign : filledEmptySign
 				};
 				const extracted = emptySub.extract();
 				expect( extracted ).toEqual( sample );
@@ -759,7 +759,7 @@ describe( 'Main Test', () => {
 			} );
 			it( 'nested object of empty object .pick() ok', () => {
 				const sample = {
-					emptySign: filledEmptySign
+					emptySign : filledEmptySign
 				};
 				const pickedArg = emptySub.pick( 'emptySign' );
 				const pickedArR = emptySub.pick( [ 'emptySign' ] );

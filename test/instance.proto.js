@@ -8,6 +8,10 @@ const gof = Object.getPrototypeOf;
 
 const { assert, expect } = require( 'chai' );
 
+const {
+	getProps,
+} = require( '..' );
+
 const tests = ( opts ) => {
 
 	const {
@@ -47,25 +51,25 @@ const tests = ( opts ) => {
 	describe( 'instance .proto props tests', () => {
 
 		it( 'should have proper prototype .__args__', () => {
-			assert.equal( user.__args__[ 0 ], USER_DATA );
+			assert.equal( getProps(user).__args__[ 0 ], USER_DATA );
 		} );
 		it( 'should have proper prototype .__type__', () => {
 			// undefined !
-			assert.equal( user.__type__.TypeProxy, UserType.__type__ );
-			assert.equal( user.__type__.TypeName, UserType.TypeName );
+			assert.equal( getProps(user).__type__.TypeProxy, UserType.__type__ );
+			assert.equal( getProps(user).__type__.TypeName, UserType.TypeName );
 		} );
 		it( 'should have proper prototype .__collection__', () => {
-			assert.equal( user.__collection__, UserType.collection );
+			assert.equal( getProps(user).__collection__, UserType.collection );
 		} );
 		it( 'should have proper prototype .__subtypes__', () => {
-			assert.equal( user.__subtypes__, UserType.subtypes );
+			assert.equal( getProps(user).__subtypes__, UserType.subtypes );
 		} );
 		it( 'should have proper prototype .__parent__', () => {
-			assert.equal( evenMore.__parent__, overMore );
-			assert.notEqual( evenMore.__parent__, moreOver );
+			assert.equal( getProps(evenMore).__parent__, overMore );
+			assert.notEqual( getProps(evenMore).__parent__, moreOver );
 		} );
 		it( 'should have proper prototype .__timestamp__', () => {
-			assert.exists( evenMore.__timestamp__ );
+			assert.exists( getProps(evenMore).__timestamp__ );
 		} );
 
 		it( 'should have proper first .clone old style', () => {
@@ -91,7 +95,7 @@ const tests = ( opts ) => {
 				email    : 'went.out@gmail.com',
 				password : 'fork old style password'
 			};
-			const userArgs = user.__args__;
+			const userArgs = getProps(user).__args__;
 
 			const userFork = user.fork( forkData );
 
@@ -103,7 +107,7 @@ const tests = ( opts ) => {
 			assert.notEqual( user, userFork );
 			assert.deepEqual( userArgs[ 0 ], USER_DATA );
 			assert.deepEqual( new UserType( forkData ), userFork );
-			assert.notDeepEqual( userArgs, userFork.__args__ );
+			assert.notDeepEqual( userArgs, getProps(userFork).__args__ );
 			expect( userFork ).instanceof( UserType );
 			assert.deepEqual( Object.keys( userFork ), Object.keys( user ) );
 
@@ -115,7 +119,7 @@ const tests = ( opts ) => {
 				email    : 'went.out@gmail.com',
 				password : 'fork regular style password'
 			};
-			const userTCArgs = userTC.__args__;
+			const userTCArgs = getProps(userTC).__args__;
 			const userTCFork = userTC.fork( forkData );
 
 			const userTCPP = gof( gof( userTC ) );
@@ -126,7 +130,7 @@ const tests = ( opts ) => {
 			assert.deepEqual( userTCArgs[ 0 ], USER_DATA );
 			const naiveFork = new UserTypeConstructor( forkData );
 			assert.deepOwnInclude( naiveFork, userTCFork );
-			assert.notDeepEqual( userTCArgs, userTCFork.__args__ );
+			assert.notDeepEqual( userTCArgs, getProps(userTCFork).__args__ );
 			expect( userTCFork ).instanceof( UserTypeConstructor );
 			assert.deepEqual( Object.keys( userTCFork ), Object.keys( userTC ) );
 
@@ -136,7 +140,7 @@ const tests = ( opts ) => {
 			const stackstart = '<-- creation of [ UserTypePL1 ] traced -->';
 			const {
 				__stack__
-			} = userPL1;
+			} = getProps(userPL1);
 			// debugger;
 			expect( __stack__.indexOf( stackstart ) ).equal( 1 );
 		} );
@@ -178,14 +182,14 @@ const tests = ( opts ) => {
 		} );
 
 		it( 'should not mutate()', () => {
-			assert.notEqual( evenMore.__proto_proto__, EvenMoreProto );
+			assert.notEqual( getProps(evenMore).__proto_proto__, EvenMoreProto );
 		} );
 
 		it( 'should have proper nested .fork()', () => {
-			assert.notEqual( overMore.__proto_proto__, overMoreFork.__proto_proto__ );
+			assert.notEqual( getProps(overMore).__proto_proto__, getProps(overMoreFork).__proto_proto__ );
 
-			assert.notEqual( evenMore.__proto_proto__, evenMoreFork.__proto_proto__ );
-			assert.notEqual( evenMore.__timestamp__, evenMoreFork.__timestamp__ );
+			assert.notEqual( getProps(evenMore).__proto_proto__, getProps(evenMoreFork).__proto_proto__ );
+			assert.notEqual( getProps(evenMore).__timestamp__, getProps(evenMoreFork).__timestamp__ );
 
 			assert.notEqual( evenMore, evenMoreFork );
 			assert.notEqual( evenMoreForkFork, evenMoreFork );
@@ -199,15 +203,15 @@ const tests = ( opts ) => {
 
 			// debugger;
 
-			assert.deepEqual( evenMore.__args__, evenMoreArgs );
-			assert.notDeepEqual( evenMore.__args__, evenMoreFork.__args__ );
+			assert.deepEqual( getProps(evenMore).__args__, evenMoreArgs );
+			assert.notDeepEqual( getProps(evenMore).__args__, getProps(evenMoreFork).__args__ );
 
 			const nativeFork = new overMore.EvenMore( strFork );
 
 			assert.notEqual( nativeFork, evenMoreFork );
 			assert.deepInclude( nativeFork, evenMoreFork );
 			assert.deepInclude( evenMoreFork, nativeFork );
-			assert.notEqual( overMore.__args__, evenMore.__args__ );
+			assert.notEqual( getProps(overMore).__args__, getProps(evenMore).__args__ );
 			expect( evenMoreFork ).instanceof( OverMore.lookup( 'EvenMore' ) );
 			assert.deepEqual( Object.keys( evenMore ), Object.keys( evenMoreFork ) );
 
@@ -249,7 +253,7 @@ const tests = ( opts ) => {
 
 		it( 'instance.ConstructorName.call(process) should work', () => {
 			const gaia = overMoreCallEvenMoreProcess[ SymbolGaia ];
-			const gaiaProto = gof( gaia );
+			const gaiaProto = gof(gof( gaia ));
 			expect( gof( gaiaProto ) ).equal( process );
 
 			expect( overMoreCallEvenMoreProcess ).instanceof( overMore.EvenMore );
@@ -279,11 +283,11 @@ const tests = ( opts ) => {
 			expect( userTCForkBind ).instanceof( UserTypeConstructor );
 			expect( userTCForkBind ).instanceof( UserType );
 			expect( userTCForkBind ).instanceof( user );
-			assert.equal( user.__args__[ 0 ], USER_DATA );
-			assert.equal( userTC.__args__[ 0 ], USER_DATA );
-			assert.deepEqual( userTCForkCall.__args__[ 0 ], FORK_CALL_DATA );
-			assert.deepEqual( userTCForkApply.__args__[ 0 ], FORK_CALL_DATA );
-			assert.deepEqual( userTCForkBind.__args__[ 0 ], FORK_CALL_DATA );
+			assert.equal( getProps(user).__args__[ 0 ], USER_DATA );
+			assert.equal( getProps(userTC).__args__[ 0 ], USER_DATA );
+			assert.deepEqual( getProps(userTCForkCall).__args__[ 0 ], FORK_CALL_DATA );
+			assert.deepEqual( getProps(userTCForkApply).__args__[ 0 ], FORK_CALL_DATA );
+			assert.deepEqual( getProps(userTCForkBind).__args__[ 0 ], FORK_CALL_DATA );
 			assert.deepInclude( userTCForkCall, FORK_CALL_DATA );
 			assert.deepInclude( userTCForkApply, FORK_CALL_DATA );
 			assert.deepInclude( userTCForkBind, FORK_CALL_DATA );

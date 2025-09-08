@@ -43,6 +43,7 @@ const {
 		parse
 	},
 	errors,
+	getProps
 } = mnemonica;
 
 const USER_DATA = {
@@ -122,7 +123,7 @@ const shaperFactory = () => {
 
 UserType.define( () => {
 	// const Shaper = shaperFactory(true);
-	const Shaper = shaperFactory( false );
+	const Shaper = shaperFactory();
 	class UserTypePL2 extends Shaper {
 		constructor () {
 			super();
@@ -212,6 +213,8 @@ const SomeADTCType = adtcDefine( 'SomeADTCType', function () {
 	this.test = 123;
 }, {}, { strictChain : false } );
 
+
+debugger;
 const someADTCInstance = new SomeADTCType();
 
 let SubOfSomeADTCTypePre = null;
@@ -253,6 +256,13 @@ const OneElseCollectionType = oneElseTypesCollection.define( 'OneElseCollectionT
 	this.self = this;
 } );
 const oneElseCollectionInstance = new OneElseCollectionType();
+
+// debugger;
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// const OneHackCollectionType = oneElseTypesCollection.define( function OneHackCollectionType () {
+// 	this.self = this;
+// } );
+
 
 const user = UserType( USER_DATA );
 const userPL1 = new user.UserTypePL1();
@@ -562,15 +572,18 @@ describe( 'Main Test', () => {
 	const strForkOfFork = 'fork of fork of evenMore';
 
 	const overMoreFork = overMore.fork();
-
+	
+	debugger;
 	const overMoreCallEvenMoreUndefined = overMore.EvenMore.call( undefined );
+	
+	debugger;
 	const overMoreCallEvenMoreNull = overMore.EvenMore.call( null );
 	const overMoreCallEvenMoreNumber = overMore.EvenMore.call( new Number( 5 ) );
 	const overMoreCallEvenMoreString = overMore.EvenMore.call( new String( 5 ) );
 	const overMoreCallEvenMoreBoolean = overMore.EvenMore.call( new Boolean( 5 ) );
 	const overMoreCallEvenMoreProcess = overMore.EvenMore.call( process );
 
-	const evenMoreArgs = evenMore.__args__;
+	const evenMoreArgs = getProps(evenMore).__args__;
 	const evenMoreFork = evenMore.fork( strFork );
 	const evenMoreForkFork = evenMoreFork.fork( strForkOfFork );
 
@@ -722,15 +735,20 @@ describe( 'Main Test', () => {
 			expect( hop( user, 'UserTypePL2' ) ).is.false;
 		} );
 		it( '.SubTypes definition is correct  20XX First Child', () => {
-			expect( user.__subtypes__.has( 'UserTypePL1' ) ).is.true;
-			expect( user.__subtypes__.has( 'UserTypePL2' ) ).is.true;
-			const oogpuser = ogp( ogp( user ) );
+			expect( getProps(user).__subtypes__.has( 'UserTypePL1' ) ).is.true;
+			expect( getProps(user).__subtypes__.has( 'UserTypePL2' ) ).is.true;
+			
+			
+			const oogpuser = ogp( user );
+
 			// 0.8.4 -- changed interface, no more methods inside of prototype chain
 			// expect(hop(oogpuser, 'UserTypePL1')).is.true;
 			// expect(hop(oogpuser, 'UserTypePL2')).is.true;
 			// but we still can check __subtypes__
-			expect( oogpuser.__subtypes__.has( 'UserTypePL2' ) ).is.true;
-			expect( oogpuser.__subtypes__.has( 'UserTypePL2' ) ).is.true;
+
+			// TODO: this tests should work !
+			expect( getProps(oogpuser).__subtypes__.has( 'UserTypePL1' ) ).is.true;
+			expect( getProps(oogpuser).__subtypes__.has( 'UserTypePL2' ) ).is.true;
 		} );
 
 
@@ -1248,10 +1266,10 @@ describe( 'Main Test', () => {
 					expect( asyncInstanceFork ).instanceof( AsyncType );
 
 					expect( typeof asyncInstanceDirect.on === 'function' ).is.true;
-					expect( ogp( ogp( asyncInstanceDirect[ SymbolGaia ] ) ) === process ).is.true;
+					expect( ogp( ogp( ogp( asyncInstanceDirect[ SymbolGaia ] ) ) ) === process ).is.true;
 					expect( asyncInstanceDirect[ SymbolGaia ][ MNEMONICA ] === URANUS ).is.true;
 					expect( typeof asyncInstanceDirectApply.on === 'function' ).is.true;
-					expect( ogp( ogp( asyncInstanceDirectApply[ SymbolGaia ] ) ) === process ).is.true;
+					expect( ogp( ogp( ogp( asyncInstanceDirectApply[ SymbolGaia ] ) ) ) === process ).is.true;
 					expect( asyncInstanceDirectApply[ SymbolGaia ][ MNEMONICA ] === URANUS ).is.true;
 
 					expect( nestedAsyncInstance ).instanceof( AsyncType );

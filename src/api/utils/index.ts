@@ -21,6 +21,8 @@ const {
 	collectConstructors
 } = utils;
 
+import { getProps, Props } from '../types/addProps';
+
 
 const CreationHandler = function ( this: unknown, constructionAnswer: unknown ) {
 	// standard says :
@@ -101,11 +103,13 @@ const getExistentAsyncStack = ( existentInstance: asyncStack ): unknown => {
 
 	while ( proto ) {
 
-		if ( !proto.__stack__ ) {
+		const props = getProps(proto) as Props;
+
+		if ( !props.__stack__ ) {
 			break;
 		}
 
-		const pstack = proto
+		const pstack = props
 			.__stack__
 			.split( '\n' )
 			.reduce( ( arr: string[], line: string ) => {
@@ -117,9 +121,11 @@ const getExistentAsyncStack = ( existentInstance: asyncStack ): unknown => {
 
 		proto = proto.parent();
 
-		if ( proto && proto.__type__ ) {
+		const protoProps = getProps(proto) as Props;
 
-			if ( proto.__type__.isSubType ) {
+		if ( proto && protoProps && protoProps.__type__ ) {
+
+			if ( protoProps.__type__.isSubType ) {
 				stack.push( ...pstack.slice( 0, 1 ) );
 			} else {
 				stack.push( ...pstack );
@@ -160,7 +166,7 @@ type parentSub = {
 	__parent__: parentSub
 }
 
-const findSubTypeFromParent = ( instance: parentSub, subType: string ): parentSub => {
+const findSubTypeFromParent = ( instance: parentSub, subType: string ): parentSub | undefined => {
 	let subtype = null;
 
 	// if (!instance.__subtypes__) {
@@ -173,13 +179,15 @@ const findSubTypeFromParent = ( instance: parentSub, subType: string ): parentSu
 	// 	return null;
 	// }
 
-	if ( instance.__type__.subtypes.has( subType ) ) {
-		subtype = instance.__type__.subtypes.get( subType );
+	const props = getProps(instance) as Props;
+
+	if ( props.__type__.subtypes.has( subType ) ) {
+		subtype = props.__type__.subtypes.get( subType );
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
 		return subtype;
 	}
-	return findSubTypeFromParent( instance.__parent__, subType );
+	return findSubTypeFromParent( props.__parent__, subType );
 };
 
 // const isClass = ( functionPointer: CallableFunction ) => {

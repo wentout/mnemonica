@@ -26,7 +26,8 @@ const {
 	},
 	errors,
 	ErrorMessages,
-	defineStackCleaner
+	defineStackCleaner,
+	getProps
 } = mnemonica;
 
 const dirname = require( 'path' ).resolve( __dirname, '../build' );
@@ -118,7 +119,7 @@ const tests = ( opts ) => {
 				'bind',
 				'decorate',
 				'registerHook',
-
+				'getProps',
 			];
 
 			const mnemonica_keys = Object.keys( mnemonica );
@@ -155,7 +156,8 @@ const tests = ( opts ) => {
 			} );
 
 			it( 'named function definition exist', () => {
-				expect( user.__subtypes__.has( 'NamedFunction' ) ).is.true;
+				const { __subtypes__ } = getProps(user);
+				expect( __subtypes__.has( 'NamedFunction' ) ).is.true;
 			} );
 
 			const NamedClassPtr = UserType.define( () => {
@@ -193,7 +195,8 @@ const tests = ( opts ) => {
 			} );
 
 			it( 'named class definition exist', () => {
-				expect( user.__subtypes__.has( 'NamedClass' ) ).is.true;
+				const { __subtypes__ } = getProps(user);
+				expect( __subtypes__.has( 'NamedClass' ) ).is.true;
 			} );
 
 			const nf = await new user.NamedFunction();
@@ -288,7 +291,8 @@ const tests = ( opts ) => {
 			it( '.SubTypes definition is correct Regular FirstChild', () => {
 				// 0.8.4 -- changed interface, no more methods inside of prototype chain
 				// expect(Object.getPrototypeOf(Object.getPrototypeOf(userTC)).hasOwnProperty('WithoutPassword')).is.true;
-				expect( userTC.__subtypes__.has( 'WithoutPassword' ) ).is.true;
+				const { __subtypes__ } = getProps(userTC);
+				expect( __subtypes__.has( 'WithoutPassword' ) ).is.true;
 			} );
 
 			it( '.SubTypes definition is correct Regular Nested Children', () => {
@@ -296,8 +300,10 @@ const tests = ( opts ) => {
 					Object.getPrototypeOf( Object.getPrototypeOf( overMore ) ),
 					Object.getPrototypeOf( Object.getPrototypeOf( moreOver ) )
 				);
-				expect( overMore.__subtypes__.has( 'EvenMore' ) ).is.true;
-				expect( moreOver.__subtypes__.has( 'OverMore' ) ).is.true;
+				const { __subtypes__: os } = getProps(overMore);
+				expect( os.has( 'EvenMore' ) ).is.true;
+				const { __subtypes__: ms } = getProps(moreOver);
+				expect( ms.has( 'OverMore' ) ).is.true;
 				// 0.8.4 -- changed interface, no more methods inside of prototype chain
 				// expect(Object.getPrototypeOf(Object.getPrototypeOf(overMore)).hasOwnProperty('EvenMore')).is.true;
 				// expect(Object.getPrototypeOf(Object.getPrototypeOf(moreOver)).hasOwnProperty('OverMore')).is.true;
@@ -367,9 +373,12 @@ const tests = ( opts ) => {
 
 				expect( backSub.sub_test ).equal( 321 );
 				expect( backSub.constructor.name ).equal( 'SubOfSomeADTCType' );
-				expect( backSub.__parent__.constructor.name ).equal( 'SubOfSomeADTCType' );
-				expect( backSub.__parent__.__parent__.constructor.name ).equal( 'SomeADTCType' );
-				expect( backSub.__parent__.__parent__.__parent__.constructor.name ).equal( 'Mnemonica' );
+				const { __parent__ } = getProps(backSub);
+				expect( __parent__.constructor.name ).equal( 'SubOfSomeADTCType' );
+				const { __parent__: pp } = getProps(__parent__);
+				expect( pp.constructor.name ).equal( 'SomeADTCType' );
+				const { __parent__: ppp } = getProps(pp);
+				expect( ppp.constructor.name ).equal( 'Mnemonica' );
 
 			} );
 
@@ -879,10 +888,12 @@ const tests = ( opts ) => {
 			expect( errorInstance ).instanceOf( Error );
 		} );
 		it( '.exception() shoud create instanceof CreationType', () => {
-			expect( errorInstance ).instanceOf( someADTCInstance.__type__ );
+			const { __type__ } = getProps(someADTCInstance);
+			expect( errorInstance ).instanceOf( __type__ );
 		} );
 		it( '.exception() args should exists create instanceof CreationType', () => {
-			expect( errorInstance ).instanceOf( someADTCInstance.__type__ );
+			const { __type__ } = getProps(someADTCInstance);
+			expect( errorInstance ).instanceOf( __type__ );
 		} );
 		it( '.exception() .instance should be existent instance', () => {
 			expect( errorInstance.instance ).equal( someADTCInstance );

@@ -1,5 +1,9 @@
 'use strict';
 
+const {
+	getProps,
+} = require( '..' );
+
 const odp = ( obj, prop, attributes ) => {
 	try {
 		return Object.defineProperty( obj, prop, attributes );
@@ -71,7 +75,8 @@ const bindProtoMethods = function ( hookData ) {
 		inheritedInstance,
 		// existentInstance,
 	} = hookData;
-	const { proto } = inheritedInstance.__type__;
+	const { __type__ } = getProps(inheritedInstance);
+	const { proto } = __type__;
 	const protoPointer = Reflect.getPrototypeOf( inheritedInstance );
 	Object.entries( protoPointer ).forEach( ( entry ) => {
 		const [ mayBeMethodName, MayBeMethodFunction ] = entry;

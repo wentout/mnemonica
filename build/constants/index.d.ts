@@ -5,7 +5,6 @@ export declare const constants: {
     readonly SymbolReplaceUranus: symbol;
     readonly SymbolDefaultTypesCollection: symbol;
     readonly SymbolConfig: symbol;
-    readonly SymbolUsed: symbol;
     readonly MNEMONICA: string;
     readonly MNEMOSYNE: string;
     readonly GAIA: string;

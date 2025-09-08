@@ -2,6 +2,10 @@
 
 const { assert, expect } = require('chai');
 
+const {
+	getProps,
+} = require( '..' );
+
 const tests = (opts) => {
 	const {
 		evenMore,
@@ -19,7 +23,7 @@ const tests = (opts) => {
 
 				const onUncaughtException = function (error) {
 					assert.equal(
-						error.__args__[ 0 ],
+						getProps(error).__args__[ 0 ],
 						throwArgs
 					);
 					expect(error).instanceOf(Error);
