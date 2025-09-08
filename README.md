@@ -492,7 +492,7 @@ And we wish to get reference to one of the prececessors, though we have only ref
 ```js
 
 // fisrst parent
-// simply equal to instance.__parent__
+// simply equal to getProps(instance).__parent__
 const parent = instance.parent();
 
 // deep parent from chain
@@ -714,6 +714,10 @@ It is important: if we make `util.callbackify` from our instance async creation 
 # Instance Properties
 
 Also starting from `v0.3.8` the following non enumerable props are availiable from instance itself (`instance.hasOwnProperty(__prop__)`):
+
+## Breaking Changes for 0.9.995
+
+### all props below available from `getProps(instance)` :
 
 ## `.__args__`
 
