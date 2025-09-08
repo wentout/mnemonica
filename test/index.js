@@ -43,6 +43,7 @@ const {
 		parse
 	},
 	errors,
+	getProps
 } = mnemonica;
 
 const USER_DATA = {
@@ -582,7 +583,7 @@ describe( 'Main Test', () => {
 	const overMoreCallEvenMoreBoolean = overMore.EvenMore.call( new Boolean( 5 ) );
 	const overMoreCallEvenMoreProcess = overMore.EvenMore.call( process );
 
-	const evenMoreArgs = evenMore.__args__;
+	const evenMoreArgs = getProps(evenMore).__args__;
 	const evenMoreFork = evenMore.fork( strFork );
 	const evenMoreForkFork = evenMoreFork.fork( strForkOfFork );
 
@@ -734,15 +735,20 @@ describe( 'Main Test', () => {
 			expect( hop( user, 'UserTypePL2' ) ).is.false;
 		} );
 		it( '.SubTypes definition is correct  20XX First Child', () => {
-			expect( user.__subtypes__.has( 'UserTypePL1' ) ).is.true;
-			expect( user.__subtypes__.has( 'UserTypePL2' ) ).is.true;
-			const oogpuser = ogp( ogp( user ) );
+			expect( getProps(user).__subtypes__.has( 'UserTypePL1' ) ).is.true;
+			expect( getProps(user).__subtypes__.has( 'UserTypePL2' ) ).is.true;
+			
+			
+			const oogpuser = ogp( user );
+
 			// 0.8.4 -- changed interface, no more methods inside of prototype chain
 			// expect(hop(oogpuser, 'UserTypePL1')).is.true;
 			// expect(hop(oogpuser, 'UserTypePL2')).is.true;
 			// but we still can check __subtypes__
-			expect( oogpuser.__subtypes__.has( 'UserTypePL2' ) ).is.true;
-			expect( oogpuser.__subtypes__.has( 'UserTypePL2' ) ).is.true;
+
+			// TODO: this tests should work !
+			expect( getProps(oogpuser).__subtypes__.has( 'UserTypePL1' ) ).is.true;
+			expect( getProps(oogpuser).__subtypes__.has( 'UserTypePL2' ) ).is.true;
 		} );
 
 

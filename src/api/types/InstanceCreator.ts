@@ -26,7 +26,7 @@ const {
 import { getStack } from '../errors';
 import { throwModificationError } from '../errors/throwModificationError';
 
-import { addProps } from './addProps';
+import { addProps, getProps, Props } from './addProps';
 
 import { makeInstanceModificator } from './InstanceModificator';
 
@@ -67,11 +67,13 @@ const invokePostHooks = function ( this: any ) {
 		inheritedInstance,
 	} = creator;
 
+	const props = getProps(inheritedInstance) as Props;
+
 	const {
 		__type__: type,
 		__parent__: existentInstance,
 		__args__: args,
-	} = inheritedInstance;
+	} = props;
 
 	const {
 		collection,

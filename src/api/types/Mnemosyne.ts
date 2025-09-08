@@ -29,8 +29,9 @@ import exceptionConstructor from '../errors/exceptionConstructor';
 
 import { InstanceCreator } from './InstanceCreator';
 
+import { getProps, Props } from './addProps';
 
-const TypesRoots = new WeakMap;
+const InstanceRoots = new WeakMap;
 
 
 
@@ -79,18 +80,22 @@ const MnemonicaProtoProps = {
 
 	fork (this: any) {
 
+		const props = getProps(this) as Props;
+
 		const {
 			__type__: type,
 			__collection__: collection,
 			__parent__: existentInstance,
 			__args__,
-			__self__
-		} = this;
+		} = props;
 
 		const {
 			isSubType,
 			TypeName
 		} = type;
+
+
+		const { __self__ } = this;
 
 		// 'function', cause might be called with 'new'
 		// eslint-disable-next-line no-shadow, @typescript-eslint/no-explicit-any
@@ -105,6 +110,8 @@ const MnemonicaProtoProps = {
 
 
 			if (this === __self__) {
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-expect-error 
 				forked = new (Constructor[ TypeName ])(...args);
 			} else {
 				// fork.call ? let's do it !
@@ -140,11 +147,12 @@ const MnemonicaProtoProps = {
 
 	sibling () {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias, @typescript-eslint/no-explicit-any
-		const self: any = this;
 		const siblings = (SiblingTypeName: string) => {
+
+			const props = getProps(this) as Props;
 			const {
 				__collection__: collection,
-			} = self;
+			} = props;
 			const sibling: any = collection[ SiblingTypeName ];
 			return sibling;
 		};
@@ -294,6 +302,7 @@ const mnemosyneProxyHandlerGet = (target: any, prop: string, receiver: any) => {
 	// prototype of proxy
 	const instance: any = Reflect.getPrototypeOf(receiver);
 
+	const props = getProps(instance) as Props;
 	const {
 		__type__: {
 			config: {
@@ -301,7 +310,8 @@ const mnemosyneProxyHandlerGet = (target: any, prop: string, receiver: any) => {
 			},
 			subtypes
 		},
-	} = instance;
+	} = props;
+
 
 	const subtype = subtypes.has(prop) ?
 		subtypes.get(prop) :
@@ -366,18 +376,18 @@ const Mnemosyne = function (gaia: any) {
 
 	Reflect.setPrototypeOf(instance, proto);
 
-	TypesRoots.set(instance, proto);
+	InstanceRoots.set(instance, proto);
 
 } as ConstructorFunction<typeof MnemonicaProtoProps>;
 
 const createMnemosyne = function (Uranus: unknown) {
 	// constructs new Gaia -> new Mnemosyne
 	// to build the first instance in chain
-	const uranus = reflectPrimitiveWrappers( Uranus );
-	const mnemosyne = new Mnemosyne( new Gaia( uranus ) );
-	const mnemosyneProxy = new Proxy( mnemosyne, {
+	const uranus = reflectPrimitiveWrappers(Uranus);
+	const mnemosyne = new Mnemosyne(new Gaia(uranus));
+	const mnemosyneProxy = new Proxy(mnemosyne, {
 		get : mnemosyneProxyHandlerGet
-	} );
+	});
 
 	return mnemosyneProxy;
 };
@@ -387,10 +397,10 @@ export default {
 	get createMnemosyne () {
 		return createMnemosyne;
 	},
-	get MnemosynePrototypeKeys () {
-		return MnemosynePrototypeKeys;
-	},
-	get TypesRoots () {
-		return TypesRoots;
-	}
+	// get MnemosynePrototypeKeys () {
+	// 	return MnemosynePrototypeKeys;
+	// },
+	// get InstanceRoots () {
+	// 	return InstanceRoots;
+	// }
 };

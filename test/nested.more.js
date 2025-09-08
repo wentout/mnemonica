@@ -18,7 +18,7 @@ const {
 	},
 	defaultTypes: types,
 	SymbolConstructorName,
-	MNEMONICA
+	MNEMONICA,
 } = mnemonica;
 
 

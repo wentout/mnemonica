@@ -24,6 +24,8 @@ const {
 
 import { makeInstanceModificator } from '../types/InstanceModificator';
 
+import { getProps, Props } from '../types/addProps';
+
 const checkThrowArgs = ( instance: any, target: any, error: Error, args: any[] ) => {
 
 	let wrongThrow;
@@ -161,10 +163,12 @@ const prepareException = function ( this: any, target: any, error: Error, ...arg
 
 	checkThrowArgs( instance, target, error, args );
 
+	const props = getProps(instance) as Props;
+
 	const {
 		__type__,
 		__creator__
-	} = instance;
+	} = props;
 
 
 	const {

@@ -5,6 +5,8 @@ const {
 	WRONG_INSTANCE_INVOCATION
 } = ErrorsTypes;
 
+import { getProps, Props } from '../api/types/addProps';
+
 // seek for firts parent instance
 // of instance prototype chain
 // with constructors of path
@@ -15,13 +17,15 @@ export const parent = ( instance: any, path: string ): any => {
 		throw new WRONG_INSTANCE_INVOCATION;
 	}
 
-	const {
-		__parent__: p
-	} = instance;
+	const props = getProps(instance) as Props;
 
-	if ( !p ) {
+	if ( !props ) {
 		return;
 	}
+
+	const {
+		__parent__: p
+	} = props;
 
 	if ( !path ) {
 		return p;

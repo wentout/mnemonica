@@ -5,7 +5,7 @@ const {
 	WRONG_INSTANCE_INVOCATION
 } = ErrorsTypes;
 
-import { hop } from './hop';
+// import { hop } from './hop';
 
 export const extract = ( instance: any ) => {
 
@@ -17,9 +17,9 @@ export const extract = ( instance: any ) => {
 	const extracted: { [ index: string ]: any } = {};
 
 	for ( const name in instance ) {
-		if ( name === 'constructor' && !hop( instance, name ) ) {
-			continue;
-		}
+		// if ( name === 'constructor' && !hop( instance, name ) ) {
+		// 	continue;
+		// }
 		// if (name === 'timestamp') {
 		// 	continue;
 		// }

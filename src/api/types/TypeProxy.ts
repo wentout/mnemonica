@@ -21,6 +21,8 @@ const { createMnemosyne } = mnemosynes;
 
 import { InstanceCreator } from './InstanceCreator';
 
+import { /* getProps, Props, */ TypeDef } from './addProps';
+
 export const TypeProxy = function ( __type__: any, Uranus: unknown ) {
 	Object.assign( this, {
 		__type__,
@@ -30,7 +32,9 @@ export const TypeProxy = function ( __type__: any, Uranus: unknown ) {
 	return typeProxy;
 } as ConstructorFunction<any>;
 
-TypeProxy.prototype.get = function ( target: any, prop: string ) {
+TypeProxy.prototype.get = function ( target: any, prop: keyof TypeDef ) {
+	
+	// const props = getProps(this) as Props;
 
 	const {
 		__type__: type

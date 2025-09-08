@@ -44,13 +44,11 @@ const getClassConstructor = ( ConstructHandler: any, CreationHandler: any, ) => 
 
 const getFunctionConstructor = ( ConstructHandler: any, CreationHandler: any, ) => {
 	const newable = Object.hasOwnProperty.call( ConstructHandler, 'prototype' );
-	// const hasReturnStatement = ConstructHandler.toString().indexOf('return') > -1;
 	return function ( this: any, ...args: any[] ) {
 		let answer;
 		// if (!new.target) {
 		// 	debugger;
 		// }
-		// if (hasReturnStatement || !newable) {
 		if ( !newable ) {
 			answer = ConstructHandler.call( this, ...args );
 		} else {
@@ -65,7 +63,7 @@ const getFunctionConstructor = ( ConstructHandler: any, CreationHandler: any, ) 
 };
 
 const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass = false ) {
-	return function ( ConstructHandler: any, CreationHandler: any, SymbolConstructorName: symbol ): any {
+	return function ( ConstructHandler: CallableFunction, CreationHandler: CallableFunction, SymbolConstructorName: symbol ): any {
 		return function () {
 			let ModificationBody: any;
 			if ( asClass ) {
@@ -87,6 +85,9 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 					return FunctionName;
 				}
 			} );
+			// Object.freeze( ModificationBody.prototype.constructor );
+			// Object.freeze( ModificationBody.prototype );
+			// Object.freeze( ModificationBody );
 			return ModificationBody;
 		};
 	};

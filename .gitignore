@@ -10,3 +10,4 @@ coveragejest
 test/example.js
 .npmrc
 .vscode
+.continue

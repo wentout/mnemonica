@@ -1,2 +1,2 @@
-declare const compileNewModificatorFunctionBody: (FunctionName: string, asClass?: boolean) => (ConstructHandler: any, CreationHandler: any, SymbolConstructorName: symbol) => any;
+declare const compileNewModificatorFunctionBody: (FunctionName: string, asClass?: boolean) => (ConstructHandler: CallableFunction, CreationHandler: CallableFunction, SymbolConstructorName: symbol) => any;
 export default compileNewModificatorFunctionBody;

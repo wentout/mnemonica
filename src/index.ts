@@ -12,6 +12,7 @@ import {
 	IDefinitorInstance
 } from './types';
 export type { IDEF, ConstructorFunction } from './types';
+export {  getProps } from './api/types/addProps';
 
 import { constants } from './constants';
 const { odp } = constants;
