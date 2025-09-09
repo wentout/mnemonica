@@ -40,4 +40,4 @@ export type Props = {
 export declare const _getProps: (instance: object, base?: object) => Props | undefined;
 export declare const _setSelf: (instance: object) => void;
 export declare const getProps: (instance: object) => Props | undefined;
-export declare const setProps: (instance: object, values: object) => boolean;
+export declare const setProps: (instance: object, _values: object) => string[] | false;

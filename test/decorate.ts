@@ -38,9 +38,6 @@ export const myDecoratedSubSubInstance = apply( myDecoratedSubInstance, MyDecora
 // @ts-ignore
 const MyOtherFn = MyDecoratedClass.define('MyOtherFn', function () {
 	this.prop = 321;
-	debugger;
 });
 
 export const myOtherInstance = apply( myDecoratedInstance, MyOtherFn );
-
-debugger;

@@ -8,10 +8,20 @@ const {
 
 const __props__ = new WeakMap();
 
-export const _addProps = function (this: any): any {
+const nativeProps = new Set([
+	'__proto_proto__',
+	'__args__',
+	'__collection__',
+	'__subtypes__',
+	'__type__',
+	'__parent__',
+	'__stack__',
+	'__creator__',
+	'__timestamp__',
+	'__self__',
+]);
 
-	// eslint-disable-next-line no-debugger
-	// debugger;
+export const _addProps = function (this: any): any {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
@@ -91,6 +101,7 @@ export const _addProps = function (this: any): any {
 		}
 	});
 
+	// __props__.set(self, value);
 	__props__.set(proto, value);
 
 };
@@ -137,14 +148,22 @@ export type Props = {
 	}
 }
 
+const isObjectNature = (instance: unknown) => {
+	if (instance instanceof Object) return true;
+	if (typeof instance === 'object' && instance != null) return true;
+	return false;
+};
+
 export const _getProps = (instance: object, base?: object): Props | undefined => {
+	if (!isObjectNature(instance)) return undefined;
 	const proto = Reflect.getPrototypeOf(instance) as object;
-	if (base !== undefined && (base.constructor !== proto.constructor)) {
+	if (base !== undefined && isObjectNature(base) && isObjectNature(proto) && (base.constructor !== proto.constructor)) {
 		// here we got rid of unnecessary chain dive
 		return undefined;
 	}
 	const result = __props__.get(proto);
 	if (result === undefined) {
+		// so we jumping deeper here
 		if (base === undefined) {
 			base = instance;
 		}
@@ -154,6 +173,7 @@ export const _getProps = (instance: object, base?: object): Props | undefined =>
 };
 
 export const _setSelf = (instance: object): void => {
+	// const props = __props__.get(instance);
 	const props = _getProps(instance);
 	Object.defineProperty(props, '__self__', {
 		get () {
@@ -164,32 +184,39 @@ export const _setSelf = (instance: object): void => {
 };
 
 export const getProps = (instance: object): Props | undefined => {
-
 	const props = _getProps(instance);
 	if (props) {
-		const additions = __props__.get(props);
-		if (additions instanceof Object) {
+		const _additions = __props__.get(props);
+		if (_additions instanceof Object) {
 			const descriptors = Object.getOwnPropertyDescriptors(props);
-			const answer = { ...additions };
-			Object.defineProperties(additions, descriptors);
-			return answer;
+			const additions = Object.getOwnPropertyDescriptors(_additions);
+			const answer = {};
+			Object.defineProperties(answer, additions);
+			Object.defineProperties(answer, descriptors);
+			return answer as Props;
 		} else {
 			return props;
 		}
 	}
 	return undefined;
-
 };
 
-export const setProps = (instance: object, values: object): boolean => {
-
+export const setProps = (instance: object, _values: object): string[] | false => {
 	const props = _getProps(instance);
 	if (props) {
-		__props__.set(props, values);
-		return true;
+		const values = Object.getOwnPropertyDescriptors(_values);
+		const written: string[] = [];
+		const allowed = {};
+		Object.entries(values).forEach(([ name, value ]) => {
+			if (!nativeProps.has(name)) {
+				written.push(name);
+				Object.defineProperty(allowed, name, value);
+			}
+		});
+		__props__.set(props, allowed);
+		return written;
 	}
 	return false;
-
 };
 
 module.exports = {

@@ -133,7 +133,5 @@ exports.myDecoratedSubSubInstance = (0, __1.apply)(exports.myDecoratedSubInstanc
 // @ts-ignore
 var MyOtherFn = MyDecoratedClass.define('MyOtherFn', function () {
     this.prop = 321;
-    debugger;
 });
 exports.myOtherInstance = (0, __1.apply)(exports.myDecoratedInstance, MyOtherFn);
-debugger;

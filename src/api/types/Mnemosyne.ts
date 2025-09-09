@@ -33,8 +33,6 @@ import { _getProps, Props } from './Props';
 
 const InstanceRoots = new WeakMap;
 
-
-
 const Gaia = function (Uranus: any) {
 
 	const gaiaProto = Uranus ? Uranus : this;
