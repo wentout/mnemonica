@@ -76,7 +76,7 @@ TypeProxy.prototype.set = function ( __: any, name: string, value: any ) {
 	// is about setting a prototype to Type
 	if ( name === 'prototype' ) {
 		checkProto( value );
-		type.proto = value;
+		Object.assign(type.proto, value);
 		return true;
 	}
 

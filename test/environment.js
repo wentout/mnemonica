@@ -620,6 +620,24 @@ const tests = (opts) => {
 			});
 		});
 
+		describe('should respect prototype', () => {
+			it('check prototype is correct', () => {
+				const MyProtoCheckFn = function () { };
+				MyProtoCheckFn.prototype.asdf = 123;
+				MyProtoCheckFn.prototype.fdsa = 123;
+				debugger;
+				const MyProtoCheckType = define(MyProtoCheckFn);
+				expect(MyProtoCheckType.proto.asdf).equal(MyProtoCheckFn.prototype.asdf);
+				MyProtoCheckType.prototype = { asdf : 321 };
+				expect(MyProtoCheckType.proto.asdf).equal(321);
+				expect(MyProtoCheckFn.prototype.asdf).equal(123);
+
+				const myProtoCheckInstance = new MyProtoCheckType();
+				expect(myProtoCheckInstance.asdf).equal(321);
+				expect(myProtoCheckInstance.fdsa).equal(123);
+			});
+		});
+
 		describe('should throw with wrong definition', () => {
 			[
 				
@@ -627,7 +645,6 @@ const tests = (opts) => {
 					const WrongType = define(function ToBecomeWrong () {}, true);
 					WrongType.prototype = Object.create(null);
 				}, errors.WRONG_TYPE_DEFINITION ],
-
 
 				[ 'wrong type definition : TypeName should start with Uppercase Letter', () => {
 					// next line same as 
