@@ -36,7 +36,6 @@ import compileNewModificatorFunctionBody from './compileNewModificatorFunctionBo
 
 import TypesUtils from '../utils';
 const {
-	checkProto,
 	getTypeChecker,
 	CreationHandler,
 	getTypeSplitPath,
@@ -67,8 +66,6 @@ const TypeDescriptor = function (
 	if ( types.has( TypeName ) ) {
 		throw new ALREADY_DECLARED;
 	}
-
-	checkProto( proto );
 
 	// const subtypes = descriptors.createTypesCollection();
 	const subtypes = new Map();
@@ -181,28 +178,11 @@ const defineUsingType = function ( this: any, subtypes: any, constructHandlerGet
 	);
 };
 
-const extractNonEnumerableProps = ( _obj: object ) => {
-	const extracted = Object.entries( Object.getOwnPropertyDescriptors( _obj ) ).reduce( ( obj, entry ) => {
-		const [ name, { value } ] = entry;
-		odp( obj, name, {
-			value,
-			configurable : true,
-			enumerable   : true,
-			writable     : true,
-		}
-		);
-		return obj;
-	}, {} );
-	return extracted;
-};
-
-
 const defineUsingFunction = function (
 	this: any,
 	subtypes: any,
 	TypeName: string,
 	constructHandler = function () { },
-	proto: any,
 	config: any = {}
 ) {
 
@@ -219,18 +199,6 @@ const defineUsingFunction = function (
 		SymbolConstructorName
 	);
 
-	if ( !proto ) {
-		if ( hop( constructHandler, 'prototype' ) ) {
-			proto = Object.assign( {}, constructHandler.prototype );
-		} else {
-			proto = {};
-		}
-	}
-
-	if ( asClass ) {
-		proto = extractNonEnumerableProps( proto );
-	}
-
 	if ( config instanceof Function ) {
 		config = {
 			ModificationConstructor : config
@@ -244,11 +212,17 @@ const defineUsingFunction = function (
 
 	config.asClass = asClass;
 
+	const proto = hop( constructHandler, 'prototype' ) &&
+		( constructHandler.prototype instanceof Object ) ?
+		Object.assign( {}, constructHandler.prototype ) :
+		{};
+
 	return new TypeDescriptor(
 		this,
 		subtypes,
 		TypeName,
 		makeConstructHandler,
+		// proto prop for TypeDescriptor
 		proto,
 		config
 	);
@@ -256,7 +230,7 @@ const defineUsingFunction = function (
 };
 
 
-export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: string | any, constructHandlerOrConfig: any, proto: object, config: object ) {
+export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: string | any, constructHandlerOrConfig: any, config: object ) {
 
 	if ( typeof TypeOrTypeName === 'function' ) {
 		if ( TypeOrTypeName.name ) {
@@ -277,7 +251,7 @@ export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: 
 		if ( !Type ) {
 
 			if ( split.length === 1 ) {
-				return defineUsingFunction.call( this, subtypes, TypeOrTypeName, constructHandlerOrConfig, proto, config );
+				return defineUsingFunction.call( this, subtypes, TypeOrTypeName, constructHandlerOrConfig, config );
 			}
 
 			throw new WRONG_TYPE_DEFINITION( `${split[ 0 ]} definition is not yet exists` );
@@ -286,13 +260,13 @@ export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: 
 		const TypeName = split.slice( 1 ).join( '.' );
 
 		if ( split.length > 1 ) {
-			return define.call( this, Type.subtypes, TypeName, constructHandlerOrConfig, proto, config );
+			return define.call( this, Type.subtypes, TypeName, constructHandlerOrConfig, config );
 		}
 
 		// so, here we go with
 		// defineUsingType.call
 		// from the next step
-		return define.call( this, Type.subtypes, constructHandlerOrConfig, proto, config );
+		return define.call( this, Type.subtypes, constructHandlerOrConfig, config );
 
 	}
 

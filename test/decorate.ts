@@ -1,6 +1,6 @@
 import { decorate, apply, ConstructorFunction } from '..';
 
-@decorate( undefined, {}, { strictChain : false } )
+@decorate( undefined, { strictChain : false } )
 class MyDecoratedClass {
 	field: number;
 	constructor () {

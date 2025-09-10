@@ -6,6 +6,8 @@ const odp = ( o, p, attributes ) => {
 
 module.exports.boundMethodErrorHandler = ( exceptionReason ) => {
 
+	debugger;
+
 	const {
 		applyTo,
 		args,

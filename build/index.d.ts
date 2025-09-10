@@ -2,12 +2,12 @@ import { TypeLookup, IDEF, hook, hooksTypes, constructorOptions, Proto, SN, IDef
 export type { IDEF, ConstructorFunction } from './types';
 export { getProps, setProps } from './api/types/Props';
 export declare const defaultTypes: any;
-export declare const define: <T, P extends object, N extends Proto<P, T>, S extends SN & N, R extends IDefinitorInstance<N, S>>(this: unknown, TypeName?: string, constructHandler?: IDEF<T>, proto?: P, config?: constructorOptions) => R;
+export declare const define: <T, P extends object, N extends Proto<P, T>, S extends SN & N, R extends IDefinitorInstance<N, S>>(this: unknown, TypeName?: string, constructHandler?: IDEF<T>, config?: constructorOptions) => R;
 export declare const lookup: TypeLookup;
 export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, ...args: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>) => (...args: unknown[]) => { [key in keyof S]: S[key]; };
-export declare const decorate: (parentClass?: unknown, proto?: object, config?: constructorOptions) => <T extends {
+export declare const decorate: (parentClass?: unknown, config?: constructorOptions) => <T extends {
     new (): unknown;
 }>(cstr: T, s: ClassDecoratorContext<T>) => T;
 export declare const registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;

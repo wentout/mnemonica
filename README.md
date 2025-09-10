@@ -54,15 +54,10 @@ const TypeModificationProcedure = function (opts) {
 	Object.assign(this, opts);
 };
 
-// prototype definition is NOT obligatory
-const TypeModificationPrototypeProperties = {
-	description : 'SomeType Constructor'
-};
-
 // SomeTypeConstructor -- is a constructor.name
 const SomeType = define('SomeTypeConstructor',
-		TypeModificationProcedure,
-			TypeModificationPrototypeProperties);
+	TypeModificationProcedure,
+);
 
 ```
 
@@ -590,7 +585,7 @@ Also nothing will warn you from doing this for SubTypes:
 
 ```js
 const NestedAsyncType = AsyncType
-	.define('NestedAsyncType',async function (data) {
+	.define('NestedAsyncType', async function (data) {
 		return Object.assign(this, {
 			data
 		});

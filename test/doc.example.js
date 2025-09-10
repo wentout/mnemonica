@@ -23,14 +23,7 @@ const TypeModificationProcedure = function (opts) {
 
 };
 
-const TypeModificationPrototype = {
-	description : 'SomeType Constructor'
-};
-
-const SomeType = define('SomeTypeConstructor',
-	TypeModificationProcedure,
-	// prototype definition is NOT obligatory
-	TypeModificationPrototype);
+const SomeType = define('SomeTypeConstructor', TypeModificationProcedure);
 
 const SomeSubType = SomeType.define('SomeSubType', function (opts) {
 	const {
@@ -43,8 +36,6 @@ const SomeSubType = SomeType.define('SomeSubType', function (opts) {
 	// our previously defined property
 	// with the new value
 	this.inside = inside;
-}, {
-	description : 'SomeSubType Constructor'
 });
 
 const someTypeInstance = new SomeType({
