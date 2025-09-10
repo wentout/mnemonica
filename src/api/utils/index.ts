@@ -203,7 +203,7 @@ const isClass = ( fn: CallableFunction ) => {
 	// if (typeof fn !== 'function') {
 	// 	return false;
 	// }
-	if ( typeof fn.prototype !== 'object' ) {
+	if ( !(fn.prototype instanceof Object) ) {
 		return false;
 	}
 	if ( fn.prototype.constructor !== fn ) {

@@ -61,7 +61,6 @@ const tests = ( opts ) => {
 	} );
 
 	describe( 'async construct should NOT return something', async () => {
-
 		let thrown;
 		try {
 			thrown = await new AsyncWOReturnNAR();
@@ -80,14 +79,14 @@ const tests = ( opts ) => {
 		var WrongSyncType = define( 'WrongSyncType', function ( data ) {
 			const self = new UserType( data );
 			return self;
-		}, {}, {
+		}, {
 			submitStack : true
 		} );
 
 		var WrongAsyncType = define( 'WrongAsyncType', async function ( data ) {
 			const self = new UserType( data );
 			return self;
-		}, {}, {
+		}, {
 			submitStack : true,
 		} );
 
@@ -338,7 +337,7 @@ const tests = ( opts ) => {
 			const b = { ...args };
 			// TypeError
 			b.c.async = null;
-		}, {}, {
+		}, {
 			blockErrors : false
 		} );
 
@@ -346,7 +345,7 @@ const tests = ( opts ) => {
 			const b = { ...args };
 			// TypeError
 			b.c.sync = null;
-		}, {}, {
+		}, {
 			blockErrors : false
 		} );
 

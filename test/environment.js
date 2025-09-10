@@ -177,11 +177,11 @@ const tests = (opts) => {
 
 			const NamedFunction = UserType.define(async function NamedFunction () {
 				this.type = 'function';
-				return this;
-			}, {
-				getTypeValue () {
+				this.getTypeValue  = () => {
 					return this.type;
-				}
+				};
+
+				return this;
 			});
 
 			it('named function definition exist', () => {
@@ -515,7 +515,7 @@ const tests = (opts) => {
 			const BadType = define('BadType', function (NotThis) {
 				// returns not instanceof this
 				return NotThis;
-			}, {}, {
+			}, {
 				submitStack : true
 			});
 			var hookInstance;
@@ -622,9 +622,13 @@ const tests = (opts) => {
 
 		describe('should throw with wrong definition', () => {
 			[
+				
 				[ 'wrong type definition : expect prototype to be an object', () => {
-					define('Wrong', function () { }, true);
+					const WrongType = define(function ToBecomeWrong () {}, true);
+					WrongType.prototype = Object.create(null);
 				}, errors.WRONG_TYPE_DEFINITION ],
+
+
 				[ 'wrong type definition : TypeName should start with Uppercase Letter', () => {
 					// next line same as 
 					// define('wrong', function () { /* ... */ });
@@ -637,7 +641,7 @@ const tests = (opts) => {
 					define();
 				}, errors.WRONG_TYPE_DEFINITION ],
 				[ 'handler must be a function', () => {
-					define('NoConstructFunctionType', NaN, '', 'false');
+					define('NoConstructFunctionType', NaN, 'false');
 				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
 				[ 'handler must be a function', () => {
 					define(() => {

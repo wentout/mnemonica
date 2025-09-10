@@ -43,11 +43,10 @@ export const define = function <
 	this: unknown,
 	TypeName?: string,
 	constructHandler?: IDEF<T>,
-	proto?: P,
 	config?: constructorOptions,
 ): R {
 	const types = checkThis( this ) ? defaultTypes : this || defaultTypes;
-	return types.define( TypeName, constructHandler, proto, config );
+	return types.define( TypeName, constructHandler, config );
 };
 
 export const lookup = function ( TypeNestedPath ) {
@@ -81,13 +80,13 @@ export const bind = function <E extends object, T extends object, S extends Prot
 	};
 };
 
-export const decorate = function ( parentClass: unknown = undefined, proto?: object, config?: constructorOptions ) {
+export const decorate = function ( parentClass: unknown = undefined, config?: constructorOptions ) {
 	const decorator = function <T extends { new(): unknown }> ( cstr: T, s: ClassDecoratorContext<T> ): T {
 		if ( parentClass === undefined ) {
-			return define( s.name, cstr, proto, config ) as unknown as T ;
+			return define( s.name, cstr, config ) as unknown as T ;
 		}
 		// @ts-ignore
-		return parentClass.define( s.name, cstr, proto, config ) as unknown as T;
+		return parentClass.define( s.name, cstr, config ) as unknown as T;
 	};
 	return decorator;
 };

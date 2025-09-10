@@ -8,7 +8,6 @@ const odp = ( obj, prop, attributes ) => {
 	try {
 		return Object.defineProperty( obj, prop, attributes );
 	} catch ( error ) {
-		debugger;
 		console.error( error );
 	}
 };
@@ -57,6 +56,7 @@ const bindMethod = function ( hookData, instance, methodName, MethodItself ) {
 
 					return answer;
 				} catch ( error ) {
+					debugger;
 					odp( exceptionReason, 'error', {
 						value      : error,
 						enumerable : true
@@ -83,7 +83,8 @@ const bindProtoMethods = function ( hookData ) {
 		if ( mayBeMethodName === 'constructor' ) {
 			return;
 		}
-		if ( MayBeMethodFunction instanceof Function && proto[ mayBeMethodName ] instanceof Function ) {
+		// if ( MayBeMethodFunction instanceof Function && proto[ mayBeMethodName ] instanceof Function ) {
+		if ( MayBeMethodFunction instanceof Function || proto[ mayBeMethodName ] instanceof Function ) {
 			// if (!hop(inheritedInstance, mayBeMethodName)) {
 			bindMethod( hookData, protoPointer, mayBeMethodName, MayBeMethodFunction );
 			// }
