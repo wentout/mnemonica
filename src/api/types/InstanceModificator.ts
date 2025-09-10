@@ -1,6 +1,6 @@
 'use strict';
 
-import { addProps } from './addProps';
+import { _addProps } from './Props';
 
 export const makeInstanceModificator = ( self: any ) => {
 
@@ -17,7 +17,7 @@ export const makeInstanceModificator = ( self: any ) => {
 		Object.assign( {}, proto ),
 		( __proto_proto__: any ) => {
 			self.__proto_proto__ = __proto_proto__;
-			addProps.call( self );
+			_addProps.call( self );
 		}
 	);
 

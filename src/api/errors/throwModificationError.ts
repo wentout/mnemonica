@@ -164,7 +164,8 @@ export const throwModificationError = function ( this: any, error: any ) {
 	odp( erroredInstance, 'extract', {
 		get () {
 			return () => {
-				return erroredInstance.__self__.extract();
+				const parent = erroredInstance.parent();
+				return parent.extract();
 			};
 		}
 	} );

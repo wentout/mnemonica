@@ -6,18 +6,16 @@ export default function (obey: CallableFunction) {
 		this: object,
 		ModificatorType: CallableFunction,
 		ModificatorTypePrototype: { [index: string]: unknown },
-		addProps: CallableFunction
+		_addProps: CallableFunction
 	) {
 
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const existentInstance = this;
 
-		// const TripleSchemeClosure = function () {
-		// const Mnemosyne = this;
-
+		// inherited
 		const Mnemosyne = {};
 		Reflect.setPrototypeOf(Mnemosyne, existentInstance);
-		addProps(Mnemosyne);
+		_addProps(Mnemosyne);
 
 		// about to setup constructor property for new instance
 		// Object.defineProperty(inherited, 'constructor', {
@@ -30,38 +28,21 @@ export default function (obey: CallableFunction) {
 
 		// modification itself
 		// so now we have to copy all constructor props
-		Object.entries(ModificatorTypePrototype).forEach((entry) => {
-			const [ name, value ] = entry;
-			if (
-				name !== 'constructor'
-				// &&
-				// name !== SymbolConstructorName
-			) {
-				(ModificatorType.prototype[ name ] = value);
-			}
-		});
-		// 1. next line is done 4 our console.log will print proper type
-		// and it should be explicit declaration, or it wouldn't see
-		// ModificatorType.prototype.constructor = ModificatorType;
-		// therfore the following lines are commented
-		Object.defineProperty(ModificatorType.prototype, 'constructor', {
+		const props = Object.getOwnPropertyDescriptors(ModificatorTypePrototype);
+		props.constructor = {
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-expect-error
 			value : ModificatorType
-			// get () {
-			// 	return ModificatorType;
-			// }
-		});
+		};
+		Object.defineProperties(ModificatorType.prototype, props);
 
 		// and set the prototype inherited
-		Reflect.setPrototypeOf(ModificatorType.prototype, Mnemosyne);
 		// Reflect.setPrototypeOf(ModificatorType.prototype, inherited);
+		Reflect.setPrototypeOf(ModificatorType.prototype, Mnemosyne);
 
 		obey(existentInstance, ModificatorType);
 
 		return ModificatorType;
-
-		// };
-		// TripleSchemeClosure.prototype = existentInstance;
-		// return new TripleSchemeClosure();
 
 	};
 

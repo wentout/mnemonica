@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "0.9.995",
+  "version": "0.9.996",
   "description": "abstract technique that aids information retention : instance inheritance system",
   "type": "commonjs",
   "main": "./build/index.js",
@@ -25,7 +25,8 @@
   },
   "contributors": [
     "laplandin <laplandin.denis@gmail.com>",
-    "petrgrishin <iam@petrgrishin.com>"
+    "petrgrishin <iam@petrgrishin.com>",
+    "Mobydack <devzetsubou@gmail.com>"
   ],
   "scripts": {
     "build": "rm -rf ./build && npx tsc --pretty --project tsconfig.json && npm run lint && npm run lint:src && npm run lint:test",
