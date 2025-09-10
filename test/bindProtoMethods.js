@@ -83,8 +83,8 @@ const bindProtoMethods = function ( hookData ) {
 		if ( mayBeMethodName === 'constructor' ) {
 			return;
 		}
-		// if ( MayBeMethodFunction instanceof Function && proto[ mayBeMethodName ] instanceof Function ) {
-		if ( MayBeMethodFunction instanceof Function || proto[ mayBeMethodName ] instanceof Function ) {
+		if ( MayBeMethodFunction instanceof Function && proto[ mayBeMethodName ] instanceof Function ) {
+		// if ( MayBeMethodFunction instanceof Function || proto[ mayBeMethodName ] instanceof Function ) {
 			// if (!hop(inheritedInstance, mayBeMethodName)) {
 			bindMethod( hookData, protoPointer, mayBeMethodName, MayBeMethodFunction );
 			// }

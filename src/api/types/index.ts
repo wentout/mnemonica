@@ -234,7 +234,7 @@ export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: 
 
 	if ( typeof TypeOrTypeName === 'function' ) {
 		if ( TypeOrTypeName.name ) {
-			return define.call( this, subtypes, TypeOrTypeName.name, TypeOrTypeName, constructHandlerOrConfig || TypeOrTypeName.prototype, config );
+			return define.call( this, subtypes, TypeOrTypeName.name, TypeOrTypeName, config );
 		} else {
 			return defineUsingType.call( this, subtypes, TypeOrTypeName, constructHandlerOrConfig );
 		}
