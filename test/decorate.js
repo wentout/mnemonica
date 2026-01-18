@@ -40,7 +40,7 @@ var __setFunctionName = (this && this.__setFunctionName) || function (f, name, p
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.myOtherInstance = exports.myDecoratedSubSubInstance = exports.myDecoratedSubInstance = exports.myDecoratedInstance2 = exports.myDecoratedInstance = void 0;
-// fails on loading sourcemap ↓↓↓ 
+// fails on loading sourcemap ↓↓↓
 // npx tsc --target es6 --moduleResolution NodeNext --module NodeNext --sourceMap --inlineSources ./test/decorate.ts
 // works ↓↓↓
 // npx tsc --target es6 --moduleResolution NodeNext --module NodeNext --sourceMap ./test/decorate.ts

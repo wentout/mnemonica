@@ -95,7 +95,6 @@ const MyFn = function () {
 // Object.setPrototypeOf(MyFn.prototype, new BaseClass);
 @decorate(MyDecoratedSubClass)
 class MyDecoratedSubSubClass extends MyFn {
-	sub_sub_field: number;
 	constructor() {
 		super();
 		this.sub_sub_field = 321;
