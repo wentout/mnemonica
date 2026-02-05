@@ -121,12 +121,13 @@ export const decorate = function (
 		config = parentClass as constructorOptions;
 		parentClass = undefined;
 	}
-	const decorator = function <T extends { new(): unknown }>(cstr: T, s: ClassDecoratorContext<T>): T {
+	const decorator = function <T extends { new(): unknown }>(cstr: T, s?: ClassDecoratorContext<T>): T {
+		const name = typeof s === 'object' ? s.name : cstr.constructor.name;
 		if (parentClass === undefined) {
-			return define(s.name, cstr, config) as unknown as T;
+			return define(name, cstr, config) as unknown as T;
 		}
 		// @ts-ignore
-		return parentClass.define(s.name, cstr, config) as unknown as T;
+		return parentClass.define(name, cstr, config) as unknown as T;
 	};
 	return decorator;
 };

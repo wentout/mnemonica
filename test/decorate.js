@@ -39,14 +39,14 @@ var __setFunctionName = (this && this.__setFunctionName) || function (f, name, p
     return Object.defineProperty(f, "name", { configurable: true, value: prefix ? "".concat(prefix, " ", name) : name });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.myOtherInstance = exports.myDecoratedSubSubInstance = exports.myDecoratedSubInstance = exports.myDecoratedInstance2 = exports.myDecoratedInstance = void 0;
+exports.midAddDecoratorSubExt = exports.midAddDecoratorBaseExt = exports.midDecoratorExt = exports.midDecoratorBase = exports.exSupTest = exports.exTest = exports.myOtherInstance = exports.myDecoratedSubSubInstance = exports.myDecoratedSubInstance = exports.myDecoratedInstance2 = exports.myDecoratedInstance = void 0;
 // fails on loading sourcemap ↓↓↓
 // npx tsc --target es6 --moduleResolution NodeNext --module NodeNext --sourceMap --inlineSources ./test/decorate.ts
 // works ↓↓↓
 // npx tsc --target es6 --moduleResolution NodeNext --module NodeNext --sourceMap ./test/decorate.ts
 const __1 = require("..");
 const typeomatica_1 = require("typeomatica");
-debugger;
+// debugger;
 const deep = { deep: true };
 class Base {
     constructor() {
@@ -94,7 +94,7 @@ const somes = new SomeS;
 console.log(somes);
 // @ts-ignore
 console.log('somes.deep', somes.deep);
-debugger;
+// debugger;
 // @ts-ignore
 class BaseE extends typeomatica_1.BaseClass {
     constructor() {
@@ -111,7 +111,7 @@ class SomeE extends BaseE {
 }
 const esome = new SomeE;
 console.log(esome);
-debugger;
+// debugger;
 let MyDecoratedClass = (() => {
     let _classDecorators = [(0, __1.decorate)({ blockErrors: true }), (0, typeomatica_1.Strict)()];
     let _classDescriptor;
@@ -119,9 +119,9 @@ let MyDecoratedClass = (() => {
     let _classThis;
     var MyDecoratedClass = _classThis = class {
         constructor() {
-            // debugger;
+            // // debugger;
             // super();
-            // debugger;
+            // // debugger;
             this.field = 123;
         }
     };
@@ -135,7 +135,7 @@ let MyDecoratedClass = (() => {
     })();
     return MyDecoratedClass = _classThis;
 })();
-debugger;
+// debugger;
 const immediateInstance = new MyDecoratedClass;
 console.log(immediateInstance);
 let MyDecoratedSubClass = (() => {
@@ -158,10 +158,11 @@ let MyDecoratedSubClass = (() => {
     })();
     return MyDecoratedSubClass = _classThis;
 })();
-debugger;
+// debugger;
 exports.myDecoratedInstance = new MyDecoratedClass;
 exports.myDecoratedInstance2 = new MyDecoratedClass;
 exports.myDecoratedSubInstance = (0, __1.apply)(exports.myDecoratedInstance, MyDecoratedSubClass);
+// debugger;
 const MyFn = function () {
     this.sub_sub_field = 123;
 };
@@ -184,8 +185,7 @@ let MyDecoratedSubSubClass = (() => {
     };
     __setFunctionName(_classThis, "MyDecoratedSubSubClass");
     (() => {
-        var _a;
-        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create((_a = _classSuper[Symbol.metadata]) !== null && _a !== void 0 ? _a : null) : void 0;
+        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(_classSuper[Symbol.metadata] ?? null) : void 0;
         __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
         MyDecoratedSubSubClass = _classThis = _classDescriptor.value;
         if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
@@ -194,7 +194,7 @@ let MyDecoratedSubSubClass = (() => {
     return MyDecoratedSubSubClass = _classThis;
 })();
 exports.myDecoratedSubSubInstance = (0, __1.apply)(exports.myDecoratedSubInstance, MyDecoratedSubSubClass);
-debugger;
+// debugger;
 let MyOtherDecoratedClass = (() => {
     let _classDecorators = [(0, __1.decorate)()];
     let _classDescriptor;
@@ -209,8 +209,7 @@ let MyOtherDecoratedClass = (() => {
     };
     __setFunctionName(_classThis, "MyOtherDecoratedClass");
     (() => {
-        var _a;
-        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create((_a = _classSuper[Symbol.metadata]) !== null && _a !== void 0 ? _a : null) : void 0;
+        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(_classSuper[Symbol.metadata] ?? null) : void 0;
         __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
         MyOtherDecoratedClass = _classThis = _classDescriptor.value;
         if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
@@ -228,5 +227,165 @@ const MyOtherFn = MyOtherDecoratedClass.define('MyOtherFn', function () {
 });
 debugger;
 exports.myOtherInstance = (0, __1.apply)(myOtherDecoratedInstance, MyOtherFn);
+debugger;
+class ExtendTestingBase {
+    constructor() {
+        this.field = 333;
+    }
+}
+let ExtendTestingExt = (() => {
+    let _classDecorators = [(0, __1.decorate)()];
+    let _classDescriptor;
+    let _classExtraInitializers = [];
+    let _classThis;
+    let _classSuper = ExtendTestingBase;
+    var ExtendTestingExt = _classThis = class extends _classSuper {
+        constructor() {
+            super(...arguments);
+            this.field = 111;
+        }
+    };
+    __setFunctionName(_classThis, "ExtendTestingExt");
+    (() => {
+        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(_classSuper[Symbol.metadata] ?? null) : void 0;
+        __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
+        ExtendTestingExt = _classThis = _classDescriptor.value;
+        if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
+        __runInitializers(_classThis, _classExtraInitializers);
+    })();
+    return ExtendTestingExt = _classThis;
+})();
+exports.exTest = new ExtendTestingExt;
+// debugger;
+let ExtendTestingSupBase = (() => {
+    let _classDecorators = [(0, __1.decorate)()];
+    let _classDescriptor;
+    let _classExtraInitializers = [];
+    let _classThis;
+    var ExtendTestingSupBase = _classThis = class {
+        constructor() {
+            this.field = 333;
+        }
+    };
+    __setFunctionName(_classThis, "ExtendTestingSupBase");
+    (() => {
+        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
+        __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
+        ExtendTestingSupBase = _classThis = _classDescriptor.value;
+        if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
+        __runInitializers(_classThis, _classExtraInitializers);
+    })();
+    return ExtendTestingSupBase = _classThis;
+})();
+class ExtendTestingSupExt extends ExtendTestingSupBase {
+    constructor() {
+        super(...arguments);
+        this.field = 111;
+    }
+}
+exports.exSupTest = new ExtendTestingSupExt;
+debugger;
+const MidDecorator = (() => {
+    let _classDecorators = [(0, __1.decorate)({ strictChain: false })];
+    let _classDescriptor;
+    let _classExtraInitializers = [];
+    let _classThis;
+    var MidDecoratorBase = _classThis = class {
+        constructor() {
+            this.field = 333;
+        }
+    };
+    __setFunctionName(_classThis, "MidDecoratorBase");
+    (() => {
+        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
+        __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
+        MidDecoratorBase = _classThis = _classDescriptor.value;
+        if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
+        __runInitializers(_classThis, _classExtraInitializers);
+    })();
+    return MidDecoratorBase = _classThis;
+})();
+// @ts-ignore
+let MidDecoratorExt = (() => {
+    let _classDecorators = [MidDecorator()];
+    let _classDescriptor;
+    let _classExtraInitializers = [];
+    let _classThis;
+    var MidDecoratorExt = _classThis = class {
+        constructor() {
+            this.field = 111;
+            console.log('im here: ', this.field);
+        }
+    };
+    __setFunctionName(_classThis, "MidDecoratorExt");
+    (() => {
+        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
+        __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
+        MidDecoratorExt = _classThis = _classDescriptor.value;
+        if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
+        __runInitializers(_classThis, _classExtraInitializers);
+    })();
+    return MidDecoratorExt = _classThis;
+})();
+// @ts-ignore
+const MidAddDecorator = (() => {
+    let _classDecorators = [MidDecorator()];
+    let _classDescriptor;
+    let _classExtraInitializers = [];
+    let _classThis;
+    var MidAddDecoratorAddExt = _classThis = class {
+        constructor() {
+            this.field = 111;
+            console.log('im here: ', this.field);
+        }
+    };
+    __setFunctionName(_classThis, "MidAddDecoratorAddExt");
+    (() => {
+        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
+        __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
+        MidAddDecoratorAddExt = _classThis = _classDescriptor.value;
+        if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
+        __runInitializers(_classThis, _classExtraInitializers);
+    })();
+    return MidAddDecoratorAddExt = _classThis;
+})();
+debugger;
+// @ts-ignore
+const MidAddDecoratorSub = (() => {
+    let _classDecorators = [MidAddDecorator({ test: true })];
+    let _classDescriptor;
+    let _classExtraInitializers = [];
+    let _classThis;
+    var MidAddDecoratorAddExtSub = _classThis = class {
+        constructor() {
+            this.field = 111;
+            console.log('im here: ', this.field);
+        }
+    };
+    __setFunctionName(_classThis, "MidAddDecoratorAddExtSub");
+    (() => {
+        const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
+        __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
+        MidAddDecoratorAddExtSub = _classThis = _classDescriptor.value;
+        if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
+        __runInitializers(_classThis, _classExtraInitializers);
+    })();
+    return MidAddDecoratorAddExtSub = _classThis;
+})();
+debugger;
+exports.midDecoratorBase = new MidDecorator;
+debugger;
+exports.midDecoratorExt = (0, __1.apply)(exports.midDecoratorBase, MidDecoratorExt);
+debugger;
+exports.midAddDecoratorBaseExt = (0, __1.apply)(exports.midDecoratorBase, MidAddDecorator);
+debugger;
+try {
+    (0, __1.apply)(exports.midDecoratorBase, MidAddDecoratorSub);
+}
+catch (error) {
+    // wow
+    console.error(error);
+}
+exports.midAddDecoratorSubExt = (0, __1.apply)(exports.midAddDecoratorBaseExt, MidAddDecoratorSub);
 debugger;
 //# sourceMappingURL=decorate.js.map

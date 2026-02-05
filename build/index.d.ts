@@ -11,7 +11,7 @@ export declare const decorate: (parentClass?: {
     new (): unknown;
 } | constructorOptions | undefined, config?: constructorOptions) => <T extends {
     new (): unknown;
-}>(cstr: T, s: ClassDecoratorContext<T>) => T;
+}>(cstr: T, s?: ClassDecoratorContext<T>) => T;
 export declare const registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
 export declare const mnemonica: {
     [index: string]: unknown;

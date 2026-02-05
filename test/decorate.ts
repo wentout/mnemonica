@@ -9,7 +9,7 @@
 import { decorate, apply, ConstructorFunction } from '..';
 import { BaseClass, Strict } from 'typeomatica';
 
-debugger;
+// debugger;
 
 const deep = { deep: true };
 class Base {
@@ -36,7 +36,7 @@ console.log(somes);
 // @ts-ignore
 console.log('somes.deep', somes.deep);
 
-debugger;
+// debugger;
 
 // @ts-ignore
 class BaseE extends BaseClass {
@@ -49,7 +49,7 @@ class SomeE extends BaseE {
 const esome = new SomeE;
 console.log(esome);
 
-debugger;
+// debugger;
 @decorate({ blockErrors: true })
 // <-- with the following error -->
 // TypeError: Cannot read properties of undefined (reading 'value')
@@ -59,14 +59,14 @@ class MyDecoratedClass {
 	// class MyDecoratedClass extends BaseClass {
 	field: number;
 	constructor() {
-		// debugger;
+		// // debugger;
 		// super();
-		// debugger;
+		// // debugger;
 		this.field = 123;
 	}
 }
 
-debugger;
+// debugger;
 const immediateInstance = new MyDecoratedClass;
 console.log(immediateInstance);
 
@@ -78,11 +78,13 @@ class MyDecoratedSubClass {
 	}
 }
 
-debugger;
+// debugger;
 
 export const myDecoratedInstance = new MyDecoratedClass;
 export const myDecoratedInstance2 = new MyDecoratedClass;
 export const myDecoratedSubInstance = apply(myDecoratedInstance, MyDecoratedSubClass);
+
+// debugger;
 
 const MyFn = function () {
 	this.sub_sub_field = 123;
@@ -104,7 +106,7 @@ class MyDecoratedSubSubClass extends MyFn {
 export const myDecoratedSubSubInstance = apply(myDecoratedSubInstance, MyDecoratedSubSubClass);
 
 
-debugger;
+// debugger;
 
 @decorate()
 // @ts-ignore
@@ -133,4 +135,91 @@ debugger;
 
 export const myOtherInstance = apply(myOtherDecoratedInstance, MyOtherFn);
 
+debugger;
+
+
+class ExtendTestingBase {
+	field = 333
+}
+
+@decorate()
+class ExtendTestingExt extends ExtendTestingBase {
+	field = 111
+}
+
+export const exTest = new ExtendTestingExt;
+
+// debugger;
+
+@decorate()
+class ExtendTestingSupBase {
+	field = 333
+}
+
+class ExtendTestingSupExt extends ExtendTestingSupBase {
+	field = 111
+}
+
+export const exSupTest = new ExtendTestingSupExt;
+
+debugger;
+
+const MidDecorator = @decorate({ strictChain: false })
+class MidDecoratorBase {
+	field = 333
+}
+
+// @ts-ignore
+@MidDecorator()
+class MidDecoratorExt{
+	field = 111
+	constructor() {
+		console.log('im here: ', this.field);
+	}
+}
+
+// @ts-ignore
+const MidAddDecorator = @MidDecorator()
+class MidAddDecoratorAddExt{
+	field = 111
+	constructor() {
+		console.log('im here: ', this.field);
+	}
+}
+
+debugger;
+// @ts-ignore
+const MidAddDecoratorSub = @MidAddDecorator({ test: true })
+class MidAddDecoratorAddExtSub{
+	field = 111
+	constructor() {
+		console.log('im here: ', this.field);
+	}
+}
+
+
+debugger;
+export const midDecoratorBase = new MidDecorator;
+
+debugger;
+export const midDecoratorExt = apply(midDecoratorBase, MidDecoratorExt);
+
+debugger;
+export const midAddDecoratorBaseExt = apply(midDecoratorBase, MidAddDecorator);
+
+try {
+	debugger;
+	apply(midDecoratorBase, MidAddDecoratorSub);
+} catch (error) {
+	// wow
+	// this is either TS transpilation based
+	// or some prototype pollution 
+	// though, if it will be pollution,
+	/// then all the tests will become broken
+	// and this is not what happens
+	console.error(error);
+}
+
+debugger;
+export const midAddDecoratorSubExt = apply(midAddDecoratorBaseExt, MidAddDecoratorSub);
 debugger;
