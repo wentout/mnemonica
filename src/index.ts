@@ -20,6 +20,8 @@ const { odp } = constants;
 import * as errorsApi from './api/errors';
 import { descriptors } from './descriptors';
 
+const { WRONG_MODIFICATION_PATTERN } = descriptors.ErrorsTypes;
+
 import mnemosynes from './api/types/Mnemosyne';
 const { prepareSubtypeForConstruction } = mnemosynes;
 
@@ -71,9 +73,9 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 	const { TypeName } = Constructor;
 	const Cstr = prepareSubtypeForConstruction(TypeName, entity) as { new( ...ars: unknown[]): unknown};
 	// TODO: check lines below and if Constructor is not mnemonized ...
-	// if (Cstr === undefined) {
-	// 	throw new TypeError(`Type ${TypeName} is not defined as a .`);
-	// }
+	if (Cstr === undefined) {
+		throw new WRONG_MODIFICATION_PATTERN(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
+	}
 	const result = new Cstr(...args);
 	// @ts-ignore
 	return result;
@@ -121,8 +123,10 @@ export const decorate = function (
 		config = parentClass as constructorOptions;
 		parentClass = undefined;
 	}
-	const decorator = function <T extends { new(): unknown }>(cstr: T, s?: ClassDecoratorContext<T>): T {
-		const name = typeof s === 'object' ? s.name : cstr.constructor.name;
+	// const decorator = function <T extends { new(): unknown }>(cstr: T, s?: ClassDecoratorContext<T>): T {
+	const decorator = function <T extends { new(): unknown }>(cstr: T): T {
+		// const name = typeof s === 'object' ? s.name : cstr.constructor.name;
+		const { name } = cstr;
 		if (parentClass === undefined) {
 			return define(name, cstr, config) as unknown as T;
 		}

@@ -170,27 +170,21 @@ type parentSub = {
 	__parent__: parentSub
 }
 
-const findSubTypeFromParent = (instance: parentSub, subType: string): parentSub | undefined => {
+const findSubTypeFromParent = (instance: parentSub, subType: string): parentSub | null => {
 	let subtype = null;
-
-	// if (!instance.__subtypes__) {
-
-	// if ( !instance.__type__ ) {
-	// 	// mocha + chai makes .inspect 4 Shaper class
-	// 	// or .showDiff if something wrong with constructor
-	// 	// debugger;
-	// 	return null;
-	// }
 
 	const props = _getProps(instance) as Props;
 
-	if (props.__type__.subtypes.has(subType)) {
-		subtype = props.__type__.subtypes.get(subType);
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
-		return subtype;
+	if (props) {
+		if(props.__type__.subtypes.has(subType)) {
+			const _subtype = props.__type__.subtypes.get(subType);
+			subtype = _subtype || null;
+		} else {
+			subtype = findSubTypeFromParent(props.__parent__, subType);
+		}
 	}
-	return findSubTypeFromParent(props.__parent__, subType);
+
+	return subtype;
 };
 
 // const isClass = ( functionPointer: CallableFunction ) => {

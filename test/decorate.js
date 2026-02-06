@@ -217,17 +217,17 @@ let MyOtherDecoratedClass = (() => {
     })();
     return MyOtherDecoratedClass = _classThis;
 })();
-debugger;
+// debugger;
 const myOtherDecoratedInstance = new MyOtherDecoratedClass();
-debugger;
+// debugger;
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const MyOtherFn = MyOtherDecoratedClass.define('MyOtherFn', function () {
     this.prop = 321;
 });
-debugger;
+// debugger;
 exports.myOtherInstance = (0, __1.apply)(myOtherDecoratedInstance, MyOtherFn);
-debugger;
+// debugger;
 class ExtendTestingBase {
     constructor() {
         this.field = 333;
@@ -284,7 +284,7 @@ class ExtendTestingSupExt extends ExtendTestingSupBase {
     }
 }
 exports.exSupTest = new ExtendTestingSupExt;
-debugger;
+// debugger;
 const MidDecorator = (() => {
     let _classDecorators = [(0, __1.decorate)({ strictChain: false })];
     let _classDescriptor;
@@ -349,7 +349,7 @@ const MidAddDecorator = (() => {
     })();
     return MidAddDecoratorAddExt = _classThis;
 })();
-debugger;
+// debugger;
 // @ts-ignore
 const MidAddDecoratorSub = (() => {
     let _classDecorators = [MidAddDecorator({ test: true })];
@@ -372,20 +372,26 @@ const MidAddDecoratorSub = (() => {
     })();
     return MidAddDecoratorAddExtSub = _classThis;
 })();
-debugger;
+// debugger;
 exports.midDecoratorBase = new MidDecorator;
-debugger;
+// debugger;
 exports.midDecoratorExt = (0, __1.apply)(exports.midDecoratorBase, MidDecoratorExt);
-debugger;
+// debugger;
 exports.midAddDecoratorBaseExt = (0, __1.apply)(exports.midDecoratorBase, MidAddDecorator);
-debugger;
 try {
+    debugger;
     (0, __1.apply)(exports.midDecoratorBase, MidAddDecoratorSub);
 }
 catch (error) {
     // wow
+    // this is either TS transpilation based
+    // or some prototype pollution 
+    // though, if it will be pollution,
+    /// then all the tests will become broken
+    // and this is not what happens
     console.error(error);
 }
+debugger;
 exports.midAddDecoratorSubExt = (0, __1.apply)(exports.midAddDecoratorBaseExt, MidAddDecoratorSub);
 debugger;
 //# sourceMappingURL=decorate.js.map

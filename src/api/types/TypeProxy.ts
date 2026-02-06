@@ -102,8 +102,10 @@ const subTypeApply = (
 	config?: constructorOptions,
 	...args: unknown[]
 ) => {
-	const decorator = function <T extends { new (): unknown }>(cstr: T, s?: ClassDecoratorContext<T>): T {
-		const name = typeof s === 'object' ? s.name : cstr.constructor.name;
+	// const decorator = function <T extends { new (): unknown }>(cstr: T, s?: ClassDecoratorContext<T>): T {
+	const decorator = function <T extends { new (): unknown }>(cstr: T): T {
+		// const name = typeof s === 'object' ? s.name : cstr.constructor.name;
+		const { name } = cstr;
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
 		return parentType.define(name, cstr, config, ...args) as unknown as T;

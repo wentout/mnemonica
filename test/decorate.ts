@@ -118,11 +118,11 @@ class MyOtherDecoratedClass extends BaseClass {
 	}
 }
 
-debugger;
+// debugger;
 
 const myOtherDecoratedInstance = new MyOtherDecoratedClass();
 
-debugger;
+// debugger;
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -131,11 +131,11 @@ const MyOtherFn = MyOtherDecoratedClass.define('MyOtherFn', function (this: { pr
 	this.prop = 321;
 });
 
-debugger;
+// debugger;
 
 export const myOtherInstance = apply(myOtherDecoratedInstance, MyOtherFn);
 
-debugger;
+// debugger;
 
 
 class ExtendTestingBase {
@@ -162,7 +162,7 @@ class ExtendTestingSupExt extends ExtendTestingSupBase {
 
 export const exSupTest = new ExtendTestingSupExt;
 
-debugger;
+// debugger;
 
 const MidDecorator = @decorate({ strictChain: false })
 class MidDecoratorBase {
@@ -187,7 +187,7 @@ class MidAddDecoratorAddExt{
 	}
 }
 
-debugger;
+// debugger;
 // @ts-ignore
 const MidAddDecoratorSub = @MidAddDecorator({ test: true })
 class MidAddDecoratorAddExtSub{
@@ -198,13 +198,13 @@ class MidAddDecoratorAddExtSub{
 }
 
 
-debugger;
+// debugger;
 export const midDecoratorBase = new MidDecorator;
 
-debugger;
+// debugger;
 export const midDecoratorExt = apply(midDecoratorBase, MidDecoratorExt);
 
-debugger;
+// debugger;
 export const midAddDecoratorBaseExt = apply(midDecoratorBase, MidAddDecorator);
 
 try {
