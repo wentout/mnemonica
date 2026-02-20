@@ -285,8 +285,8 @@ class ExtendTestingSupExt extends ExtendTestingSupBase {
 }
 exports.exSupTest = new ExtendTestingSupExt;
 // debugger;
-const MidDecorator = (() => {
-    let _classDecorators = [(0, __1.decorate)({ strictChain: false })];
+let MidDecoratorBase = (() => {
+    let _classDecorators = [(0, __1.decorate)()];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
@@ -307,7 +307,7 @@ const MidDecorator = (() => {
 })();
 // @ts-ignore
 let MidDecoratorExt = (() => {
-    let _classDecorators = [MidDecorator()];
+    let _classDecorators = [MidDecoratorBase()];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
@@ -328,8 +328,8 @@ let MidDecoratorExt = (() => {
     return MidDecoratorExt = _classThis;
 })();
 // @ts-ignore
-const MidAddDecorator = (() => {
-    let _classDecorators = [MidDecorator()];
+let MidAddDecoratorAddExt = (() => {
+    let _classDecorators = [MidDecoratorBase()];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
@@ -351,8 +351,8 @@ const MidAddDecorator = (() => {
 })();
 // debugger;
 // @ts-ignore
-const MidAddDecoratorSub = (() => {
-    let _classDecorators = [MidAddDecorator({ test: true })];
+let MidAddDecoratorAddExtSub = (() => {
+    let _classDecorators = [MidAddDecoratorAddExt({ test: true })];
     let _classDescriptor;
     let _classExtraInitializers = [];
     let _classThis;
@@ -373,14 +373,14 @@ const MidAddDecoratorSub = (() => {
     return MidAddDecoratorAddExtSub = _classThis;
 })();
 // debugger;
-exports.midDecoratorBase = new MidDecorator;
+exports.midDecoratorBase = new MidDecoratorBase;
 // debugger;
 exports.midDecoratorExt = (0, __1.apply)(exports.midDecoratorBase, MidDecoratorExt);
 // debugger;
-exports.midAddDecoratorBaseExt = (0, __1.apply)(exports.midDecoratorBase, MidAddDecorator);
+exports.midAddDecoratorBaseExt = (0, __1.apply)(exports.midDecoratorBase, MidAddDecoratorAddExt);
 try {
     debugger;
-    (0, __1.apply)(exports.midDecoratorBase, MidAddDecoratorSub);
+    (0, __1.apply)(exports.midDecoratorBase, MidAddDecoratorAddExtSub);
 }
 catch (error) {
     // wow
@@ -392,6 +392,6 @@ catch (error) {
     console.error(error);
 }
 debugger;
-exports.midAddDecoratorSubExt = (0, __1.apply)(exports.midAddDecoratorBaseExt, MidAddDecoratorSub);
+exports.midAddDecoratorSubExt = (0, __1.apply)(exports.midAddDecoratorBaseExt, MidAddDecoratorAddExtSub);
 debugger;
 //# sourceMappingURL=decorate.js.map

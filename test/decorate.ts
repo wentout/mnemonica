@@ -164,13 +164,13 @@ export const exSupTest = new ExtendTestingSupExt;
 
 // debugger;
 
-const MidDecorator = @decorate({ strictChain: false })
+@decorate()
 class MidDecoratorBase {
 	field = 333
 }
 
 // @ts-ignore
-@MidDecorator()
+@MidDecoratorBase()
 class MidDecoratorExt{
 	field = 111
 	constructor() {
@@ -179,7 +179,7 @@ class MidDecoratorExt{
 }
 
 // @ts-ignore
-const MidAddDecorator = @MidDecorator()
+@MidDecoratorBase()
 class MidAddDecoratorAddExt{
 	field = 111
 	constructor() {
@@ -189,7 +189,7 @@ class MidAddDecoratorAddExt{
 
 // debugger;
 // @ts-ignore
-const MidAddDecoratorSub = @MidAddDecorator({ test: true })
+@MidAddDecoratorAddExt({ test: true })
 class MidAddDecoratorAddExtSub{
 	field = 111
 	constructor() {
@@ -199,17 +199,17 @@ class MidAddDecoratorAddExtSub{
 
 
 // debugger;
-export const midDecoratorBase = new MidDecorator;
+export const midDecoratorBase = new MidDecoratorBase;
 
 // debugger;
 export const midDecoratorExt = apply(midDecoratorBase, MidDecoratorExt);
 
 // debugger;
-export const midAddDecoratorBaseExt = apply(midDecoratorBase, MidAddDecorator);
+export const midAddDecoratorBaseExt = apply(midDecoratorBase, MidAddDecoratorAddExt);
 
 try {
 	debugger;
-	apply(midDecoratorBase, MidAddDecoratorSub);
+	apply(midDecoratorBase, MidAddDecoratorAddExtSub);
 } catch (error) {
 	// wow
 	// this is either TS transpilation based
@@ -221,5 +221,5 @@ try {
 }
 
 debugger;
-export const midAddDecoratorSubExt = apply(midAddDecoratorBaseExt, MidAddDecoratorSub);
+export const midAddDecoratorSubExt = apply(midAddDecoratorBaseExt, MidAddDecoratorAddExtSub);
 debugger;

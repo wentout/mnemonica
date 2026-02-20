@@ -67,11 +67,11 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 ): {
 		[key in keyof S]: S[key]
 	} {
-	 
+
 	// debugger;
 	// @ts-ignore
 	const { TypeName } = Constructor;
-	const Cstr = prepareSubtypeForConstruction(TypeName, entity) as { new( ...ars: unknown[]): unknown};
+	const Cstr = prepareSubtypeForConstruction(TypeName, entity) as { new(...ars: unknown[]): unknown };
 	// TODO: check lines below and if Constructor is not mnemonized ...
 	if (Cstr === undefined) {
 		throw new WRONG_MODIFICATION_PATTERN(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
@@ -115,6 +115,25 @@ export const bind = function <E extends object, T extends object, S extends Prot
 	};
 };
 
+
+
+
+type Constructor<T = unknown> = new (...args: unknown[]) => T;
+
+type ClassDecorator<T = unknown> = (
+  target: Constructor<unknown>
+) => Constructor<T> | void;
+
+
+interface CallableClassWithDecoratorFactory<C> {
+  // 1. As constructor (normal usage)
+  new (...args: unknown[]): C;
+
+  // 2. As call signature → returns a class decorator
+  <T>(target?: Constructor<T>): ClassDecorator<T>;
+}
+
+
 export const decorate = function (
 	parentClass?: { new(): unknown } | constructorOptions | undefined,
 	config?: constructorOptions
@@ -124,17 +143,21 @@ export const decorate = function (
 		parentClass = undefined;
 	}
 	// const decorator = function <T extends { new(): unknown }>(cstr: T, s?: ClassDecoratorContext<T>): T {
-	const decorator = function <T extends { new(): unknown }>(cstr: T): T {
+	const decorator = function <
+		T extends Constructor<unknown>,
+		R extends CallableClassWithDecoratorFactory<InstanceType<T>> & T
+	>(cstr: T): R {
 		// const name = typeof s === 'object' ? s.name : cstr.constructor.name;
 		const { name } = cstr;
 		if (parentClass === undefined) {
-			return define(name, cstr, config) as unknown as T;
+			return define(name, cstr, config) as unknown as R;
 		}
 		// @ts-ignore
-		return parentClass.define(name, cstr, config) as unknown as T;
+		return parentClass.define(name, cstr, config) as unknown as R;
 	};
 	return decorator;
 };
+
 
 export const registerHook = function <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook): void {
 	// @ts-ignore

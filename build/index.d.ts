@@ -7,11 +7,15 @@ export declare const lookup: TypeLookup;
 export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, ...args: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>) => (...args: unknown[]) => { [key in keyof S]: S[key]; };
+type Constructor<T = unknown> = new (...args: unknown[]) => T;
+type ClassDecorator<T = unknown> = (target: Constructor<unknown>) => Constructor<T> | void;
+interface CallableClassWithDecoratorFactory<C> {
+    new (...args: unknown[]): C;
+    <T>(target?: Constructor<T>): ClassDecorator<T>;
+}
 export declare const decorate: (parentClass?: {
     new (): unknown;
-} | constructorOptions | undefined, config?: constructorOptions) => <T extends {
-    new (): unknown;
-}>(cstr: T) => T;
+} | constructorOptions | undefined, config?: constructorOptions) => <T extends Constructor<unknown>, R extends CallableClassWithDecoratorFactory<InstanceType<T>> & T>(cstr: T) => R;
 export declare const registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
 export declare const mnemonica: {
     [index: string]: unknown;

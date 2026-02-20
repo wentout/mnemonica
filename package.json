@@ -30,11 +30,11 @@
   ],
   "scripts": {
     "build": "rm -rf ./build && npx tsc --pretty --project tsconfig.json && npm run lint:src && npm run lint:test",
-    "build:all": "rm -rf ./build && npx tsc --pretty --project tsconfig.json && npm run decorate && npm run lint:src && npm run lint:test",
+    "build:all": "rm -rf ./build && npx tsc --pretty --project tsconfig.json && npm run decorate:ts && npm run lint:src && npm run lint:test",
     "example": "npm run build && node ./test/example.js",
     "example:ts": "npx tsc ./test-ts/*.ts && npx eslint --fix ./test-ts/*.js && node ./test-ts/test-no-types.js && node ./test-ts/test-with-types.js",
     "deopt": "node --trace-deopt --trace-opt ./node_modules/mocha/bin/mocha.js ./test/index.js",
-    "decorate": "npx tsc --target ES2021 --moduleResolution NodeNext --module NodeNext --sourceMap ./test/decorate.ts",
+    "decorate:ts": "npx tsc --target ES2021 --moduleResolution NodeNext --module NodeNext --sourceMap ./test/decorate.ts",
     "lint": "npx eslint",
     "lint:src": "npx eslint --fix ./src",
     "lint:test": "npx eslint --fix ./test",
