@@ -5,7 +5,7 @@ export type asyncStack = {
     };
     parent: () => asyncStack;
 };
-type parentSub = {
+export type parentSub = {
     __type__: {
         subtypes: Map<string, parentSub>;
     };

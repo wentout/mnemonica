@@ -284,7 +284,7 @@ class ExtendTestingSupExt extends ExtendTestingSupBase {
     }
 }
 exports.exSupTest = new ExtendTestingSupExt;
-// debugger;
+// --- decorate tests ---
 let MidDecoratorBase = (() => {
     let _classDecorators = [(0, __1.decorate)()];
     let _classDescriptor;
@@ -305,6 +305,10 @@ let MidDecoratorBase = (() => {
     })();
     return MidDecoratorBase = _classThis;
 })();
+debugger;
+// Note: TypeScript's decorator type checking has limitations with callable class types.
+// The @ts-ignore is needed because TypeScript doesn't recognize DecoratedClass as callable
+// even though the type definition correctly includes the call signature.
 // @ts-ignore
 let MidDecoratorExt = (() => {
     let _classDecorators = [MidDecoratorBase()];
@@ -336,6 +340,7 @@ let MidAddDecoratorAddExt = (() => {
     var MidAddDecoratorAddExt = _classThis = class {
         constructor() {
             this.field = 111;
+            this.addition = 321;
             console.log('im here: ', this.field);
         }
     };

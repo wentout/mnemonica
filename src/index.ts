@@ -11,6 +11,13 @@ import {
 	SN,
 	IDefinitorInstance
 } from './types';
+
+import TypesUtils from './api/utils/index';
+export const {
+	isClass,
+	findSubTypeFromParent,
+} = TypesUtils;
+
 export type { IDEF, ConstructorFunction } from './types';
 export { getProps, setProps } from './api/types/Props';
 
@@ -118,42 +125,48 @@ export const bind = function <E extends object, T extends object, S extends Prot
 
 
 
-type Constructor<T = unknown> = new (...args: unknown[]) => T;
+type Constructor<T = unknown> = new(...args: unknown[]) => T;
 
-type ClassDecorator<T = unknown> = (
-  target: Constructor<unknown>
-) => Constructor<T> | void;
+// Type for decorated classes that can be used as:
+// 1. A constructor: new MyDecoratedClass()
+// 2. A decorator: @MyDecoratedClass() class Sub {}
+// 3. Extended: class Sub extends MyDecoratedClass {}
+// 4. Have mnemonica methods: MyDecoratedClass.define(...)
+type DecoratedClass<T extends Constructor<object>> =
+	// Base constructor type
+	T &
+	// Callable as decorator: @MyDecoratedClass() class Sub {}
+	(<U extends Constructor<object>>(target: U) => DecoratedClass<U>) &
+	// Mnemonica type system methods
+	{
+		define: IDefinitorInstance<InstanceType<T>, unknown>['define'];
+		registerHook: IDefinitorInstance<InstanceType<T>, unknown>['registerHook'];
+		lookup: TypeLookup;
+	};
 
-
-interface CallableClassWithDecoratorFactory<C> {
-  // 1. As constructor (normal usage)
-  new (...args: unknown[]): C;
-
-  // 2. As call signature → returns a class decorator
-  <T>(target?: Constructor<T>): ClassDecorator<T>;
-}
-
-
-export const decorate = function (
-	parentClass?: { new(): unknown } | constructorOptions | undefined,
+export const decorate = function <
+	T extends Constructor<object> | constructorOptions | undefined = undefined
+>(
+	target?: T,
 	config?: constructorOptions
-) {
-	if (config === undefined && typeof parentClass === 'object' && !(parentClass instanceof Function)) {
-		config = parentClass as constructorOptions;
-		parentClass = undefined;
-	}
-	// const decorator = function <T extends { new(): unknown }>(cstr: T, s?: ClassDecoratorContext<T>): T {
-	const decorator = function <
-		T extends Constructor<unknown>,
-		R extends CallableClassWithDecoratorFactory<InstanceType<T>> & T
-	>(cstr: T): R {
-		// const name = typeof s === 'object' ? s.name : cstr.constructor.name;
+): <U extends Constructor<object>>(cstr: U) => DecoratedClass<U> {
+	const opts = (config === undefined && typeof target === 'object' && !(target instanceof Function))
+		? target as constructorOptions
+		: config;
+
+	const parentType = (target instanceof Function)
+		? target as Constructor<object>
+		: undefined;
+
+	const decorator = function <U extends Constructor<object>>(cstr: U): DecoratedClass<U> {
 		const { name } = cstr;
-		if (parentClass === undefined) {
-			return define(name, cstr, config) as unknown as R;
+		if (parentType === undefined) {
+			return define(name, cstr, opts) as unknown as DecoratedClass<U>;
 		}
-		// @ts-ignore
-		return parentClass.define(name, cstr, config) as unknown as R;
+		const parent = parentType as unknown as {
+			define: (name: string, cstr: Constructor<unknown>, config?: constructorOptions) => unknown
+		};
+		return parent.define(name, cstr, opts) as unknown as DecoratedClass<U>;
 	};
 	return decorator;
 };
@@ -211,3 +224,4 @@ export const errors = descriptors.ErrorsTypes;
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
 /* eslint-enable @typescript-eslint/ban-ts-comment, space-before-function-paren */
+
