@@ -815,8 +815,372 @@ defaultTypes[SymbolConfig].blockErrors = false;
 
 ```
 
+---
 
-# finally
+# API Reference
+
+## Core Functions
+
+### `define(typeName, constructHandler, config?)`
+Defines a new type constructor. Returns a TypeClass that can be used to create instances.
+
+### `lookup(typeNestedPath)`
+Looks up a type by its nested path (e.g., `'SomeType.SomeNestedType'`).
+
+### `apply(entity, Constructor, args?)`
+Applies a constructor to an entity with the given arguments array.
+
+### `call(entity, Constructor, ...args)`
+Calls a constructor on an entity with spread arguments.
+
+### `bind(entity, Constructor)`
+Binds a constructor to an entity, returning a function that can be called later.
+
+### `registerHook(Constructor, hookType, callback)`
+Registers a hook for a specific constructor.
+
+## Type Management
+
+### `defaultTypes`
+The default types collection. All types defined with the top-level `define()` function are stored here.
+
+### `createTypesCollection()`
+Creates a new isolated types collection.
+
+```js
+const myCollection = createTypesCollection();
+const MyType = myCollection.define('MyType', function() {});
+```
+
+### `getProps(instance)` / `setProps(instance, values)`
+Get or set internal properties of an instance.
+
+```js
+const { getProps, setProps } = require('mnemonica');
+const props = getProps(instance);
+console.log(props.__type__, props.__args__);
+```
+
+## Instance Methods
+
+All mnemonica instances have the following methods:
+
+### `.extract()`
+Extracts all inherited properties into a single flat object.
+
+### `.pick(...keys)` / `.pick([keys])`
+Picks specific properties from the instance and its inheritance chain.
+
+```js
+const picked = instance.pick('email', 'password');
+// or
+const picked = instance.pick(['email', 'password']);
+```
+
+### `.parent(constructorName?)`
+Gets the parent instance. If `constructorName` is provided, walks up the chain to find that specific parent.
+
+```js
+const immediateParent = instance.parent();
+const specificParent = instance.parent('UserType');
+```
+
+### `.clone`
+Property that returns a cloned instance (same as `.fork()` with no arguments).
+
+### `.fork(...args)`
+Creates a forked instance from the same parent, optionally with different arguments.
+
+```js
+const forked = instance.fork(); // same args
+const forkedWithNewArgs = instance.fork('new', 'args');
+```
+
+### `.fork.call(thisArg, ...args)` / `.fork.apply(thisArg, args)`
+Forks with a different `this` context (useful for DAG construction).
+
+```js
+const dagInstance = instanceA.fork.call(instanceB, 'args');
+```
+
+### `.exception(error, ...args)`
+Creates an exception instance from the current instance. Useful for typed errors.
+
+```js
+const error = someInstance.exception(new Error('Something went wrong'));
+throw error;
+```
+
+### `.sibling(typeName)` / `.sibling.TypeName`
+Access sibling types from the same collection.
+
+```js
+const siblingType = instance.sibling('OtherType');
+const siblingInstance = new siblingType();
+// or
+const sibling = instance.sibling.OtherType;
+```
+
+## Utils
+
+### `utils.extract(instance)`
+Standalone extract function.
+
+### `utils.pick(instance, ...keys)`
+Standalone pick function.
+
+### `utils.parent(instance, constructorName?)`
+Standalone parent function.
+
+### `utils.parse(instance)`
+Parses an instance structure, returning detailed information about:
+- `name`: constructor name
+- `props`: extracted properties
+- `self`: the instance itself
+- `proto`: prototype object
+- `joint`: prototype properties
+- `parent`: parent prototype
+
+```js
+const { utils: { parse } } = require('mnemonica');
+const parsed = parse(instance);
+```
+
+### `utils.merge(A, B, ...args)`
+Merges two instances using fork semantics.
+
+```js
+const merged = merge(instanceA, instanceB, 'args');
+```
+
+### `utils.toJSON(instance)`
+Serializes an instance to JSON.
+
+```js
+const json = utils.toJSON(instance);
+```
+
+### `utils.collectConstructors(instance, flat?)`
+Collects all constructors in the instance's prototype chain.
+
+```js
+const constructors = utils.collectConstructors(instance, true);
+```
+
+## Instance Properties (via getProps)
+
+All instances have non-enumerable internal properties accessible via `getProps()`:
+
+| Property | Description |
+|----------|-------------|
+| `.__args__` | Arguments used for instance creation |
+| `.__type__` | Type definition object |
+| `.__parent__` | Parent instance reference |
+| `.__subtypes__` | Map of available subtypes |
+| `.__collection__` | Types collection where type was defined |
+| `.__stack__` | Stack trace (if `submitStack: true` in config) |
+| `.__creator__` | Instance creator reference |
+| `.__timestamp__` | Creation timestamp (ms since epoch) |
+| `.__self__` | Self reference to the instance |
+
+## Hooks
+
+### Hook Types
+
+- `'preCreation'` - Called before instance creation
+- `'postCreation'` - Called after instance creation
+- `'creationError'` - Called when instance creation throws an error
+
+### `type.registerHook(hookType, callback)`
+Register a hook on a specific type.
+
+```js
+MyType.registerHook('preCreation', (hookData) => {
+	console.log('Creating:', hookData.TypeName);
+});
+```
+
+### `collection.registerHook(hookType, callback)`
+Register a hook on a types collection.
+
+```js
+defaultTypes.registerHook('postCreation', (hookData) => {
+	console.log('Created:', hookData.inheritedInstance.constructor.name);
+});
+```
+
+### `collection.registerFlowChecker(callback)`
+Register a flow checker that runs before hooks.
+
+```js
+defaultTypes.registerFlowChecker((opts) => {
+	// Perform validation or logging
+	console.log('Flow check:', opts.TypeName);
+});
+```
+
+### Hook Data Structure
+
+```js
+{
+	TypeName: string,              // Constructor name
+	argumentsOfTypeModificator: [], // Arguments passed
+	instanceUsedForInheritance: {}, // Parent instance
+	inheritedInstance: {}          // Newly created instance (postCreation only)
+}
+```
+
+## Error Handling
+
+### `errors` Object
+
+All mnemonica errors are accessible via the `errors` export:
+
+```js
+const { errors } = require('mnemonica');
+
+// Available error types:
+errors.BASE_MNEMONICA_ERROR
+errors.WRONG_TYPE_DEFINITION
+errors.WRONG_INSTANCE_INVOCATION
+errors.WRONG_MODIFICATION_PATTERN
+errors.ALREADY_DECLARED
+errors.TYPENAME_MUST_BE_A_STRING
+errors.HANDLER_MUST_BE_A_FUNCTION
+errors.WRONG_ARGUMENTS_USED
+errors.WRONG_HOOK_TYPE
+errors.MISSING_HOOK_CALLBACK
+errors.MISSING_CALLBACK_ARGUMENT
+errors.FLOW_CHECKER_REDEFINITION
+errors.OPTIONS_ERROR
+errors.WRONG_STACK_CLEANER
+```
+
+### Exception Instances
+
+When you create an exception using `instance.exception()`, the resulting error has special properties:
+
+```js
+const error = instance.exception(new Error('Original error'));
+
+// Properties:
+error.originalError    // The original error
+error.exceptionReason  // { methodName, ... }
+error.BaseStack        // Base stack trace
+error.parse()          // Parse the exception structure
+error.extract()        // Extract properties from the exception
+```
+
+## Symbols
+
+Mnemonica exports the following symbols:
+
+```js
+const {
+	SymbolParentType,           // Parent type symbol
+	SymbolConstructorName,      // Constructor name symbol
+	SymbolDefaultTypesCollection, // Default collection symbol
+	SymbolConfig                 // Config symbol
+} = require('mnemonica');
+```
+
+## TypeScript Types
+
+The following types are exported for TypeScript users:
+
+```typescript
+import {
+	IDEF,                    // Constructor function type
+	ConstructorFunction,     // Constructor with prototype
+	TypeLookup,              // Lookup function type
+	TypeClass,               // Type class interface
+	TypeAbsorber,            // Type absorber type
+	ITypeClass,              // Typed class interface
+	IDefinitorInstance,      // Definitor instance type
+	hooksTypes,              // 'preCreation' | 'postCreation' | 'creationError'
+	hooksOpts,               // Hook options type
+	hook,                    // Hook callback type
+	constructorOptions       // Configuration options type
+} from 'mnemonica';
+```
+
+## Decorator API
+
+The `decorate` function provides TypeScript decorator support:
+
+### Basic Usage
+
+```typescript
+import { decorate } from 'mnemonica';
+
+@decorate()
+class MyClass {
+	field: number;
+	constructor() {
+		this.field = 123;
+	}
+}
+
+const instance = new MyClass();
+```
+
+### With Configuration
+
+```typescript
+@decorate({ strictChain: false, blockErrors: true })
+class MyClass {
+	// ...
+}
+```
+
+### Nested Decoration
+
+```typescript
+@decorate()
+class ParentClass {
+	// ...
+}
+
+@decorate(ParentClass, { strictChain: false })
+class ChildClass {
+	// ...
+}
+
+const parent = new ParentClass();
+const child = apply(parent, ChildClass);
+```
+
+### Decorator as Function
+
+Decorated classes can be used as decorators themselves:
+
+```typescript
+@decorate()
+class Base {
+	// ...
+}
+
+@Base()  // Use Base as a decorator
+class Extended {
+	// ...
+}
+
+const base = new Base();
+const extended = apply(base, Extended);
+```
+
+## Configuration Options Reference
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `strictChain` | `boolean` | `true` | Only allow sub-instances from current type, not up-nested |
+| `blockErrors` | `boolean` | `true` | Disallow instance construction if error in prototype chain |
+| `submitStack` | `boolean` | `false` | Collect stack trace as `__stack__` property |
+| `awaitReturn` | `boolean` | `true` | Ensure `await new Constructor()` returns value |
+| `ModificationConstructor` | `Function` | internal | Custom modification constructor |
+| `asClass` | `boolean` | auto | Force class mode (auto-detected by default) |
+
+## finally
 
 So, now you can craft as much types as you wish, combine them, re-define them and spend much more time playing with them:
 

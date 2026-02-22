@@ -11,6 +11,13 @@ import {
 	SN,
 	IDefinitorInstance
 } from './types';
+
+import TypesUtils from './api/utils/index';
+export const {
+	isClass,
+	findSubTypeFromParent,
+} = TypesUtils;
+
 export type { IDEF, ConstructorFunction } from './types';
 export { getProps, setProps } from './api/types/Props';
 
@@ -19,6 +26,8 @@ const { odp } = constants;
 
 import * as errorsApi from './api/errors';
 import { descriptors } from './descriptors';
+
+const { WRONG_MODIFICATION_PATTERN } = descriptors.ErrorsTypes;
 
 import mnemosynes from './api/types/Mnemosyne';
 const { prepareSubtypeForConstruction } = mnemosynes;
@@ -65,15 +74,15 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 ): {
 		[key in keyof S]: S[key]
 	} {
-	 
+
 	// debugger;
 	// @ts-ignore
 	const { TypeName } = Constructor;
-	const Cstr = prepareSubtypeForConstruction(TypeName, entity) as { new( ...ars: unknown[]): unknown};
+	const Cstr = prepareSubtypeForConstruction(TypeName, entity) as { new(...ars: unknown[]): unknown };
 	// TODO: check lines below and if Constructor is not mnemonized ...
-	// if (Cstr === undefined) {
-	// 	throw new TypeError(`Type ${TypeName} is not defined as a .`);
-	// }
+	if (Cstr === undefined) {
+		throw new WRONG_MODIFICATION_PATTERN(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
+	}
 	const result = new Cstr(...args);
 	// @ts-ignore
 	return result;
@@ -113,23 +122,55 @@ export const bind = function <E extends object, T extends object, S extends Prot
 	};
 };
 
-export const decorate = function (
-	parentClass?: { new(): unknown } | constructorOptions | undefined,
+
+
+
+type Constructor<T = unknown> = new(...args: unknown[]) => T;
+
+// Type for decorated classes that can be used as:
+// 1. A constructor: new MyDecoratedClass()
+// 2. A decorator: @MyDecoratedClass() class Sub {}
+// 3. Extended: class Sub extends MyDecoratedClass {}
+// 4. Have mnemonica methods: MyDecoratedClass.define(...)
+type DecoratedClass<T extends Constructor<object>> =
+	// Base constructor type
+	T &
+	// Callable as decorator: @MyDecoratedClass() class Sub {}
+	(<U extends Constructor<object>>(target: U) => DecoratedClass<U>) &
+	// Mnemonica type system methods
+	{
+		define: IDefinitorInstance<InstanceType<T>, unknown>['define'];
+		registerHook: IDefinitorInstance<InstanceType<T>, unknown>['registerHook'];
+		lookup: TypeLookup;
+	};
+
+export const decorate = function <
+	T extends Constructor<object> | constructorOptions | undefined = undefined
+>(
+	target?: T,
 	config?: constructorOptions
-) {
-	if (config === undefined && typeof parentClass === 'object' && !(parentClass instanceof Function)) {
-		config = parentClass as constructorOptions;
-		parentClass = undefined;
-	}
-	const decorator = function <T extends { new(): unknown }>(cstr: T, s: ClassDecoratorContext<T>): T {
-		if (parentClass === undefined) {
-			return define(s.name, cstr, config) as unknown as T;
+): <U extends Constructor<object>>(cstr: U) => DecoratedClass<U> {
+	const opts = (config === undefined && typeof target === 'object' && !(target instanceof Function))
+		? target as constructorOptions
+		: config;
+
+	const parentType = (target instanceof Function)
+		? target as Constructor<object>
+		: undefined;
+
+	const decorator = function <U extends Constructor<object>>(cstr: U): DecoratedClass<U> {
+		const { name } = cstr;
+		if (parentType === undefined) {
+			return define(name, cstr, opts) as unknown as DecoratedClass<U>;
 		}
-		// @ts-ignore
-		return parentClass.define(s.name, cstr, config) as unknown as T;
+		const parent = parentType as unknown as {
+			define: (name: string, cstr: Constructor<unknown>, config?: constructorOptions) => unknown
+		};
+		return parent.define(name, cstr, opts) as unknown as DecoratedClass<U>;
 	};
 	return decorator;
 };
+
 
 export const registerHook = function <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook): void {
 	// @ts-ignore
@@ -183,3 +224,4 @@ export const errors = descriptors.ErrorsTypes;
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
 /* eslint-enable @typescript-eslint/ban-ts-comment, space-before-function-paren */
+

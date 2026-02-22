@@ -5,7 +5,7 @@ export type asyncStack = {
     };
     parent: () => asyncStack;
 };
-type parentSub = {
+export type parentSub = {
     __type__: {
         subtypes: Map<string, parentSub>;
     };
@@ -21,7 +21,7 @@ declare const TypesUtils: {
     getTypeSplitPath: (path: string) => string[];
     getExistentAsyncStack: (existentInstance: asyncStack) => unknown;
     checkTypeName: (name: string) => void;
-    findSubTypeFromParent: (instance: parentSub, subType: string) => parentSub | undefined;
+    findSubTypeFromParent: (instance: parentSub, subType: string) => parentSub | null;
     makeFakeModificatorType: (TypeName: string, fakeModificator?: () => void) => any;
     reflectPrimitiveWrappers: (_thisArg: unknown) => unknown;
 };

@@ -110,8 +110,8 @@ export type SN = Record<string, new () => unknown>
 export interface IDefinitorInstance<N extends object, S> {
 	new( ...arg: unknown[] ): {
 		[ key in keyof S ]: S[ key ]
-	}
-	define: IDefinitor<N, string>
+	} & IDefinitor<N, string> 
+	define: IDefinitorInstance<N, string>
 	registerHook: ( hookType: hooksTypes, cb: hook ) => void
 }
 

@@ -28,7 +28,9 @@ const {
 	ErrorMessages,
 	defineStackCleaner,
 	getProps,
-	setProps
+	setProps,
+	isClass,
+	findSubTypeFromParent
 } = mnemonica;
 
 // next line changed from '../build' to '../src' cause now we use sourceMaps
@@ -94,6 +96,14 @@ const tests = (opts) => {
 			expect(nullR).not.instanceOf(Object);
 
 		});
+		describe('.isClass, .findSubTypeFromParent', () => {
+			expect(isClass(class {})).is.equal(true);
+			expect(isClass(() => {})).is.equal(false);
+			expect(isClass(function () {})).is.equal(false);
+			debugger;
+			const part = findSubTypeFromParent(userWithoutPassword, 'missing');
+			expect(part).is.equal(null);
+		});
 		describe('interface test', () => {
 
 			const interface_keys = [
@@ -125,6 +135,8 @@ const tests = (opts) => {
 				'registerHook',
 				'getProps',
 				'setProps',
+				'isClass',
+				'findSubTypeFromParent'
 			];
 
 			const mnemonica_keys = Object.keys(mnemonica);

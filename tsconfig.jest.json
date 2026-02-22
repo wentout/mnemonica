@@ -1,29 +1,27 @@
 {
 	"compilerOptions": {
 		"module": "commonjs",
-		"target": "ES6",
-		"lib": [
-			"ES6",
-		],
+		"target": "es6",
 		"strict": true,
 		"alwaysStrict": true,
-		"strictFunctionTypes": true,
+
+		"declaration": false,
 		"diagnostics": true,
-		"noImplicitThis": true,
+
 		"extendedDiagnostics": true,
-		"noImplicitReturns": true,
+		"forceConsistentCasingInFileNames": true,
 		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"declaration": false,
-		"traceResolution": false,
 		"removeComments": true,
-		"experimentalDecorators": true,
-		"forceConsistentCasingInFileNames": true,
+		"strictFunctionTypes": true,
+		"traceResolution": false,
 		"types": [
 			"jest",
 			"node"
-		],
+		]
 	},
 	"include": [
 		"./src/**/*.ts",

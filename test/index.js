@@ -253,8 +253,10 @@ const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionTy
 	Object.assign(this, { check });
 }, false);
 
+// TypeProxy .bind
+// so we will replace "root" instance of prototype chain here
 process.TestForAddition = 'passed';
-const anotherCollectionInstance = AnotherCollectionType.apply(process, [ 'check' ]);
+const anotherCollectionInstance = AnotherCollectionType.bind(process)('check');
 
 const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionType', function () {
 	this.self = this;
@@ -268,7 +270,7 @@ const oneElseCollectionInstance = new OneElseCollectionType();
 // } );
 
 
-const user = UserType(USER_DATA);
+const user = new UserType(USER_DATA);
 const userPL1 = new user.UserTypePL1();
 const userPL2 = new user.UserTypePL2();
 
@@ -618,6 +620,8 @@ describe('Main Test', () => {
 
 	const merged = merge(user, overMore, FORK_CALL_DATA);
 
+	// TypeProxy .apply
+	debugger;
 	const userTCdirectDAG = UserTypeConstructor.call(new Boolean(5), FORK_CALL_DATA);
 	const userTCforkDAG = userTC.fork.call(new Boolean(5), FORK_CALL_DATA);
 

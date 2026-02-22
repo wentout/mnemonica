@@ -1,4 +1,5 @@
 import { TypeLookup, IDEF, hook, hooksTypes, constructorOptions, Proto, SN, IDefinitorInstance } from './types';
+export declare const isClass: (fn: CallableFunction) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub, subType: string) => import("./api/utils/index").parentSub | null;
 export type { IDEF, ConstructorFunction } from './types';
 export { getProps, setProps } from './api/types/Props';
 export declare const defaultTypes: any;
@@ -7,11 +8,13 @@ export declare const lookup: TypeLookup;
 export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, ...args: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>) => (...args: unknown[]) => { [key in keyof S]: S[key]; };
-export declare const decorate: (parentClass?: {
-    new (): unknown;
-} | constructorOptions | undefined, config?: constructorOptions) => <T extends {
-    new (): unknown;
-}>(cstr: T, s: ClassDecoratorContext<T>) => T;
+type Constructor<T = unknown> = new (...args: unknown[]) => T;
+type DecoratedClass<T extends Constructor<object>> = T & (<U extends Constructor<object>>(target: U) => DecoratedClass<U>) & {
+    define: IDefinitorInstance<InstanceType<T>, unknown>['define'];
+    registerHook: IDefinitorInstance<InstanceType<T>, unknown>['registerHook'];
+    lookup: TypeLookup;
+};
+export declare const decorate: <T extends Constructor<object> | constructorOptions | undefined = undefined>(target?: T, config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
 export declare const registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
 export declare const mnemonica: {
     [index: string]: unknown;
