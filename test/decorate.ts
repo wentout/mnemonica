@@ -178,6 +178,7 @@ debugger;
 @MidDecoratorBase()
 class MidDecoratorExt{
 	field = 111;
+	ext = 321;
 	constructor () {
 		console.log('im here: ', this.field);
 	}
@@ -214,7 +215,6 @@ export const midDecoratorExt = apply(midDecoratorBase, MidDecoratorExt);
 export const midAddDecoratorBaseExt = apply(midDecoratorBase, MidAddDecoratorAddExt);
 
 try {
-	debugger;
 	apply(midDecoratorBase, MidAddDecoratorAddExtSub);
 } catch (error) {
 	// wow
@@ -223,9 +223,10 @@ try {
 	// though, if it will be pollution,
 	/// then all the tests will become broken
 	// and this is not what happens
+	// debugger;
 	console.error(error);
 }
 
-debugger;
+// debugger;
 export const midAddDecoratorSubExt = apply(midAddDecoratorBaseExt, MidAddDecoratorAddExtSub);
-debugger;
+// debugger;

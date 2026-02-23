@@ -5,7 +5,7 @@ const { decorate, apply } = require('../src/index');
 // Simple decorated classes for testing
 @decorate({ blockErrors: true })
 class MyDecoratedClass {
-	field: any;
+	field: number;
 	constructor() {
 		this.field = 123;
 	}
@@ -13,7 +13,7 @@ class MyDecoratedClass {
 
 @decorate(MyDecoratedClass, { strictChain: false })
 class MyDecoratedSubClass {
-	sub_field: any;
+	sub_field: number;
 	constructor() {
 		this.sub_field = 321;
 	}
@@ -24,13 +24,17 @@ const myDecoratedInstance2 = new MyDecoratedClass();
 const myDecoratedSubInstance = apply(myDecoratedInstance, MyDecoratedSubClass);
 
 // MyDecoratedSubSubClass extending from a function constructor
-const MyFn = function (this: any) {
+interface MyFnType {
+	sub_sub_field: number;
+}
+
+const MyFn = function (this: MyFnType): void {
 	this.sub_sub_field = 123;
-} as any;
+};
 
 @decorate(MyDecoratedSubClass)
-class MyDecoratedSubSubClass extends MyFn {
-	sub_sub_field: any;
+class MyDecoratedSubSubClass extends (MyFn as unknown as new () => { sub_sub_field: number }) {
+	sub_sub_field: number;
 	constructor() {
 		super();
 		this.sub_sub_field = 321;
@@ -42,8 +46,8 @@ const myDecoratedSubSubInstance = apply(myDecoratedSubInstance, MyDecoratedSubSu
 // Other decorated class
 @decorate()
 class MyOtherDecoratedClass {
-	field: any;
-	prop: any;
+	field: number;
+	prop!: number;
 	constructor() {
 		this.field = 123;
 	}
@@ -52,7 +56,11 @@ class MyOtherDecoratedClass {
 const myOtherDecoratedInstance = new MyOtherDecoratedClass();
 
 // Define a nested type
-const MyOtherFn = MyOtherDecoratedClass.define('MyOtherFn', function (this: any) {
+interface TypeWithDefine {
+	define: (name: string, fn: (this: { prop: number }) => void) => new () => { prop: number };
+}
+
+const MyOtherFn = (MyOtherDecoratedClass as unknown as TypeWithDefine).define('MyOtherFn', function (this: { prop: number }) {
 	this.prop = 321;
 });
 

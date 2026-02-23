@@ -4,9 +4,9 @@ const {
 	getProps,
 } = require('../src/index');
 
-const odp = (obj: Record<string, unknown>, prop: string, attributes: PropertyDescriptor) => {
+const odp = (obj: Record<string, unknown>, prop: string, attributes: PropertyDescriptor): void => {
 	try {
-		return Object.defineProperty(obj, prop, attributes);
+		Object.defineProperty(obj, prop, attributes);
 	} catch (error) {
 		console.error(error);
 	}

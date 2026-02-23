@@ -1,6 +1,11 @@
 'use strict';
 
 import { beforeAll, describe, expect, it } from '@jest/globals';
+import type {
+	AsyncChainTestOptions,
+	MnemonicaError,
+	ExtractableInstance
+} from './types';
 
 const mnemonica = require('../src/index');
 const {
@@ -9,7 +14,7 @@ const {
 	getProps,
 } = mnemonica;
 
-export const asyncChainTests = (opts: any) => {
+export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 
 	const {
 		UserType,
@@ -20,12 +25,12 @@ export const asyncChainTests = (opts: any) => {
 
 	describe('async construct should return something', () => {
 
-		let thrown: any;
+		let thrown: Error | undefined;
 		beforeAll(async () => {
 			try {
 				await new AsyncWOReturn();
 			} catch (error) {
-				thrown = error;
+				thrown = error as Error;
 			}
 		});
 
@@ -33,18 +38,18 @@ export const asyncChainTests = (opts: any) => {
 			expect(thrown).toBeInstanceOf(Error);
 			expect(thrown).toBeInstanceOf(AsyncWOReturn);
 			expect(thrown).toBeInstanceOf(errors.WRONG_MODIFICATION_PATTERN);
-			expect(thrown.message).toBeDefined();
-			expect(typeof thrown.message).toEqual('string');
-			expect(thrown.message).toEqual('wrong modification pattern : should inherit from AsyncWOReturn: seems async AsyncWOReturn has no return statement');
+			expect(thrown!.message).toBeDefined();
+			expect(typeof thrown!.message).toEqual('string');
+			expect(thrown!.message).toEqual('wrong modification pattern : should inherit from AsyncWOReturn: seems async AsyncWOReturn has no return statement');
 		});
 
 	});
 
 	describe('test hook throwModificationError', () => {
 		const thrownError = new Error('aha');
-		let thrown: any;
+		let thrown: Error | undefined;
 		const HookThrownType = define('HookThrownType', function () { });
-		HookThrownType.registerHook('postCreation', (hookData: any) => {
+		HookThrownType.registerHook('postCreation', (hookData: { throwModificationError: (error: Error) => void }) => {
 			if (!(thrown instanceof Error)) {
 				hookData.throwModificationError(thrownError);
 			}
@@ -54,19 +59,19 @@ export const asyncChainTests = (opts: any) => {
 			try {
 				await new HookThrownType();
 			} catch (error) {
-				thrown = error;
+				thrown = error as Error;
 			}
 		});
 
 		it('should throw without return statement', () => {
 			expect(thrown).toBeInstanceOf(Error);
 			expect(thrown).toBeInstanceOf(HookThrownType);
-			expect(thrown.message).toEqual('aha');
+			expect(thrown!.message).toEqual('aha');
 		});
 	});
 
 	describe('async construct should NOT return something', () => {
-		let thrown: any;
+		let thrown: unknown;
 		beforeAll(async () => {
 			try {
 				thrown = await new AsyncWOReturnNAR();

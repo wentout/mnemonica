@@ -10,12 +10,14 @@
 
 		"noImplicitAny": true,
 		"strictNullChecks": true,
-		"strictFunctionTypes": false,
+		"strictFunctionTypes": true,
 		"noImplicitThis": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"noImplicitReturns": false,
-		"noFallthroughCasesInSwitch": false,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+
+		"isolatedModules" : true,
 
 		"extendedDiagnostics": true,
 		"forceConsistentCasingInFileNames": true,

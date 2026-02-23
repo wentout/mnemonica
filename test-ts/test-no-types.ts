@@ -10,8 +10,6 @@ const SomeType = define( 'SomeType', function (this: {
 	this.one = gather;
 	this.check = check;
 	this.q = 123;
-}, {
-	l : 12345
 });
 SomeType.registerHook('preCreation', () => { console.log('SomeType'); });
 
@@ -24,8 +22,6 @@ const SomeSubType = SomeType.define( 'SomeSubType', function ( this: {
 	this.one = undefined;
 	this.two = 'SomeSubType';
 	this.q = 123;
-}, {
-	k : 123
 });
 
 const first = new SomeType('SomeArg');

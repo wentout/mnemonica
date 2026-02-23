@@ -1,4 +1,4 @@
-import { define } from '..';
+import { define, apply } from '..';
 
 const FirstType = define( 'SomeType', function (this: {
 	first: 'FirstType',
@@ -28,7 +28,9 @@ const firstO = new FirstTypeO();
 
 type TSecondInstance = InstanceType<typeof SecondType>;
 
-const second = new first.SecondType() as TSecondInstance;
+const second = new first.SecondType() as unknown as TSecondInstance;
+
+const second2 = apply(first, SecondType);
 
 // Type tests for exposeInstanceMethods
 // first should have MnemonicaInstance methods (extract, pick, etc.) and subtypes
@@ -49,4 +51,4 @@ const f1: 'FirstType' = first.first;
 const f2: 'FirstType' = firstO.first;
 
 // { first: undefined, second: "SecondType" }
-console.log(first, firstO, second, f1, f2);
+console.log(first, firstO, second, second2, f1, f2);
