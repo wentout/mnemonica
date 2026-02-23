@@ -3,9 +3,14 @@
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import type {
 	AsyncChainTestOptions,
-	MnemonicaError,
-	ExtractableInstance
+	UserData,
+	ChainedAsyncInstance,
+	WrongSyncTypeInstance,
+	WrongAsyncTypeInstance,
+	SleepTypeInstance,
+	SleepErrorInstance,
 } from './types';
+import type { MnemonicaInstance } from '../src/types';
 
 const mnemonica = require('../src/index');
 const {
@@ -88,24 +93,24 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 
 	describe('async chain check', () => {
 
-		const WrongSyncType = define('WrongSyncType', function (data: any) {
+		const WrongSyncType = define('WrongSyncType', function (data: UserData) {
 			const self = new UserType(data);
 			return self;
 		}, {
 			submitStack: true
 		});
 
-		const WrongAsyncType = define('WrongAsyncType', async function (data: any) {
+		const WrongAsyncType = define('WrongAsyncType', async function (data: UserData) {
 			const self = new UserType(data);
 			return self;
 		}, {
 			submitStack: true,
 		});
 
-		let syncWAsync1: any,
-			syncWAsync2: any,
-			wrongSyncTypeErr: any,
-			wrongAsyncTypeErr: any;
+		let syncWAsync1: ChainedAsyncInstance,
+			syncWAsync2: ChainedAsyncInstance,
+			wrongSyncTypeErr: WrongSyncTypeInstance | undefined,
+			wrongAsyncTypeErr: WrongAsyncTypeInstance | undefined;
 
 		const etalon1 = {
 			WithAdditionalSignSign: 'WithAdditionalSignSign',
@@ -132,7 +137,7 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 			async: '2_3rd',
 		};
 
-		let syncWAsyncChained: any;
+		let syncWAsyncChained: ChainedAsyncInstance;
 
 		beforeAll(function (done) {
 			(async () => {
@@ -143,9 +148,9 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 							await (
 								await (
 
-									new UserTypeConstructor({
+									(new UserTypeConstructor({
 										email: 'async@gmail.com', password: 32123
-									})
+									}) as ChainedAsyncInstance)
 										.WithoutPassword()
 										.WithAdditionalSign('async sign')
 
@@ -158,32 +163,33 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 					).AsyncChain3rd({ async: '1_3rd' });
 
 				// working two
-				syncWAsync2 = await (
+				syncWAsync2 = (await (
 
-					new UserTypeConstructor({
+					(new UserTypeConstructor({
 						email: 'async@gmail.com', password: 32123
-					})
+					}) as ChainedAsyncInstance)
 						.WithoutPassword()
 						.WithAdditionalSign('async sign')
+						.AsyncChain1st({ async1st: '2_1st' })
 
-				).AsyncChain1st({ async1st: '2_1st' })
+				)
 					// after promise
-					.then(async function (instance: any) {
+					.then(async function (instance: ChainedAsyncInstance) {
 						return await instance.AsyncChain2nd({ async2nd: '2_2nd' });
 					})
-					.then(async function (instance: any) {
+					.then(async function (instance: ChainedAsyncInstance) {
 						// sync 2 async
 						return await instance.Async2Sync2nd({ sync: '2_is' });
 					})
-					.then(async function (instance: any) {
+					.then(async function (instance: ChainedAsyncInstance) {
 						return await instance.AsyncChain3rd({ async: '2_3rd' });
-					});
+					})) as ChainedAsyncInstance;
 
 				syncWAsyncChained = await
-					new UserTypeConstructor({
+					(new UserTypeConstructor({
 						email: 'async@gmail.com',
 						password: 32123
-					})
+					}) as ChainedAsyncInstance)
 						.WithoutPassword()
 						.WithAdditionalSign('async sign')
 						.AsyncChain1st({ async1st: '1st' })
@@ -200,7 +206,7 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 						password: 111
 					});
 				} catch (err) {
-					wrongSyncTypeErr = err;
+					wrongSyncTypeErr = err as WrongSyncTypeInstance;
 				}
 
 				try {
@@ -209,7 +215,7 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 						password: 111
 					});
 				} catch (err) {
-					wrongAsyncTypeErr = err;
+					wrongAsyncTypeErr = err as WrongAsyncTypeInstance;
 				}
 
 			})();
@@ -262,84 +268,84 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 
 		it('SyncError.stack should have seekable definition', () => {
 			const stackstart = '<-- creation of [ WrongSyncType ] traced -->';
-			const { stack } = wrongSyncTypeErr;
+			const { stack } = wrongSyncTypeErr!;
 			expect(stack.indexOf(stackstart)).toEqual(1);
 			expect(stack.indexOf('async.chain.ts') > 0).toEqual(true);
 			expect(wrongSyncTypeErr).toBeInstanceOf(Error);
 			expect(wrongSyncTypeErr).toBeInstanceOf(WrongSyncType);
 			expect(wrongSyncTypeErr).toBeInstanceOf(errors.WRONG_MODIFICATION_PATTERN);
-			expect(wrongSyncTypeErr.message).toBeDefined();
+			expect(wrongSyncTypeErr!.message).toBeDefined();
 
-			expect(wrongSyncTypeErr.message).toEqual('wrong modification pattern : should inherit from WrongSyncType but got UserType');
+			expect(wrongSyncTypeErr!.message).toEqual('wrong modification pattern : should inherit from WrongSyncType but got UserType');
 		});
 
 		it('AsyncError.stack should have seekable definition', () => {
 			const stackstart = '<-- creation of [ WrongAsyncType ] traced -->';
-			const { stack } = wrongAsyncTypeErr;
+			const { stack } = wrongAsyncTypeErr!;
 			expect(stack.indexOf(stackstart)).toEqual(1);
 			expect(stack.indexOf('async.chain.ts') > 0).toEqual(true);
 			expect(wrongAsyncTypeErr).toBeInstanceOf(Error);
 			expect(wrongAsyncTypeErr).toBeInstanceOf(WrongAsyncType);
 			expect(wrongAsyncTypeErr).toBeInstanceOf(errors.WRONG_MODIFICATION_PATTERN);
-			expect(wrongAsyncTypeErr.message).toBeDefined();
+			expect(wrongAsyncTypeErr!.message).toBeDefined();
 
-			expect(wrongAsyncTypeErr.message).toEqual('wrong modification pattern : should inherit from WrongAsyncType but got UserType');
+			expect(wrongAsyncTypeErr!.message).toEqual('wrong modification pattern : should inherit from WrongAsyncType but got UserType');
 		});
 
 	});
 
 	describe('async chain forced errors types check', () => {
 
-		let sleepError: any = null;
+		let sleepError: SleepErrorInstance | null = null;
 
-		let sleepInstance: any = null;
-		let otherSleepInstance: any = null;
-		let anotherSleepInstance: any = null;
+		let sleepInstance: SleepTypeInstance | null = null;
+		let otherSleepInstance: SleepTypeInstance | null = null;
+		let anotherSleepInstance: SleepTypeInstance | null = null;
 
-		let syncErrorStart: any = null;
-		let syncErrorEnd: any = null;
+		let syncErrorStart: SleepErrorInstance | null = null;
+		let syncErrorEnd: SleepErrorInstance | null = null;
 
-		let straightErrorSync: any = null;
-		let straightErrorAsync: any = null;
+		let straightErrorSync: Error | null = null;
+		let straightErrorAsync: Error | null = null;
 
 		const argsTest = { argsTest: 123 };
 
 		const sleep = (time: number) => {
-			return new Promise((resolve) => setTimeout(resolve, time));
+			return new Promise<void>((resolve) => setTimeout(resolve, time));
 		};
 
-		const SleepType = define('SleepType', async function () {
+		const SleepType = define('SleepType', async function (this: MnemonicaInstance) {
 			await sleep(100);
-			this.slept = true;
+			(this as SleepTypeInstance).slept = true;
 			return this;
 		});
 
-		const AsyncErroredType = SleepType.define('AsyncErroredType', async function (this: any, ...args: any[]) {
+		const AsyncErroredType = SleepType.define('AsyncErroredType', async function (this: MnemonicaInstance, ...args: unknown[]) {
 			await sleep(100);
 			const b = { ...args };
-			// TypeError
-			(b as any).c.async = null;
+			// TypeError - intentional error creation
+			((b as Record<string, unknown>).c as Record<string, unknown>).async = null;
 		});
 
-		const SyncErroredType = SleepType.define('SyncErroredType', function (this: any, ...args: any[]) {
+		const SyncErroredType = SleepType.define('SyncErroredType', function (this: MnemonicaInstance, ...args: unknown[]) {
 			const b = { ...args };
-			// TypeError
-			(b as any).c.sync = null;
+			// TypeError - intentional error creation
+			((b as Record<string, unknown>).c as Record<string, unknown>).sync = null;
 		});
 
-		const AsyncErroredTypeStraight = SleepType.define('AsyncErroredTypeStraight', async function (this: any, ...args: any[]) {
+		const AsyncErroredTypeStraight = SleepType.define('AsyncErroredTypeStraight', async function (this: MnemonicaInstance, ...args: unknown[]) {
 			await sleep(100);
 			const b = { ...args };
-			// TypeError
-			(b as any).c.async = null;
+			// TypeError - intentional error creation
+			((b as Record<string, unknown>).c as Record<string, unknown>).async = null;
 		}, {
 			blockErrors: false
 		});
 
-		const SyncErroredTypeStraight = SleepType.define('SyncErroredTypeStraight', function (this: any, ...args: any[]) {
+		const SyncErroredTypeStraight = SleepType.define('SyncErroredTypeStraight', function (this: MnemonicaInstance, ...args: unknown[]) {
 			const b = { ...args };
-			// TypeError
-			(b as any).c.sync = null;
+			// TypeError - intentional error creation
+			((b as Record<string, unknown>).c as Record<string, unknown>).sync = null;
 		}, {
 			blockErrors: false
 		});
@@ -347,40 +353,40 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 		beforeAll(function (done) {
 			(async () => {
 
-				sleepInstance = await new SleepType();
+				sleepInstance = await new SleepType() as SleepTypeInstance;
 
 				try {
-					await sleepInstance.AsyncErroredType(argsTest);
+					await sleepInstance!.AsyncErroredType(argsTest);
 				} catch (error) {
-					sleepError = error;
+					sleepError = error as SleepErrorInstance;
 				}
 
-				otherSleepInstance = await new SleepType();
+				otherSleepInstance = await new SleepType() as SleepTypeInstance;
 
-				anotherSleepInstance = await new SleepType();
+				anotherSleepInstance = await new SleepType() as SleepTypeInstance;
 
 				try {
-					anotherSleepInstance.SyncErroredType(argsTest);
+					anotherSleepInstance!.SyncErroredType(argsTest);
 				} catch (error) {
-					syncErrorStart = error;
+					syncErrorStart = error as SleepErrorInstance;
 				}
 
 				try {
-					anotherSleepInstance.SyncErroredType(argsTest);
+					anotherSleepInstance!.SyncErroredType(argsTest);
 				} catch (error) {
-					syncErrorEnd = error;
+					syncErrorEnd = error as SleepErrorInstance;
 				}
 
 				try {
 					await new SleepType().AsyncErroredTypeStraight(argsTest);
 				} catch (error) {
-					straightErrorAsync = error;
+					straightErrorAsync = error as Error;
 				}
 
 				try {
 					await new SleepType().SyncErroredTypeStraight(argsTest);
 				} catch (error) {
-					straightErrorSync = error;
+					straightErrorSync = error as Error;
 				}
 
 				done();
@@ -389,9 +395,9 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 		}, 30000);
 
 		it('should have props', () => {
-			expect(sleepInstance.slept).toEqual(true);
-			expect(sleepError.slept).toEqual(true);
-			expect(otherSleepInstance.slept).toEqual(true);
+			expect(sleepInstance!.slept).toEqual(true);
+			expect(sleepError!.slept).toEqual(true);
+			expect(otherSleepInstance!.slept).toEqual(true);
 		});
 
 		it('sleepError should be instanceof Error', () => {

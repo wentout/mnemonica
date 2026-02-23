@@ -376,3 +376,62 @@ export interface AsyncChainInstance extends MnemonicaInstance {
 	Async2Sync2nd(opts: { sync: string }): AsyncChainInstance;
 	AsyncChain3rd(opts: { async: string }): Promise<AsyncChainInstance>;
 }
+
+// ============================================================================
+// Async Chain Test Types
+// ============================================================================
+
+// User data for constructor parameters
+export interface UserData {
+	email: string;
+	password: number;
+}
+
+// Type that supports both Promise-like behavior and direct method chaining
+// (mnemonica returns a special thenable that allows both)
+type AsyncChainable = Promise<ChainedAsyncInstance> & ChainedAsyncInstance;
+
+// Instance with chained methods for async tests
+export interface ChainedAsyncInstance extends ExtractableInstance {
+	WithoutPassword(): ChainedAsyncInstance;
+	WithAdditionalSign(sign: string): ChainedAsyncInstance;
+	AsyncChain1st(opts: { async1st: string }): AsyncChainable;
+	AsyncChain2nd(opts: { async2nd: string }): AsyncChainable;
+	Async2Sync2nd(opts: { sync: string }): ChainedAsyncInstance;
+	AsyncChain3rd(opts: { async: string }): AsyncChainable;
+}
+
+// Error types for wrong modification pattern tests
+export interface WrongSyncTypeInstance extends MnemonicaError {
+	stack: string;
+	message: string;
+	extract(): Record<string, unknown>;
+}
+
+export interface WrongAsyncTypeInstance extends MnemonicaError {
+	stack: string;
+	message: string;
+	extract(): Record<string, unknown>;
+}
+
+// Sleep type and related error types
+export interface SleepTypeInstance extends MnemonicaInstance {
+	slept: boolean;
+	AsyncErroredType(data: { argsTest: number }): Promise<SleepErrorInstance>;
+	SyncErroredType(data: { argsTest: number }): SleepErrorInstance;
+}
+
+export interface SleepErrorInstance extends MnemonicaError {
+	slept: boolean;
+}
+
+// Constructor function types for error-generating functions
+export type ErrorConstructorFunction = (
+	this: MnemonicaInstance,
+	...args: unknown[]
+) => void;
+
+export type AsyncErrorConstructorFunction = (
+	this: MnemonicaInstance,
+	...args: unknown[]
+) => Promise<void>;

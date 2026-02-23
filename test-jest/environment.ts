@@ -6,24 +6,8 @@ import type {
 	EnvironmentTestOptions,
 	MnemonicaError,
 	MnemonicaErrorWithError,
-	UserTypeInstance,
-	UserTypeConstructorInstance,
-	UserWithoutPasswordInstance,
-	WithAdditionalSignInstance,
-	OverMoreInstance,
-	MoreOverInstance,
 	SomeADTCInstance,
-	SubOfSomeADTCInstance,
-	MyDecoratedInstance,
-	MyDecoratedSubInstance,
-	MyDecoratedSubSubInstance,
-	MyOtherInstance,
-	AnotherCollectionInstance,
-	OneElseCollectionInstance,
-	TestTypeClass,
-	InstanceWithException,
 	FlexibleConstructor,
-	UserWithNamedClass
 } from './types';
 
 const mnemonica = require('../src/index');
