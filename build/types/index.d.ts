@@ -33,7 +33,7 @@ export type constructorOptions = {
     exposeInstanceMethods?: boolean;
 };
 export type HideInstanceMethodsOptions = constructorOptions & {
-    exposeInstanceMethods: false;
+    exposeInstanceMethods: true;
 };
 export type SubtypesMap = Map<string, TypeClass>;
 export type TypeDef = {

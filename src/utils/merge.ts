@@ -5,7 +5,7 @@ const {
 	WRONG_ARGUMENTS_USED
 } = ErrorsTypes;
 
-export const merge = ( a: any, b: any, ...args: any[] ) => {
+export const merge = ( a: any, b: any, ...args: unknown[] ) => {
 
 	// at this situation this check is enough
 	if ( a !== Object( a ) ) {

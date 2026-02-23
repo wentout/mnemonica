@@ -191,7 +191,7 @@ const makeAwaiter = function ( this: any, type: any, then?: ThenSpec ) {
 			const props = _getProps(self.inheritedInstance) as Props;
 
 			 
-			if ( props.__self__ !== (self.inheritedInstance as any) ) {
+			if ( props.__self__ !== (self.inheritedInstance as unknown) ) {
 				self.postProcessing( type );
 			}
 
@@ -237,7 +237,7 @@ const InstanceCreatorPrototype = {
 };
 
  
-export const InstanceCreator = function ( this: any, type: any, existentInstance: any, args: any[], chained: boolean ) {
+export const InstanceCreator = function ( this: any, type: any, existentInstance: unknown, args: unknown[], chained: boolean ) {
 
 	const {
 		constructHandler,

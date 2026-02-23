@@ -14,7 +14,7 @@ export const extract = ( instance: any ) => {
 		throw new WRONG_INSTANCE_INVOCATION;
 	}
 
-	const extracted: { [ index: string ]: any } = {};
+	const extracted: { [ index: string ]: unknown } = {};
 
 	for ( const name in instance ) {
 		// if ( name === 'constructor' && !hop( instance, name ) ) {

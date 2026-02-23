@@ -26,7 +26,7 @@ import { makeInstanceModificator } from '../types/InstanceModificator';
 
 import { _getProps, Props } from '../types/Props';
 
-const checkThrowArgs = ( instance: any, target: any, error: Error, args: any[] ) => {
+const checkThrowArgs = ( instance: unknown, target: unknown, error: Error, args: unknown[] ) => {
 
 	let wrongThrow;
 
@@ -156,7 +156,7 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 
 };
 
-const prepareException = function ( this: any, target: any, error: Error, ...args: any[] ) {
+const prepareException = function ( this: any, target: unknown, error: Error, ...args: unknown[] ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const instance = this;

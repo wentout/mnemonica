@@ -56,7 +56,7 @@ export const define = function <
 	config?: constructorOptions,
 ): IDefinitorInstance<N, SN, constructorOptions> {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	return types.define(TypeName, constructHandler as IDEF<T>, config) as IDefinitorInstance<N, SN, constructorOptions>;
+	return (types as any).define(TypeName, constructHandler as IDEF<T>, config) as IDefinitorInstance<N, SN, constructorOptions>;
 } as TypeAbsorber;
 
 export const lookup = function (
@@ -64,7 +64,7 @@ export const lookup = function (
 	TypeNestedPath: string
 ): TypeClass | undefined {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	return types.lookup(TypeNestedPath);
+	return (types as any).lookup(TypeNestedPath);
 };
 
 
@@ -182,6 +182,13 @@ export const mnemonica = Object.entries({
 	return acc;
 }, {});
 
+import * as api from './api';
+
+export const {
+	define: _define,
+	lookup: _lookup
+} = api.types;
+
 export const {
 
 	SymbolParentType,
@@ -202,7 +209,7 @@ const typedCreateTypesCollection: CreateTypesCollectionFunction = mnemonica.crea
 export const createTypesCollection: CreateTypesCollectionFunction = typedCreateTypesCollection;
 
 
-export const defaultCollection = defaultTypes.subtypes;
+export const defaultCollection = (defaultTypes as any).subtypes;
 export const errors = descriptors.ErrorsTypes;
 
 export { utils } from './utils';

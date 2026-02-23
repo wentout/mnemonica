@@ -107,7 +107,7 @@ const MnemonicaProtoProps = {
 	exception () {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const self = this;
-		return function (error: Error, ...args: any[]) {
+		return function (error: Error, ...args: unknown[]) {
 			const target = new.target;
 			return exceptionConstructor.call(self, target, error, ...args);
 		};
@@ -121,7 +121,7 @@ const MnemonicaProtoProps = {
 			const {
 				__collection__: collection,
 			} = props;
-			const sibling: any = collection[ SiblingTypeName ];
+			const sibling: unknown = collection[ SiblingTypeName ];
 			return sibling;
 		};
 
@@ -168,7 +168,7 @@ const staticProps = [
 	}, Object.create(null));
 
 // tslint:disable-next-line: only-arrow-functions
-const makeSubTypeProxy = function (subtype: any, inheritedInstance: any) {
+const makeSubTypeProxy = function (subtype: any, inheritedInstance: unknown) {
 
 	const subtypeProxy = new Proxy(InstanceCreator, {
 
@@ -231,7 +231,7 @@ const prepareSubtypeForConstruction = function (subtypeName: string, inheritedIn
 	return subtype ? makeSubTypeProxy(subtype, inheritedInstance) : undefined;
 };
 
-const mnemosyneProxyHandlerGet = (target: any, prop: string, receiver: any) => {
+const mnemosyneProxyHandlerGet = (target: any, prop: string, receiver: unknown) => {
 
 	// Node.js 22 Reflect.get Behaviour Changed here
 	// cause something gone wrong with prop assignment
@@ -315,7 +315,7 @@ const Mnemosyne = function (mnemonica: object) {
 } as ConstructorFunction<typeof MnemonicaProtoProps>;
 
 const createMnemosyne = function (Uranus: unknown) {
-// const createMnemosyne = function (Uranus: unknown, typeProxy: any) {
+// const createMnemosyne = function (Uranus: unknown, typeProxy: unknown) {
 // 	if (typeof Uranus === 'undefined') {
 // 		const { __type__: type, Uranus: _uranus } = typeProxy;
 // 		console.log(type, _uranus);

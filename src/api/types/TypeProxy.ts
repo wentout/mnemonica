@@ -22,7 +22,7 @@ import { InstanceCreator } from './InstanceCreator';
 // Type for TypeProxy instance
 export interface TypeProxyInstance {
 	__type__: any;
-	Uranus: unknown;
+	Uranus: any;
 	get(target: any, prop: string): any;
 	set(target: any, name: string, value: any): boolean;
 	construct(target: any, args: unknown[]): any;
@@ -30,7 +30,7 @@ export interface TypeProxyInstance {
 	new (...args: unknown[]): any;
 }
 
-export const TypeProxy = function (__type__: any, Uranus: unknown) {
+export const TypeProxy = function (__type__: any, Uranus: any) {
 	Object.assign(this, {
 		__type__,
 		Uranus
@@ -74,7 +74,7 @@ TypeProxy.prototype.get = function (target: any, prop: string) {
 
 };
 
-TypeProxy.prototype.set = function (__: any, name: string, value: any) {
+TypeProxy.prototype.set = function (__: unknown, name: string, value: unknown) {
 
 	const {
 		__type__: type

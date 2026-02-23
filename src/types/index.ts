@@ -61,7 +61,7 @@ export type constructorOptions = {
 
 // Constructor options that explicitly hide instance methods
 export type HideInstanceMethodsOptions = constructorOptions & {
-	exposeInstanceMethods: false;
+	exposeInstanceMethods: true;
 };
 
 // Subtypes map - represents the subtypes property

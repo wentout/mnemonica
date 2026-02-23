@@ -29,7 +29,7 @@ const {
 
 const typesCollections = new Map();
 
-const TypesCollection = function ( _config: Record<string, unknown> ) {
+const TypesCollection = function ( _config: Record<string, any> ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;

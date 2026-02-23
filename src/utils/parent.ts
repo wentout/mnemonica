@@ -10,7 +10,7 @@ import { _getProps, Props } from '../api/types/Props';
 // seek for firts parent instance
 // of instance prototype chain
 // with constructors of path
-export const parent = ( instance: any, path: string ): any => {
+export const parent = ( instance: any, path: string ): unknown => {
 
 	// at this situation this check is enough
 	if ( instance !== Object( instance ) ) {

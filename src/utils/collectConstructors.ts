@@ -35,7 +35,7 @@ export const collectConstructors = (self: object, asSequence = false) => {
 		return constructors;
 	}
 
-	let proto: any = Reflect.getPrototypeOf(self);
+	let proto: unknown = Reflect.getPrototypeOf(self);
 
 	let mnemonicaReached = false;
 	while (proto) {

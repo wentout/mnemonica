@@ -13,6 +13,7 @@ export declare const registerHook: <T extends object>(Ctor: IDEF<T>, hookType: h
 export declare const mnemonica: {
     [index: string]: unknown;
 };
+export declare const _define: (this: CallableFunction, subtypes: Map<string, object>, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object) => TypeClass, _lookup: (this: Map<string, object>, TypeNestedPath: string) => TypeClass | undefined;
 export declare const SymbolParentType: unknown, SymbolConstructorName: unknown, SymbolDefaultTypesCollection: unknown, SymbolConfig: unknown, MNEMONICA: unknown, MNEMOSYNE: unknown, TYPE_TITLE_PREFIX: unknown, ErrorMessages: unknown;
 export declare const createTypesCollection: CreateTypesCollectionFunction;
 export declare const defaultCollection: any;

@@ -243,7 +243,7 @@ const makeFakeModificatorType = (
 
 	const modificatorBody = compileNewModificatorFunctionBody(TypeName);
 
-	const modificatorType = modificatorBody(
+	const modificatorType: any = modificatorBody(
 		fakeModificator,
 		CreationHandler,
 		SymbolConstructorName

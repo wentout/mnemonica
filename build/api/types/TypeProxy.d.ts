@@ -1,7 +1,7 @@
 import type { constructorOptions, ConstructorFunction } from '../../types';
 export interface TypeProxyInstance {
     __type__: any;
-    Uranus: unknown;
+    Uranus: any;
     get(target: any, prop: string): any;
     set(target: any, name: string, value: any): boolean;
     construct(target: any, args: unknown[]): any;
