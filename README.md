@@ -1,5 +1,6 @@
-# mnemonica is
-abstract technique that aids information retention : instance inheritance system
+# mnemonica
+
+**Abstract technique that aids information retention: Instance Inheritance System**
 
 ... allows us to make inherited descriptions of mappings of transformations from predecessor structured data types to the successors, as if it was math `f(x)=>y` ... and we will use `this` keyword as a persistent data structure where we will apply that transformations
 
@@ -10,865 +11,377 @@ abstract technique that aids information retention : instance inheritance system
 
 # shortcuts
 
+* ?. : state : **mad science**
 * ?. : type : **asynchronous monad descriptor** => this
 * ?. : prod ready : **we wonder about**
 * ?. : example : **git clone && npm run example**
 
 ---
-
 [![Coverage Status](https://coveralls.io/repos/github/wentout/mnemonica/badge.svg?branch=master)](https://coveralls.io/github/wentout/mnemonica?branch=master)
-
 ![NPM](https://img.shields.io/npm/l/mnemonica)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/wentout/mnemonica)
 ![GitHub last commit](https://img.shields.io/github/last-commit/wentout/mnemonica)
-
 [![NPM](https://nodei.co/npm/mnemonica.png?mini=true)](https://www.npmjs.com/package/mnemonica)
 
 ---
 
+## Table of Contents
 
-# core concept
+- [Overview](#overview)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Core Concepts](#core-concepts)
+- [TypeScript Support](#typescript-support)
+- [API Reference](#api-reference)
+  - [Core Functions](#core-functions)
+  - [Type Management](#type-management)
+  - [Instance Methods](#instance-methods)
+  - [Utilities](#utilities)
+  - [Hooks](#hooks)
+  - [Error Handling](#error-handling)
+  - [Symbols & Constants](#symbols--constants)
+- [Configuration Options](#configuration-options)
+- [AI Agent Usage Guide](#ai-agent-usage-guide)
+- [Examples](#examples)
 
-This lib might help to create some sort of order or sequence or precedence of how we modify data inside of our code. It utilizes the concept of tree or [Trie](https://en.wikipedia.org/wiki/Trie) by combining both: Object Instances and Inheritance through the Prototype Chain, where we are able to create new instance inherited from existing one as much times as we need. It might look like obvious, but ... we tell about Instances, not about Classes, meaning Plain Objects, crafted from real Constructors before we start the process of inheriting them one from another. In an attempt to describe this approach let me suggest this articles:
+---
 
-* [Inheritance in JavaScript : Factory of Constructors with Prototype Chain](https://github.com/mythographica/stash/blob/master/inheritance.md)
-* [Architecture of Prototype Inheritance in JavaScript](https://dev.to/wentout/architecture-of-prototype-inheritance-in-javascript-ce6)
-* [Dead Simple type checker for JavaScript](https://dev.to/wentout/dead-simple-type-checker-for-javascript-4l40)
+## Overview
 
+Mnemonica helps create ordered sequences of data transformations using prototype chain inheritance. It combines Object Instances with Inheritance through the Prototype Chain, enabling you to create new instances inherited from existing ones.
 
-## TypeScript note
+Think of it as a mathematical function `f(x) => y` where `this` is your persistent data structure and transformations are applied sequentially.
 
-**define** function now fully supports TypeScript definitions
+> *"O Great Mnemosyne! Please! Save us from Oblivion..."*
+> — from the source, where memory persists
 
-for more easy types writing nested~sub constructors might be applied using just direct apply, call or bind functions
+![concept](https://raw.githubusercontent.com/mythographica/stash/master/img/LifeCycle/LifeCycle.png)
 
+**Key Features:**
+- Factory of Constructors with Prototype Chain Inheritance
+- Instance-level inheritance (not just class-level)
+- Async constructor support with chainable awaits
+- Type-safe data flow definition
+- Comprehensive hook system for lifecycle events
 
-## Factory of Constructors
+**Related Reading:**
+- [Inheritance in JavaScript: Factory of Constructors with Prototype Chain](https://github.com/mythographica/stash/blob/master/inheritance.md)
+- [Architecture of Prototype Inheritance in JavaScript](https://dev.to/wentout/architecture-of-prototype-inheritance-in-javascript-ce6)
+- [Dead Simple type checker for JavaScript](https://dev.to/wentout/dead-simple-type-checker-for-javascript-4l40)
 
-As we discrovered from that article, we need some tooling, giving us the best experience with Prototype Chain Inheritance pattern. First of all it must be reproducible and maintainable. And from the first point we have to define some sort of Factory Constructor for start crafting our Instances, it might look like so:
+---
+
+## Installation
+
+```bash
+npm install mnemonica
+```
+
+**Requirements:** Node.js >=16 <24
+
+---
+
+## Quick Start
+
+### CommonJS
 
 ```js
 const { define } = require('mnemonica');
 
-const TypeModificationProcedure = function (opts) {
-	Object.assign(this, opts);
-};
-
-// SomeTypeConstructor -- is a constructor.name
-const SomeType = define('SomeTypeConstructor',
-	TypeModificationProcedure,
-);
-
-```
-
-Or, we can define `SomeType` like this:
-
-```js
-const TypeModificationConstructorFactory = () => {
-	// SomeTypeConstructor -- is a constructor.name
-	const SomeTypeConstructor = function (opts) {
-		// as this is absolutely the same behaviour
-		// we described upper
-		// in TypeModificationProcedure
-		// we allowed to do the following
-		// for shortening this example lines
-		Object.assign(this, opts);
-	};
-	// prototype definition is NOT obligatory
-	SomeTypeConstructor.prototype
-		.description = 'SomeType Constructor';
-
-	return SomeTypeConstructor;
-};
-
-const SomeType = define(TypeModificationConstructorFactory);
-```
-
-Or using Classes:
-
-```js
-const TypeModificationConstructorFactory = () => {
-	// SomeTypeConstructor -- is a constructor.name
-	class SomeTypeConstructor {
-		constructor (opts) {
-			// all this definitions
-			// just to show the example
-			// of how it works
-			const {
-				some,
-				data,
-				// we will re-define
-				// "inside" property later
-				// using nested sub-type
-				inside
-			} = opts;
-			this.some = some;
-			this.data = data;
-			this.inside = inside;
-		}
-	};
-	return SomeTypeConstructor;
-};
-
-const SomeType = define(TypeModificationConstructorFactory);
-```
-
-Then we can define some nested type, using our crafted `SomeType` definition:
-
-```js
-SomeType.define('SomeSubType', function (opts) {
-	const {
-		other,
-		inside // again
-	} = opts;
-	this.other = other;
-	// here we will re-define
-	// our previously defined property
-	// with the new value
-	this.inside = inside;
-}, {
-	description : 'SomeSubType Constructor'
+// Define a type
+const UserType = define('UserType', function (data) {
+  Object.assign(this, data);
 });
 
-// or, absolutely equal
-SomeType.SomeSubType = function (opts) {
-	const {
-		other,
-		inside // again
-	} = opts;
-	this.other = other;
-	// here we will re-define
-	// our previously defined property
-	// with the new value
-	this.inside = inside;
-};
-SomeType.SomeSubType.prototype = {
-	description : 'SomeSubType Constructor'
-};
-```
-
-Now our type modification chain looks like this:
-
-```js
-// 1.
-SomeType
-	// 1.1
-	.SomeSubType;
-```
-
-And we can continue nesting sub-types as far as it might be necessary for our code and our software architecture... :^)
-
-## **How it Works then**
-
-Let's create an instance, using `SomeType` construtor, we earlier.
-
-```js
-const someTypeInstance = new SomeType({
-	some   : 'arguments',
-	data   : 'necessary',
-	inside : 'of SomeType definition'
-});
-```
-
-Then, there might be situation, when we reached the place in code, where we have to use the next, nested -- `SomeSubType` -- constructor, to apply our `someTypeInstance` to the next one Inherited and **`Sub-Type'd`** Instance.
-
-```js
-
-const someSubTypeInstance =
-	// someTypeInstance is an instance
-	// we did before, through the referenced
-	// SomeType constructor we made using
-	// define at the first step
-	// of this fabulous adventure
-	someTypeInstance
-		// we defined SomeSubType
-		// as a nested constructor
-		// so we have to use it
-		// utilising  instance
-		// crafted from it's parent
-		.SomeSubType({
-			other  : 'data needed',
-			// and this is -re-definition
-			// of "inside" property
-			// as we promised before
-			inside : ' of ... etc ...'
-		});
-
-```
-
-At this moment all stored data will inherit from `someTypeInstance` to `someSubTypeInstance`. Moreover, `someSubTypeInstance` become instanceof `SomeType` and `SomeSubType` and, let's go deeper, instance of `someTypeInstance`.
-
-
-And now let's ponder on our Instances:
-
-```js
-
-console.log(someTypeInstance);
-
-	some   : 'arguments'
-	data   : 'necessary'
-	inside : 'of SomeType definition'
-
-console.log(someSubTypeInstance);
-
-	other  : 'data needed'
-	inside : ' of ... etc ...'
-
-```
-
-So, here it might be looking miscouraging... but this is not the end of the story, cause we have the magic of **built-in** ...
-
-# .extract()
-
-So, here is a situation we need all previously defined props and all the nested props collected to the one-same object:
-
-```js
-
-const extracted = someSubTypeInstance.extract();
-
-console.log(extracted);
-
-	data        : "necessary"
-	description : "SomeSubType Constructor"
-	inside      : " of ... etc ..."
-	other       : "data needed"
-	some        : "arguments"
-
-```
-
-or, with the same behaviour:
-
-```js
-const { extract } = require('mnemonica').utils;
-const extracted = extract(someSubTypeInstance);
-
-	data        : "necessary"
-	description : "SomeSubType Constructor"
-	inside      : " of ... etc ..."
-	other       : "data needed"
-	some        : "arguments"
-
-console.log(extract(someTypeInstance));
-
-	data        : "necessary"
-	description : "SomeType Constructor"
-	inside      : "of SomeType definition"
-	some        : "arguments"
-
-```
-
-Here `extracted` object will contain all iterable props of `someSubTypeInstance`. It means props are accessible via `Symbol.iterator`. So if you will define some hidden props, it will not consume them. This technique allows us acheive concentration only on meaningfull parts of [Data Flow Definition](https://en.wikipedia.org/wiki/Data-flow_diagram). So, all this might help to cover the gap between declared data flow and indeed flow written in code through describing flow itself with that simple way. For sure you are free to make your own `.extractor()` functions on the top of acheived multiplie inherited data object (storage):
-
-![Inheritance of someSubTypeInstance](https://raw.githubusercontent.com/mythographica/stash/master/img/doc.example.png)
-
-And back to definitions, for sure, all of the following is true:
-
-```js
-
-console.log(someTypeInstance instanceof SomeType); // true
-console.log(someSubTypeInstance instanceof SomeType); // true
-console.log(someSubTypeInstance instanceof SomeSubType); // true
-// who there can care... but, yes, it is again: true
-console.log(someSubTypeInstance instanceof someTypeInstance);
-
-```
-
-But this is not the end... it might be discouraging, but this is only the begining.
-
-## How do we use defined "mnemonicas"
-
-Suppose we have to handle the `request.data` somewhere in our code and we have to consume it someelsewhere. Let's imagine us inside of **[ETL process](https://en.wikipedia.org/wiki/Extract,_transform,_load)**.
-
-Let's create Constructor for this sort of data.
-
-```js
-const RequestDataTypeModificator = 
-	define('RequestData',
-		FactoryOfRequestHandlerCostructor);
-```
-
-Then we will use it in our code like this:
-
-```js
-(req, res) => {
-	const requestInstance = 
-		RequestDataTypeModificator(req.body);
-};
-```
-
-And then it might be necessary to jump to the next part of code, which cooperate with some Storage or Daba Base.
-
-```js
-const GoneToTheDataBase = 
-	RequestDataTypeModificator.
-		// jumped data definition
-		define('GoneToTheDataBase',
-			DataBaseRequestHandlerCostructor);
-```
-
-Here we might choose what to do: inspect some collected data or probably we wish to extract it for **tests** or **log** or even grab them with the other consumer. And yes, we already saw `.extract()` method, but there are also two other methods could be much more helpfull...
-
-# Pre & Post creation Hooks
-
-```js
-// callback will be called Before requestInstance creation
-
-const preCreationCallback = (hookData) => {
-	const {
-		
-		// { string }
-		TypeName : TypeModificatorConstructor.name,
-		
-		// 1. [ array ]
-		// ...args of TypeModificator
-		// for instance creation
-		argumentsOfTypeModificator,
-		
-		// 2. { object }
-		// instance we will craft from
-		// using our TypeModificator
-		instanceUsedForInheritance
-		
-	} = hookData;
-	// some necessary pre-investigations
-};
-
-RequestDataTypeModificator
-	.registerHook(
-		'preCreation', 
-			preCreationCallback);
-
-
-const postCreationCallback = (hookData) => {
-	const {
-		// { string }
-		TypeName : TypeModificatorConstructor.name,
-		
-		// 1. [ array ]
-		argumentsOfTypeModificator,
-		
-		// 2. { object }
-		instanceUsedForInheritance,
-		
-		// 3. { object }
-		// instance we just crafted
-		// from instanceUsedForInheritance
-		// using our TypeModificator
-		// with argumentsOfTypeModificator
-		// and ... inheritedInstance
-		//  .constructor.name is 
-		// TypeName
-		inheritedInstance
-		
-	} = hookData;
-	// some necessary post-investigations
-};
-
-// callback will be called After requestInstance creation
-RequestDataTypeModificator
-	.registerHook(
-		'postCreation', 
-			postCreationCallback);
-```
-
-Thouse hooks will be proceeded if you register them... for each instance you will craft using `RequestDataTypeModificator`. So if you wish to investigate instances of `GoneToTheDataBase` type modificator then you have to register the other hooks for it:
-
-```js
-
-GoneToTheDataBase
-	.registerHook(
-		'preCreation', // ...
-		
-GoneToTheDataBase
-	.registerHook(
-		'postCreation', // ...
-	
-
-```
-
-
-And even more. You can use Hooks with Types Collections also (starting from v0.3.1). For doing this just grab referer to collection somewhere, for example:
-
-
-```js
-const {
-	defaultTypes
-} = require('mnemonica');
-
-defaultTypes
-	.registerHook(
-		'preCreation', preCreationTypesCollectionCallback);
-		
-defaultTypes
-	.registerHook(
-		'postCreation', postCreationTypesCollectionCallback);
-
-
-```
-
-'Pre' hooks for Types Collections invoked before Type Hook invocation. 'Post' hooks for Types Collections invoked after Type Hook invocation. So, actually it looks like:
-
-```js
-
-// 1.
-typecollection.invokeHook('preCreation', // ...
-
-// 2.
-type.invokeHook('preCreation', // ...
-
-// 3. instance creation is here
-
-// 4.
-type.invokeHook('postCreation', // ...
-
-// 5.
-typecollection.invokeHook('postCreation', // ...
-
-
-```
-
-As we can see, type hooks are closest one to the type itself. For sure, there can be situations, when you have to register some common hooks, but not for `typecollection`. Assume you have some friendly types, might be from different collections, and you have to register the same hooks definitions for them. And the plase where you wish to do this is the file, other than files you defined that types. There you can use:
-
-# .lookup('TypeName')
-
-```js
-const {
-	lookup
-} = require('mnemonica');
-
-const SomeType = lookup('SomeType');
-const SomeNestedType = lookup('SomeType.SomeNestedType');
-
-```
-
-And now it is not so necessary easy to explain why it could be usefull to use nested definitions. Sure you can do them by using the following technique: 
-
-```js
-
-define('SomeExistentType.SomeExistentNestedType.NewType', function () {
-	// operators
+// Create an instance
+const user = new UserType({ name: 'John', email: 'john@example.com' });
+
+// Define a subtype
+const AdminType = UserType.define('AdminType', function () {
+  this.role = 'admin';
 });
 
-// or from tm descriptor
-// if you have reference
-SomeExistentType.define('SomeExistentNestedType.NewType', function () {
-	// operators
-});
-
-// you can also use
-
-SomeExistentType.define('SomeExistentNestedType', () => {
-	// name of "NewType" is here
-	// nested inside of delcaration
-	return class NewType {
-		constructor (str) {
-			// operators
-		}
-	};
-});
-
+// Create nested instance (inherits from user)
+const admin = new user.AdminType();
+console.log(admin.name); // 'John' (inherited)
+console.log(admin.role); // 'admin' (own property)
 ```
 
-# .parent('TypeName')
-
-Let assume our `instance` has indeed deep prototype chain:
-
-```js
-EvenMore
-	.MoreOver
-		.OverMore
-			// ...
-			// ...
-			.InitialType
-```
-
-And we wish to get reference to one of the prececessors, though we have only reference to insance itself. Here we can use builtin `instance.parent()` method:
-
-```js
-
-// fisrst parent
-// simply equal to getProps(instance).__parent__
-const parent = instance.parent();
-
-// deep parent from chain
-const parent = instance
-	.parent( 'DeepParentName' );
-
-```
-
-
-# SomeType.call ( this_obj, ...args)
-You can combine existing TypeConstructor with any instance, even with Singletones:
-
-```js
-const usingProcessAsProto = Singletoned.call(process, {
-	some   : 'arguments',
-	data   : 'necessary',
-	inside : 'for definition'
-});
-console.log(typeof instanceUsingProcessSingletone.on) // function
-```
-
-or you can combine with window, or document or...
-
-```js
-
-const usingWindowAsProto = Windowed.call(window);
-const usingDocumentAsProto = Documented.call(document);
-const usingJQueryAsProto = JQueried.call(jQuery);
-
-// or even ReactDOM
-import ReactDOM from "react-dom";
-import { define } from "mnemonica";
-const ReactDOOMed = define("ReactDOOMed", function() {});
-const usingReactAsProto = ReactDOOMed.call(ReactDOM);
-
-const root = document.getElementById("root");
-usingReactAsProto.render("just works", root);
-
-```
-
-
-# call, apply & bind ( existent, ItsNestedType, ...args)
-
-mostly for TypeScript purpose you may do this
-
-```js
-const SomeType = define('SomeType', function () {
-	// ...
-});
-
-
-const SomeSubType = SomeType
-	.define('SomeSubType', function (...args) {
-		// ...
-	});
-
-const someInstance = new SomeType;
-
-const someSubInstance = call(
-	someInstance, SomeSubType, ...args);
-
-// or for array of args
-const someSubInstance = apply(
-	someInstance, SomeSubType, args);
-
-// or for delayed construction
-const someSubInstanceConstructor = 
-	bind( someInstance, SomeSubType );
-
-const someSubInstance = someSubInstanceConstructor(...args);
-
-```
-
-# Asynchronous Constructors
-First of all you should understand what you wish to are doing!
-Then you should understand what you wish. And only after doing so you might use this technic:
-
-```js
-const AsyncType = define('AsyncType', async function (data) {
-	return Object.assign(this, {
-		data
-	});
-});
-
-const asyncCall = async function () {
-	const asyncConstructedInstance = await new AsyncType('tada');
-	console.log(asyncConstructedInstance) // { data: "tada" }
-	console.log(asyncConstructedInstance instanceof AsyncType) // true
-};
-
-asyncCall();
-```
-
-Also nothing will warn you from doing this for SubTypes:
-
-```js
-const NestedAsyncType = AsyncType
-	.define('NestedAsyncType', async function (data) {
-		return Object.assign(this, {
-			data
-		});
-	}, {
-		description: 'async of nested'
-	});
-
-const nestedAsyncTypeInstance = await new 
-	asyncConstructedInstance.NestedAsyncType('boom');
-
-console.log(nestedAsyncTypeInstance instanceof AsyncType) // true
-console.log(nestedAsyncTypeInstance instanceof NestedAsyncType) // true
-console.log(nestedAsyncTypeInstance.description); // 'async of nested'
-```
-
-Also for the first instance in chain you can do for example inherit from singletone:
-
-```js
-const asyncCalledInstance = await AsyncType
-	.call(process, 'wat');
-// or
-const asyncCalledInstance = await AsyncType
-	.apply(process, ['wat']);
-console.log(asyncCalledInstance) // { data: "wat" }
-console.log(asyncCalledInstance instanceof AsyncType) // true
-```
-
-# Asynch Chain & single await
-
-Let for example suppose you need the following code:
-
-```js
-async (req, res) => {
-	
-	const {
-		email    // : 'async@check.mail',
-		password // : 'some password'
-	} = req.body
-
-	const user = await
-		new UserTypeConstructor({
-			email,
-			password
-		})
-		.UserEntityValidate('valid sign') // sync
-		.WithoutPassword() // sync, rid of password
-	
-	const storagePushResult =
-		await user.AsyncPushToStorage();
-	const storageGetResult =
-		await storagePushResult.AsyncGetStorageResponse();
-	const storageValidateResult =
-		storagePushResult.SyncValidateStorageData()
-	const requestRplyResult = 
-		await StorageValidateResult.AsyncReplyToRequest(res);
-	return requestRplyResult;
-};
-```
-
-Here we have a lot of unnecessary variables. Though we can combine our chain using `.then()` or simpy brakets `(await ...)`, but it will definetely looks weird:
-
-```js
-async (req, res) => {
-	
-	const {
-		email,    // : 'async@check.mail',
-		password // : 'some password'
-	} = req.body
-
-	const user =
-		await (
-			  (
-		await (
-		await (
-			new UserTypeConstructor({
-				email,
-				password
-			})
-			.UserEntityValidate('valid sign')
-			.WithoutPassword()
-		).AsyncPushToStorage()
-		).AsyncGetStorageResponse()
-		).SyncValidateStorageData()
-		).AsyncReplyToRequest(res);
-};
-```
-
-And with using `.then()` of general promises it will look much more badly, even over than "callback hell".
-
-And, if so, starting from `v.0.5.8` we are able to use async chains for async constructors:
-
-```js
-async (req, res) => {
-	
-	const {
-		email,    // : 'async@check.mail',
-		password // : 'some password'
-	} = req.body
-
-	const user =
-		await new UserTypeConstructor({
-				email,
-				password
-			})
-			.UserEntityValidate('valid sign')
-			.WithoutPassword()
-			.AsyncPushToStorage()
-			.AsyncGetStorageResponse()
-			.SyncValidateStorageData()
-			.AsyncReplyToRequest(res);
-};
-```
-So now you don't have to care if this constructor is async or sync and where to put brakets and how many of them. It is enough to type constructor name after the dot and pass necessary arguments. That's it.
-
-## require('util').callbackify
-
-It is important: if we make `util.callbackify` from our instance async creation method, we shall [`.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_objects/Function/call) it then.
-
-
-
-# Instance Properties
-
-Also starting from `v0.3.8` the following non enumerable props are availiable from instance itself (`instance.hasOwnProperty(__prop__)`):
-
-## Breaking Changes for 0.9.995
-
-### all props below available from `getProps(instance)` :
-
-## `.__args__`
-
-Arguments, used for calling instance creation constructor.
-
-## `.__type__`
-The definition of instance type.
-
-## `.__parent__`
-If instance is nested, then it is a reference of it's parent.
-
-## `.__subtypes__`
-What you can craft from this instance accordingly with it's defined Type, the same as `__type__.subtypes`.
-
-## `.__collection__`
-Collection of types where `__type__` was defined.
-
-# `instance.clone`
-Returns cloned instance, with the following condition `instance !== instance.clone`. Cloning includes all the inheritance, with hooks invocations and so on. Therfore cloned instance is not the same as instance, but both made from the same `.__parent__` instance.
-
-_Note_: if you are cloning instance, which has `async Constructor`, you should `await` it;
-
-
-# **`instance.fork( some, new, args )`**
-Returns forked instance. Behaviour is same as for cloned instance, both made from the same `.__parent__`. But this is a method, not the property, so you can apply another arguments to the constructor.
-
-_Note_: if you are forking instance, which has `async Constructor`, you should `await` it;
-
-
-# Directed Acyclic Graphs
-
-## **`instance.fork.call( thisArg, ...args )`**
-## **`instance.fork.apply( thisArg, [args] )`**
-Let assume you nedd [Directed Acyclic Graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph). Then you have to be able to construct it somehow. Starting from `v0.6.1` you can use `fork.call` or `fork.apply` for doing this:
-
-```js
-// the following equals
-A.fork.call(B, ...args);
-A.fork.apply(B, [args]);
-A.fork.bind(B)(...args);
-```
-_Note_: if you are `fork.clone`'ing instance, which has `async Constructor`, you should `await` it;
-
-
-## mnemonica.utils.merge(A, B, ...args)
-The same as `fork.call` but providing instsnces directly.
-
-_Note_: if you are `merge`'ing instances, where A.constructor is `async Constructor`, you should `await` it;
-
----
-
-# ESM Support
-Starting from v0.6.8 you can try to import ESM using the following scenario:
+### ESM
 
 ```js
 import { define, lookup } from 'mnemonica/module';
 ```
 
-# Config Options
+---
 
-While making `define` we can provide some config data about how instance should be created, default values and descriptions are below:
+## Core Concepts
+
+### Factory of Constructors
+
+Define types using constructors, factory functions, or classes:
 
 ```js
-define('SomeType', function () {}, {}, {
+// Using a constructor function
+const SomeType = define('SomeType', function (opts) {
+  Object.assign(this, opts);
+});
 
-	// shall or not we use strict checking
-	// for creation sub-instances Only from current type
-	// or we might use up-nested sub-instances from chain
-	strictChain: true,
+// Using a factory function
+const AnotherType = define(() => {
+  const AnotherTypeConstructor = function (opts) {
+    Object.assign(this, opts);
+  };
+  AnotherTypeConstructor.prototype.description = 'SomeType Constructor';
+  return AnotherTypeConstructor;
+});
 
-	// should we use forced errors checking
-	// to make all inherited types errored
-	// if there is an error somewhere in chain
-	// disallow instance construction
-	// if there is an error in prototype chain
-	blockErrors: true,
-
-	// if it is necessary to collect stack
-	// as a __stack__ prototype property
-	// during the process of instance creation
-	submitStack: false,
-
-	// await new Constructor()
-	// must return value
-	// optional ./issues/106
-	awaitReturn: true,
-
-})
+// Using a class
+const ClassType = define(() => {
+  class MyClass {
+    constructor(opts) {
+      Object.assign(this, opts);
+    }
+  }
+  return MyClass;
+});
 ```
 
-Also you can override default config options for Types Collection. For example, after doing so all types that have no own config will fall without any error:
+### Nested Type Definition
 
 ```js
-import {
-	defaultTypes,
-	SymbolConfig
-} from 'mnemonica';
+// Define nested types
+SomeType.define('SubType', function (opts) {
+  this.other = opts.other;
+}, {
+  description: 'SomeSubType Constructor'
+});
 
-defaultTypes[SymbolConfig].blockErrors = false;
+// Or using assignment
+SomeType.SubType = function (opts) {
+  this.other = opts.other;
+};
+SomeType.SubType.prototype = {
+  description: 'SomeSubType Constructor'
+};
+```
 
+### Instance Creation and Inheritance
+
+```js
+const someInstance = new SomeType({
+  some: 'arguments',
+  data: 'necessary'
+});
+
+const subInstance = new someInstance.SubType({
+  other: 'data needed'
+});
+
+// All properties are inherited
+console.log(subInstance.some);   // 'arguments' (inherited)
+console.log(subInstance.other);  // 'data needed' (own)
+```
+
+### The `.extract()` Method
+
+Extract all inherited properties into a flat object:
+
+```js
+const extracted = subInstance.extract();
+// Result: { data, description, other, some }
+
+// Or use the standalone utility
+const { utils: { extract } } = require('mnemonica');
+const extracted2 = extract(subInstance);
 ```
 
 ---
 
-# API Reference
+## TypeScript Support
 
-## Core Functions
+The `define` function has full TypeScript support:
 
-### `define(typeName, constructHandler, config?)`
-Defines a new type constructor. Returns a TypeClass that can be used to create instances.
+```typescript
+import { define, apply, call, bind } from 'mnemonica';
 
-### `lookup(typeNestedPath)`
-Looks up a type by its nested path (e.g., `'SomeType.SomeNestedType'`).
+interface UserData {
+  email: string;
+  password: string;
+}
 
-### `apply(entity, Constructor, args?)`
-Applies a constructor to an entity with the given arguments array.
+const UserType = define('UserType', function (this: UserData, data: UserData) {
+  Object.assign(this, data);
+});
 
-### `call(entity, Constructor, ...args)`
+// Nested constructors work with apply/call/bind for type inference
+const user = new UserType({ email: 'test@test.com', password: 'secret' });
+```
+
+For complex nested types, use `apply`, `call`, or `bind` for better type inference:
+
+```typescript
+const SomeSubType = SomeType.define('SomeSubType', function (...args: string[]) {
+  // ...
+});
+
+const someInstance = new SomeType();
+const subInstance = call(someInstance, SomeSubType, 'arg1', 'arg2');
+```
+
+---
+
+## API Reference
+
+### Core Functions
+
+#### `define(typeName, constructHandler, config?)`
+
+Defines a new type constructor. Returns a TypeClass.
+
+```js
+const MyType = define('MyType', function (data) {
+  Object.assign(this, data);
+}, {
+  strictChain: true,
+  blockErrors: true
+});
+```
+
+**Parameters:**
+- `typeName` (string): Name of the type (optional if using factory function)
+- `constructHandler` (Function): Constructor function
+- `config` (object, optional): Configuration options
+
+#### `lookup(typeNestedPath)`
+
+Looks up a type by its nested path.
+
+```js
+const { lookup } = require('mnemonica');
+const SomeType = lookup('SomeType');
+const SomeNestedType = lookup('SomeType.SomeNestedType');
+```
+
+#### `apply(entity, Constructor, args?)`
+
+Applies a constructor to an entity with an array of arguments.
+
+```js
+const { apply } = require('mnemonica');
+const subInstance = apply(parentInstance, SubType, ['arg1', 'arg2']);
+```
+
+#### `call(entity, Constructor, ...args)`
+
 Calls a constructor on an entity with spread arguments.
 
-### `bind(entity, Constructor)`
-Binds a constructor to an entity, returning a function that can be called later.
+```js
+const { call } = require('mnemonica');
+const subInstance = call(parentInstance, SubType, 'arg1', 'arg2');
+```
 
-### `registerHook(Constructor, hookType, callback)`
+#### `bind(entity, Constructor)`
+
+Binds a constructor to an entity, returning a function.
+
+```js
+const { bind } = require('mnemonica');
+const createSub = bind(parentInstance, SubType);
+const subInstance = createSub('arg1', 'arg2');
+```
+
+#### `decorate(target?, config?)`
+
+TypeScript decorator for class-based definitions.
+
+```typescript
+import { decorate } from 'mnemonica';
+
+@decorate()
+class MyClass {
+  field: number = 123;
+}
+
+// With configuration
+@decorate({ strictChain: false })
+class ConfiguredClass {
+  // ...
+}
+
+// Nested decoration
+@decorate()
+class ParentClass {}
+
+@decorate(ParentClass)
+class ChildClass {}
+```
+
+#### `registerHook(Constructor, hookType, callback)`
+
 Registers a hook for a specific constructor.
 
-## Type Management
+```js
+const { registerHook } = require('mnemonica');
 
-### `defaultTypes`
-The default types collection. All types defined with the top-level `define()` function are stored here.
+registerHook(MyType, 'preCreation', (hookData) => {
+  console.log('Creating:', hookData.TypeName);
+});
+```
 
-### `createTypesCollection()`
+---
+
+### Type Management
+
+#### `defaultTypes`
+
+The default types collection. All types defined with the top-level `define()` are stored here.
+
+```js
+const { defaultTypes } = require('mnemonica');
+const MyType = defaultTypes.MyType;
+```
+
+#### `createTypesCollection(config?)`
+
 Creates a new isolated types collection.
 
 ```js
+const { createTypesCollection } = require('mnemonica');
 const myCollection = createTypesCollection();
-const MyType = myCollection.define('MyType', function() {});
+const MyType = myCollection.define('MyType', function () {});
 ```
 
-### `getProps(instance)` / `setProps(instance, values)`
+#### `getProps(instance)` / `setProps(instance, values)`
+
 Get or set internal properties of an instance.
 
 ```js
 const { getProps, setProps } = require('mnemonica');
+
 const props = getProps(instance);
 console.log(props.__type__, props.__args__);
+
+// Set properties
+setProps(instance, { __timestamp__: Date.now() });
 ```
 
-## Instance Methods
+---
+
+### Instance Methods
 
 All mnemonica instances have the following methods:
 
-### `.extract()`
+#### `.extract()`
+
 Extracts all inherited properties into a single flat object.
 
-### `.pick(...keys)` / `.pick([keys])`
+```js
+const extracted = instance.extract();
+```
+
+#### `.pick(...keys)` / `.pick([keys])`
+
 Picks specific properties from the instance and its inheritance chain.
 
 ```js
@@ -877,99 +390,65 @@ const picked = instance.pick('email', 'password');
 const picked = instance.pick(['email', 'password']);
 ```
 
-### `.parent(constructorName?)`
-Gets the parent instance. If `constructorName` is provided, walks up the chain to find that specific parent.
+#### `.parent(constructorName?)`
+
+Gets the parent instance. If `constructorName` is provided, walks up the chain.
 
 ```js
 const immediateParent = instance.parent();
 const specificParent = instance.parent('UserType');
 ```
 
-### `.clone`
-Property that returns a cloned instance (same as `.fork()` with no arguments).
+#### `.clone`
 
-### `.fork(...args)`
-Creates a forked instance from the same parent, optionally with different arguments.
+Property that returns a cloned instance (same parent, same args).
 
 ```js
-const forked = instance.fork(); // same args
-const forkedWithNewArgs = instance.fork('new', 'args');
+const cloned = instance.clone;
+// Note: For async constructors, use: await instance.clone
 ```
 
-### `.fork.call(thisArg, ...args)` / `.fork.apply(thisArg, args)`
-Forks with a different `this` context (useful for DAG construction).
+#### `.fork(...args)`
+
+Creates a forked instance from the same parent with optional new arguments.
+
+```js
+const forked = instance.fork();           // same args
+const forkedWithNewArgs = instance.fork('new', 'args');
+// Note: For async constructors, use: await instance.fork(...)
+```
+
+#### `.fork.call(thisArg, ...args)` / `.fork.apply(thisArg, args)`
+
+Forks with a different `this` context (useful for Directed Acyclic Graphs).
 
 ```js
 const dagInstance = instanceA.fork.call(instanceB, 'args');
 ```
 
-### `.exception(error, ...args)`
-Creates an exception instance from the current instance. Useful for typed errors.
+#### `.exception(error, ...args)`
+
+Creates an exception instance from the current instance.
 
 ```js
 const error = someInstance.exception(new Error('Something went wrong'));
 throw error;
 ```
 
-### `.sibling(typeName)` / `.sibling.TypeName`
+#### `.sibling(typeName)` / `.sibling.TypeName`
+
 Access sibling types from the same collection.
 
 ```js
 const siblingType = instance.sibling('OtherType');
-const siblingInstance = new siblingType();
-// or
 const sibling = instance.sibling.OtherType;
 ```
 
-## Utils
+---
 
-### `utils.extract(instance)`
-Standalone extract function.
+### Instance Properties (via `getProps`)
 
-### `utils.pick(instance, ...keys)`
-Standalone pick function.
-
-### `utils.parent(instance, constructorName?)`
-Standalone parent function.
-
-### `utils.parse(instance)`
-Parses an instance structure, returning detailed information about:
-- `name`: constructor name
-- `props`: extracted properties
-- `self`: the instance itself
-- `proto`: prototype object
-- `joint`: prototype properties
-- `parent`: parent prototype
-
-```js
-const { utils: { parse } } = require('mnemonica');
-const parsed = parse(instance);
-```
-
-### `utils.merge(A, B, ...args)`
-Merges two instances using fork semantics.
-
-```js
-const merged = merge(instanceA, instanceB, 'args');
-```
-
-### `utils.toJSON(instance)`
-Serializes an instance to JSON.
-
-```js
-const json = utils.toJSON(instance);
-```
-
-### `utils.collectConstructors(instance, flat?)`
-Collects all constructors in the instance's prototype chain.
-
-```js
-const constructors = utils.collectConstructors(instance, true);
-```
-
-## Instance Properties (via getProps)
-
-All instances have non-enumerable internal properties accessible via `getProps()`:
+All instances have non-enumerable internal properties:
 
 | Property | Description |
 |----------|-------------|
@@ -983,58 +462,122 @@ All instances have non-enumerable internal properties accessible via `getProps()
 | `.__timestamp__` | Creation timestamp (ms since epoch) |
 | `.__self__` | Self reference to the instance |
 
-## Hooks
+---
 
-### Hook Types
+### Utilities
+
+Access via `utils` export:
+
+```js
+const { utils } = require('mnemonica');
+```
+
+#### `utils.extract(instance)`
+Standalone extract function.
+
+#### `utils.pick(instance, ...keys)`
+Standalone pick function.
+
+#### `utils.parent(instance, constructorName?)`
+Standalone parent function.
+
+#### `utils.parse(instance)`
+Parses an instance structure, returning:
+- `name`: constructor name
+- `props`: extracted properties
+- `self`: the instance itself
+- `proto`: prototype object
+- `joint`: prototype properties
+- `parent`: parent prototype
+
+```js
+const { utils: { parse } } = require('mnemonica');
+const parsed = parse(instance);
+```
+
+#### `utils.merge(A, B, ...args)`
+Merges two instances using fork semantics.
+
+```js
+const merged = utils.merge(instanceA, instanceB, 'args');
+// Note: For async constructors, use: await utils.merge(...)
+```
+
+#### `utils.toJSON(instance)`
+Serializes an instance to JSON.
+
+```js
+const json = utils.toJSON(instance);
+```
+
+#### `utils.collectConstructors(instance, flat?)`
+Collects all constructors in the instance's prototype chain.
+
+```js
+const constructors = utils.collectConstructors(instance, true);
+```
+
+---
+
+### Hooks
+
+#### Hook Types
 
 - `'preCreation'` - Called before instance creation
 - `'postCreation'` - Called after instance creation
 - `'creationError'` - Called when instance creation throws an error
 
-### `type.registerHook(hookType, callback)`
+#### `type.registerHook(hookType, callback)`
+
 Register a hook on a specific type.
 
 ```js
 MyType.registerHook('preCreation', (hookData) => {
-	console.log('Creating:', hookData.TypeName);
+  console.log('Creating:', hookData.TypeName);
 });
 ```
 
-### `collection.registerHook(hookType, callback)`
+#### `collection.registerHook(hookType, callback)`
+
 Register a hook on a types collection.
 
 ```js
 defaultTypes.registerHook('postCreation', (hookData) => {
-	console.log('Created:', hookData.inheritedInstance.constructor.name);
+  console.log('Created:', hookData.inheritedInstance.constructor.name);
 });
 ```
 
-### `collection.registerFlowChecker(callback)`
+#### `collection.registerFlowChecker(callback)`
+
 Register a flow checker that runs before hooks.
 
 ```js
 defaultTypes.registerFlowChecker((opts) => {
-	// Perform validation or logging
-	console.log('Flow check:', opts.TypeName);
+  console.log('Flow check:', opts.TypeName);
 });
 ```
 
-### Hook Data Structure
+#### Hook Data Structure
 
 ```js
 {
-	TypeName: string,              // Constructor name
-	argumentsOfTypeModificator: [], // Arguments passed
-	instanceUsedForInheritance: {}, // Parent instance
-	inheritedInstance: {}          // Newly created instance (postCreation only)
+  TypeName: string,              // Constructor name
+  type: TypeDescriptor,          // The type being constructed
+  args: unknown[],               // Arguments passed to constructor
+  existentInstance: object,      // Parent instance
+  inheritedInstance: object      // New instance (postCreation only)
 }
 ```
 
-## Error Handling
+**Note:** In preCreation hooks, `existentInstance` refers to the parent; in postCreation hooks, it refers to the instance used for inheritance.
 
-### `errors` Object
+---
 
-All mnemonica errors are accessible via the `errors` export:
+### Error Handling
+
+#### Error Types
+
+All mnemonica errors extend `BASE_MNEMONICA_ERROR`:
 
 ```js
 const { errors } = require('mnemonica');
@@ -1056,9 +599,9 @@ errors.OPTIONS_ERROR
 errors.WRONG_STACK_CLEANER
 ```
 
-### Exception Instances
+#### Exception Instances
 
-When you create an exception using `instance.exception()`, the resulting error has special properties:
+When creating exceptions using `instance.exception()`:
 
 ```js
 const error = instance.exception(new Error('Original error'));
@@ -1071,126 +614,265 @@ error.parse()          // Parse the exception structure
 error.extract()        // Extract properties from the exception
 ```
 
-## Symbols
+#### Stack Cleaning
 
-Mnemonica exports the following symbols:
+```js
+const { defineStackCleaner } = require('mnemonica');
+
+// Add regex patterns to clean stack traces
+defineStackCleaner(/node_modules\/some-package/);
+```
+
+---
+
+### Symbols & Constants
 
 ```js
 const {
-	SymbolParentType,           // Parent type symbol
-	SymbolConstructorName,      // Constructor name symbol
-	SymbolDefaultTypesCollection, // Default collection symbol
-	SymbolConfig                 // Config symbol
+  SymbolParentType,              // Parent type symbol
+  SymbolConstructorName,         // Constructor name symbol
+  SymbolDefaultTypesCollection,  // Default collection symbol
+  SymbolConfig,                  // Config symbol
+  MNEMONICA,                     // Library name
+  MNEMOSYNE                      // Collection identifier
 } = require('mnemonica');
 ```
 
-## TypeScript Types
+---
 
-The following types are exported for TypeScript users:
+## Configuration Options
 
-```typescript
-import {
-	IDEF,                    // Constructor function type
-	ConstructorFunction,     // Constructor with prototype
-	TypeLookup,              // Lookup function type
-	TypeClass,               // Type class interface
-	TypeAbsorber,            // Type absorber type
-	ITypeClass,              // Typed class interface
-	IDefinitorInstance,      // Definitor instance type
-	hooksTypes,              // 'preCreation' | 'postCreation' | 'creationError'
-	hooksOpts,               // Hook options type
-	hook,                    // Hook callback type
-	constructorOptions       // Configuration options type
-} from 'mnemonica';
+Pass options as the third argument to `define()`:
+
+```js
+define('SomeType', function () {}, {
+  strictChain: true,       // Only allow sub-instances from current type
+  blockErrors: true,       // Disallow construction if error in prototype chain
+  submitStack: false,      // Collect stack trace as __stack__ property
+  awaitReturn: true,       // Ensure await new Constructor() returns value
+  ModificationConstructor: fn,  // Custom modification constructor
+  asClass: false           // Force class mode (auto-detected by default)
+});
 ```
 
-## Decorator API
+### Override Default Config for Collection
 
-The `decorate` function provides TypeScript decorator support:
+```js
+import { defaultTypes, SymbolConfig } from 'mnemonica';
 
-### Basic Usage
-
-```typescript
-import { decorate } from 'mnemonica';
-
-@decorate()
-class MyClass {
-	field: number;
-	constructor() {
-		this.field = 123;
-	}
-}
-
-const instance = new MyClass();
+defaultTypes[SymbolConfig].blockErrors = false;
 ```
 
-### With Configuration
+---
 
-```typescript
-@decorate({ strictChain: false, blockErrors: true })
-class MyClass {
-	// ...
+## AI Agent Usage Guide
+
+This section helps AI agents understand and work with mnemonica programmatically.
+
+### 1. Type Introspection
+
+Use `utils.parse(instance)` to understand instance structure:
+
+```js
+const { utils: { parse } } = require('mnemonica');
+
+const parsed = parse(instance);
+// Returns: { name, props, self, proto, joint, parent, constructor }
+```
+
+### 2. Safe Property Access
+
+Always use `getProps()` instead of direct property access:
+
+```js
+const { getProps } = require('mnemonica');
+
+const props = getProps(instance);
+// props.__type__, props.__args__, props.__parent__, props.__subtypes__, etc.
+```
+
+### 3. Type Discovery
+
+```js
+const { defaultTypes } = require('mnemonica');
+
+// List all types in default collection
+const typeNames = [...defaultTypes.subtypes.keys()];
+
+// List subtypes of a specific type
+const myType = defaultTypes.MyType;
+const subTypeNames = [...myType.subtypes.keys()];
+
+// Check if a type exists
+const hasType = defaultTypes.lookup('MyType') !== undefined;
+```
+
+### 4. Instance Traversal
+
+```js
+const { getProps } = require('mnemonica');
+
+// Walk up the inheritance chain
+function traverseChain(instance) {
+  const chain = [];
+  let current = instance;
+  
+  while (current) {
+    const props = getProps(current);
+    if (!props) break;
+    
+    chain.push({
+      typeName: props.__type__.TypeName,
+      timestamp: props.__timestamp__,
+      args: props.__args__
+    });
+    
+    current = props.__parent__;
+  }
+  
+  return chain;
 }
 ```
 
-### Nested Decoration
+### 5. Safe Construction Patterns
 
-```typescript
-@decorate()
-class ParentClass {
-	// ...
+```js
+const { lookup } = require('mnemonica');
+
+// Always check if type exists before construction
+const MyType = lookup('MyType');
+if (MyType) {
+  const instance = new MyType(data);
 }
 
-@decorate(ParentClass, { strictChain: false })
-class ChildClass {
-	// ...
+// For nested construction with proper error handling
+try {
+  const subInstance = new instance.SubType(data);
+} catch (error) {
+  // Handle WRONG_MODIFICATION_PATTERN if SubType not defined
+  console.error('Subtype not available:', error.message);
 }
-
-const parent = new ParentClass();
-const child = apply(parent, ChildClass);
 ```
 
-### Decorator as Function
+### 6. Analyzing Type Structure
 
-Decorated classes can be used as decorators themselves:
+```js
+const { getProps } = require('mnemonica');
 
-```typescript
-@decorate()
-class Base {
-	// ...
+function analyzeType(typeConstructor) {
+  return {
+    name: typeConstructor.TypeName,
+    isSubType: typeConstructor.isSubType,
+    subTypesCount: typeConstructor.subtypes?.size || 0,
+    hasHooks: Object.keys(typeConstructor.hooks || {}).length > 0,
+    config: typeConstructor.config
+  };
 }
-
-@Base()  // Use Base as a decorator
-class Extended {
-	// ...
-}
-
-const base = new Base();
-const extended = apply(base, Extended);
 ```
 
-## Configuration Options Reference
+### 7. Working with Collections
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `strictChain` | `boolean` | `true` | Only allow sub-instances from current type, not up-nested |
-| `blockErrors` | `boolean` | `true` | Disallow instance construction if error in prototype chain |
-| `submitStack` | `boolean` | `false` | Collect stack trace as `__stack__` property |
-| `awaitReturn` | `boolean` | `true` | Ensure `await new Constructor()` returns value |
-| `ModificationConstructor` | `Function` | internal | Custom modification constructor |
-| `asClass` | `boolean` | auto | Force class mode (auto-detected by default) |
+```js
+const { createTypesCollection, defaultTypes } = require('mnemonica');
 
-## finally
+// Create isolated collection for testing
+const testCollection = createTypesCollection({
+  strictChain: false,
+  blockErrors: false
+});
 
-So, now you can craft as much types as you wish, combine them, re-define them and spend much more time playing with them:
+// Define types in isolation
+const TestType = testCollection.define('TestType', function () {});
 
+// Register collection-level hooks
+testCollection.registerHook('preCreation', (data) => {
+  console.log('Creating in test collection:', data.TypeName);
+});
+```
+
+---
+
+## Examples
+
+### Asynchronous Constructors
+
+```js
+const AsyncType = define('AsyncType', async function (data) {
+  await someAsyncOperation();
+  return Object.assign(this, { data });
+});
+
+// Usage
+const asyncInstance = await new AsyncType('tada');
+
+// Nested async types
+const NestedAsync = AsyncType.define('NestedAsync', async function (data) {
+  return Object.assign(this, { nestedData: data });
+});
+
+const nested = await new asyncInstance.NestedAsync('nested');
+```
+
+### Async Chain with Single Await
+
+```js
+async (req, res) => {
+  const result = await new UserTypeConstructor({
+      email: req.body.email,
+      password: req.body.password
+    })
+    .UserEntityValidate('valid sign')
+    .WithoutPassword()
+    .AsyncPushToStorage()
+    .AsyncGetStorageResponse()
+    .SyncValidateStorageData()
+    .AsyncReplyToRequest(res);
+};
+```
+
+### Using `call` with Existing Objects
+
+```js
+// Combine with process, window, document, etc.
+const usingProcessAsProto = Singletoned.call(process, {
+  some: 'arguments'
+});
+
+// With React
+import ReactDOM from "react-dom";
+const ReactDOOMed = define("ReactDOOMed", function() {});
+const usingReactAsProto = ReactDOOMed.call(ReactDOM);
+```
+
+### Directed Acyclic Graphs (DAG)
+
+```js
+// Fork from different parent
+const dagInstance = instanceA.fork.call(instanceB, 'args');
+
+// Or use merge utility
+const { utils: { merge } } = require('mnemonica');
+const merged = merge(instanceA, instanceB, 'args');
+```
+
+---
+
+## Epilogue
+
+So, now you can craft as many types as you wish, combine them, re-define them and spend much more time playing with them:
 
 * test : instances & arguments
 * track : moments of creation
 * check : if the order of creation is OK
 * validate : everything, 4 example use sort of TS in runtime
-* and even .parse them using `mnemonica.utils.parse`:
-
-![Inheritance of someSubTypeInstance](https://raw.githubusercontent.com/mythographica/stash/master/img/doc.example.parse.png)
+* and even `.parse` them using `mnemonica.utils.parse`
 
 Good Luck!
+
+---
+
+## License
+
+MIT
+
+Copyright (c) 2019 https://github.com/wentout
