@@ -58,3 +58,49 @@ export type TypeDescriptorInstance = {
     lookup: CallableFunction;
     subtypes: object;
 };
+export type CollectionDef = {
+    define: CallableFunction;
+    lookup: CallableFunction;
+    invokeHook: CallableFunction;
+    registerHook: CallableFunction;
+    registerFlowChecker: CallableFunction;
+    subtypes: object;
+    hooks: object;
+    [key: string]: unknown;
+};
+export type TypeDef = {
+    proto: object;
+    collection: CollectionDef;
+    invokeHook: CallableFunction;
+    config: {
+        strictChain: boolean;
+    };
+    subtypes: Map<string, Props>;
+    isSubType: boolean;
+    TypeName: string;
+    prototype: unknown;
+    stack?: string;
+};
+export type Props = {
+    __proto_proto__: object;
+    __args__: unknown[];
+    __collection__: CollectionDef;
+    __subtypes__: Map<string, object>;
+    __type__: TypeDef;
+    __parent__: Props;
+    __stack__?: string;
+    __creator__: TypeDef;
+    __timestamp__: number;
+    __self__?: {
+        extract: CallableFunction;
+        [key: string]: unknown;
+    };
+};
+export type Constructor<T = unknown> = new (...args: unknown[]) => T;
+export type DecoratedClass<T extends Constructor<object>> = T & (<U extends Constructor<object>>(target: U) => DecoratedClass<U>) & {
+    define: IDefinitorInstance<InstanceType<T>, unknown>['define'];
+    registerHook: IDefinitorInstance<InstanceType<T>, unknown>['registerHook'];
+    lookup: TypeLookup;
+};
+export type TypeDescriptorConstructor = ConstructorFunction<TypeDescriptorInstance>;
+export type TypesCollectionConstructor = ConstructorFunction<object>;

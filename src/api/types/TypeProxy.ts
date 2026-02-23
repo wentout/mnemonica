@@ -1,7 +1,6 @@
-
 'use strict';
 
-import { constructorOptions, ConstructorFunction } from '../../types';
+import type { constructorOptions, ConstructorFunction } from '../../types';
 
 import TypesUtils from '../utils';
 const {
@@ -20,7 +19,16 @@ const { createMnemosyne, getDefaultPrototype } = mnemosynes;
 
 import { InstanceCreator } from './InstanceCreator';
 
-import { /* _getProps, Props, */ TypeDef } from './Props';
+// Type for TypeProxy instance
+export interface TypeProxyInstance {
+	__type__: any;
+	Uranus: unknown;
+	get(target: any, prop: string): any;
+	set(target: any, name: string, value: any): boolean;
+	construct(target: any, args: unknown[]): any;
+	apply: typeof subTypeApply;
+	new (...args: unknown[]): any;
+}
 
 export const TypeProxy = function (__type__: any, Uranus: unknown) {
 	Object.assign(this, {
@@ -29,9 +37,9 @@ export const TypeProxy = function (__type__: any, Uranus: unknown) {
 	});
 	const typeProxy = new Proxy(InstanceCreator, this);
 	return typeProxy;
-} as ConstructorFunction<any>;
+} as ConstructorFunction<TypeProxyInstance>;
 
-TypeProxy.prototype.get = function (target: any, prop: keyof TypeDef) {
+TypeProxy.prototype.get = function (target: any, prop: string) {
 
 	// const props = _getProps(this) as Props;
 
@@ -115,7 +123,7 @@ const subTypeApply = (
 
 // replace instance prototype
 const primaryTypeApply = function (
-	this: InstanceType<typeof TypeProxy>,
+	this: TypeProxyInstance,
 	// proxy target
 	__: unknown,
 	Uranus: unknown,

@@ -9,7 +9,9 @@ import {
 	constructorOptions,
 	Proto,
 	SN,
-	IDefinitorInstance
+	IDefinitorInstance,
+	Constructor,
+	DecoratedClass
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -42,13 +44,8 @@ function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolea
 
 export const define = function <
 	T,
-	// K extends IDEF<T>,
-	// H extends ThisType<IDEF<T>>,
 	P extends object,
 	N extends Proto<P, T>,
-	// so S it just basically allows nested constructors
-	// and gives extracted props from constructHandler & proto
-	// then it goes to new() keyword of define output
 	S extends SN & N,
 	R extends IDefinitorInstance<N, S>
 >(
@@ -69,7 +66,7 @@ export const lookup = function (TypeNestedPath) {
 
 const $run = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Constructor: IDEF<T>,
+	Ctor: IDEF<T>,
 	args: unknown[]
 ): {
 		[key in keyof S]: S[key]
@@ -77,7 +74,7 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 
 	// debugger;
 	// @ts-ignore
-	const { TypeName } = Constructor;
+	const { TypeName } = Ctor;
 	const Cstr = prepareSubtypeForConstruction(TypeName, entity) as { new(...ars: unknown[]): unknown };
 	// TODO: check lines below and if Constructor is not mnemonized ...
 	if (Cstr === undefined) {
@@ -91,58 +88,36 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 // TODO: apply instance .to type .with arguments
 export const apply = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Constructor: IDEF<T>,
+	Ctor: IDEF<T>,
 	args: unknown[] = []
 ): {
 		[key in keyof S]: S[key]
 	} {
-	return $run<E, T, S>(entity, Constructor, args);
+	return $run<E, T, S>(entity, Ctor, args);
 };
 
 // TODO: call type .by instance .with arguments
 export const call = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Constructor: IDEF<T>,
+	Ctor: IDEF<T>,
 	...args: unknown[]
 ): {
 		[key in keyof S]: S[key]
 	} {
-	return $run<E, T, S>(entity, Constructor, args);
+	return $run<E, T, S>(entity, Ctor, args);
 };
 
 // TODO: bind type .with instance → (...args)
 export const bind = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Constructor: IDEF<T>
+	Ctor: IDEF<T>
 ): (...args: unknown[]) => {
 	[key in keyof S]: S[key]
 } {
 	return (...args) => {
-		return $run<E, T, S>(entity, Constructor, args);
+		return $run<E, T, S>(entity, Ctor, args);
 	};
 };
-
-
-
-
-type Constructor<T = unknown> = new(...args: unknown[]) => T;
-
-// Type for decorated classes that can be used as:
-// 1. A constructor: new MyDecoratedClass()
-// 2. A decorator: @MyDecoratedClass() class Sub {}
-// 3. Extended: class Sub extends MyDecoratedClass {}
-// 4. Have mnemonica methods: MyDecoratedClass.define(...)
-type DecoratedClass<T extends Constructor<object>> =
-	// Base constructor type
-	T &
-	// Callable as decorator: @MyDecoratedClass() class Sub {}
-	(<U extends Constructor<object>>(target: U) => DecoratedClass<U>) &
-	// Mnemonica type system methods
-	{
-		define: IDefinitorInstance<InstanceType<T>, unknown>['define'];
-		registerHook: IDefinitorInstance<InstanceType<T>, unknown>['registerHook'];
-		lookup: TypeLookup;
-	};
 
 export const decorate = function <
 	T extends Constructor<object> | constructorOptions | undefined = undefined
@@ -172,9 +147,9 @@ export const decorate = function <
 };
 
 
-export const registerHook = function <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook): void {
+export const registerHook = function <T extends object>(Ctor: IDEF<T>, hookType: hooksTypes, cb: hook): void {
 	// @ts-ignore
-	Constructor.registerHook(hookType, cb);
+	Ctor.registerHook(hookType, cb);
 };
 
 export const mnemonica = Object.entries({
@@ -224,4 +199,3 @@ export const errors = descriptors.ErrorsTypes;
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
 /* eslint-enable @typescript-eslint/ban-ts-comment, space-before-function-paren */
-
