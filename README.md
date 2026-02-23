@@ -34,6 +34,7 @@
 - [TypeScript Support](#typescript-support)
 - [API Reference](#api-reference)
   - [Core Functions](#core-functions)
+  - [Type Reference](#type-reference)
   - [Type Management](#type-management)
   - [Instance Methods](#instance-methods)
   - [Utilities](#utilities)
@@ -200,7 +201,7 @@ const extracted2 = extract(subInstance);
 
 ## TypeScript Support
 
-The `define` function has full TypeScript support:
+The `define` function has full TypeScript support with comprehensive type definitions:
 
 ```typescript
 import { define, apply, call, bind } from 'mnemonica';
@@ -227,6 +228,84 @@ const SomeSubType = SomeType.define('SomeSubType', function (...args: string[]) 
 
 const someInstance = new SomeType();
 const subInstance = call(someInstance, SomeSubType, 'arg1', 'arg2');
+```
+
+### Exported Type Definitions
+
+The following types are available for advanced TypeScript usage:
+
+```typescript
+import {
+  // Core constructor types
+  IDEF,                          // Base constructor function type: { new(): T } | { (this: T, ...args): void }
+  ConstructorFunction,           // Constructor with prototype
+  Constructor,                   // Generic constructor type
+  
+  // Instance types
+  MnemonicaInstance,             // Instance methods interface (extract, pick, parent, fork, etc.)
+  Props,                         // Internal instance properties (__type__, __args__, __parent__, etc.)
+  SiblingAccessor,               // Sibling type accessor type
+  
+  // Type definition types
+  TypeClass,                     // Base type constructor returned by define()
+  IDefinitorInstance,            // Definitor instance with define/lookup methods and subtypes
+  DecoratedClass,                // Type for @decorate decorated classes
+  TypeDef,                       // Type definition object structure
+  
+  // Configuration types
+  constructorOptions,            // Type config options (strictChain, blockErrors, etc.)
+  hooksTypes,                    // 'preCreation' | 'postCreation' | 'creationError'
+  hook,                          // Hook callback type
+  hooksOpts,                     // Hook options passed to callbacks
+  CollectionDef,                 // Types collection definition
+  
+  // Utility function types
+  ApplyFunction,                 // apply(entity, Ctor, args) => S
+  CallFunction,                  // call(entity, Ctor, ...args) => S
+  BindFunction,                  // bind(entity, Ctor) => (...args) => S
+} from 'mnemonica';
+```
+
+### Generic Type Patterns
+
+Define types with proper generic constraints for full type safety:
+
+```typescript
+// Using IDEF with interface definitions
+interface UserData {
+  email: string;
+  password: string;
+}
+
+// Type-safe constructor with 'this' context
+const UserType = define('UserType', function (this: UserData, data: UserData) {
+  Object.assign(this, data);
+});
+
+// Type-safe nested types with merged interfaces
+interface AdminData {
+  role: string;
+}
+
+const AdminType = UserType.define('AdminType', function (this: UserData & AdminData, role: string) {
+  this.role = role;
+  this.email; // string - inherited from UserData
+});
+```
+
+### Async Constructor Type Patterns
+
+```typescript
+// Async type with proper return type
+const AsyncType = define('AsyncType', async function (this: UserData, data: string) {
+  await someAsyncOperation();
+  return Object.assign(this, { data });
+});
+
+// With explicit awaitReturn option (no return required)
+const AsyncTypeNoReturn = define('AsyncType', async function () {
+  // No return needed
+}, { awaitReturn: false });
 ```
 
 ---
@@ -328,6 +407,32 @@ registerHook(MyType, 'preCreation', (hookData) => {
   console.log('Creating:', hookData.TypeName);
 });
 ```
+
+---
+
+### Type Reference
+
+For advanced TypeScript usage, the following types are exported from `mnemonica`:
+
+| Type | Description | Usage |
+|------|-------------|-------|
+| `IDEF<T>` | Base constructor function type | `define('Name', fn: IDEF<MyType>)` |
+| `MnemonicaInstance` | Instance methods interface | `instance.extract()`, `instance.pick()` |
+| `TypeClass` | Base type constructor | `const MyType: TypeClass = define(...)` |
+| `DecoratedClass<T>` | Decorated class type | `@decorate() class MyClass {}` |
+| `IDefinitorInstance<N, S>` | Constructor with subtypes | Returned by `define()` with `.define()` method |
+| `ConstructorFunction<T>` | Constructor with prototype | Generic constructor function signature |
+| `constructorOptions` | Configuration options | `{ strictChain: true, blockErrors: true }` |
+| `hooksTypes` | Hook type literals | `'preCreation' \| 'postCreation' \| 'creationError'` |
+| `hook` | Hook callback type | `(opts: hooksOpts) => void` |
+| `hooksOpts` | Hook options object | Passed to hook callbacks |
+| `TypeDef` | Type definition structure | `instance.__type__` structure |
+| `CollectionDef` | Types collection | `instance.__collection__` structure |
+| `ApplyFunction` | apply() function type | `apply<E, T, S>(entity, Ctor, args) => S` |
+| `CallFunction` | call() function type | `call<E, T, S>(entity, Ctor, ...args) => S` |
+| `BindFunction` | bind() function type | `bind<E, T, S>(entity, Ctor) => (...args) => S` |
+
+These types enable complete type safety when defining and using mnemonica types in TypeScript projects.
 
 ---
 
@@ -450,17 +555,17 @@ const sibling = instance.sibling.OtherType;
 
 All instances have non-enumerable internal properties:
 
-| Property | Description |
-|----------|-------------|
-| `.__args__` | Arguments used for instance creation |
-| `.__type__` | Type definition object |
-| `.__parent__` | Parent instance reference |
-| `.__subtypes__` | Map of available subtypes |
-| `.__collection__` | Types collection where type was defined |
-| `.__stack__` | Stack trace (if `submitStack: true` in config) |
-| `.__creator__` | Instance creator reference |
-| `.__timestamp__` | Creation timestamp (ms since epoch) |
-| `.__self__` | Self reference to the instance |
+| Property | Type | Description |
+|----------|------|-------------|
+| `.__args__` | `unknown[]` | Arguments used for instance creation |
+| `.__type__` | `TypeDef` | Type definition object |
+| `.__parent__` | `object` | Parent instance reference |
+| `.__subtypes__` | `Map<string, object>` | Map of available subtypes |
+| `.__collection__` | `CollectionDef` | Types collection where type was defined |
+| `.__stack__` | `string` | Stack trace (if `submitStack: true` in config) |
+| `.__creator__` | `TypeDef` | Instance creator reference |
+| `.__timestamp__` | `number` | Creation timestamp (ms since epoch) |
+| `.__self__` | `object` | Self reference to the instance |
 
 ---
 
@@ -559,14 +664,22 @@ defaultTypes.registerFlowChecker((opts) => {
 
 #### Hook Data Structure
 
-```js
-{
-  TypeName: string,              // Constructor name
-  type: TypeDescriptor,          // The type being constructed
-  args: unknown[],               // Arguments passed to constructor
-  existentInstance: object,      // Parent instance
-  inheritedInstance: object      // New instance (postCreation only)
+```typescript
+interface HookData {
+  TypeName: string;              // Constructor name
+  type: TypeDef;                 // The type being constructed
+  args: unknown[];               // Arguments passed to constructor
+  existentInstance: object;      // Parent instance
+  inheritedInstance: object;     // New instance (postCreation only)
+  throwModificationError(error: Error): void;  // Throw error from hook
 }
+```
+
+```js
+MyType.registerHook('postCreation', (hookData) => {
+  // Throw custom error from hook
+  hookData.throwModificationError(new Error('Custom hook error'));
+});
 ```
 
 **Note:** In preCreation hooks, `existentInstance` refers to the parent; in postCreation hooks, it refers to the instance used for inheritance.
