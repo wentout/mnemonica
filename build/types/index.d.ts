@@ -3,6 +3,11 @@ export type IDEF<T> = {
 } | {
     (this: T, ...args: unknown[]): void;
 };
+export type IDEFWithArgs<T, Args extends unknown[] = unknown[]> = {
+    new (): T;
+} | {
+    (this: T, ...args: Args): void;
+};
 export interface ConstructorFunction<ConstructorInstance extends object> {
     new (...args: unknown[]): ConstructorInstance;
     (this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
@@ -25,6 +30,10 @@ export type constructorOptions = {
     submitStack?: boolean;
     awaitReturn?: boolean;
     asClass?: boolean;
+    exposeInstanceMethods?: boolean;
+};
+export type HideInstanceMethodsOptions = constructorOptions & {
+    exposeInstanceMethods: false;
 };
 export type SubtypesMap = Map<string, TypeClass>;
 export type TypeDef = {
@@ -33,14 +42,7 @@ export type TypeDef = {
     isSubType: boolean;
     subtypes: SubtypesMap;
     collection: CollectionDef;
-    config: {
-        strictChain: boolean;
-        blockErrors?: boolean;
-        submitStack?: boolean;
-        awaitReturn?: boolean;
-        asClass?: boolean;
-        ModificationConstructor?: CallableFunction;
-    };
+    config: constructorOptions;
     parentType?: TypeDef;
     constructHandler: () => CallableFunction;
     title: string;
@@ -60,30 +62,12 @@ export type CollectionDef = {
     [key: string]: unknown;
 };
 export type TypeLookup = (this: Map<string, unknown>, TypeNestedPath: string) => TypeClass | undefined;
-export type TypeAbsorber = <T extends object, P extends object = object>(this: unknown, TypeName: string, constructHandler: IDEF<T>, proto?: P, config?: constructorOptions) => IDefinitorInstance<Proto<P, T>, SN & Proto<P, T>>;
 export type Proto<P extends object, T extends object> = Pick<P, Exclude<keyof P, keyof T>> & T;
-export type SN = Record<string, IDefinitorInstance<object, object>>;
-export type Props = {
-    __proto_proto__: object;
-    __args__: unknown[];
-    __collection__: CollectionDef;
-    __subtypes__: Map<string, object>;
-    __type__: TypeDef;
-    __parent__: object;
-    __stack__?: string;
-    __creator__: TypeDef;
-    __timestamp__: number;
-    __self__?: {
-        extract: () => Record<string, unknown>;
-        pick: (...keys: string[]) => Record<string, unknown>;
-        parent: (constructorLookupPath?: string) => object | undefined;
-        clone: object;
-        fork: (...forkArgs: unknown[]) => object;
-        exception: (error: Error, ...args: unknown[]) => Error;
-        sibling: SiblingAccessor;
-        [key: string]: unknown;
-    };
-};
+export type SN = Record<string, IDefinitorInstance<object, SN>>;
+export type IsHidingMethods<Config extends constructorOptions> = Config extends {
+    exposeInstanceMethods: false;
+} ? true : false;
+export type InstanceResult<N extends object, S extends SN, Config extends constructorOptions> = IsHidingMethods<Config> extends true ? N : N & MnemonicaInstance & S;
 export interface SiblingAccessor {
     (SiblingTypeName: string): TypeClass | undefined;
     [key: string]: TypeClass | undefined;
@@ -100,16 +84,46 @@ export interface MnemonicaInstance {
     readonly sibling: SiblingAccessor;
     [key: string]: unknown;
 }
-export interface IDefinitorInstance<N extends object, S = SN> {
-    new (...args: unknown[]): N & MnemonicaInstance & S;
-    (...args: unknown[]): N & MnemonicaInstance & S;
+export type InstanceInternalProps = {
+    __proto_proto__: object;
+    __args__: unknown[];
+    __collection__: CollectionDef;
+    __subtypes__: Map<string, object>;
+    __type__: TypeDef;
+    __parent__: object;
+    __stack__?: string;
+    __creator__: TypeDef;
+    __timestamp__: number;
+};
+export type InstanceSelfProps = InstanceInternalProps & {
+    __self__: InstanceInternalProps & MnemonicaInstance;
+};
+export type Props = InstanceSelfProps & {
+    [key: string]: unknown;
+};
+export interface IDefinitorInstance<N extends object, S extends SN = SN, Config extends constructorOptions = constructorOptions> {
+    new (...args: unknown[]): InstanceResult<N, S, Config>;
+    (...args: unknown[]): InstanceResult<N, S, Config>;
     define: TypeAbsorber;
     lookup: TypeLookup;
     registerHook(hookType: hooksTypes, cb: hook): void;
     TypeName: string;
     prototype: N;
     subtypes: SubtypesMap;
+    __type__?: TypeDef;
+    collection?: CollectionDef;
+    [key: string]: unknown;
 }
+export interface TypeAbsorber {
+    <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig: IDEF<T> | object | boolean | CallableFunction, configOrUndefined: HideInstanceMethodsOptions): IDefinitorInstance<T, SN, HideInstanceMethodsOptions>;
+    <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<T, SN, constructorOptions>;
+}
+export interface TypesCollection {
+    define: TypeAbsorber;
+    lookup: TypeLookup;
+    subtypes: SubtypesMap;
+}
+export type CreateTypesCollectionFunction = (config?: Record<string, unknown>) => TypesCollection;
 export interface IDefinitor<P extends object, SubTypeName extends string> {
     <PP extends object, T extends object, M extends Proto<P, Proto<PP, T>>, S extends SN & M>(this: unknown, TypeName: SubTypeName, constructHandler: IDEF<T>, proto?: PP, config?: constructorOptions): IDefinitorInstance<M, S>;
 }

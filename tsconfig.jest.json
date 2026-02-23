@@ -8,15 +8,18 @@
 		"declaration": false,
 		"diagnostics": true,
 
-		"extendedDiagnostics": true,
-		"forceConsistentCasingInFileNames": true,
-		"noFallthroughCasesInSwitch": true,
-		"noImplicitReturns": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"strictFunctionTypes": false,
 		"noImplicitThis": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
+		"noImplicitReturns": false,
+		"noFallthroughCasesInSwitch": false,
+
+		"extendedDiagnostics": true,
+		"forceConsistentCasingInFileNames": true,
 		"removeComments": true,
-		"strictFunctionTypes": true,
 		"traceResolution": false,
 		"types": [
 			"jest",

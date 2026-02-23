@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, space-before-function-paren */
 'use strict';
 
-import {
-	TypeLookup,
+import type {
+	CreateTypesCollectionFunction,
 	IDEF,
 	hook,
 	hooksTypes,
@@ -11,7 +11,9 @@ import {
 	SN,
 	IDefinitorInstance,
 	Constructor,
-	DecoratedClass
+	DecoratedClass,
+	TypeClass,
+	TypeAbsorber
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -44,24 +46,26 @@ function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolea
 
 export const define = function <
 	T extends object,
-	P extends object,
-	N extends Proto<P, T>,
-	S extends SN & N,
-	R extends IDefinitorInstance<N, S>
+	P extends object = object,
+	N extends Proto<P, T> = Proto<P, T>
 >(
 	this: unknown,
-	TypeName?: string,
-	constructHandler?: IDEF<T>,
+	TypeName?: string | CallableFunction,
+	// Allow both strict IDEF and more flexible function signatures
+	constructHandler?: IDEF<T> | CallableFunction | object | boolean,
 	config?: constructorOptions,
-): R {
+): IDefinitorInstance<N, SN, constructorOptions> {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	return types.define(TypeName, constructHandler, config);
-};
+	return types.define(TypeName, constructHandler as IDEF<T>, config) as IDefinitorInstance<N, SN, constructorOptions>;
+} as TypeAbsorber;
 
-export const lookup = function (TypeNestedPath) {
+export const lookup = function (
+	this: unknown,
+	TypeNestedPath: string
+): TypeClass | undefined {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	return types.lookup(TypeNestedPath);
-} as TypeLookup;
+};
 
 
 const $run = function <E extends object, T extends object, S extends Proto<E, T>>(
@@ -114,7 +118,7 @@ export const bind = function <E extends object, T extends object, S extends Prot
 ): (...args: unknown[]) => {
 	[key in keyof S]: S[key]
 } {
-	return (...args) => {
+	return (...args: unknown[]) => {
 		return $run<E, T, S>(entity, Ctor, args);
 	};
 };
@@ -136,12 +140,12 @@ export const decorate = function <
 	const decorator = function <U extends Constructor<object>>(cstr: U): DecoratedClass<U> {
 		const { name } = cstr;
 		if (parentType === undefined) {
-			return define(name, cstr, opts) as unknown as DecoratedClass<U>;
+			return define(name, cstr as IDEF<object>, opts) as unknown as DecoratedClass<U>;
 		}
 		const parent = parentType as unknown as {
-			define: (name: string, cstr: Constructor<unknown>, config?: constructorOptions) => unknown
+			define: TypeAbsorber;
 		};
-		return parent.define(name, cstr, opts) as unknown as DecoratedClass<U>;
+		return parent.define(name, cstr as IDEF<object>, opts) as unknown as DecoratedClass<U>;
 	};
 	return decorator;
 };
@@ -188,9 +192,14 @@ export const {
 	MNEMOSYNE,
 	TYPE_TITLE_PREFIX,
 	ErrorMessages,
-	createTypesCollection,
 
 } = mnemonica;
+
+// Export createTypesCollection with proper type
+ 
+const typedCreateTypesCollection: CreateTypesCollectionFunction = mnemonica.createTypesCollection as CreateTypesCollectionFunction;
+ 
+export const createTypesCollection: CreateTypesCollectionFunction = typedCreateTypesCollection;
 
 
 export const defaultCollection = defaultTypes.subtypes;

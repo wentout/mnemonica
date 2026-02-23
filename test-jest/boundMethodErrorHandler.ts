@@ -3,7 +3,18 @@
 const mnemonica = require('../src/index');
 const { getProps } = mnemonica;
 
-export const boundMethodErrorHandler = function (exceptionReason: any) {
+export interface ExceptionReason {
+	methodName: string;
+	args: unknown[];
+	applyTo: unknown;
+	instance: Record<string, unknown> & {
+		exception?: new (...args: unknown[]) => Error;
+	};
+	from: unknown;
+	error?: Error;
+}
+
+export const boundMethodErrorHandler = function (exceptionReason: ExceptionReason) {
 	const {
 		methodName,
 		args,

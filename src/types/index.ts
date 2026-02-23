@@ -5,6 +5,8 @@
 
 // Base constructor function type - can be a class constructor or a function
 export type IDEF<T> = { new(): T } | { (this: T, ...args: unknown[]): void };
+// More flexible version that accepts typed arguments for common patterns
+export type IDEFWithArgs<T, Args extends unknown[] = unknown[]> = { new(): T } | { (this: T, ...args: Args): void };
 
 // Constructor function with prototype
 export interface ConstructorFunction<ConstructorInstance extends object> {
@@ -29,7 +31,7 @@ export type hooksOpts = {
 // Hook callback type
 export type hook = (opts: hooksOpts) => void;
 
-// Constructor options for define
+// Constructor options for define - default (exposeInstanceMethods defaults to true behavior)
 export type constructorOptions = {
 	// explicit declaration we wish use
 	// an old style based constructors
@@ -51,6 +53,15 @@ export type constructorOptions = {
 	awaitReturn?: boolean,
 	// Force class mode (auto-detected by default)
 	asClass?: boolean,
+	// Expose instance methods (extract, pick, parent, clone, fork, exception, sibling)
+	// on the instance type. When false, these methods are still available on the prototype
+	// but hidden from the type definition unless explicitly exposed.
+	exposeInstanceMethods?: boolean,
+};
+
+// Constructor options that explicitly hide instance methods
+export type HideInstanceMethodsOptions = constructorOptions & {
+	exposeInstanceMethods: false;
 };
 
 // Subtypes map - represents the subtypes property
@@ -63,14 +74,7 @@ export type TypeDef = {
 	isSubType: boolean;
 	subtypes: SubtypesMap;
 	collection: CollectionDef;
-	config: {
-		strictChain: boolean;
-		blockErrors?: boolean;
-		submitStack?: boolean;
-		awaitReturn?: boolean;
-		asClass?: boolean;
-		ModificationConstructor?: CallableFunction;
-	};
+	config: constructorOptions;
 	parentType?: TypeDef;
 	constructHandler: () => CallableFunction;
 	title: string;
@@ -95,43 +99,26 @@ export type CollectionDef = {
 // Type lookup function type
 export type TypeLookup = (this: Map<string, unknown>, TypeNestedPath: string) => TypeClass | undefined;
 
-// Type absorber function type - used for defining subtypes
-export type TypeAbsorber = <T extends object, P extends object = object>(
-	this: unknown,
-	TypeName: string,
-	constructHandler: IDEF<T>,
-	proto?: P,
-	config?: constructorOptions
-) => IDefinitorInstance<Proto<P, T>, SN & Proto<P, T>>;
-
 // Proto merge type - combines parent and child types
 export type Proto<P extends object, T extends object> = Pick<P, Exclude<keyof P, keyof T>> & T;
 
 // String-Name map for nested constructors - represents subtypes on instances
-export type SN = Record<string, IDefinitorInstance<object, object>>;
+export type SN = Record<string, IDefinitorInstance<object, SN>>;
 
-// Instance properties (internal)
-export type Props = {
-	__proto_proto__: object;
-	__args__: unknown[];
-	__collection__: CollectionDef;
-	__subtypes__: Map<string, object>;
-	__type__: TypeDef;
-	__parent__: object;
-	__stack__?: string;
-	__creator__: TypeDef;
-	__timestamp__: number;
-	__self__?: {
-		extract: () => Record<string, unknown>;
-		pick: (...keys: string[]) => Record<string, unknown>;
-		parent: (constructorLookupPath?: string) => object | undefined;
-		clone: object;
-		fork: (...forkArgs: unknown[]) => object;
-		exception: (error: Error, ...args: unknown[]) => Error;
-		sibling: SiblingAccessor;
-		[key: string]: unknown;
-	};
-};
+// Helper type to detect if exposeInstanceMethods is explicitly false
+export type IsHidingMethods<Config extends constructorOptions> =
+  Config extends { exposeInstanceMethods: false } ? true : false;
+
+// Combined instance type based on config
+export type InstanceResult<
+  N extends object,
+  S extends SN,
+  Config extends constructorOptions
+> = IsHidingMethods<Config> extends true
+	// Only user-defined properties (hiding MnemonicaInstance & subtypes)
+  ? N
+	// User props + instance methods + subtypes
+  : N & MnemonicaInstance & S;
 
 // Sibling type accessor
 export interface SiblingAccessor {
@@ -139,7 +126,9 @@ export interface SiblingAccessor {
 	[key: string]: TypeClass | undefined;
 }
 
-// Instance methods available on all mnemonica instances
+// Mnemonica instance methods interface
+// These methods are always available on the prototype chain
+// but can be hidden from type definitions via exposeInstanceMethods option
 export interface MnemonicaInstance {
 	extract(): Record<string, unknown>;
 	pick(...keys: string[]): Record<string, unknown>;
@@ -153,19 +142,88 @@ export interface MnemonicaInstance {
 	[key: string]: unknown;
 }
 
+// Internal instance properties (non-enumerable)
+// These are always present on instances but accessed via getProps/setProps
+export type InstanceInternalProps = {
+	__proto_proto__: object;
+	__args__: unknown[];
+	__collection__: CollectionDef;
+	__subtypes__: Map<string, object>;
+	__type__: TypeDef;
+	__parent__: object;
+	__stack__?: string;
+	__creator__: TypeDef;
+	__timestamp__: number;
+};
+
+// Instance properties for __self__ reference
+// This merges internal props with the instance methods
+export type InstanceSelfProps = InstanceInternalProps & {
+	__self__: InstanceInternalProps & MnemonicaInstance;
+};
+
+// Combined Props type for internal use
+export type Props = InstanceSelfProps & {
+	[key: string]: unknown;
+};
+
 // Definitor instance - the constructor function returned by define
 // N = instance type (properties available on instances)
 // S = subtypes map
-export interface IDefinitorInstance<N extends object, S = SN> {
-	new(...args: unknown[]): N & MnemonicaInstance & S;
-	(...args: unknown[]): N & MnemonicaInstance & S;
+// Config = constructor options controlling type visibility
+export interface IDefinitorInstance<
+	N extends object,
+	S extends SN = SN,
+	Config extends constructorOptions = constructorOptions
+> {
+	new(...args: unknown[]): InstanceResult<N, S, Config>;
+	(...args: unknown[]): InstanceResult<N, S, Config>;
 	define: TypeAbsorber;
 	lookup: TypeLookup;
 	registerHook(hookType: hooksTypes, cb: hook): void;
 	TypeName: string;
 	prototype: N;
 	subtypes: SubtypesMap;
+	// Internal properties accessed by tests
+	__type__?: TypeDef;
+	collection?: CollectionDef;
+	// Allow dynamic property access for subtypes
+	[key: string]: unknown;
 }
+
+// Type absorber function type - used for defining subtypes
+// Supports multiple calling conventions:
+// 1. Modern: define(TypeName, constructHandler, config?)
+// 2. Legacy: define(constructHandler, config?) - TypeName from constructor name
+// 3. Nested: parentType.define(TypeName, constructHandler, config?)
+// Using interface with overloads to properly handle exposeInstanceMethods option
+export interface TypeAbsorber {
+	// Overload: with exposeInstanceMethods: false - hide instance methods
+	<T extends object>(
+		this: unknown,
+		TypeOrTypeName: string | CallableFunction,
+		constructHandlerOrConfig: IDEF<T> | object | boolean | CallableFunction,
+		configOrUndefined: HideInstanceMethodsOptions
+	): IDefinitorInstance<T, SN, HideInstanceMethodsOptions>;
+	
+	// Overload: without config or with exposeInstanceMethods not false - show all
+	<T extends object>(
+		this: unknown,
+		TypeOrTypeName: string | CallableFunction,
+		constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction,
+		configOrUndefined?: constructorOptions | CallableFunction | boolean
+	): IDefinitorInstance<T, SN, constructorOptions>;
+}
+
+// TypesCollection interface for createTypesCollection
+export interface TypesCollection {
+	define: TypeAbsorber;
+	lookup: TypeLookup;
+	subtypes: SubtypesMap;
+}
+
+// createTypesCollection function type
+export type CreateTypesCollectionFunction = (config?: Record<string, unknown>) => TypesCollection;
 
 // Definitor interface for nested types - callable constructor with define method
 export interface IDefinitor<P extends object, SubTypeName extends string> {
