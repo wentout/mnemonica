@@ -29,7 +29,7 @@ const {
 
 const typesCollections = new Map();
 
-const TypesCollection = function ( _config: Record<string, any> ) {
+const TypesCollection = function ( _config: Record<string, unknown> ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
@@ -102,7 +102,7 @@ odp( TypesCollection.prototype, MNEMONICA, {
 } );
 
 odp( TypesCollection.prototype, 'define', {
-	get () {
+	get (this: { subtypes: Map<string, object> }) {
 		const {
 			subtypes
 		} = this;
@@ -120,7 +120,7 @@ odp( TypesCollection.prototype, 'define', {
 } );
 
 odp( TypesCollection.prototype, 'lookup', {
-	get () {
+	get (this: { subtypes: Map<string, object> }) {
 		return function (
 			this: { subtypes: Map<string, object> },
 			TypeNestedPath: string

@@ -145,7 +145,7 @@ TypeDescriptor.prototype.lookup = function (
 };
 
 odp( TypeDescriptor.prototype, Symbol.hasInstance, {
-	get () {
+	get (this: TypeDescriptorInstance) {
 		return getTypeChecker( this.TypeName );
 	}
 } );

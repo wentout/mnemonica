@@ -7,7 +7,7 @@ const {
 
 // import { hop } from './hop';
 
-export const extract = ( instance: any ) => {
+export const extract = ( instance: object ) => {
 
 	// at this situation this check is enough
 	if ( instance !== Object( instance ) ) {
@@ -24,7 +24,7 @@ export const extract = ( instance: any ) => {
 		// 	continue;
 		// }
 
-		extracted[ name ] = instance[ name ];
+		extracted[ name ] = ( instance as Record<string, unknown> )[ name ];
 	}
 
 	return extracted;

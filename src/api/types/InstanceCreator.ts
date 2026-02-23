@@ -1,4 +1,4 @@
- 
+  
 'use strict';
 
 import { ConstructorFunction } from '../../types';
@@ -30,7 +30,7 @@ import { _getProps, _setSelf, Props } from './Props';
 
 import { makeInstanceModificator } from './InstanceModificator';
 
- 
+  
 const invokePreHooks = function ( this: any ) {
 
 	const {
@@ -58,7 +58,7 @@ const invokePreHooks = function ( this: any ) {
 };
 
 
- 
+  
 const invokePostHooks = function ( this: any ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -100,7 +100,8 @@ const invokePostHooks = function ( this: any ) {
 
 };
 
- 
+
+  
 const postProcessing = function ( this: any, continuationOf: any ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -139,7 +140,7 @@ export interface ThenSpec {
 	name?: string;
 }
 
- 
+  
 const addThen = function ( this: any, then: ThenSpec ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -161,7 +162,8 @@ const addThen = function ( this: any, then: ThenSpec ) {
 
 };
 
- 
+
+  
 const makeAwaiter = function ( this: any, type: any, then?: ThenSpec ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -236,7 +238,7 @@ const InstanceCreatorPrototype = {
 	throwModificationError
 };
 
- 
+  
 export const InstanceCreator = function ( this: any, type: any, existentInstance: unknown, args: unknown[], chained: boolean ) {
 
 	const {

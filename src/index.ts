@@ -44,6 +44,7 @@ function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolea
 	return pointer === mnemonica || pointer === exports;
 }
 
+// Define function using TypeAbsorber interface with proper type casting
 export const define = function <
 	T extends object,
 	P extends object = object,
@@ -56,7 +57,8 @@ export const define = function <
 	config?: constructorOptions,
 ): IDefinitorInstance<N, SN, constructorOptions> {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	return (types as any).define(TypeName, constructHandler as IDEF<T>, config) as IDefinitorInstance<N, SN, constructorOptions>;
+	// Type assertion needed because TypesCollectionProxy is a Proxy
+	return (types as { define: TypeAbsorber }).define(TypeName as string, constructHandler as IDEF<T>, config) as unknown as IDefinitorInstance<N, SN, constructorOptions>;
 } as TypeAbsorber;
 
 export const lookup = function (
@@ -64,7 +66,8 @@ export const lookup = function (
 	TypeNestedPath: string
 ): TypeClass | undefined {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	return (types as any).lookup(TypeNestedPath);
+	// Type assertion needed because TypesCollectionProxy is a Proxy
+	return (types as { lookup: (path: string) => TypeClass | undefined }).lookup(TypeNestedPath);
 };
 
 
@@ -77,15 +80,15 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 	} {
 
 	// debugger;
-	// @ts-ignore
+	// @ts-expect-error - extracting TypeName from function
 	const { TypeName } = Ctor;
 	const Cstr = prepareSubtypeForConstruction(TypeName, entity) as { new(...ars: unknown[]): unknown };
 	// TODO: check lines below and if Constructor is not mnemonized ...
 	if (Cstr === undefined) {
-		throw new WRONG_MODIFICATION_PATTERN(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
+		throw new (WRONG_MODIFICATION_PATTERN as unknown as new (msg: string) => Error)(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
 	}
 	const result = new Cstr(...args);
-	// @ts-ignore
+	// @ts-expect-error - returning result as merged proto type
 	return result;
 };
 

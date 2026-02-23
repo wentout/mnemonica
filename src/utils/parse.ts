@@ -14,34 +14,40 @@ const {
 
 import { extract } from './extract';
 
-export const parse = ( self: any ): any => {
+export const parse = ( self: object ) => {
 
-	if ( !self || !self.constructor ) {
+	if ( !self || !( self as { constructor?: CallableFunction } ).constructor ) {
 		throw new WRONG_MODIFICATION_PATTERN;
 	}
 
 	const proto = Reflect.getPrototypeOf( self ) as object;
 
-	if ( self.constructor.name.toString() !== proto.constructor.name.toString() ) {
-		throw new WRONG_ARGUMENTS_USED( `have to use "instance" itself: '${self.constructor.name}' vs '${proto.constructor.name}'` );
+	const selfConstructor = ( self as { constructor: { name: string } } ).constructor;
+	const protoConstructor = ( proto as { constructor: { name: string } } ).constructor;
+
+	if ( selfConstructor.name.toString() !== protoConstructor.name.toString() ) {
+		throw new WRONG_ARGUMENTS_USED( `have to use "instance" itself: '${selfConstructor.name}' vs '${protoConstructor.name}'` );
 	}
 
 	const protoProto: unknown = Reflect.getPrototypeOf( proto );
-	if ( protoProto && proto.constructor.name.toString() !== protoProto.constructor.name.toString() ) {
-		throw new WRONG_ARGUMENTS_USED( `have to use "instance" itself: '${proto.constructor.name}' vs '${protoProto.constructor.name}'` );
+	if ( protoProto ) {
+		const protoProtoConstructor = ( protoProto as { constructor?: { name: string } } ).constructor;
+		if ( protoProtoConstructor && protoConstructor.name.toString() !== protoProtoConstructor.name.toString() ) {
+			throw new WRONG_ARGUMENTS_USED( `have to use "instance" itself: '${protoConstructor.name}' vs '${protoProtoConstructor.name}'` );
+		}
 	}
 
 	// const args = self[SymbolConstructorName] ?
 	// self[SymbolConstructorName].args : [];
 
-	const { name } = proto.constructor;
+	const { name } = protoConstructor;
 
-	const props: any = extract( { ...self } );
+	const props = extract( { ...self } as Record<string, unknown> );
 	// props.constructor = undefined;
-	delete props.constructor;
+	delete ( props as { constructor?: unknown } ).constructor;
 
-	const joint: any = extract( Object.assign( {}, proto ) );
-	delete joint.constructor;
+	const joint = extract( Object.assign( {}, proto ) as Record<string, unknown> );
+	delete ( joint as { constructor?: unknown } ).constructor;
 
 	const parent = protoProto;
 	// TODO: deep parse

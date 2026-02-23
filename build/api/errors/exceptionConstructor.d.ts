@@ -1,2 +1,2 @@
-declare const prepareException: (this: any, target: unknown, error: Error, ...args: unknown[]) => any;
+declare const prepareException: (this: object, target: unknown, error: Error, ...args: unknown[]) => any;
 export default prepareException;

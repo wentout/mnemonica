@@ -14,7 +14,23 @@ declare const InstanceCreatorPrototype: {
         type: void;
         collection: void;
     };
-    throwModificationError: (this: any, error: any) => void;
+    throwModificationError: (this: {
+        [key: string]: unknown;
+        TypeName: string;
+        type: {
+            stack: string;
+        };
+        args: unknown[];
+        ModificatorType: CallableFunction;
+        InstanceModificator: new (...args: unknown[]) => {
+            stack: string[];
+        };
+        inheritedInstance?: unknown;
+        invokePostHooks(): {
+            type: Set<unknown>;
+            collection: Set<unknown>;
+        };
+    }, error: import("../../types").MnemonicaError) => void;
 };
 export declare const InstanceCreator: ConstructorFunction<typeof InstanceCreatorPrototype>;
 export {};

@@ -8,6 +8,21 @@ export type IDEFWithArgs<T, Args extends unknown[] = unknown[]> = {
 } | {
     (this: T, ...args: Args): void;
 };
+export type ErrorMessageKey = 'BASE_ERROR_MESSAGE' | 'TYPENAME_MUST_BE_A_STRING' | 'HANDLER_MUST_BE_A_FUNCTION' | 'WRONG_TYPE_DEFINITION' | 'WRONG_INSTANCE_INVOCATION' | 'WRONG_MODIFICATION_PATTERN' | 'ALREADY_DECLARED' | 'WRONG_ARGUMENTS_USED' | 'WRONG_HOOK_TYPE' | 'MISSING_HOOK_CALLBACK' | 'MISSING_CALLBACK_ARGUMENT' | 'FLOW_CHECKER_REDEFINITION' | 'OPTIONS_ERROR' | 'WRONG_STACK_CLEANER';
+export type ErrorMessages = Record<ErrorMessageKey, string>;
+export interface MnemonicaErrorConstructor {
+    new (addition?: string, stack?: string[]): Error;
+    (name: string): Error;
+    prototype: {
+        constructor: CallableFunction;
+    };
+}
+export type ErrorsTypesMap = Record<string, MnemonicaErrorConstructor>;
+export interface MnemonicaError extends Error {
+    exceptionReason?: Error;
+    reasons?: Error[];
+    surplus?: Error[];
+}
 export interface ConstructorFunction<ConstructorInstance extends object> {
     new (...args: unknown[]): ConstructorInstance;
     (this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
@@ -140,6 +155,7 @@ export type TypeDescriptorInstance = {
     define: CallableFunction;
     lookup: CallableFunction;
     subtypes: object;
+    TypeName: string;
 };
 export type TypeDescriptorConstructor = ConstructorFunction<TypeDescriptorInstance>;
 export type TypesCollectionConstructor = ConstructorFunction<object>;

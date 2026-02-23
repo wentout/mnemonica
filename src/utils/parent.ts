@@ -10,7 +10,7 @@ import { _getProps, Props } from '../api/types/Props';
 // seek for firts parent instance
 // of instance prototype chain
 // with constructors of path
-export const parent = ( instance: any, path: string ): unknown => {
+export const parent = ( instance: object, path: string ): unknown => {
 
 	// at this situation this check is enough
 	if ( instance !== Object( instance ) ) {
@@ -40,6 +40,6 @@ export const parent = ( instance: any, path: string ): unknown => {
 	// seek throuh parent instances
 	// about the fist constructor with this name
 	return name === path ?
-		p : parent( p, path );
+		p : parent( p as object, path );
 
 };

@@ -21,16 +21,16 @@ import { InstanceCreator } from './InstanceCreator';
 
 // Type for TypeProxy instance
 export interface TypeProxyInstance {
-	__type__: any;
-	Uranus: any;
-	get(target: any, prop: string): any;
-	set(target: any, name: string, value: any): boolean;
-	construct(target: any, args: unknown[]): any;
+	__type__: { [key: string]: unknown; proto: object; subtypes: Map<string, unknown>; define: (n: string, c: CallableFunction, cf?: object, ...fa: unknown[]) => unknown };
+	Uranus: unknown;
+	get(target: CallableFunction, prop: string): unknown;
+	set(target: unknown, name: string, value: unknown): boolean;
+	construct(target: unknown, args: unknown[]): object;
 	apply: typeof subTypeApply;
-	new (...args: unknown[]): any;
+	new (...args: unknown[]): object;
 }
 
-export const TypeProxy = function (__type__: any, Uranus: any) {
+export const TypeProxy = function (__type__: TypeProxyInstance['__type__'], Uranus: unknown) {
 	Object.assign(this, {
 		__type__,
 		Uranus
@@ -39,7 +39,7 @@ export const TypeProxy = function (__type__: any, Uranus: any) {
 	return typeProxy;
 } as ConstructorFunction<TypeProxyInstance>;
 
-TypeProxy.prototype.get = function (target: any, prop: string) {
+TypeProxy.prototype.get = function (target: CallableFunction, prop: string) {
 
 	// const props = _getProps(this) as Props;
 
@@ -74,7 +74,7 @@ TypeProxy.prototype.get = function (target: any, prop: string) {
 
 };
 
-TypeProxy.prototype.set = function (__: unknown, name: string, value: unknown) {
+TypeProxy.prototype.set = function (_target: unknown, name: string, value: unknown) {
 
 	const {
 		__type__: type
@@ -106,9 +106,9 @@ TypeProxy.prototype.set = function (__: unknown, name: string, value: unknown) {
 
 // share decorator from primary type
 const subTypeApply = (
-	parentType: unknown,
-	config?: constructorOptions,
-	...args: unknown[]
+	parentType: { define: (n: string, c: CallableFunction, cf?: object, ...fa: unknown[]) => unknown },
+	cfg?: constructorOptions,
+	...fnArgs: unknown[]
 ) => {
 	// const decorator = function <T extends { new (): unknown }>(cstr: T, s?: ClassDecoratorContext<T>): T {
 	const decorator = function <T extends { new (): unknown }>(cstr: T): T {
@@ -116,7 +116,7 @@ const subTypeApply = (
 		const { name } = cstr;
 		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 		// @ts-ignore
-		return parentType.define(name, cstr, config, ...args) as unknown as T;
+		return parentType.define(name, cstr, cfg, ...fnArgs) as unknown as T;
 	};
 	return decorator;
 };
@@ -161,7 +161,7 @@ Object.defineProperty(TypeProxy.prototype, 'apply', {
 
 // this always is initial type creation ...
 // so no way to invoke this otherwise than direct type call
-TypeProxy.prototype.construct = function (__: unknown, args: unknown[]) {
+TypeProxy.prototype.construct = function (_target: unknown, args: unknown[]) {
 
 	// new.target id equal with target here
 

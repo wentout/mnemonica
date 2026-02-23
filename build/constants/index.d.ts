@@ -5,7 +5,7 @@ export declare const constants: {
     readonly SymbolConfig: symbol;
     readonly MNEMONICA: string;
     readonly MNEMOSYNE: string;
-    readonly odp: (o: any, p: PropertyKey, attributes: PropertyDescriptor & ThisType<any>) => any;
+    readonly odp: <T extends object>(o: T, p: PropertyKey, attributes: PropertyDescriptor) => T;
     readonly defaultOptions: Record<string, unknown>;
     readonly defaultOptionsKeys: string[];
     TYPE_TITLE_PREFIX: string;

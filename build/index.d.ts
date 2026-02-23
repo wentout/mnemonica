@@ -18,7 +18,7 @@ export declare const SymbolParentType: unknown, SymbolConstructorName: unknown, 
 export declare const createTypesCollection: CreateTypesCollectionFunction;
 export declare const defaultCollection: any;
 export declare const errors: {
-    [index: string]: any;
+    [index: string]: import("./types").MnemonicaErrorConstructor;
 };
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';

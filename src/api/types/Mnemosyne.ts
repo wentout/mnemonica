@@ -203,9 +203,9 @@ const makeSubTypeProxy = function (subtype: any, inheritedInstance: unknown) {
 	return subtypeProxy;
 };
 
-const prepareSubtypeForConstruction = function (subtypeName: string, inheritedInstance: any) {
+const prepareSubtypeForConstruction = function (subtypeName: string, inheritedInstance: unknown) {
 	// prototype of proxy
-	const propInstance: any = Reflect.getPrototypeOf(inheritedInstance);
+	const propInstance = Reflect.getPrototypeOf(inheritedInstance as object) as object;
 
 	const props = _getProps(propInstance) as Props;
 	if (!props) {
@@ -226,12 +226,12 @@ const prepareSubtypeForConstruction = function (subtypeName: string, inheritedIn
 		subtypes.get(subtypeName) :
 		strictChain ?
 			undefined :
-			findSubTypeFromParent(inheritedInstance, subtypeName);
+			findSubTypeFromParent(inheritedInstance as object, subtypeName);
 
 	return subtype ? makeSubTypeProxy(subtype, inheritedInstance) : undefined;
 };
 
-const mnemosyneProxyHandlerGet = (target: any, prop: string, receiver: unknown) => {
+const mnemosyneProxyHandlerGet = (target: object, prop: string, receiver: unknown) => {
 
 	// Node.js 22 Reflect.get Behaviour Changed here
 	// cause something gone wrong with prop assignment
@@ -281,10 +281,12 @@ const Mnemosyne = function (mnemonica: object) {
 	// while this just returns false, silently ... unfortunately
 	// Reflect.setPrototypeOf(Mnemonica.prototype, mnemonica);
 
-	Object.entries(MnemonicaProtoProps).forEach(([ name, method ]: [string, any]) => {
+	Object.entries(MnemonicaProtoProps).forEach(([ name, method ]: [string, unknown]) => {
 		odp(Mnemonica.prototype, name, {
-			get (this: object) {
-				return method.call(this);
+			get () {
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-ignore
+				return (method as CallableFunction).call(this);
 			}
 		});
 	});

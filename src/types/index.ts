@@ -8,6 +8,45 @@ export type IDEF<T> = { new(): T } | { (this: T, ...args: unknown[]): void };
 // More flexible version that accepts typed arguments for common patterns
 export type IDEFWithArgs<T, Args extends unknown[] = unknown[]> = { new(): T } | { (this: T, ...args: Args): void };
 
+// Error message types - all error messages are strings
+export type ErrorMessageKey =
+	| 'BASE_ERROR_MESSAGE'
+	| 'TYPENAME_MUST_BE_A_STRING'
+	| 'HANDLER_MUST_BE_A_FUNCTION'
+	| 'WRONG_TYPE_DEFINITION'
+	| 'WRONG_INSTANCE_INVOCATION'
+	| 'WRONG_MODIFICATION_PATTERN'
+	| 'ALREADY_DECLARED'
+	| 'WRONG_ARGUMENTS_USED'
+	| 'WRONG_HOOK_TYPE'
+	| 'MISSING_HOOK_CALLBACK'
+	| 'MISSING_CALLBACK_ARGUMENT'
+	| 'FLOW_CHECKER_REDEFINITION'
+	| 'OPTIONS_ERROR'
+	| 'WRONG_STACK_CLEANER';
+
+// Error messages object type
+export type ErrorMessages = Record<ErrorMessageKey, string>;
+
+// Error constructor from constructError - constructable function with prototype
+export interface MnemonicaErrorConstructor {
+	new(addition?: string, stack?: string[]): Error;
+	(name: string): Error;
+	prototype: {
+		constructor: CallableFunction;
+	};
+}
+
+// Errors types map - indexable record of error constructors
+export type ErrorsTypesMap = Record<string, MnemonicaErrorConstructor>;
+
+// Mnemonica error interface for extended Error objects
+export interface MnemonicaError extends Error {
+	exceptionReason?: Error;
+	reasons?: Error[];
+	surplus?: Error[];
+}
+
 // Constructor function with prototype
 export interface ConstructorFunction<ConstructorInstance extends object> {
 	new(...args: unknown[]): ConstructorInstance;
@@ -262,6 +301,7 @@ export type TypeDescriptorInstance = {
 	define: CallableFunction;
 	lookup: CallableFunction;
 	subtypes: object;
+	TypeName: string;
 };
 
 // TypeDescriptor constructor type
