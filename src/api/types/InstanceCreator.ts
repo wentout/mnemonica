@@ -30,6 +30,7 @@ import { _getProps, _setSelf, Props } from './Props';
 
 import { makeInstanceModificator } from './InstanceModificator';
 
+ 
 const invokePreHooks = function ( this: any ) {
 
 	const {
@@ -57,6 +58,7 @@ const invokePreHooks = function ( this: any ) {
 };
 
 
+ 
 const invokePostHooks = function ( this: any ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -98,6 +100,7 @@ const invokePostHooks = function ( this: any ) {
 
 };
 
+ 
 const postProcessing = function ( this: any, continuationOf: any ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -130,15 +133,20 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 
 };
 
-const addThen = function ( this: any, then: any ) {
+export interface ThenSpec {
+	subtype: object;
+	args: unknown[];
+	name?: string;
+}
+
+ 
+const addThen = function ( this: any, then: ThenSpec ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	self.inheritedInstance = self.inheritedInstance
-		// .then( ( instance: any ) => {
 		.then( () => {
-			// self.inheritedInstance = instance;
 			self.inheritedInstance =
 				new InstanceCreator(
 					then.subtype,
@@ -147,20 +155,20 @@ const addThen = function ( this: any, then: any ) {
 					// was chained :
 					true
 					// self.existentInstance
-				);
+				) as unknown as Promise<unknown>;
 			return self.inheritedInstance;
 		} );
 
 };
 
-
-const makeAwaiter = function ( this: any, type: any, then: any ) {
+ 
+const makeAwaiter = function ( this: any, type: any, then?: ThenSpec ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const self = this;
 
 	self.inheritedInstance = self.inheritedInstance
-		.then( ( instance: any ) => {
+		.then( ( instance: unknown ) => {
 
 			if ( typeof instance !== 'object' ) {
 				if ( self.config.awaitReturn ) {
@@ -172,9 +180,9 @@ const makeAwaiter = function ( this: any, type: any, then: any ) {
 			}
 
 			if ( !( instance instanceof self.type ) ) {
-				const icn = instance.constructor.name;
+				 
+				const icn = (instance as any).constructor.name;
 				const msg = `should inherit from ${type.TypeName} but got ${icn}`;
-				// self.throwModificationError(new WRONG_MODIFICATION_PATTERN(msg, self.stack));
 				throw new WRONG_MODIFICATION_PATTERN( msg, self.stack );
 			}
 
@@ -182,10 +190,8 @@ const makeAwaiter = function ( this: any, type: any, then: any ) {
 
 			const props = _getProps(self.inheritedInstance) as Props;
 
-			if ( props.__self__ !== self.inheritedInstance ) {
-				// it was async instance,
-				// so we have to add all the stuff
-				// for sync instances it was done already
+			 
+			if ( props.__self__ !== (self.inheritedInstance as any) ) {
 				self.postProcessing( type );
 			}
 
@@ -204,8 +210,9 @@ const makeAwaiter = function ( this: any, type: any, then: any ) {
 		self.addThen( then );
 	}
 
-	type.subtypes.forEach( ( subtype: any, name: string ) => {
-		self.inheritedInstance[ name ] = ( ...args: any[] ) => {
+	type.subtypes.forEach( ( subtype: object, name: string ) => {
+		 
+		(self.inheritedInstance as any)[ name ] = ( ...args: unknown[] ) => {
 			self.inheritedInstance = self.makeAwaiter( subtype, {
 				name,
 				subtype,

@@ -100,9 +100,10 @@ const tests = (opts) => {
 			expect(isClass(class {})).is.equal(true);
 			expect(isClass(() => {})).is.equal(false);
 			expect(isClass(function () {})).is.equal(false);
-			debugger;
 			const part = findSubTypeFromParent(userWithoutPassword, 'missing');
 			expect(part).is.equal(null);
+			const nullish = findSubTypeFromParent(undefined, 'missing');
+			expect(nullish).is.equal(null);
 		});
 		describe('interface test', () => {
 

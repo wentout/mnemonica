@@ -1,4 +1,4 @@
 export declare const utils: {
-    [index: string]: any;
+    [index: string]: CallableFunction;
 };
 export { defineStackCleaner } from './defineStackCleaner';

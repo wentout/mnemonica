@@ -36,28 +36,28 @@ const getDefaultPrototype = () => {
 const MnemonicaProtoProps = {
 
 	extract () {
-		return function (this: any) {
+		return function (this: object) {
 			return extract(this);
 		};
 	},
 
 	pick () {
-		return function (this: any, ...args: any[]) {
+		return function (this: object, ...args: (string | string[])[]) {
 			return pick(this, ...args);
 		};
 	},
 
 	parent () {
-		return function (this: any, constructorLookupPath: string) {
+		return function (this: object, constructorLookupPath: string) {
 			return parent(this, constructorLookupPath);
 		};
 	},
 
-	clone (this: any) {
+	clone (this: { fork: () => object }) {
 		return this.fork();
 	},
 
-	fork (this: any) {
+	fork (this: object) {
 
 		const props = _getProps(this) as Props;
 
@@ -76,7 +76,7 @@ const MnemonicaProtoProps = {
 
 		// 'function', cause might be called with 'new'
 		 
-		return function (this: any, ...forkArgs: any[]) {
+		return function (this: object, ...forkArgs: unknown[]) {
 
 			let forked;
 			const Constructor = isSubType ?
@@ -268,7 +268,7 @@ const Mnemosyne = function (mnemonica: object) {
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const instance = this;
 
-	const Mnemonica = function (this: any) {
+	const Mnemonica = function (this: object) {
 		odp(this, SymbolConstructorName, {
 			get () {
 				return MNEMONICA;
@@ -283,7 +283,7 @@ const Mnemosyne = function (mnemonica: object) {
 
 	Object.entries(MnemonicaProtoProps).forEach(([ name, method ]: [string, any]) => {
 		odp(Mnemonica.prototype, name, {
-			get (this: any) {
+			get (this: object) {
 				return method.call(this);
 			}
 		});

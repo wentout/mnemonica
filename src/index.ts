@@ -43,7 +43,7 @@ function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolea
 }
 
 export const define = function <
-	T,
+	T extends object,
 	P extends object,
 	N extends Proto<P, T>,
 	S extends SN & N,

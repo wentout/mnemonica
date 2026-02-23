@@ -7,6 +7,6 @@ export declare const hooks: {
     registerFlowChecker: (this: any, cb: () => unknown) => void;
 };
 export declare const types: {
-    define: any;
-    lookup: any;
+    define: (this: CallableFunction, subtypes: Map<string, object>, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object) => import("../types").TypeClass;
+    lookup: (this: Map<string, object>, TypeNestedPath: string) => import("../types").TypeClass | undefined;
 };

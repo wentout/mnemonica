@@ -5,7 +5,7 @@ const {
 	WRONG_INSTANCE_INVOCATION
 } = ErrorsTypes;
 
-export const pick = ( instance: any, ...args: string[] ) => {
+export const pick = ( instance: object, ...args: (string | string[])[] ) => {
 
 	// at this situation this check is enough
 	if ( instance !== Object( instance ) ) {
@@ -21,8 +21,9 @@ export const pick = ( instance: any, ...args: string[] ) => {
 		return arr;
 	}, [] );
 
-	const picked = props.reduce( ( obj: { [ index: string ]: any }, name: string ) => {
-		obj[ name ] = instance[ name ];
+	const record = instance as Record<string, unknown>;
+	const picked = props.reduce( ( obj: { [ index: string ]: unknown }, name: string ) => {
+		obj[ name ] = record[ name ];
 		return obj;
 	}, {} );
 

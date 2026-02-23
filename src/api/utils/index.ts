@@ -170,8 +170,12 @@ export type parentSub = {
 	__parent__: parentSub
 }
 
-const findSubTypeFromParent = (instance: parentSub, subType: string): parentSub | null => {
+const findSubTypeFromParent = (instance: parentSub | object | undefined, subType: string): parentSub | null => {
 	let subtype = null;
+
+	if (!instance) {
+		return null;
+	}
 
 	const props = _getProps(instance) as Props;
 

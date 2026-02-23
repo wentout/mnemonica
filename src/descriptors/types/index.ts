@@ -106,9 +106,14 @@ odp( TypesCollection.prototype, 'define', {
 		const {
 			subtypes
 		} = this;
-		return function ( this: any, ...args: any[] ) {
+		return function (
+			this: unknown,
+			TypeOrTypeName: string | CallableFunction,
+			constructHandlerOrConfig?: CallableFunction | object,
+			config?: object
+		) {
 			// this - define function of mnemonica interface
-			return define.call( this, subtypes, ...args );
+			return define.call( this as CallableFunction, subtypes as Map<string, object>, TypeOrTypeName, constructHandlerOrConfig, config );
 		};
 	},
 	enumerable : true
@@ -116,8 +121,11 @@ odp( TypesCollection.prototype, 'define', {
 
 odp( TypesCollection.prototype, 'lookup', {
 	get () {
-		return function ( this: any, ...args: any[] ) {
-			return lookup.call( this.subtypes, ...args );
+		return function (
+			this: { subtypes: Map<string, object> },
+			TypeNestedPath: string
+		) {
+			return lookup.call( this.subtypes, TypeNestedPath );
 		}.bind( this );
 	},
 	enumerable : true
