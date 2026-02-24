@@ -77,7 +77,7 @@ Think of it as a mathematical function `f(x) => y` where `this` is your persiste
 npm install mnemonica
 ```
 
-**Requirements:** Node.js >=16 <24
+**Requirements:** Node.js >=18 <24
 
 ---
 
@@ -262,6 +262,20 @@ import {
   ApplyFunction,                 // apply(entity, Ctor, args) => S
   CallFunction,                  // call(entity, Ctor, ...args) => S
   BindFunction,                  // bind(entity, Ctor) => (...args) => S
+  
+  // createTypesCollection types
+  CreateTypesCollectionFunction, // (config?: constructorOptions) => TypesCollection
+  TypesCollection,               // Interface returned by createTypesCollection
+  
+  // Configuration helper types
+  HideInstanceMethodsOptions,    // constructorOptions & { exposeInstanceMethods: true }
+  IsHidingMethods<Config>,       // Conditional type for exposeInstanceMethods: false detection
+  
+  // Utility types
+  Proto<P, T>,                   // Merges parent P and child T types
+  SN,                            // String-Name map for nested constructors
+  SubtypesMap,                   // Map<string, TypeClass>
+  TypeAbsorber,                  // Main define() function interface with overloads
 } from 'mnemonica';
 ```
 
@@ -373,27 +387,61 @@ const subInstance = createSub('arg1', 'arg2');
 
 TypeScript decorator for class-based definitions.
 
+**Usage Patterns:**
+
 ```typescript
 import { decorate } from 'mnemonica';
 
+// 1. Basic decoration
 @decorate()
 class MyClass {
   field: number = 123;
 }
 
-// With configuration
-@decorate({ strictChain: false })
+// 2. With configuration
+@decorate({ strictChain: false, blockErrors: true })
 class ConfiguredClass {
-  // ...
+  field: number = 123;
 }
 
-// Nested decoration
+// 3. Nested decoration (define as subtype)
 @decorate()
-class ParentClass {}
+class ParentClass {
+  parentField: string = 'parent';
+}
 
 @decorate(ParentClass)
-class ChildClass {}
+class ChildClass {
+  childField: string = 'child';
+}
+
+// Create parent instance, then child from it
+const parent = new ParentClass();
+const child = new parent.ChildClass();
+
+// 4. Parent with configuration
+@decorate(ParentClass, { strictChain: false })
+class ConfiguredChildClass {
+  field: number = 123;
+}
+
+// 5. Using decorated class as decorator (advanced)
+// After a class is decorated with @decorate(), it can be used
+// as a decorator for nested types
+@decorate()
+class BaseDecorator {
+  baseField: number = 100;
+}
+
+// Use BaseDecorator as a decorator
+// @ts-ignore - TypeScript limitation with callable class types
+@BaseDecorator()
+class ExtendedClass {
+  extField: number = 200;
+}
 ```
+
+**Note:** When using decorated classes as decorators (pattern 5), TypeScript may require `@ts-ignore` due to type checking limitations with callable class types.
 
 #### `registerHook(Constructor, hookType, callback)`
 
@@ -454,6 +502,61 @@ Creates a new isolated types collection.
 const { createTypesCollection } = require('mnemonica');
 const myCollection = createTypesCollection();
 const MyType = myCollection.define('MyType', function () {});
+```
+
+**`TypesCollection` Interface:**
+
+`createTypesCollection()` returns a `TypesCollection` object with the following interface:
+
+```typescript
+interface TypesCollection {
+  // Define a new type in this collection
+  define: TypeAbsorber;
+  
+  // Look up a type by its nested path (e.g., 'TypeName.SubType')
+  lookup: (path: string) => TypeClass | undefined;
+  
+  // Register a hook for all types in this collection
+  registerHook(hookType: hooksTypes, callback: hook): void;
+  
+  // Invoke hooks manually (advanced usage)
+  invokeHook(hookType: hooksTypes, opts: hooksOpts): void;
+  
+  // Register a flow checker that runs before hooks
+  registerFlowChecker(callback: () => unknown): void;
+  
+  // Map of all types defined in this collection
+  subtypes: Map<string, TypeClass>;
+  
+  // Registered hooks for this collection
+  hooks: Record<string, hook[]>;
+}
+```
+
+**Example with full configuration:**
+
+```js
+const { createTypesCollection } = require('mnemonica');
+
+// Create isolated collection with custom config
+const myCollection = createTypesCollection({
+  strictChain: false,
+  blockErrors: false,
+  exposeInstanceMethods: false  // Hide instance methods for cleaner API
+});
+
+// Define types in isolation
+const MyType = myCollection.define('MyType', function (data) {
+  Object.assign(this, data);
+});
+
+// Collection-level hooks
+myCollection.registerHook('preCreation', (opts) => {
+  console.log('Creating in myCollection:', opts.TypeName);
+});
+
+// Look up types within the collection
+const FoundType = myCollection.lookup('MyType');
 ```
 
 #### `getProps(instance)` / `setProps(instance, values)`
@@ -566,7 +669,7 @@ All instances have non-enumerable internal properties:
 | `.__stack__` | `string` | Stack trace (if `submitStack: true` in config) |
 | `.__creator__` | `TypeDef` | Instance creator reference |
 | `.__timestamp__` | `number` | Creation timestamp (ms since epoch) |
-| `.__self__` | `object` | Self reference to the instance |
+| `.__self__` | `object` | Self reference to the instance (useful when `exposeInstanceMethods: false`) |
 
 ---
 
@@ -760,14 +863,58 @@ Pass options as the third argument to `define()`:
 
 ```js
 define('SomeType', function () {}, {
-  strictChain: true,       // Only allow sub-instances from current type
-  blockErrors: true,       // Disallow construction if error in prototype chain
-  submitStack: false,      // Collect stack trace as __stack__ property
-  awaitReturn: true,       // Ensure await new Constructor() returns value
+  strictChain: true,        // Only allow sub-instances from current type
+  blockErrors: true,        // Disallow construction if error in prototype chain
+  submitStack: false,       // Collect stack trace as __stack__ property
+  awaitReturn: true,        // Ensure await new Constructor() returns value
   ModificationConstructor: fn,  // Custom modification constructor
-  asClass: false,          // Force class mode (auto-detected by default)
-  exposeInstanceMethods: false  // Expose instance methods on the instance itself
+  asClass: false,           // Force class mode (auto-detected by default)
+  exposeInstanceMethods: true   // Expose instance methods (default: true for backward compatibility)
 });
+```
+
+### Configuration Option Details
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `strictChain` | `boolean` | `true` | If `true`, only direct subtypes can be instantiated. If `false`, allows using subtypes from parent chains. |
+| `blockErrors` | `boolean` | `true` | If `true`, prevents construction when errors exist in the prototype chain. |
+| `submitStack` | `boolean` | `false` | If `true`, collects stack trace and stores as `__stack__` property on instances. |
+| `awaitReturn` | `boolean` | `true` | For async constructors, ensures `await new Constructor()` returns the instance. |
+| `asClass` | `boolean` | `auto` | Force class mode detection. Usually auto-detected from constructor syntax. |
+| `exposeInstanceMethods` | `boolean` | `true` | Expose instance methods on the instance. Set to `false` to hide from TypeScript types. See details below. |
+| `ModificationConstructor` | `Function` | - | Custom constructor function for internal instance modification. |
+
+### `exposeInstanceMethods` Option
+
+Controls whether instance methods (`extract()`, `pick()`, `parent()`, `clone`, `fork()`, `exception()`, `sibling()`) are exposed on the instance type.
+
+| Value | Behavior |
+|-------|----------|
+| `true` (default) | All instance methods are available directly on instances |
+| `false` | Methods are hidden from TypeScript types but still accessible via prototype chain |
+
+**Use Case:** Set to `false` when you want a cleaner public API and don't want internal mnemonica methods cluttering autocomplete/IntelliSense.
+
+```typescript
+import { define, getProps, utils } from 'mnemonica';
+
+// With exposeInstanceMethods: false
+const CleanType = define('CleanType', function (data) {
+  Object.assign(this, data);
+}, { exposeInstanceMethods: false });
+
+const instance = new CleanType({ value: 42 });
+
+// Methods not available directly on instance (TypeScript error)
+// instance.extract();  // Error!
+
+// But still accessible via getProps
+const props = getProps(instance);
+props.__self__.extract();  // Works!
+
+// Or using utils
+utils.extract(instance);  // Works!
 ```
 
 ### Override Default Config for Collection
