@@ -111,8 +111,8 @@ export const constants = {
 		return MNEMOSYNE;
 	},
 	get 'odp' () {
-		return ( o: any, p: PropertyKey, attributes: PropertyDescriptor & ThisType<any> ): any => {
-			return Object.defineProperty( o, p, attributes );
+		return <T extends object>( o: T, p: PropertyKey, attributes: PropertyDescriptor ): T => {
+			return Object.defineProperty( o, p, attributes ) as T;
 		};
 	},
 

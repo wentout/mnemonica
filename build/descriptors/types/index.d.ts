@@ -1,4 +1,4 @@
 export declare const types: {
-    readonly createTypesCollection: (config?: {}) => any;
-    readonly defaultTypes: any;
+    readonly createTypesCollection: (config?: {}) => object;
+    readonly defaultTypes: object;
 };

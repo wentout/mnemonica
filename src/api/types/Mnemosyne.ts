@@ -36,28 +36,28 @@ const getDefaultPrototype = () => {
 const MnemonicaProtoProps = {
 
 	extract () {
-		return function (this: any) {
+		return function (this: object) {
 			return extract(this);
 		};
 	},
 
 	pick () {
-		return function (this: any, ...args: any[]) {
+		return function (this: object, ...args: (string | string[])[]) {
 			return pick(this, ...args);
 		};
 	},
 
 	parent () {
-		return function (this: any, constructorLookupPath: string) {
+		return function (this: object, constructorLookupPath: string) {
 			return parent(this, constructorLookupPath);
 		};
 	},
 
-	clone (this: any) {
+	clone (this: { fork: () => object }) {
 		return this.fork();
 	},
 
-	fork (this: any) {
+	fork (this: object) {
 
 		const props = _getProps(this) as Props;
 
@@ -76,7 +76,7 @@ const MnemonicaProtoProps = {
 
 		// 'function', cause might be called with 'new'
 		 
-		return function (this: any, ...forkArgs: any[]) {
+		return function (this: object, ...forkArgs: unknown[]) {
 
 			let forked;
 			const Constructor = isSubType ?
@@ -107,7 +107,7 @@ const MnemonicaProtoProps = {
 	exception () {
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const self = this;
-		return function (error: Error, ...args: any[]) {
+		return function (error: Error, ...args: unknown[]) {
 			const target = new.target;
 			return exceptionConstructor.call(self, target, error, ...args);
 		};
@@ -121,7 +121,7 @@ const MnemonicaProtoProps = {
 			const {
 				__collection__: collection,
 			} = props;
-			const sibling: any = collection[ SiblingTypeName ];
+			const sibling: unknown = collection[ SiblingTypeName ];
 			return sibling;
 		};
 
@@ -168,7 +168,7 @@ const staticProps = [
 	}, Object.create(null));
 
 // tslint:disable-next-line: only-arrow-functions
-const makeSubTypeProxy = function (subtype: any, inheritedInstance: any) {
+const makeSubTypeProxy = function (subtype: any, inheritedInstance: unknown) {
 
 	const subtypeProxy = new Proxy(InstanceCreator, {
 
@@ -203,9 +203,9 @@ const makeSubTypeProxy = function (subtype: any, inheritedInstance: any) {
 	return subtypeProxy;
 };
 
-const prepareSubtypeForConstruction = function (subtypeName: string, inheritedInstance: any) {
+const prepareSubtypeForConstruction = function (subtypeName: string, inheritedInstance: unknown) {
 	// prototype of proxy
-	const propInstance: any = Reflect.getPrototypeOf(inheritedInstance);
+	const propInstance = Reflect.getPrototypeOf(inheritedInstance as object) as object;
 
 	const props = _getProps(propInstance) as Props;
 	if (!props) {
@@ -226,12 +226,12 @@ const prepareSubtypeForConstruction = function (subtypeName: string, inheritedIn
 		subtypes.get(subtypeName) :
 		strictChain ?
 			undefined :
-			findSubTypeFromParent(inheritedInstance, subtypeName);
+			findSubTypeFromParent(inheritedInstance as object, subtypeName);
 
 	return subtype ? makeSubTypeProxy(subtype, inheritedInstance) : undefined;
 };
 
-const mnemosyneProxyHandlerGet = (target: any, prop: string, receiver: any) => {
+const mnemosyneProxyHandlerGet = (target: object, prop: string, receiver: unknown) => {
 
 	// Node.js 22 Reflect.get Behaviour Changed here
 	// cause something gone wrong with prop assignment
@@ -268,7 +268,7 @@ const Mnemosyne = function (mnemonica: object) {
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const instance = this;
 
-	const Mnemonica = function (this: any) {
+	const Mnemonica = function (this: object) {
 		odp(this, SymbolConstructorName, {
 			get () {
 				return MNEMONICA;
@@ -281,10 +281,12 @@ const Mnemosyne = function (mnemonica: object) {
 	// while this just returns false, silently ... unfortunately
 	// Reflect.setPrototypeOf(Mnemonica.prototype, mnemonica);
 
-	Object.entries(MnemonicaProtoProps).forEach(([ name, method ]: [string, any]) => {
+	Object.entries(MnemonicaProtoProps).forEach(([ name, method ]: [string, unknown]) => {
 		odp(Mnemonica.prototype, name, {
-			get (this: any) {
-				return method.call(this);
+			get () {
+				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				// @ts-ignore
+				return (method as CallableFunction).call(this);
 			}
 		});
 	});
@@ -315,7 +317,7 @@ const Mnemosyne = function (mnemonica: object) {
 } as ConstructorFunction<typeof MnemonicaProtoProps>;
 
 const createMnemosyne = function (Uranus: unknown) {
-// const createMnemosyne = function (Uranus: unknown, typeProxy: any) {
+// const createMnemosyne = function (Uranus: unknown, typeProxy: unknown) {
 // 	if (typeof Uranus === 'undefined') {
 // 		const { __type__: type, Uranus: _uranus } = typeProxy;
 // 		console.log(type, _uranus);

@@ -1,3 +1,3 @@
-export declare const extract: (instance: any) => {
-    [index: string]: any;
+export declare const extract: (instance: object) => {
+    [index: string]: unknown;
 };

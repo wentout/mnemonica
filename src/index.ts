@@ -1,15 +1,19 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment, space-before-function-paren */
 'use strict';
 
-import {
-	TypeLookup,
+import type {
+	CreateTypesCollectionFunction,
 	IDEF,
 	hook,
 	hooksTypes,
 	constructorOptions,
 	Proto,
 	SN,
-	IDefinitorInstance
+	IDefinitorInstance,
+	Constructor,
+	DecoratedClass,
+	TypeClass,
+	TypeAbsorber
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -40,109 +44,87 @@ function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolea
 	return pointer === mnemonica || pointer === exports;
 }
 
+// Define function using TypeAbsorber interface with proper type casting
 export const define = function <
-	T,
-	// K extends IDEF<T>,
-	// H extends ThisType<IDEF<T>>,
-	P extends object,
-	N extends Proto<P, T>,
-	// so S it just basically allows nested constructors
-	// and gives extracted props from constructHandler & proto
-	// then it goes to new() keyword of define output
-	S extends SN & N,
-	R extends IDefinitorInstance<N, S>
+	T extends object,
+	P extends object = object,
+	N extends Proto<P, T> = Proto<P, T>
 >(
 	this: unknown,
-	TypeName?: string,
-	constructHandler?: IDEF<T>,
+	TypeName?: string | CallableFunction,
+	// Allow both strict IDEF and more flexible function signatures
+	constructHandler?: IDEF<T> | CallableFunction | object | boolean,
 	config?: constructorOptions,
-): R {
+): IDefinitorInstance<N, SN, constructorOptions> {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	return types.define(TypeName, constructHandler, config);
-};
+	// Type assertion needed because TypesCollectionProxy is a Proxy
+	return (types as { define: TypeAbsorber }).define(TypeName as string, constructHandler as IDEF<T>, config) as unknown as IDefinitorInstance<N, SN, constructorOptions>;
+} as TypeAbsorber;
 
-export const lookup = function (TypeNestedPath) {
+export const lookup = function (
+	this: unknown,
+	TypeNestedPath: string
+): TypeClass | undefined {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	return types.lookup(TypeNestedPath);
-} as TypeLookup;
+	// Type assertion needed because TypesCollectionProxy is a Proxy
+	return (types as { lookup: (path: string) => TypeClass | undefined }).lookup(TypeNestedPath);
+};
 
 
 const $run = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Constructor: IDEF<T>,
+	Ctor: IDEF<T>,
 	args: unknown[]
 ): {
 		[key in keyof S]: S[key]
 	} {
 
 	// debugger;
-	// @ts-ignore
-	const { TypeName } = Constructor;
+	// @ts-expect-error - extracting TypeName from function
+	const { TypeName } = Ctor;
 	const Cstr = prepareSubtypeForConstruction(TypeName, entity) as { new(...ars: unknown[]): unknown };
 	// TODO: check lines below and if Constructor is not mnemonized ...
 	if (Cstr === undefined) {
-		throw new WRONG_MODIFICATION_PATTERN(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
+		throw new (WRONG_MODIFICATION_PATTERN as unknown as new (msg: string) => Error)(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
 	}
 	const result = new Cstr(...args);
-	// @ts-ignore
+	// @ts-expect-error - returning result as merged proto type
 	return result;
 };
 
 // TODO: apply instance .to type .with arguments
 export const apply = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Constructor: IDEF<T>,
+	Ctor: IDEF<T>,
 	args: unknown[] = []
 ): {
 		[key in keyof S]: S[key]
 	} {
-	return $run<E, T, S>(entity, Constructor, args);
+	return $run<E, T, S>(entity, Ctor, args);
 };
 
 // TODO: call type .by instance .with arguments
 export const call = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Constructor: IDEF<T>,
+	Ctor: IDEF<T>,
 	...args: unknown[]
 ): {
 		[key in keyof S]: S[key]
 	} {
-	return $run<E, T, S>(entity, Constructor, args);
+	return $run<E, T, S>(entity, Ctor, args);
 };
 
 // TODO: bind type .with instance → (...args)
 export const bind = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Constructor: IDEF<T>
+	Ctor: IDEF<T>
 ): (...args: unknown[]) => {
 	[key in keyof S]: S[key]
 } {
-	return (...args) => {
-		return $run<E, T, S>(entity, Constructor, args);
+	return (...args: unknown[]) => {
+		return $run<E, T, S>(entity, Ctor, args);
 	};
 };
-
-
-
-
-type Constructor<T = unknown> = new(...args: unknown[]) => T;
-
-// Type for decorated classes that can be used as:
-// 1. A constructor: new MyDecoratedClass()
-// 2. A decorator: @MyDecoratedClass() class Sub {}
-// 3. Extended: class Sub extends MyDecoratedClass {}
-// 4. Have mnemonica methods: MyDecoratedClass.define(...)
-type DecoratedClass<T extends Constructor<object>> =
-	// Base constructor type
-	T &
-	// Callable as decorator: @MyDecoratedClass() class Sub {}
-	(<U extends Constructor<object>>(target: U) => DecoratedClass<U>) &
-	// Mnemonica type system methods
-	{
-		define: IDefinitorInstance<InstanceType<T>, unknown>['define'];
-		registerHook: IDefinitorInstance<InstanceType<T>, unknown>['registerHook'];
-		lookup: TypeLookup;
-	};
 
 export const decorate = function <
 	T extends Constructor<object> | constructorOptions | undefined = undefined
@@ -161,20 +143,20 @@ export const decorate = function <
 	const decorator = function <U extends Constructor<object>>(cstr: U): DecoratedClass<U> {
 		const { name } = cstr;
 		if (parentType === undefined) {
-			return define(name, cstr, opts) as unknown as DecoratedClass<U>;
+			return define(name, cstr as IDEF<object>, opts) as unknown as DecoratedClass<U>;
 		}
 		const parent = parentType as unknown as {
-			define: (name: string, cstr: Constructor<unknown>, config?: constructorOptions) => unknown
+			define: TypeAbsorber;
 		};
-		return parent.define(name, cstr, opts) as unknown as DecoratedClass<U>;
+		return parent.define(name, cstr as IDEF<object>, opts) as unknown as DecoratedClass<U>;
 	};
 	return decorator;
 };
 
 
-export const registerHook = function <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook): void {
+export const registerHook = function <T extends object>(Ctor: IDEF<T>, hookType: hooksTypes, cb: hook): void {
 	// @ts-ignore
-	Constructor.registerHook(hookType, cb);
+	Ctor.registerHook(hookType, cb);
 };
 
 export const mnemonica = Object.entries({
@@ -203,6 +185,13 @@ export const mnemonica = Object.entries({
 	return acc;
 }, {});
 
+import * as api from './api';
+
+export const {
+	define: _define,
+	lookup: _lookup
+} = api.types;
+
 export const {
 
 	SymbolParentType,
@@ -213,15 +202,19 @@ export const {
 	MNEMOSYNE,
 	TYPE_TITLE_PREFIX,
 	ErrorMessages,
-	createTypesCollection,
 
 } = mnemonica;
 
+// Export createTypesCollection with proper type
+ 
+const typedCreateTypesCollection: CreateTypesCollectionFunction = mnemonica.createTypesCollection as CreateTypesCollectionFunction;
+ 
+export const createTypesCollection: CreateTypesCollectionFunction = typedCreateTypesCollection;
 
-export const defaultCollection = defaultTypes.subtypes;
+
+export const defaultCollection = (defaultTypes as { subtypes: Map<string, object> }).subtypes;
 export const errors = descriptors.ErrorsTypes;
 
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
 /* eslint-enable @typescript-eslint/ban-ts-comment, space-before-function-paren */
-

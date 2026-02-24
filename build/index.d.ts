@@ -1,28 +1,24 @@
-import { TypeLookup, IDEF, hook, hooksTypes, constructorOptions, Proto, SN, IDefinitorInstance } from './types';
-export declare const isClass: (fn: CallableFunction) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub, subType: string) => import("./api/utils/index").parentSub | null;
+import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, Constructor, DecoratedClass, TypeClass, TypeAbsorber } from './types';
+export declare const isClass: (fn: CallableFunction) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => import("./api/utils/index").parentSub | null;
 export type { IDEF, ConstructorFunction } from './types';
 export { getProps, setProps } from './api/types/Props';
-export declare const defaultTypes: any;
-export declare const define: <T, P extends object, N extends Proto<P, T>, S extends SN & N, R extends IDefinitorInstance<N, S>>(this: unknown, TypeName?: string, constructHandler?: IDEF<T>, config?: constructorOptions) => R;
-export declare const lookup: TypeLookup;
-export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
-export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, ...args: unknown[]) => { [key in keyof S]: S[key]; };
-export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>) => (...args: unknown[]) => { [key in keyof S]: S[key]; };
-type Constructor<T = unknown> = new (...args: unknown[]) => T;
-type DecoratedClass<T extends Constructor<object>> = T & (<U extends Constructor<object>>(target: U) => DecoratedClass<U>) & {
-    define: IDefinitorInstance<InstanceType<T>, unknown>['define'];
-    registerHook: IDefinitorInstance<InstanceType<T>, unknown>['registerHook'];
-    lookup: TypeLookup;
-};
+export declare const defaultTypes: object;
+export declare const define: TypeAbsorber;
+export declare const lookup: (this: unknown, TypeNestedPath: string) => TypeClass | undefined;
+export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
+export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, ...args: unknown[]) => { [key in keyof S]: S[key]; };
+export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>) => (...args: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const decorate: <T extends Constructor<object> | constructorOptions | undefined = undefined>(target?: T, config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
-export declare const registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
+export declare const registerHook: <T extends object>(Ctor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
 export declare const mnemonica: {
     [index: string]: unknown;
 };
-export declare const SymbolParentType: unknown, SymbolConstructorName: unknown, SymbolDefaultTypesCollection: unknown, SymbolConfig: unknown, MNEMONICA: unknown, MNEMOSYNE: unknown, TYPE_TITLE_PREFIX: unknown, ErrorMessages: unknown, createTypesCollection: unknown;
-export declare const defaultCollection: any;
+export declare const _define: (this: CallableFunction, subtypes: Map<string, object>, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object) => TypeClass, _lookup: (this: Map<string, object>, TypeNestedPath: string) => TypeClass | undefined;
+export declare const SymbolParentType: unknown, SymbolConstructorName: unknown, SymbolDefaultTypesCollection: unknown, SymbolConfig: unknown, MNEMONICA: unknown, MNEMOSYNE: unknown, TYPE_TITLE_PREFIX: unknown, ErrorMessages: unknown;
+export declare const createTypesCollection: CreateTypesCollectionFunction;
+export declare const defaultCollection: Map<string, object>;
 export declare const errors: {
-    [index: string]: any;
+    [index: string]: import("./types").MnemonicaErrorConstructor;
 };
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';

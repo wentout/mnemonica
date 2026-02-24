@@ -36,7 +36,7 @@ import { hop } from '../../utils/hop';
 const getClassConstructor = ( ConstructHandler: any, CreationHandler: any, ) => {
 	return class extends ConstructHandler {
 		// oxlint-disable-next-line constructor-super
-		constructor ( ...args: any[] ) {
+		constructor ( ...args: unknown[] ) {
 			const answer = super( ...args );
 			// debugger;
 			const result = CreationHandler.call( this, answer );
@@ -50,7 +50,7 @@ const getFunctionConstructor = ( ConstructHandler: any, CreationHandler: any, ) 
 		hop( ConstructHandler.prototype, 'constructor' ) &&
 		(ConstructHandler.prototype.constructor == ConstructHandler);
 	
-	return function ( this: any, ...args: any[] ) {
+	return function ( this: object, ...args: unknown[] ) {
 		let answer;
 		// if (!new.target) {
 		// 	debugger;
@@ -71,13 +71,13 @@ const getFunctionConstructor = ( ConstructHandler: any, CreationHandler: any, ) 
 };
 
 const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass = false ) {
-	return function ( ConstructHandler: CallableFunction, CreationHandler: CallableFunction, SymbolConstructorName: symbol ): any {
+	return function ( ConstructHandler: CallableFunction, CreationHandler: CallableFunction, SymbolConstructorName: symbol ): unknown {
 		return function () {
 			let ModificationBody: any;
 			if ( asClass ) {
 				ModificationBody = getClassConstructor( ConstructHandler, CreationHandler );
 			} else {
-				// const ReNamedConstructHandler = {} as any;
+				// const ReNamedConstructHandler = {} as unknown;
 				// ReNamedConstructHandler[FunctionName] = ConstructHandler;
 				// ModificationBody = getFunctionConstructor(ReNamedConstructHandler[FunctionName], CreationHandler);
 				ModificationBody = getFunctionConstructor( ConstructHandler, CreationHandler );

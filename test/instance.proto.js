@@ -1,8 +1,8 @@
 'use strict';
 
-// const {
-// 	SymbolGaia,
-// } = require( '..' );
+const mnemonica = require( '..' );
+
+const { _lookup } = mnemonica;
 
 const gof = Object.getPrototypeOf;
 
@@ -212,10 +212,20 @@ const tests = ( opts ) => {
 			assert.deepInclude( nativeFork, evenMoreFork );
 			assert.deepInclude( evenMoreFork, nativeFork );
 			assert.notEqual( getProps(overMore).__args__, getProps(evenMore).__args__ );
-			expect( evenMoreFork ).instanceof( OverMore.lookup( 'EvenMore' ) );
+			const lookedUp = OverMore.lookup( 'EvenMore' );
+			expect( evenMoreFork ).instanceof( lookedUp );
 			assert.deepEqual( Object.keys( evenMore ), Object.keys( evenMoreFork ) );
-
+			
 		} );
+
+		it( 'api/types/index.ts coverage (line 389) should cover lookup undefined type case', () => {
+			// Create a mock subtypes map that returns undefined for the first lookup
+			const mockSubtypes = new Map();
+			// Test lookup with non-existent nested path - should return undefined
+			const result = _lookup.call(mockSubtypes, 'NonExistent.Nested.Type');
+			expect(result).equal(undefined);
+		} );
+
 
 		it( 'instance.ConstructorName.call(undefined) should work', () => {
 			expect( overMoreCallEvenMoreUndefined ).instanceof( overMore.EvenMore );

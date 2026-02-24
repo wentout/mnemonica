@@ -318,6 +318,7 @@ let MidDecoratorExt = (() => {
     var MidDecoratorExt = _classThis = class {
         constructor() {
             this.field = 111;
+            this.ext = 321;
             console.log('im here: ', this.field);
         }
     };
@@ -384,7 +385,6 @@ exports.midDecoratorExt = (0, __1.apply)(exports.midDecoratorBase, MidDecoratorE
 // debugger;
 exports.midAddDecoratorBaseExt = (0, __1.apply)(exports.midDecoratorBase, MidAddDecoratorAddExt);
 try {
-    debugger;
     (0, __1.apply)(exports.midDecoratorBase, MidAddDecoratorAddExtSub);
 }
 catch (error) {
@@ -394,9 +394,10 @@ catch (error) {
     // though, if it will be pollution,
     /// then all the tests will become broken
     // and this is not what happens
+    // debugger;
     console.error(error);
 }
-debugger;
+// debugger;
 exports.midAddDecoratorSubExt = (0, __1.apply)(exports.midAddDecoratorBaseExt, MidAddDecoratorAddExtSub);
-debugger;
+// debugger;
 //# sourceMappingURL=decorate.js.map

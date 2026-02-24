@@ -3,7 +3,10 @@ module.exports = {
 	testEnvironment : 'node',
 	testMatch       : [ '**/test-jest/index.ts' ],
 	transform       : {
-		'\\./test-jest/*.ts$' : [ 'ts-jest', { tsconfig : './tsconfig.jest.json' } ]
+		'^.+\\.ts$' : [ 'ts-jest', { 
+			tsconfig : './tsconfig.jest.json',
+			isolatedModules : true
+		} ]
 	},
 	coverageDirectory   : './coveragejest',
 	collectCoverageFrom : [

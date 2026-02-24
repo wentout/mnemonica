@@ -11,7 +11,7 @@ import { BaseClass, Strict } from 'typeomatica';
 
 // debugger;
 
-const deep = { deep: true };
+const deep = { deep : true };
 class Base {
 	base_field = 555;
 }
@@ -50,7 +50,7 @@ const esome = new SomeE;
 console.log(esome);
 
 // debugger;
-@decorate({ blockErrors: true })
+@decorate({ blockErrors : true })
 // <-- with the following error -->
 // TypeError: Cannot read properties of undefined (reading 'value')
 // @ts-ignore
@@ -58,7 +58,7 @@ console.log(esome);
 class MyDecoratedClass {
 	// class MyDecoratedClass extends BaseClass {
 	field: number;
-	constructor() {
+	constructor () {
 		// // debugger;
 		// super();
 		// // debugger;
@@ -70,10 +70,10 @@ class MyDecoratedClass {
 const immediateInstance = new MyDecoratedClass;
 console.log(immediateInstance);
 
-@decorate(MyDecoratedClass, { strictChain: false })
+@decorate(MyDecoratedClass, { strictChain : false })
 class MyDecoratedSubClass {
 	sub_field: number;
-	constructor() {
+	constructor () {
 		this.sub_field = 321;
 	}
 }
@@ -97,7 +97,7 @@ const MyFn = function () {
 // Object.setPrototypeOf(MyFn.prototype, new BaseClass);
 @decorate(MyDecoratedSubClass)
 class MyDecoratedSubSubClass extends MyFn {
-	constructor() {
+	constructor () {
 		super();
 		this.sub_sub_field = 321;
 	}
@@ -112,7 +112,7 @@ export const myDecoratedSubSubInstance = apply(myDecoratedSubInstance, MyDecorat
 // @ts-ignore
 class MyOtherDecoratedClass extends BaseClass {
 	field: number;
-	constructor() {
+	constructor () {
 		super();
 		this.field = 123;
 	}
@@ -139,12 +139,12 @@ export const myOtherInstance = apply(myOtherDecoratedInstance, MyOtherFn);
 
 
 class ExtendTestingBase {
-	field = 333
+	field = 333;
 }
 
 @decorate()
 class ExtendTestingExt extends ExtendTestingBase {
-	field = 111
+	field = 111;
 }
 
 export const exTest = new ExtendTestingExt;
@@ -153,11 +153,11 @@ export const exTest = new ExtendTestingExt;
 
 @decorate()
 class ExtendTestingSupBase {
-	field = 333
+	field = 333;
 }
 
 class ExtendTestingSupExt extends ExtendTestingSupBase {
-	field = 111
+	field = 111;
 }
 
 export const exSupTest = new ExtendTestingSupExt;
@@ -167,7 +167,7 @@ export const exSupTest = new ExtendTestingSupExt;
 
 @decorate()
 class MidDecoratorBase {
-	field = 333
+	field = 333;
 }
 
 debugger;
@@ -177,8 +177,9 @@ debugger;
 // @ts-ignore
 @MidDecoratorBase()
 class MidDecoratorExt{
-	field = 111
-	constructor() {
+	field = 111;
+	ext = 321;
+	constructor () {
 		console.log('im here: ', this.field);
 	}
 }
@@ -186,19 +187,19 @@ class MidDecoratorExt{
 // @ts-ignore
 @MidDecoratorBase()
 class MidAddDecoratorAddExt{
-	field = 111
-	addition = 321
-	constructor() {
+	field = 111;
+	addition = 321;
+	constructor () {
 		console.log('im here: ', this.field);
 	}
 }
 
 // debugger;
 // @ts-ignore
-@MidAddDecoratorAddExt({ test: true })
+@MidAddDecoratorAddExt({ test : true })
 class MidAddDecoratorAddExtSub{
-	field = 111
-	constructor() {
+	field = 111;
+	constructor () {
 		console.log('im here: ', this.field);
 	}
 }
@@ -214,7 +215,6 @@ export const midDecoratorExt = apply(midDecoratorBase, MidDecoratorExt);
 export const midAddDecoratorBaseExt = apply(midDecoratorBase, MidAddDecoratorAddExt);
 
 try {
-	debugger;
 	apply(midDecoratorBase, MidAddDecoratorAddExtSub);
 } catch (error) {
 	// wow
@@ -223,9 +223,10 @@ try {
 	// though, if it will be pollution,
 	/// then all the tests will become broken
 	// and this is not what happens
+	// debugger;
 	console.error(error);
 }
 
-debugger;
+// debugger;
 export const midAddDecoratorSubExt = apply(midAddDecoratorBaseExt, MidAddDecoratorAddExtSub);
-debugger;
+// debugger;

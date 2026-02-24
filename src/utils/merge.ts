@@ -5,7 +5,7 @@ const {
 	WRONG_ARGUMENTS_USED
 } = ErrorsTypes;
 
-export const merge = ( a: any, b: any, ...args: any[] ) => {
+export const merge = ( a: object, b: object, ...args: unknown[] ): object => {
 
 	// at this situation this check is enough
 	if ( a !== Object( a ) ) {
@@ -17,11 +17,12 @@ export const merge = ( a: any, b: any, ...args: any[] ) => {
 		throw new WRONG_ARGUMENTS_USED( 'B should be an object' );
 	}
 
-	if ( typeof a.fork !== 'function' ) {
+	const { fork } = a as { fork?: (this: object, ...forkArgs: unknown[]) => unknown };
+	if ( typeof fork !== 'function' ) {
 		throw new WRONG_ARGUMENTS_USED( 'A should have A.fork()' );
 	}
 
-	const aa = a.fork.call( b, ...args );
-	return aa;
+	const aa = fork.call( b, ...args );
+	return aa as object;
 
 };

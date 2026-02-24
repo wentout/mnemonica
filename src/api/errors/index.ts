@@ -53,7 +53,7 @@ export class BASE_MNEMONICA_ERROR extends Error {
 	constructor ( message = BASE_ERROR_MESSAGE, additionalStack: string[] ) {
 
 		super( message );
-		const BaseStack: any = this.stack;
+		const BaseStack: string = this.stack as string;
 		odp( this, 'BaseStack', {
 			get () {
 				return BaseStack;

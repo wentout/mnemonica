@@ -15,7 +15,7 @@ export const makeInstanceModificator = ( self: any ) => {
 		existentInstance,
 		ModificatorType,
 		Object.assign( {}, proto ),
-		( __proto_proto__: any ) => {
+		( __proto_proto__: unknown ) => {
 			self.__proto_proto__ = __proto_proto__;
 			_addProps.call( self );
 		}

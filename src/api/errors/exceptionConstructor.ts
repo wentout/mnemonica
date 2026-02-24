@@ -26,7 +26,7 @@ import { makeInstanceModificator } from '../types/InstanceModificator';
 
 import { _getProps, Props } from '../types/Props';
 
-const checkThrowArgs = ( instance: any, target: any, error: Error, args: any[] ) => {
+const checkThrowArgs = ( instance: unknown, target: unknown, error: Error, args: unknown[] ) => {
 
 	let wrongThrow;
 
@@ -73,7 +73,7 @@ const checkThrowArgs = ( instance: any, target: any, error: Error, args: any[] )
 
 };
 
-const exceptionConsctructHandler = function ( this: any, opts: { [ index: string ]: any } ) {
+const exceptionConsctructHandler = function ( this: Error, opts: { [ index: string ]: unknown } ) {
 
 	const {
 		instance,
@@ -81,7 +81,13 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 		typeStack,
 		args,
 		error
-	} = opts;
+	} = opts as {
+		instance: { extract: () => unknown };
+		TypeName: string;
+		typeStack: string[];
+		args: unknown[];
+		error: Error;
+	};
 
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -122,7 +128,7 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 	} );
 
 	// real error stack
-	const errorStack = exception.stack.split( '\n' );
+	const errorStack = exception.stack!.split( '\n' );
 
 	const stack: string[] = [];
 
@@ -130,6 +136,8 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 
 	getStack.call( exception, title, [], prepareException );
 
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
 	stack.push( ...exception.stack );
 
 	stack.push( '<-- with the following error -->' );
@@ -156,7 +164,7 @@ const exceptionConsctructHandler = function ( this: any, opts: { [ index: string
 
 };
 
-const prepareException = function ( this: any, target: any, error: Error, ...args: any[] ) {
+const prepareException = function ( this: object, target: unknown, error: Error, ...args: unknown[] ) {
 
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
 	const instance = this;
@@ -190,7 +198,7 @@ const prepareException = function ( this: any, target: any, error: Error, ...arg
 
 	ExceptionCreator.existentInstance = error;
 	 
-	ExceptionCreator.ModificatorType = makeFakeModificatorType( TypeName, function ( this: unknown ) {
+	ExceptionCreator.ModificatorType = makeFakeModificatorType( TypeName, function (this: Error) {
 		return exceptionConsctructHandler.call( this, {
 			instance,
 			TypeName,

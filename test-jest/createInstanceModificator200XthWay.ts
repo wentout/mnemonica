@@ -3,35 +3,51 @@
 const { mnemonica } = require('../src/index');
 const { defaultOptions: { ModificationConstructor } } = mnemonica;
 
-module.exports = function () {
+interface ExistentInstance {
+	goneToFallback?: unknown;
+}
+
+interface ModificatorType {
+	prototype: object;
+}
+
+type AddPropsFunction = (mnemosyne: unknown) => void;
+
+module.exports = function (): (
+	this: ExistentInstance,
+	ModificatorType: ModificatorType,
+	ModificatorTypePrototype: Record<string, unknown>,
+	addProps: AddPropsFunction
+) => unknown {
 
 	const CreateInstanceModificatorAncient200XthWay = function (
-		ModificatorType: any,
-		ModificatorTypePrototype: any,
-		addProps: any
-	) {
+		this: ExistentInstance,
+		ModificatorType: ModificatorType,
+		ModificatorTypePrototype: Record<string, unknown>,
+		addProps: AddPropsFunction
+	): unknown {
 
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const existentInstance = this;
 
 		try {
-			const TripleSchemeClosure = function () {
+			const TripleSchemeClosure = function (this: unknown): unknown {
 
 				// eslint-disable-next-line @typescript-eslint/no-this-alias
 				const Mnemosyne = this;
 				addProps(Mnemosyne);
 
-				const Inherico = function () {
+				const Inherico = function (this: unknown): ModificatorType {
 
 					// eslint-disable-next-line @typescript-eslint/no-this-alias
 					const moreInherited = this;
 
-					ModificatorType.prototype = moreInherited;
+					ModificatorType.prototype = moreInherited as object;
 
 					Object.assign(ModificatorType.prototype, ModificatorTypePrototype);
 
 					Object.defineProperty(ModificatorType.prototype, 'constructor', {
-						get() {
+						get(): ModificatorType {
 							return ModificatorType;
 						},
 						enumerable: false
@@ -42,20 +58,22 @@ module.exports = function () {
 				};
 
 				Inherico.prototype = Mnemosyne;
-				Inherico.prototype.constructor = ModificatorType;
+				(Inherico.prototype as { constructor?: unknown }).constructor = ModificatorType;
 
-				return new Inherico();
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+				return new (Inherico as unknown as new () => ModificatorType)();
 			};
 
 			TripleSchemeClosure.prototype = existentInstance;
-			return new TripleSchemeClosure();
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+			return new (TripleSchemeClosure as unknown as new () => unknown)();
 
-		} catch (error) {
+		} catch (error: unknown) {
 
 			try {
 				if (!existentInstance.goneToFallback) {
 					Object.defineProperty(existentInstance, 'goneToFallback', {
-						get() {
+						get(): unknown {
 							return error;
 						}
 					});
@@ -65,6 +83,7 @@ module.exports = function () {
 				process.exit(1);
 			}
 
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
 			return ModificationConstructor()
 				.call(
 					existentInstance,

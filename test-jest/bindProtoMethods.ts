@@ -4,9 +4,9 @@ const {
 	getProps,
 } = require('../src/index');
 
-const odp = (obj: any, prop: string, attributes: PropertyDescriptor) => {
+const odp = (obj: Record<string, unknown>, prop: string, attributes: PropertyDescriptor): void => {
 	try {
-		return Object.defineProperty(obj, prop, attributes);
+		Object.defineProperty(obj, prop, attributes);
 	} catch (error) {
 		console.error(error);
 	}
@@ -14,12 +14,19 @@ const odp = (obj: any, prop: string, attributes: PropertyDescriptor) => {
 
 const { boundMethodErrorHandler } = require('./boundMethodErrorHandler');
 
-export const bindMethod = function (hookData: any, instance: any, methodName: string, MethodItself: Function) {
+export interface HookData {
+	inheritedInstance: Record<string, unknown> & {
+		__type__?: { proto: Record<string, unknown> };
+		exception?: new (...args: unknown[]) => Error;
+	};
+}
+
+export const bindMethod = function (hookData: HookData, instance: Record<string, unknown>, methodName: string, MethodItself: (...args: unknown[]) => unknown | ((this: Record<string, unknown>, propName: string) => unknown)) {
 	const from = hookData;
 
 	odp(instance, methodName, {
 		get() {
-			return function (this: any, ...args: any[]) {
+			return function (this: unknown, ...args: unknown[]) {
 				const applyTo = this !== undefined ? this : from;
 				const exceptionReason = {
 					method: MethodItself,
@@ -35,14 +42,14 @@ export const bindMethod = function (hookData: any, instance: any, methodName: st
 				try {
 					let answer;
 					if (new.target) {
-						(exceptionReason as any).asNew = true;
-						answer = new (MethodItself as any)(...args);
+						(exceptionReason as { asNew?: boolean }).asNew = true;
+						answer = new (MethodItself as unknown as new (...args: unknown[]) => unknown)(...args);
 					} else {
 						answer = MethodItself.call(applyTo, ...args);
 					}
 
 					if (answer instanceof Promise) {
-						answer = answer.catch((error: any) => {
+						answer = answer.catch((error: Error) => {
 							odp(exceptionReason, 'error', {
 								value: error,
 								enumerable: true
@@ -52,7 +59,7 @@ export const bindMethod = function (hookData: any, instance: any, methodName: st
 					}
 
 					return answer;
-				} catch (error) {
+				} catch (error: unknown) {
 					odp(exceptionReason, 'error', {
 						value: error,
 						enumerable: true
@@ -66,20 +73,23 @@ export const bindMethod = function (hookData: any, instance: any, methodName: st
 	});
 };
 
-export const bindProtoMethods = function (hookData: any) {
+export const bindProtoMethods = function (hookData: HookData) {
 	const {
 		inheritedInstance,
 	} = hookData;
 	const { __type__ } = getProps(inheritedInstance);
 	const { proto } = __type__;
 	const protoPointer = Reflect.getPrototypeOf(inheritedInstance);
+	if (protoPointer === null) {
+		return;
+	}
 	Object.entries(protoPointer).forEach((entry) => {
 		const [mayBeMethodName, MayBeMethodFunction] = entry;
 		if (mayBeMethodName === 'constructor') {
 			return;
 		}
 		if (MayBeMethodFunction instanceof Function && proto[mayBeMethodName] instanceof Function) {
-			bindMethod(hookData, protoPointer, mayBeMethodName, MayBeMethodFunction as Function);
+			bindMethod(hookData, protoPointer as unknown as Record<string, unknown>, mayBeMethodName, MayBeMethodFunction as (...args: unknown[]) => unknown);
 		}
 	});
 };

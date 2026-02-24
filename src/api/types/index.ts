@@ -1,6 +1,11 @@
 'use strict';
 
-import { ConstructorFunction, TypeDescriptorInstance } from '../../types';
+import {
+	ConstructorFunction,
+	TypeDescriptorInstance,
+	TypeClass,
+	constructorOptions
+} from '../../types';
 
 import { hop } from '../../utils/hop';
 
@@ -49,9 +54,9 @@ const {
 import { getStack } from '../errors';
 
 const TypeDescriptor = function (
-	this: any,
+	this: TypeDescriptorInstance,
 	defineOrigin: CallableFunction,
-	types: any,
+	types: Map<string, object>,
 	TypeName: string,
 	constructHandler: CallableFunction,
 	proto: { [ index: string ]: unknown },
@@ -60,22 +65,24 @@ const TypeDescriptor = function (
 
 	// here "types" refers to subtypes of type or collection object {}
 
-	const parentType = types[ SymbolParentType ] || null;
+	const parentType = (types as unknown as Record<symbol, object>)[ SymbolParentType ] || null;
 
 	const isSubType = parentType ? true : false;
 
-	const collection = isSubType ? parentType.collection : types[ MNEMOSYNE ];
+	const collection = isSubType
+		? (parentType as Record<string, unknown>).collection as object
+		: (types as unknown as Record<string | symbol, object>)[ MNEMOSYNE ];
 
 	if ( types.has( TypeName ) ) {
 		throw new ALREADY_DECLARED;
 	}
 
 	// const subtypes = descriptors.createTypesCollection();
-	const subtypes = new Map();
+	const subtypes = new Map<string, object>();
 
 	const title = `${TYPE_TITLE_PREFIX}${TypeName}`;
 
-	config = Object.assign( {}, collection[ SymbolConfig ], config );
+	config = Object.assign( {}, (collection as Record<symbol, unknown>)[ SymbolConfig ], config );
 
 	const type = Object.assign( this, {
 
@@ -117,20 +124,28 @@ const TypeDescriptor = function (
 
 	return types.get( TypeName );
 
-} as ConstructorFunction<TypeDescriptorInstance>;
+} as unknown as ConstructorFunction<TypeDescriptorInstance>;
 
 Object.assign( TypeDescriptor.prototype, hooksApi );
 
-TypeDescriptor.prototype.define = function ( ...args: any[] ) {
-	return define.call( define, this.subtypes, ...args );
+TypeDescriptor.prototype.define = function (
+	this: TypeDescriptorInstance,
+	TypeOrTypeName: string | CallableFunction,
+	constructHandlerOrConfig?: CallableFunction | object,
+	config?: object
+) {
+	return define.call( define, this.subtypes as Map<string, object>, TypeOrTypeName, constructHandlerOrConfig, config );
 };
 
-TypeDescriptor.prototype.lookup = function ( ...args: any[] ) {
-	return lookup.call( this.subtypes, ...args );
+TypeDescriptor.prototype.lookup = function (
+	this: TypeDescriptorInstance,
+	TypeNestedPath: string
+) {
+	return lookup.call( this.subtypes as Map<string, object>, TypeNestedPath );
 };
 
 odp( TypeDescriptor.prototype, Symbol.hasInstance, {
-	get () {
+	get (this: TypeDescriptorInstance) {
 		return getTypeChecker( this.TypeName );
 	}
 } );
@@ -139,7 +154,12 @@ odp( TypeDescriptor.prototype, Symbol.hasInstance, {
 here we use function to retreive a contructor
 and constructHandlerGetter is that function
 */
-const defineUsingType = function ( this: any, subtypes: any, constructHandlerGetter: CallableFunction, config: any ) {
+const defineUsingType = function (
+	this: CallableFunction,
+	subtypes: Map<string, object>,
+	constructHandlerGetter: () => CallableFunction,
+	config: constructorOptions | undefined
+) {
 	// we need this to extract TypeName
 	const type = constructHandlerGetter();
 
@@ -167,9 +187,9 @@ const defineUsingType = function ( this: any, subtypes: any, constructHandlerGet
 		// this was checking for class / function
 		// functions has .writable prototype
 		// and classes are has not
-		const protoDesc: any = Object
-			.getOwnPropertyDescriptor( constructHandler, 'prototype' );
-		if ( protoDesc.writable ) {
+		const protoDesc = Object
+			.getOwnPropertyDescriptor( constructHandler, 'prototype' ) as PropertyDescriptor | undefined;
+		if ( protoDesc && protoDesc.writable ) {
 			// constructHandler.prototype = {};
 			constructHandler.prototype = getDefaultPrototype();
 		}
@@ -213,11 +233,11 @@ here we directly passing constructHandler
 as a constructor for instances creations
 */
 const defineUsingFunction = function (
-	this: any,
-	subtypes: any,
+	this: CallableFunction,
+	subtypes: Map<string, object>,
 	TypeName: string,
-	constructHandler = function () { },
-	config: any = {}
+	constructHandler: CallableFunction = function () { },
+	config: constructorOptions = {}
 ) {
 
 	if ( typeof constructHandler !== 'function' ) {
@@ -273,7 +293,13 @@ const defineUsingFunction = function (
 };
 
 
-export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: string | any, constructHandlerOrConfig: any, config: object ) {
+export const define = function (
+	this: CallableFunction,
+	subtypes: Map<string, object>,
+	TypeOrTypeName: string | CallableFunction,
+	constructHandlerOrConfig?: CallableFunction | object,
+	config?: object
+): TypeClass {
 
 	if ( typeof TypeOrTypeName === 'function' ) {
 		// TODO: if ( hop( TypeOrTypeName, 'name' ) ) {
@@ -281,7 +307,13 @@ export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: 
 		if ( TypeOrTypeName.name ) {
 			return define.call( this, subtypes, TypeOrTypeName.name, TypeOrTypeName, config );
 		} else {
-			return defineUsingType.call( this, subtypes, TypeOrTypeName, constructHandlerOrConfig );
+			 
+			return (defineUsingType as any).call(
+				this,
+				subtypes,
+				TypeOrTypeName,
+				constructHandlerOrConfig
+			);
 		}
 	}
 
@@ -296,7 +328,14 @@ export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: 
 		if ( !Type ) {
 
 			if ( split.length === 1 ) {
-				return defineUsingFunction.call( this, subtypes, TypeOrTypeName, constructHandlerOrConfig, config );
+				 
+				return (defineUsingFunction as any).call(
+					this,
+					subtypes,
+					TypeOrTypeName,
+					constructHandlerOrConfig,
+					config
+				);
 			}
 
 			throw new WRONG_TYPE_DEFINITION( `${split[ 0 ]} definition is not yet exists` );
@@ -305,13 +344,18 @@ export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: 
 		const TypeName = split.slice( 1 ).join( '.' );
 
 		if ( split.length > 1 ) {
-			return define.call( this, Type.subtypes, TypeName, constructHandlerOrConfig, config );
+			return define.call( this, Type.subtypes as Map<string, object>, TypeName, constructHandlerOrConfig, config );
 		}
 
 		// so, here we go with
 		// defineUsingType.call
 		// from the next step
-		return define.call( this, Type.subtypes, constructHandlerOrConfig, config );
+		return define.call(
+			this as unknown as CallableFunction,
+			Type.subtypes as Map<string, object>,
+			constructHandlerOrConfig as CallableFunction,
+			config
+		);
 
 	}
 
@@ -319,7 +363,10 @@ export const define: any = function ( this: any, subtypes: any, TypeOrTypeName: 
 
 };
 
-export const lookup: any = function ( this: any, TypeNestedPath: string ) {
+export const lookup = function (
+	this: Map<string, object>,
+	TypeNestedPath: string
+): TypeClass | undefined {
 
 	if ( typeof TypeNestedPath !== 'string' ) {
 		throw new WRONG_TYPE_DEFINITION( 'arg : type nested path must be a string' );
@@ -332,13 +379,16 @@ export const lookup: any = function ( this: any, TypeNestedPath: string ) {
 	const split = getTypeSplitPath( TypeNestedPath );
 
 	const [ name ] = split;
-	const type = this.get( name );
+	const type = this.get( name ) as TypeClass | undefined;
 	if ( split.length === 1 ) {
 		return type;
 	}
 
 	const NextNestedPath = split.slice( 1 ).join( '.' );
-	return lookup.call( type.subtypes, NextNestedPath );
+	if (!type) {
+		return undefined;
+	}
+	return lookup.call( type.subtypes as Map<string, object>, NextNestedPath );
 
 };
 

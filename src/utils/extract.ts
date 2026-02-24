@@ -7,14 +7,14 @@ const {
 
 // import { hop } from './hop';
 
-export const extract = ( instance: any ) => {
+export const extract = ( instance: object ) => {
 
 	// at this situation this check is enough
 	if ( instance !== Object( instance ) ) {
 		throw new WRONG_INSTANCE_INVOCATION;
 	}
 
-	const extracted: { [ index: string ]: any } = {};
+	const extracted: { [ index: string ]: unknown } = {};
 
 	for ( const name in instance ) {
 		// if ( name === 'constructor' && !hop( instance, name ) ) {
@@ -24,7 +24,7 @@ export const extract = ( instance: any ) => {
 		// 	continue;
 		// }
 
-		extracted[ name ] = instance[ name ];
+		extracted[ name ] = ( instance as Record<string, unknown> )[ name ];
 	}
 
 	return extracted;

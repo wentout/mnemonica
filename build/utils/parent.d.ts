@@ -1,1 +1,1 @@
-export declare const parent: (instance: any, path: string) => any;
+export declare const parent: (instance: object, path: string) => unknown;

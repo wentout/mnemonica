@@ -27,15 +27,15 @@ const utilsUnWrapped = {
 };
 
 const wrapThis = ( method: CallableFunction ) => {
-	return function ( this: any, instance: any, ...args: any[] ) {
+	return function ( this: object, instance: object | undefined, ...args: unknown[] ) {
 		return method( instance !== undefined ? instance : this, ...args );
 	};
 };
 
-export const utils: { [ index: string ]: any } = {
+export const utils: { [ index: string ]: CallableFunction } = {
 
 	...Object.entries( utilsUnWrapped )
-		.reduce( ( methods: { [ index: string ]: any }, util ) => {
+		.reduce( ( methods: { [ index: string ]: CallableFunction }, util ) => {
 			const [ name, fn ] = util;
 			methods[ name ] = wrapThis( fn );
 			return methods;

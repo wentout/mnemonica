@@ -1,5 +1,7 @@
 'use strict';
 
+import type { MnemonicaError } from '../../types';
+
 import { constants } from '../../constants';
 const {
 	odp,
@@ -28,7 +30,19 @@ const {
 
 import { makeInstanceModificator } from '../types/InstanceModificator';
 
-export const throwModificationError = function ( this: any, error: any ) {
+// Instance creator context type
+type InstanceCreatorContext = {
+	TypeName: string;
+	type: { stack: string };
+	args: unknown[];
+	ModificatorType: CallableFunction;
+	InstanceModificator: new (...args: unknown[]) => { stack: string[] };
+	inheritedInstance?: unknown;
+	invokePostHooks(): { type: Set<unknown>; collection: Set<unknown> };
+	[key: string]: unknown;
+};
+
+export const throwModificationError = function ( this: InstanceCreatorContext, error: MnemonicaError ) {
 
 	// InstanceCreator
 	// eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -50,8 +64,8 @@ export const throwModificationError = function ( this: any, error: any ) {
 
 	if ( error.exceptionReason !== undefined ) {
 
-		error.reasons.push( error.exceptionReason );
-		error.surplus.push( error );
+		(error.reasons as Error[]).push( error.exceptionReason );
+		(error.surplus as Error[]).push( error );
 
 		throw error;
 
@@ -64,7 +78,7 @@ export const throwModificationError = function ( this: any, error: any ) {
 		enumerable : true
 	} );
 
-	const reasons: any[ typeof exceptionReason ] = [ exceptionReason ];
+	const reasons: Error[] = [ exceptionReason ];
 
 	odp( error, 'reasons', {
 		get () {
@@ -72,7 +86,7 @@ export const throwModificationError = function ( this: any, error: any ) {
 		},
 		enumerable : true
 	} );
-	const surplus: any[ typeof exceptionReason ] = [];
+	const surplus: Error[] = [];
 	odp( error, 'surplus', {
 		get () {
 			return surplus;
@@ -82,12 +96,12 @@ export const throwModificationError = function ( this: any, error: any ) {
 
 	self.ModificatorType = makeFakeModificatorType( TypeName );
 
-	self.InstanceModificator = makeInstanceModificator( self );
+	self.InstanceModificator = makeInstanceModificator( self as unknown as Record<string, unknown> ) as InstanceCreatorContext['InstanceModificator'];
 
 	// let erroredInstance = new self.InstanceModificator();
 	const erroredInstance = new self.InstanceModificator();
 
-	let errorProto: any = Reflect.getPrototypeOf( erroredInstance );
+	let errorProto: object | null = Reflect.getPrototypeOf( erroredInstance );
 	let isMnemonicaInstance = false;
 	while ( errorProto ) {
 		const testToProto = Reflect.getPrototypeOf( errorProto );
@@ -108,7 +122,7 @@ export const throwModificationError = function ( this: any, error: any ) {
 	}
 
 	// Reflect.setPrototypeOf( errorProto, error);
-	const result = Reflect.setPrototypeOf( errorProto, error);
+	const result = Reflect.setPrototypeOf( errorProto as object, error);
 	// let result = Reflect.setPrototypeOf( errorProto, error);
 	// if (result === false) {
 	// 	Object.setPrototypeOf(errorProto, error);
@@ -121,7 +135,7 @@ export const throwModificationError = function ( this: any, error: any ) {
 
 	if ( error instanceof BASE_MNEMONICA_ERROR ) {
 
-		stack.push( error.stack );
+		stack.push( error.stack as string );
 
 	} else {
 
@@ -131,7 +145,7 @@ export const throwModificationError = function ( this: any, error: any ) {
 
 		stack.push( ...erroredInstance.stack );
 
-		const errorStack = error.stack.split( '\n' );
+		const errorStack = (error.stack as string ).split( '\n' );
 
 		stack.push( '<-- with the following error -->' );
 

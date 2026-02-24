@@ -1,3 +1,3 @@
-export declare const pick: (instance: any, ...args: string[]) => {
-    [index: string]: any;
+export declare const pick: (instance: object, ...args: (string | string[])[]) => {
+    [index: string]: unknown;
 };

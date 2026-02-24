@@ -170,8 +170,12 @@ export type parentSub = {
 	__parent__: parentSub
 }
 
-const findSubTypeFromParent = (instance: parentSub, subType: string): parentSub | null => {
+const findSubTypeFromParent = (instance: parentSub | object | undefined, subType: string): parentSub | null => {
 	let subtype = null;
+
+	if (!instance) {
+		return null;
+	}
 
 	const props = _getProps(instance) as Props;
 
@@ -239,7 +243,7 @@ const makeFakeModificatorType = (
 
 	const modificatorBody = compileNewModificatorFunctionBody(TypeName);
 
-	const modificatorType = modificatorBody(
+	const modificatorType: any = modificatorBody(
 		fakeModificator,
 		CreationHandler,
 		SymbolConstructorName
@@ -252,7 +256,7 @@ const makeFakeModificatorType = (
 
 // TODO: .valueOf(), .toString() ???
 const reflectPrimitiveWrappers = (_thisArg: unknown) => {
-	let thisArg = _thisArg;
+	let thisArg: object = _thisArg as object;
 
 	if (_thisArg === null) {
 		thisArg = Object.create(null);
@@ -273,7 +277,7 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 		odp(thisArg, Symbol.toPrimitive, {
 			get () {
 				return () => {
-					return _thisArg.valueOf();
+					return (_thisArg as String | Number | Boolean).valueOf();
 				};
 			}
 		});

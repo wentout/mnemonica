@@ -1,32 +1,32 @@
 module.exports = {
-	"env": {
-		"node": true,
-		"es6": true,
-		'mocha': true,
+	'env' : {
+		'node'  : true,
+		'es6'   : true,
+		'mocha' : true,
 	},
-	"extends": "eslint:recommended",
-	"parserOptions": {
-		"ecmaVersion": 2018
+	'extends'       : 'eslint:recommended',
+	'parserOptions' : {
+		'ecmaVersion' : 2018
 	},
-	"plugins" : [
-		"mocha"
+	'plugins' : [
+		'mocha'
 	],
-	"rules": {
-		"linebreak-style": [
-			"error",
-			"unix"
+	'rules' : {
+		'linebreak-style' : [
+			'error',
+			'unix'
 		],
-		"quotes": [
-			"error",
-			"single"
+		'quotes' : [
+			'error',
+			'single'
 		],
-		"semi": [
-			"error",
-			"always"
+		'semi' : [
+			'error',
+			'always'
 		],
-		"no-unused-vars": "warn",
-		"no-console": "off",
-		"no-debugger": "off",
-		"new-cap": "off"
+		'no-unused-vars' : 'warn',
+		'no-console'     : 'off',
+		'no-debugger'    : 'off',
+		'new-cap'        : 'off'
 	}
 };
