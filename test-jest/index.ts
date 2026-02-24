@@ -29,7 +29,9 @@ import type { hooksOpts } from '../src/types';
 
 declare const process: NodeJS.Process;
 
-const mnemonica = require('../src/index');
+// Use require with type assertion for proper type inference
+import type { MnemonicaModule } from '../src/types';
+const mnemonica = require('../src/index') as MnemonicaModule;
 const { mnemonica: _mnemonica } = mnemonica;
 
 // Covers: src/index.ts - module exports structure (lines 1-217)
@@ -51,10 +53,12 @@ import {
 const ogp = Object.getPrototypeOf;
 const hop = (o: unknown, p: string) => Object.prototype.hasOwnProperty.call(o, p);
 
+// Import createTypesCollection directly for proper type inference
+import { createTypesCollection } from '../src/index';
+
 const {
 	define,
 	defaultTypes: types,
-	createTypesCollection,
 	MNEMONICA,
 	URANUS,
 	SymbolGaia,

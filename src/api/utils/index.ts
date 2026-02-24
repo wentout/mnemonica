@@ -21,29 +21,13 @@ const {
 
 import { _getProps, Props } from '../types/Props';
 
-const CreationHandler = function (this: object & { constructor: NewableFunction }, constructionAnswer: unknown) {
-	// standard says :
-	// if constructor returns something
-	// then this is a toy
-	// we have to play with
-	// respectively
-	// so we will not follow the rule
-	// if (constructionAnswer instanceof types[TypeName]) {
-	// and instead follow the line below
-
-	// but if it is not an instace of Object ... so ...
-	// if ( constructionAnswer instanceof Object )
-	// if (constructionAnswer instanceof this.constructor)
-	// will fall the on post processing
-	return constructionAnswer;
-
-	// TODO: this check was not covered with tests
-	// if (this instanceof Promise) {
-	// 	return this;
-	// }
-};
-
 import compileNewModificatorFunctionBody from '../types/compileNewModificatorFunctionBody';
+
+// CreationHandler - handles constructor return values
+// Moved to api/types/index.ts as per refactoring plan
+export const CreationHandler = function (this: object & { constructor: NewableFunction }, constructionAnswer: unknown) {
+	return constructionAnswer;
+};
 
 const checkProto = (proto: unknown) => {
 	if (!(proto instanceof Object)) {
@@ -245,7 +229,7 @@ const makeFakeModificatorType = (
 
 	const modificatorType: any = modificatorBody(
 		fakeModificator,
-		CreationHandler,
+		CreationHandler, // is now defined locally in api/types/index.ts
 		SymbolConstructorName
 	);
 
@@ -288,7 +272,6 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 
 const TypesUtils = {
 	isClass,
-	CreationHandler,
 	checkProto,
 	getTypeChecker,
 	getTypeSplitPath,

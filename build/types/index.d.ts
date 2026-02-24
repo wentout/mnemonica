@@ -136,9 +136,12 @@ export interface TypeAbsorber {
 export interface TypesCollection {
     define: TypeAbsorber;
     lookup: TypeLookup;
+    registerHook(hookType: hooksTypes, cb: hook): void;
+    registerFlowChecker(cb: () => unknown): void;
     subtypes: SubtypesMap;
+    hooks: Record<string, hook[]>;
 }
-export type CreateTypesCollectionFunction = (config?: Record<string, unknown>) => TypesCollection;
+export type CreateTypesCollectionFunction = (config?: constructorOptions) => TypesCollection;
 export interface IDefinitor<P extends object, SubTypeName extends string> {
     <PP extends object, T extends object, M extends Proto<P, Proto<PP, T>>, S extends SN & M>(this: unknown, TypeName: SubTypeName, constructHandler: IDEF<T>, proto?: PP, config?: constructorOptions): IDefinitorInstance<M, S>;
 }

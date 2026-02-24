@@ -175,10 +175,14 @@ TypeProxy.prototype.construct = function (_target: unknown, args: unknown[]) {
 	// then we should rely on that somehow
 	const uranus = type.isSubType ? getDefaultPrototype() : Uranus;
 
+	// Get exposeInstanceMethods from type config, defaulting to false
+	const config = type.config as { exposeInstanceMethods?: boolean } | undefined;
+	const exposeInstanceMethods = config?.exposeInstanceMethods ?? false;
+
 	// "this" argument may be passed for tracking why something happened
 	// but uncomment it there in createMnemosyne if needed
 	// const mnemosyneProxy = createMnemosyne(uranus, this);
-	const mnemosyneProxy = createMnemosyne(uranus);
+	const mnemosyneProxy = createMnemosyne(uranus, exposeInstanceMethods);
 	const instance = new InstanceCreator(type, mnemosyneProxy, args);
 
 	// const instance = new InstanceCreator(type, null, args);

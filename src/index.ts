@@ -13,7 +13,8 @@ import type {
 	Constructor,
 	DecoratedClass,
 	TypeClass,
-	TypeAbsorber
+	TypeAbsorber,
+	MnemonicaModule
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -183,7 +184,7 @@ export const mnemonica = Object.entries({
 		enumerable : true
 	});
 	return acc;
-}, {});
+}, {}) as MnemonicaModule;
 
 import * as api from './api';
 
@@ -206,10 +207,7 @@ export const {
 } = mnemonica;
 
 // Export createTypesCollection with proper type
- 
-const typedCreateTypesCollection: CreateTypesCollectionFunction = mnemonica.createTypesCollection as CreateTypesCollectionFunction;
- 
-export const createTypesCollection: CreateTypesCollectionFunction = typedCreateTypesCollection;
+export const createTypesCollection: CreateTypesCollectionFunction = mnemonica.createTypesCollection as CreateTypesCollectionFunction;
 
 
 export const defaultCollection = (defaultTypes as { subtypes: Map<string, object> }).subtypes;

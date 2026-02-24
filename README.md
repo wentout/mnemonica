@@ -476,6 +476,8 @@ setProps(instance, { __timestamp__: Date.now() });
 
 All mnemonica instances have the following methods:
 
+> **Note:** You can disable instance methods by setting `exposeInstanceMethods: false` in the type configuration. When disabled, these methods are still accessible via `getProps(instance).__self__` or the standalone `utils` export.
+
 #### `.extract()`
 
 Extracts all inherited properties into a single flat object.
@@ -763,7 +765,8 @@ define('SomeType', function () {}, {
   submitStack: false,      // Collect stack trace as __stack__ property
   awaitReturn: true,       // Ensure await new Constructor() returns value
   ModificationConstructor: fn,  // Custom modification constructor
-  asClass: false           // Force class mode (auto-detected by default)
+  asClass: false,          // Force class mode (auto-detected by default)
+  exposeInstanceMethods: false  // Expose instance methods on the instance itself
 });
 ```
 

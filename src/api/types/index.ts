@@ -45,11 +45,13 @@ import compileNewModificatorFunctionBody from './compileNewModificatorFunctionBo
 import TypesUtils from '../utils';
 const {
 	getTypeChecker,
-	CreationHandler,
 	getTypeSplitPath,
 	checkTypeName,
 	isClass,
 } = TypesUtils;
+
+// Import CreationHandler from utils - it's defined there but not part of TypesUtils
+import { CreationHandler } from '../utils';
 
 import { getStack } from '../errors';
 

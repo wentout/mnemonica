@@ -192,7 +192,7 @@ const typesCollectionProxyHandler = {
 	}
 };
 
-const createTypesCollection = ( config = {} ) => {
+const createTypesCollection = ( config: Record<string, unknown> = {} ) => {
 
 	const typesCollection = new TypesCollection( config );
 	const typesCollectionProxy = new Proxy( typesCollection, typesCollectionProxyHandler );
@@ -210,14 +210,16 @@ odp( DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 	}
 } );
 
+import type { CreateTypesCollectionFunction, TypesCollection } from '../../types';
+
 export const types = {
-	get createTypesCollection () {
-		return function ( config = {} ) {
-			return createTypesCollection( config );
+	get createTypesCollection (): CreateTypesCollectionFunction {
+		return function ( config: Record<string, unknown> = {} ): TypesCollection {
+			return createTypesCollection( config ) as TypesCollection;
 		};
 	},
-	get defaultTypes () {
-		return DEFAULT_TYPES;
+	get defaultTypes (): TypesCollection {
+		return DEFAULT_TYPES as TypesCollection;
 	}
 
 };
