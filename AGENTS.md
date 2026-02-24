@@ -14,10 +14,10 @@ All commands run from the `core/` directory:
 # Full build with linting
 npm run build
 
-# Run all tests with coverage (requires build first)
+# Run Mocha tests with coverage (runs npm run build:all internally)
 npm run test:cov
 
-# Run Jest tests only
+# Run Jest tests with coverage
 npm run test:jest:cov
 
 # Watch mode for development
@@ -25,8 +25,10 @@ npm run watch
 ```
 
 **Critical**: The project uses TWO test frameworks:
-- **Mocha** (`npm run test:cov`): Runs on transpiled code in `build/`, requires `npm run build:all` first
+- **Mocha** (`npm run test:cov`): Runs on transpiled code in `build/`, runs `npm run build:all` internally
 - **Jest** (`npm run test:jest:cov`): Runs TypeScript directly from `src/`, faster for development
+
+**Important**: `npm run test:cov` runs `npm run build:all` internally, so it is not necessary to run `npm run build` before `npm run test:cov`.
 
 ## Code Style (Project-Specific)
 
@@ -114,10 +116,12 @@ These configuration files define the project's strict standards. Any changes req
 
 ## Testing Requirements
 
-- **100% coverage required** for Jest (see `jest.config.js`)
+- **100% coverage required** for Jest (statements, branches, functions, lines) - see `jest.config.js`
+- **100% coverage required** for Mocha (`npm run test:cov`)
 - Mocha tests run on built code in `build/` directory
 - Jest tests run directly on TypeScript source
 - Tests must pass with `--allow-uncaught` flag (mocha)
+- **Must run `npm run test:cov` before completing task** - this validates the build and ensures 100% coverage
 
 ## Common Patterns
 

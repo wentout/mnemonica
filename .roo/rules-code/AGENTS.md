@@ -9,11 +9,11 @@ You are in **Code** mode. Your task is to implement features, fix bugs, and modi
 # Build TypeScript
 npm run build
 
-# Run all tests (Mocha + Jest)
-npm test
+# Run Mocha tests with coverage (runs npm run build:all internally)
+npm run test:cov
 
-# Run Jest tests only (TypeScript source)
-npm run test:jest
+# Run Jest tests with coverage (TypeScript source)
+npm run test:jest:cov
 
 # Run single test file
 npx jest test-jest/types.ts
@@ -24,6 +24,9 @@ npx mocha --require ts-node/register test-ts/test-example.ts
 # Watch mode
 npm run watch
 ```
+
+**Important**: `npm run test:cov` runs `npm run build:all` internally - no need to run build first.
+**Must run `npm run test:cov` before completing task** - this validates the build and ensures 100% coverage.
 
 ## Code Style Rules (CRITICAL)
 
@@ -112,7 +115,8 @@ throw new MyError('additional info', stack);
 - `URANUS` - Special instance handler
 
 ## Testing Requirements
-- Maintain **100% code coverage**
+- Maintain **100% code coverage** (statements, branches, functions, lines)
 - Mocha tests run on transpiled code (`build/`)
 - Jest tests run directly on TypeScript source
 - Always run both test suites before completing
+- **Must run `npm run test:cov` before completing task** - validates build and ensures 100% coverage
