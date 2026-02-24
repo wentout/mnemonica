@@ -78,10 +78,8 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 		merged
 	} = opts;
 
-	// Covers: src/index.ts - module exports, define(), createTypesCollection (lines 1-217)
 	describe('Check Environment', () => {
 
-		// Covers: src/api/types/InstanceCreator.ts - null return handling (lines 60-90)
 		describe('constructors may give any answer', () => {
 			const NullishReturn = define('NullishReturn', () => {
 				return null;
@@ -93,7 +91,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			expect(nullR).not.toBeInstanceOf(Object);
 		});
 
-		// Covers: src/api/utils/index.ts - isClass(), findSubTypeFromParent() (lines 202-237)
 		describe('.isClass, .findSubTypeFromParent', () => {
 			expect(isClass(class { })).toEqual(true);
 			expect(isClass(() => { })).toEqual(false);
@@ -102,7 +99,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			expect(part).toEqual(null);
 		});
 
-		// Covers: src/index.ts - full module exports interface (lines 1-217)
 		describe('interface test', () => {
 
 			const interface_keys = [
@@ -158,7 +154,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 
 		});
 
-		// Covers: src/api/types/Props.ts - getProps(), setProps() (lines 1-80)
 		describe('additional props test', () => {
 
 			const props_int = getProps(user);
@@ -174,7 +169,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 
 		});
 
-		// Covers: src/api/types/Mnemosyne.ts - missing property handling (lines 100-150)
 		describe('missing props test for Mnemosyne', () => {
 			// check prepareSubtypeForConstruction omits execution early
 			const userProto = Reflect.getPrototypeOf(user);
@@ -183,7 +177,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 		});
 
 
-		// Covers: src/api/types/Props.ts - getProps() edge cases (lines 20-50)
 		describe('missing instance props test', () => {
 			const result = setProps({}, {});
 			expect(result).toEqual(false);
@@ -196,7 +189,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			expect(getProps(Object.create(null))).toEqual(undefined);
 		});
 
-		// Covers: src/api/types/index.ts - named function/class definitions (lines 200-280)
 		describe('named constructor define', () => {
 
 			const NamedFunction = UserType.define(async function NamedFunction(this: { type: string; getTypeValue: () => string }) {
@@ -340,7 +332,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 
 		});
 
-		// Covers: src/utils/defineStackCleaner.ts - stack cleaner registration (lines 1-50)
 		describe('error defineStackCleaner test ', () => {
 			let madeError = null;
 			try {
@@ -358,7 +349,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			});
 		});
 
-		// Covers: src/descriptors/types/index.ts - TypesCollection properties (lines 40-217)
 		describe('core env tests', () => {
 
 			it('.SubTypes definition is correct Regular', () => {
@@ -464,7 +454,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 
 			});
 
-			// Covers: src/api/types/TypeProxy.ts - Proxy handler set() trap (lines 168-187)
 			describe('should create type from Proxy.set()', () => {
 				it('type creation from Proxy.set()', () => {
 					const userProxyTyped = (user as unknown as Record<string, (arg: string) => { str: string; proxyTyped: boolean; SaySomething(): string }>).ProxyTyped('aha');
@@ -514,7 +503,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 
 		});
 
-		// Covers: src/api/types/Mnemosyne.ts - sibling() method (lines 80-120)
 		describe('sibling test', () => {
 			const UserTypePtr1 = user.sibling('UserType');
 			const { UserType: UserTypePtr2 } = user.sibling;
@@ -526,7 +514,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			});
 		});
 
-		// Covers: src/api/errors/index.ts - BASE_MNEMONICA_ERROR class (lines 51-77)
 		describe('base error should be defined', () => {
 			it('BASE_MNEMONICA_ERROR exists', () => {
 				expect(errors.BASE_MNEMONICA_ERROR).not.toBeUndefined();
@@ -546,7 +533,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			}
 		});
 
-		// Covers: src/api/types/InstanceCreator.ts - DFD (Data Flow Definition) handling (lines 90-130)
 		describe('should respect DFD', () => {
 			const BadBadType = define('BadBadType', function () {
 				return null;
@@ -568,7 +554,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 
 		});
 
-		// Covers: src/api/errors/throwModificationError.ts - error throwing and stack traces (lines 1-217)
 		describe('should respect DFD', () => {
 			const BadType = define('BadType', function (this: unknown, NotThis: unknown) {
 				// returns not instanceof this
@@ -623,7 +608,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			});
 		});
 
-		// Covers: src/api/types/InstanceCreator.ts - constructor integrity checks (lines 100-140)
 		describe('should not hack DFD', () => {
 			const BadTypeReThis = define('BadTypeReThis', function (this: { constructor?: unknown }) {
 				// removing constructor
@@ -653,7 +637,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			}
 		});
 
-		// Covers: src/api/types/index.ts - subtype re-definition handling (lines 280-320)
 		describe('subtype property inside type re-definition', () => {
 			const BadTypeReInConstruct = define('BadTypeReInConstruct', function () { });
 			BadTypeReInConstruct.define('ExistentConstructor', function (this: { ExistentConstructor?: unknown }) {
@@ -672,14 +655,12 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			});
 		});
 
-		// Covers: src/descriptors/types/index.ts - typesCollectionProxyHandler (lines 168-187)
 		describe('should define through typesCollection proxy', () => {
 			it('check typesCollection proxified creation', () => {
 				(types as unknown as Record<string, () => void>).ProxifiedCreation = function () { };
 			});
 		});
 
-		// Covers: src/api/types/index.ts - prototype handling for functions and classes (lines 220-280)
 		describe('should respect prototype', () => {
 			it('check function prototype is correct', () => {
 				const MyProtoCheckFn = function () { } as unknown as { prototype: Record<string, number> };
@@ -746,7 +727,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			});
 		});
 
-		// Covers: src/api/types/index.ts - define() validation errors (lines 100-180)
 		describe('should throw with wrong definition', () => {
 			[
 
@@ -801,7 +781,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			});
 		});
 
-		// Covers: src/descriptors/types/index.ts - multiple TypesCollections (lines 189-217)
 		describe('another instances', () => {
 			it('Another typesCollections gather types', () => {
 				expect(hop(anotherTypesCollection, 'AnotherCollectionType')).toEqual(true);
@@ -851,21 +830,18 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				});
 		});
 
-		// Covers: src/api/types/index.ts - strictChain option handling (lines 250-300)
 		describe('strict chain test', () => {
 			it('deep chained type should be undefined', () => {
 				expect(userWithoutPassword.WithoutPassword).toBeUndefined();
 			});
 		});
 
-		// Covers: src/api/types/InstanceCreator.ts - unchained construction (lines 130-170)
 		describe('check uncained construction', () => {
 			it('check instance creation without chain', () => {
 				expect(unchainedUserWithoutPassword).toBeInstanceOf(UserWithoutPassword);
 			});
 		});
 
-		// Covers: src/utils/merge.ts - merge() utility with error cases (lines 1-100)
 		describe('merge tests', () => {
 			const mergedSample = {
 				OverMoreSign: 'OverMoreSign',
@@ -881,7 +857,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				expect(merged.extract()).toEqual(mergedSample);
 			});
 
-			// Covers: src/utils/merge.ts - merge() null first argument (lines 10-30)
 			describe('wrong A 1', () => {
 				try {
 					merge(null, userTC);
@@ -898,7 +873,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 					});
 				}
 			});
-			// Covers: src/utils/merge.ts - merge() invalid fork() method (lines 30-50)
 			describe('wrong A 2', () => {
 				const Cstr = function () { } as unknown as FlexibleConstructor;
 				Cstr.prototype.clone = Object.create({});
@@ -918,7 +892,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 					});
 				}
 			});
-			// Covers: src/utils/merge.ts - merge() null second argument (lines 50-70)
 			describe('wrong B', () => {
 				try {
 					merge(userTC, null);
@@ -937,7 +910,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			});
 		});
 
-		// Covers: src/api/types/Mnemosyne.ts - prototype chain consistency (lines 50-100)
 		describe('chain repeat check', () => {
 			const keys1_1 = Object.keys(userTC);
 			const keys1_2 = Object.keys(chained);
@@ -954,7 +926,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 
 	});
 
-	// Covers: src/api/errors/exceptionConstructor.ts - instance.exception() method (lines 1-150)
 	describe('prepareException', () => {
 		let errorInstance: MnemonicaError | null = null;
 		let exceptionError = new Error('asdf');

@@ -34,7 +34,6 @@ import type { MnemonicaModule } from '../src/types';
 const mnemonica = require('../src/index') as MnemonicaModule;
 const { mnemonica: _mnemonica } = mnemonica;
 
-// Covers: src/index.ts - module exports structure (lines 1-217)
 describe('props tests', () => {
 	test('base instance has props', () => {
 		expect(mnemonica).not.toBeInstanceOf(Object);
@@ -439,8 +438,7 @@ SubOfNestedAsync.registerHook('postCreation', function (opts: SubOfNestedAsyncPo
 // Decorate tests
 const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, myOtherInstance } = require('./decorate');
 
-// Covers: src/api/types/index.ts - define() function and Type creation (lines 1-400+)
-describe('Main Test', () => {
+	describe('Main Test', () => {
 
 	const UserTypeConstructorProto = {
 		email: '',
@@ -689,7 +687,6 @@ describe('Main Test', () => {
 		});
 	};
 
-	// Covers: src/api/types/index.ts - Type definition creation, lookup(), subtypes Map (lines 178-210)
 	describe('Type Definitions Tests', () => {
 		it('userPL2 uses default errored and used constructor', () => {
 			expect(userPL1.goneToFallback).toBeInstanceOf(Error);
@@ -721,8 +718,7 @@ describe('Main Test', () => {
 	});
 
 
-	// Covers: src/api/types/InstanceCreator.ts - instance construction logic (lines 1-200+)
-	describe('Instance Constructors Tests', () => {
+		describe('Instance Constructors Tests', () => {
 
 		it('type constructor itself is correct', () => {
 			expect(user).toBeInstanceOf(types.UserType);
@@ -755,7 +751,6 @@ describe('Main Test', () => {
 		});
 
 
-		// Covers: src/api/types/InstanceCreator.ts - empty constructor handling (lines 50-100)
 		describe('empty constructor works properly', () => {
 			it('should construct an object', () => {
 				expect(empty).toBeDefined();
@@ -792,7 +787,6 @@ describe('Main Test', () => {
 			});
 		});
 
-		// Covers: src/api/types/Mnemosyne.ts - Symbol.hasInstance handling (lines 1-150)
 		describe('instancof checks', () => {
 			it('userWithoutPassword instanceof userTC', () => {
 				expect(userWithoutPassword instanceof userTC).toEqual(true);
@@ -806,7 +800,6 @@ describe('Main Test', () => {
 			});
 		});
 
-		// Covers: src/api/types/InstanceModificator.ts - util.inspect custom formatting (lines 1-100)
 		describe('util.inspect tests', () => {
 
 			it('should have proper util inspect 4 UserType', () => {
@@ -840,7 +833,6 @@ describe('Main Test', () => {
 
 		});
 
-		// Covers: src/utils/extract.ts, src/utils/pick.ts - error handling (lines 1-50)
 		describe('errors tests', () => {
 			it('should throw on wrong instance 4 .extract()', () => {
 				expect(() => {
@@ -910,9 +902,7 @@ describe('Main Test', () => {
 			});
 		});
 
-		// Covers: src/api/types/index.ts - nested type creation and inheritance (lines 250-350)
 		describe('Nested Tests', () => {
-			// Covers: src/api/types/InstanceCreator.ts - legacy construction patterns (lines 80-120)
 			describe('nested type with old style check', () => {
 				it('actually do construction', () => {
 					expect(userPL1).toBeInstanceOf(types.UserType.subtypes.get('UserTypePL1'));
@@ -943,7 +933,6 @@ describe('Main Test', () => {
 				});
 			});
 
-			// Covers: src/api/types/InstanceCreator.ts - modern construction patterns (lines 120-180)
 			describe('nested type with new style check', () => {
 				it('actually do construction', () => {
 					expect(userPL2).toBeInstanceOf(types.UserType.subtypes.get('UserTypePL2'));
@@ -1001,9 +990,7 @@ describe('Main Test', () => {
 			});
 		});
 
-		// Covers: src/utils/ - merge, extract, toJSON utilities (lines 1-100)
 		describe('More Nested Tests', () => {
-			// Covers: src/api/types/Mnemosyne.ts - prototype chain inheritance (lines 50-100)
 			describe('inheritance works', () => {
 				it('.prototype is correct', () => {
 					expect(userTC.constructor.prototype).toBeInstanceOf(Object);
@@ -1040,7 +1027,6 @@ describe('Main Test', () => {
 				});
 			});
 
-			// Covers: src/utils/collectConstructors.ts - constructor chain collection (lines 1-50)
 			describe('constructors sequence is ok', () => {
 				const constructorsSequence = collectConstructors(evenMore, true);
 				it('must be ok', () => {
@@ -1069,7 +1055,6 @@ describe('Main Test', () => {
 				});
 			});
 
-			// Covers: src/utils/extract.ts, src/utils/toJSON.ts - data extraction (lines 1-80)
 			describe('extraction works properly', () => {
 				const extracted = extract(evenMore);
 				const extractedJSON = toJSON(extracted);
@@ -1105,10 +1090,8 @@ describe('Main Test', () => {
 				});
 			});
 
-			// Covers: src/api/types/index.ts - lookup() function (lines 300-400)
 			describe('lookup test', () => {
 
-				// Covers: src/api/types/index.ts - lookup() null argument validation (line 389)
 				describe('should throw proper error when looking up without TypeName', () => {
 					try {
 						lookup(null as unknown);
@@ -1125,7 +1108,6 @@ describe('Main Test', () => {
 					}
 				});
 
-				// Covers: src/api/types/index.ts - lookup() empty string validation (lines 300-310)
 				describe('should throw proper error when looking up for empty TypeName', () => {
 					try {
 						lookup('');
@@ -1142,7 +1124,6 @@ describe('Main Test', () => {
 					}
 				});
 
-				// Covers: src/api/types/index.ts - lookup() path validation (lines 320-350)
 				describe('should throw proper error when defining from wrong lookup', () => {
 					try {
 						define('UserTypeConstructor.WithoutPassword.WrongPath.WrongNestedType');
@@ -1159,7 +1140,6 @@ describe('Main Test', () => {
 					}
 				});
 
-				// Covers: src/api/types/index.ts - define() empty name validation (lines 100-150)
 				describe('should throw proper error when declaring with empty TypeName', () => {
 					try {
 						define('');
@@ -1191,7 +1171,6 @@ describe('Main Test', () => {
 			});
 
 
-			// Covers: src/utils/parent.ts - parent() utility function (lines 1-50)
 			describe('.parent("TypeName") checks', () => {
 
 				it('should seek proper .parent()', () => {
@@ -1225,7 +1204,6 @@ describe('Main Test', () => {
 				}
 			});
 
-			// Covers: src/utils/merge.ts - merge() utility function (lines 1-80)
 			describe('merge tests', () => {
 				it('should merge instances properly', () => {
 					expect(merged).toBeDefined();
@@ -1238,7 +1216,6 @@ describe('Main Test', () => {
 			});
 		});
 
-		// Covers: src/api/types/Props.ts - instance property accessors (lines 1-100)
 		describe('instance .proto props tests', () => {
 
 			it('should have proper prototype .__args__', () => {
@@ -1473,7 +1450,6 @@ describe('Main Test', () => {
 
 		});
 
-		// Covers: src/api/hooks/ - registerHook, invokeHook (lines 1-100)
 		describe('Hooks Tests', () => {
 			it('check invocations count', () => {
 					// Note: with exposeInstanceMethods: false by default, some hooks may fire less often
@@ -1502,7 +1478,6 @@ describe('Main Test', () => {
 			});
 		});
 
-		// Covers: src/api/hooks/ - hook registration error handling (lines 20-80)
 		describe('hooks environment', () => {
 			try {
 				types.registerFlowChecker(undefined as unknown);
@@ -1538,7 +1513,6 @@ describe('Main Test', () => {
 			}
 		});
 
-		// Covers: src/api/types/InstanceCreator.ts - async construction handling (lines 150-250)
 		describe('Async Constructors Test', () => {
 			let asyncInstance: AsyncTypeInstance,
 				asyncInstanceDirect: AsyncTypeInstance,
@@ -1625,7 +1599,7 @@ describe('Main Test', () => {
 				expect(result11).toEqual(456);
 			});
 
-			// Test bound methods error handling - covers bindProtoMethods.ts lines 52-58
+			// Test bound methods error handling
 			it('should be able to throw bound methods invocations properly', () => {
 				const {
 					hookedMethod
@@ -1696,7 +1670,6 @@ describe('Main Test', () => {
 
 			});
 
-			// Test async error re-throwing - covers throwModificationError.ts nested error handling (lines 53-56)
 			it('should be able to re-throw async bound methods invocations properly', async () => {
 				const {
 					erroredAsyncMethod,
@@ -1920,14 +1893,14 @@ describe('Main Test', () => {
 		});
 
 		describe('throwModificationError coverage', () => {
-			it('should handle nested exception reasons (lines 53-56)', () => {
+			it('should handle nested exception reasons', () => {
 				// Create a type that throws an error which already has exceptionReason
 				// This simulates a nested error scenario
 				let thrownError: MnemonicaError | undefined;
 				
 				const NestedThrowingType = define('NestedThrowingType', function () {
 					const err = new Error('inner error') as MnemonicaError;
-					// Pre-populate the error with exceptionReason to trigger lines 53-56
+					// Pre-populate the error with exceptionReason to trigger nested error handling
 					err.exceptionReason = new Error('previous reason');
 					err.reasons = [];
 					err.surplus = [];
@@ -1947,7 +1920,7 @@ describe('Main Test', () => {
 				expect(thrownError).toBeDefined();
 			});
 
-			it('should test error getters for modification error (lines 62, 71, 78, 184, 190, 196, 202-204, 211-212)', async () => {
+			it('should test error getters for modification error', async () => {
 				// Create a type that will throw during construction
 				const ThrowingType = define('ThrowingType', function () {
 					throw new Error('intentional construction error');
@@ -1957,33 +1930,33 @@ describe('Main Test', () => {
 					new ThrowingType();
 					expect(false).toBe(true); // Should not reach here
 				} catch (error) {
-					// Test exceptionReason getter (line 62)
+					// Test exceptionReason getter
 					expect((error as MnemonicaError).exceptionReason).toBeDefined();
 					expect((error as MnemonicaError).exceptionReason!.message).toBe('intentional construction error');
 					
-					// Test reasons getter (line 71)
+					// Test reasons getter
 					expect((error as MnemonicaError).reasons).toBeInstanceOf(Array);
 					expect((error as MnemonicaError).reasons!.length).toBeGreaterThan(0);
 					
-					// Test surplus getter (line 78)
+					// Test surplus getter
 					expect((error as MnemonicaError).surplus).toBeInstanceOf(Array);
 					
-					// Test args getter (line 184)
+					// Test args getter
 					expect((error as MnemonicaError).args).toBeInstanceOf(Array);
 					
-					// Test originalError getter (line 190)
+					// Test originalError getter
 					expect((error as MnemonicaError).originalError).toBeInstanceOf(Error);
 					expect((error as MnemonicaError).originalError!.message).toBe('intentional construction error');
 					
-					// Test instance getter (line 196)
+					// Test instance getter
 					expect((error as MnemonicaError).instance).toBe(error);
 					
-					// Test extract getter (lines 202-204)
+					// Test extract getter
 					expect(typeof (error as MnemonicaError).extract).toBe('function');
 					const extracted = (error as MnemonicaError).extract!();
 					expect(extracted).toBeDefined();
 					
-					// Test parse getter (lines 211-212)
+					// Test parse getter
 					expect(typeof (error as MnemonicaError).parse).toBe('function');
 					const parsed = (error as MnemonicaError).parse!();
 					expect(parsed).toBeDefined();
@@ -1991,8 +1964,8 @@ describe('Main Test', () => {
 			});
 		});
 
-		describe('TypeProxy decorator apply coverage (lines 114-121, 138-139)', () => {
-			it('should cover subTypeApply decorator path (lines 114-121)', () => {
+		describe('TypeProxy decorator apply coverage', () => {
+			it('should cover subTypeApply decorator path', () => {
 				// Test the decorator pattern through apply method
 				const BaseType = define('BaseTypeForApply', function () {});
 				
@@ -2001,7 +1974,7 @@ describe('Main Test', () => {
 				expect(typeof DecoratorType).toBe('function');
 			});
 
-			it('should cover primaryTypeApply decorator path (lines 138-139)', () => {
+			it('should cover primaryTypeApply decorator path', () => {
 				const PrimaryType = define('PrimaryTypeForDecorator', function () {});
 				const instance = new PrimaryType();
 				
@@ -2018,7 +1991,7 @@ describe('Main Test', () => {
 			});
 		});
 
-		describe('TypesCollection Symbol.hasInstance coverage (lines 61-62)', () => {
+		describe('TypesCollection Symbol.hasInstance coverage', () => {
 			it('should test Symbol.hasInstance for TypesCollection', () => {
 				const { types } = require('../src/descriptors/types');
 				const collection = types.createTypesCollection();
@@ -2032,8 +2005,8 @@ describe('Main Test', () => {
 			});
 		});
 
-		describe('src/index.ts coverage (lines 85, 156)', () => {
-			it('should cover line 85 - prepareSubtypeForConstruction undefined case', () => {
+		describe('src/index.ts coverage', () => {
+			it('should cover prepareSubtypeForConstruction undefined case', () => {
 				// Test when $run receives a Ctor that returns undefined from prepareSubtypeForConstruction
 				const { apply, define } = require('../src/index');
 				
@@ -2045,14 +2018,13 @@ describe('Main Test', () => {
 				const UndefinedSubType = define('UndefinedSubType', function () {});
 				
 				// Try to apply a type that doesn't exist on the instance's type chain
-				// This should trigger line 85 where Cstr is undefined
 				expect(() => {
 					// Use a fake constructor that won't be found in the instance's type chain
 					apply(instance, UndefinedSubType, []);
 				}).toThrow(/is not defined as a Type Constructor/);
 			});
 
-			it('should cover registerHook at line 156', () => {
+			it('should cover registerHook', () => {
 				const { registerHook } = require('../src/index');
 				const TestHookType = define('TestHookType', function () {});
 				
@@ -2067,7 +2039,7 @@ describe('Main Test', () => {
 			});
 		});
 
-		describe('api/errors/index.ts coverage (line 74)', () => {
+		describe('api/errors/index.ts coverage', () => {
 			it('should cover BASE_MNEMONICA_ERROR SymbolConstructorName getter', () => {
 				// Import from api/errors where the static getter is defined
 				const { BASE_MNEMONICA_ERROR } = require('../src/api/errors');
@@ -2080,7 +2052,7 @@ describe('Main Test', () => {
 			});
 		});
 
-		describe('api/types/index.ts coverage (line 389)', () => {
+		describe('api/types/index.ts coverage', () => {
 			it('should cover lookup undefined type case', () => {
 				const { lookup } = require('../src/api/types');
 				
@@ -2092,17 +2064,17 @@ describe('Main Test', () => {
 			});
 		});
 
-		describe('descriptors/types/index.ts coverage (lines 46, 61-62, 85, 100)', () => {
-			it('should cover config type check at line 46', () => {
-				// Create TypesCollection with CORRECT config types to trigger line 46 (o[key] = value)
+		describe('descriptors/types/index.ts coverage', () => {
+			it('should cover config type check', () => {
+				// Create TypesCollection with CORRECT config types to trigger config handling
 				const { types } = require('../src/descriptors/types');
 				
-				// Pass config with CORRECT types - should use the values at line 46
+				// Pass config with CORRECT types
 				const collection = types.createTypesCollection({
-					strictChain: false,  // line 46: t_conf === t_opts (boolean === boolean)
-					blockErrors: true,   // line 46: t_conf === t_opts (boolean === boolean)
-					submitStack: false,  // line 46: t_conf === t_opts (boolean === boolean)
-					awaitReturn: true    // line 46: t_conf === t_opts (boolean === boolean)
+					strictChain: false,
+					blockErrors: true,
+					submitStack: false,
+					awaitReturn: true
 				});
 				
 				// The collection should work with the provided values
@@ -2111,7 +2083,7 @@ describe('Main Test', () => {
 				expect(instance).toBeDefined();
 			});
 
-			it('should cover Symbol.hasInstance at lines 61-62', () => {
+			it('should cover Symbol.hasInstance', () => {
 				const { types } = require('../src/descriptors/types');
 				const collection = types.createTypesCollection();
 				
@@ -2123,18 +2095,18 @@ describe('Main Test', () => {
 				expect(instance instanceof (collection as { [Symbol.hasInstance](instance: unknown): boolean })).toBe(true);
 			});
 
-			it('should cover MNEMOSYNE getter at line 85', () => {
+			it('should cover MNEMOSYNE getter', () => {
 				const { types } = require('../src/descriptors/types');
 				const { constants } = require('../src/constants');
 				const collection = types.createTypesCollection();
 				
-				// Access the MNEMOSYNE property directly on the collection instance (line 85)
+				// Access the MNEMOSYNE property directly on the collection instance
 				// This getter returns typesCollections.get(self) where self is the TypesCollection
 				const mnemosyneValue = (collection as Record<string, unknown>)[constants.MNEMOSYNE];
 				expect(mnemosyneValue).toBeDefined();
 			});
 
-			it('should cover MNEMONICA getter at line 100', () => {
+			it('should cover MNEMONICA getter', () => {
 				const { types } = require('../src/descriptors/types');
 				const { constants } = require('../src/constants');
 				
@@ -2148,7 +2120,7 @@ describe('Main Test', () => {
 			});
 		});
 
-		describe('TypeProxy subTypeApply coverage (lines 116-119)', () => {
+		describe('TypeProxy subTypeApply coverage', () => {
 			it('should cover subTypeApply function body', () => {
 				// Use the decorator pattern through apply to trigger subTypeApply
 				const BaseType = define('TypeProxyBase', function () {});
@@ -2182,7 +2154,7 @@ describe('Main Test', () => {
 					constructor() {}
 				}
 				
-				// Call the decorator - this executes lines 116-119
+				// Call the decorator
 				const DecoratedResult = decoratorFn(TestDecoratedClass);
 				expect(DecoratedResult).toBeDefined();
 				
@@ -2192,11 +2164,11 @@ describe('Main Test', () => {
 			});
 		});
 
-		describe('api/index.ts coverage (lines 11-29)', () => {
+		describe('api/index.ts coverage', () => {
 			it('should cover api exports', () => {
 				const api = require('../src/api');
 				
-				// Test that all exports are defined (lines 11-29)
+				// Test that all exports are defined
 				expect(api.hooks).toBeDefined();
 				expect(api.hooks.invokeHook).toBeDefined();
 				expect(api.hooks.registerHook).toBeDefined();
@@ -2205,6 +2177,150 @@ describe('Main Test', () => {
 				expect(api.types.define).toBeDefined();
 				expect(api.types.lookup).toBeDefined();
 				expect(api.errors).toBeDefined();
+			});
+		});
+
+		describe('Mnemosyne.ts coverage', () => {
+			it('should cover SymbolConstructorName symbol getter', () => {
+				// Import the constants to get SymbolConstructorName
+				const { constants } = require('../src/constants');
+				const { SymbolConstructorName, MNEMONICA } = constants;
+
+				// Create a type with exposeInstanceMethods explicitly true
+				// This ensures the symbol properties are added to Mnemonica.prototype
+				const { define } = require('../src/index');
+
+				const SymbolTestType = define('SymbolTestTypeJest2', function (this: { value: number }) {
+					this.value = 42;
+				}, { exposeInstanceMethods: true });
+
+				const instance = new SymbolTestType();
+
+				// Access the SymbolConstructorName symbol on the instance
+				// This should trigger the getter defined in Mnemosyne.ts
+				// which calls the method
+				const result = (instance as { [key: symbol]: string })[SymbolConstructorName];
+
+				// The result should be 'Mnemonica' from the method
+				expect(result).toBe(MNEMONICA);
+			});
+
+			it('should cover SymbolConstructorName directly from MnemonicaProtoProps', () => {
+				// This test specifically targets Mnemosyne.ts
+				const { constants } = require('../src/constants');
+				const { SymbolConstructorName, MNEMONICA } = constants;
+
+				// Create type with exposeInstanceMethods: true to ensure symbol getter is added
+				const { define } = require('../src/index');
+
+				const DirectSymbolType = define('DirectSymbolTypeJest', function (this: { value: number }) {
+					this.value = 999;
+				}, { exposeInstanceMethods: true });
+
+				const instance = new DirectSymbolType();
+
+				// Directly access the symbol property to trigger the getter
+				// which in turn calls the method
+				const symbolValue = instance[SymbolConstructorName as unknown as keyof typeof instance];
+				expect(symbolValue).toBe(MNEMONICA);
+			});
+		});
+
+		describe('TypeProxy.ts coverage', () => {
+			it('should cover config?.exposeInstanceMethods when config exists but has no exposeInstanceMethods property', () => {
+				// Create a type with config that doesn't have exposeInstanceMethods property
+				// This will make config?.exposeInstanceMethods return undefined
+				const { define } = require('../src/index');
+
+				const ConfigTestType = define('ConfigTestTypeJest', function (this: { value: number }) {
+					this.value = 123;
+				}, { strictChain: true }); // config exists but no exposeInstanceMethods
+
+				const instance = new ConfigTestType();
+				expect(instance.value).toBe(123);
+			});
+
+			it('should cover config?.exposeInstanceMethods when config is explicitly undefined', () => {
+				// This test covers the optional chaining branch
+				// when config is explicitly undefined
+				const { define } = require('../src/index');
+
+				// Define a type with explicitly undefined config
+				const ExplicitUndefinedType = define('ExplicitUndefinedType', function (this: { value: number }) {
+					this.value = 789;
+				}, undefined);
+
+				const instance = new ExplicitUndefinedType();
+				expect(instance.value).toBe(789);
+			});
+		});
+
+		describe('src/api/types/index.ts coverage', () => {
+			it('should cover config instanceof Function check', () => {
+				// This is triggered when config is a function (ModificationConstructor)
+				const { define, mnemonica } = require('../src/index');
+				const { defaultOptions: { ModificationConstructor: defaultMC } } = mnemonica;
+
+				// Pass the default ModificationConstructor directly as config
+				const FnConfigType = define('FnConfigTypeJest', function (this: { value: number }) {
+					this.value = 456;
+				}, defaultMC);
+
+				const instance = new FnConfigType();
+				expect(instance.value).toBe(456);
+			});
+
+			it('should cover TypeDescriptor.prototype.lookup', () => {
+				// Create a type and test lookup from the type instance
+				const { define, lookup } = require('../src/index');
+
+				const LookupTestType = define('LookupTestTypeJest', function (this: { value: number }) {
+					this.value = 111;
+				});
+
+				// Define a nested subtype
+				LookupTestType.define('NestedLookupType', function (this: { nested: boolean }) {
+					this.nested = true;
+				});
+
+				// Use lookup from the type's subtypes
+				const nestedType = LookupTestType.lookup('NestedLookupType');
+				expect(nestedType).toBeDefined();
+			});
+
+			it('should cover defineUsingType HANDLER_MUST_BE_A_FUNCTION', () => {
+				const { define } = require('../src/index');
+
+				// Try to define a type with a non-function handler using the type factory pattern
+				expect(() => {
+					define(() => {
+						// Return a non-function (string instead of function)
+						return 'not a function' as unknown as CallableFunction;
+					});
+				}).toThrow();
+			});
+
+			it('should cover defineUsingType TYPENAME_MUST_BE_A_STRING', () => {
+				const { define } = require('../src/index');
+				
+				// Define a type with a function that has no name property
+				expect(() => {
+					define(() => {
+						// Return an anonymous function without a name
+						const fn = function () {};
+						// Ensure it has no name
+						Object.defineProperty(fn, 'name', { value: '' });
+						return fn as CallableFunction;
+					});
+				}).toThrow();
+			});
+
+			it('should cover lookup undefined type case', () => {
+				const { lookup } = require('../src/index');
+
+				// Lookup a nested path where the parent type doesn't exist
+				const result = lookup('NonExistentType.NestedType');
+				expect(result).toBeUndefined();
 			});
 		});
 	});
