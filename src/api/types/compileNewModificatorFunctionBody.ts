@@ -50,7 +50,7 @@ const getFunctionConstructor = ( ConstructHandler: any, CreationHandler: any, ) 
 		hop( ConstructHandler.prototype, 'constructor' ) &&
 		(ConstructHandler.prototype.constructor == ConstructHandler);
 	
-	return function ( this: any, ...args: unknown[] ) {
+	return function ( this: object, ...args: unknown[] ) {
 		let answer;
 		// if (!new.target) {
 		// 	debugger;

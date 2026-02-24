@@ -58,7 +58,7 @@ const TypesCollection = function ( _config: Record<string, unknown> ) {
 
 	odp( this, Symbol.hasInstance, {
 		get () {
-			return ( instance: any ) => {
+			return ( instance: { [SymbolConstructorName]?: string } ) => {
 				return instance[ SymbolConstructorName ] === MNEMONICA;
 			};
 		}
@@ -165,18 +165,24 @@ odp( TypesCollection.prototype, 'registerFlowChecker', {
 } );
 
 
+interface TypesCollectionTarget {
+	subtypes: Map<string, object>;
+	define: (name: string, ctor: FunctionConstructor) => object;
+}
+
 const typesCollectionProxyHandler = {
-	get ( target: any, prop: string ) {
+	get ( target: TypesCollectionTarget, prop: string ) {
 		if ( target.subtypes.has( prop ) ) {
 			return target.subtypes.get( prop );
 		}
 		return Reflect.get( target, prop );
 	},
-	set ( target: any, TypeName: string, Constructor: FunctionConstructor ) {
-		return target.define( TypeName, Constructor );
+	set ( target: TypesCollectionTarget, TypeName: string, Constructor: FunctionConstructor ) {
+		target.define( TypeName, Constructor );
+		return true;
 	},
 	// Object.prototype.hasOwnProperty.call
-	getOwnPropertyDescriptor ( target: any, prop: string ) {
+	getOwnPropertyDescriptor ( target: TypesCollectionTarget, prop: string ) {
 		return target.subtypes.has( prop ) ? {
 			configurable : true,
 			enumerable   : true,

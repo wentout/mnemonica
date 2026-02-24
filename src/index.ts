@@ -212,7 +212,7 @@ const typedCreateTypesCollection: CreateTypesCollectionFunction = mnemonica.crea
 export const createTypesCollection: CreateTypesCollectionFunction = typedCreateTypesCollection;
 
 
-export const defaultCollection = (defaultTypes as any).subtypes;
+export const defaultCollection = (defaultTypes as { subtypes: Map<string, object> }).subtypes;
 export const errors = descriptors.ErrorsTypes;
 
 export { utils } from './utils';
