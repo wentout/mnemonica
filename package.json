@@ -86,7 +86,7 @@
     "nyc": "^17.1.0",
     "oxlint": "^0.16.0",
     "ts-jest": "^29.2.5",
-    "typeomatica": "^0.3.55",
+    "typeomatica": "^0.3.56",
     "typescript": "^5.7.3"
   },
   "engines": {

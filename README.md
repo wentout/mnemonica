@@ -43,6 +43,7 @@
   - [Symbols & Constants](#symbols--constants)
 - [Configuration Options](#configuration-options)
 - [AI Agent Usage Guide](#ai-agent-usage-guide)
+- [Usage with TypeØmatica](#usage-with-typeomatica)
 - [Examples](#examples)
 
 ---
@@ -924,6 +925,32 @@ import { defaultTypes, SymbolConfig } from 'mnemonica';
 
 defaultTypes[SymbolConfig].blockErrors = false;
 ```
+
+---
+
+## Usage with TypeØmatica
+
+TypeØmatica is a companion library that provides strict runtime type checking using JavaScript Proxies. It enforces types at runtime exactly as TypeScript expects at compile time.
+
+```typescript
+import { BaseClass } from 'typeomatica';
+import { decorate } from 'mnemonica';
+
+@decorate()
+class User extends BaseClass {
+  name: string = 'default';
+  age: number = 0;
+}
+
+const user = new User();
+user.name = 'John';     // ✓ Works - string to string
+user.age = 25;          // ✓ Works - number to number
+
+// @ts-ignore
+user.age = '25';        // ✗ TypeError: Type Mismatch at runtime!
+```
+
+For complete documentation including integration patterns, error handling, and advanced usage, see [TypeØmatica.md](TypeØmatica.md).
 
 ---
 
