@@ -2059,6 +2059,23 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const result = lookup.call(mockSubtypes, 'NonExistent.Nested.Type');
 				expect(result).toBeUndefined();
 			});
+
+			it('should cover TypeDescriptor constructHandler getter', () => {
+				// Access constructHandler getter on a type definition
+				// This covers lines 88-90 in src/api/types/index.ts
+				const handler = UserType.constructHandler;
+				expect(typeof handler).toBe('function');
+			});
+
+			it('should cover default constructHandler function', () => {
+				// Define a type without a handler function
+				// This covers the default empty function at line 1093
+				const EmptyType = define('EmptyTypeForCoverage');
+				expect(typeof EmptyType.constructHandler).toBe('function');
+				// Create instance to trigger the default handler
+				const instance = new EmptyType();
+				expect(instance).toBeDefined();
+			});
 		});
 
 		describe('descriptors/types/index.ts coverage', () => {
