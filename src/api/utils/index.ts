@@ -227,9 +227,10 @@ const makeFakeModificatorType = (
 
 	const modificatorBody = compileNewModificatorFunctionBody(TypeName);
 
+	// CreationHandler is now defined locally in api/types/index.ts
 	const modificatorType: any = modificatorBody(
 		fakeModificator,
-		CreationHandler, // is now defined locally in api/types/index.ts
+		CreationHandler,
 		SymbolConstructorName
 	);
 

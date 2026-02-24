@@ -98,6 +98,20 @@ Instances have non-enumerable internal properties accessed via `getProps()`:
 - `__args__` - Constructor arguments
 - `__collection__` - Types collection reference
 
+## Build Requirements
+
+### No Warnings Policy
+The build **must have zero warnings**. Running `npm run build` should produce **no ESLint warnings** in the `./src` directory. If there are warnings:
+1. Fix the source code causing the warning
+2. Do not modify `./tsconfig.json` or `./eslint.config.js` to suppress warnings
+
+### Configuration Files
+**Disallowed without explicit approval:**
+- Modifying `./tsconfig.json`
+- Modifying `./eslint.config.js`
+
+These configuration files define the project's strict standards. Any changes require user approval first.
+
 ## Testing Requirements
 
 - **100% coverage required** for Jest (see `jest.config.js`)

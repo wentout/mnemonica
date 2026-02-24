@@ -80,8 +80,7 @@ const defaultOptions = {
 	},
 
 	// expose instance methods (extract, pick, parent, clone, fork, exception, sibling)
-	// on the instance itself. When false, methods are only available through __self__
-	// Default is true for backward compatibility
+	// on the instance itself. When true (default for backward compatibility), methods are available directly
 	get exposeInstanceMethods () {
 		return true;
 	},

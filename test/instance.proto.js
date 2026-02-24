@@ -2,14 +2,16 @@
 
 const mnemonica = require( '..' );
 
-const { _lookup } = mnemonica;
+const {
+	_lookup
+} = mnemonica;
 
 const gof = Object.getPrototypeOf;
 
 const { assert, expect } = require( 'chai' );
 
 const {
-	getProps,
+	getProps
 } = require( '..' );
 
 const tests = ( opts ) => {
@@ -313,9 +315,10 @@ const tests = ( opts ) => {
 			expect( evenMoreForkCall ).instanceof( UserType );
 			expect( evenMoreForkCall ).instanceof( user );
 		} );
-
+	
+	
 	} );
-
+	
 };
 
 module.exports = tests;

@@ -319,7 +319,7 @@ const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMetho
 
 } as ConstructorFunction<object>;
 
-const createMnemosyne = function (Uranus: unknown, exposeInstanceMethods = false) {
+const createMnemosyne = function (Uranus: unknown, exposeInstanceMethods: boolean) {
 // const createMnemosyne = function (Uranus: unknown, typeProxy: unknown) {
 // 	if (typeof Uranus === 'undefined') {
 // 		const { __type__: type, Uranus: _uranus } = typeProxy;

@@ -177,7 +177,7 @@ TypeProxy.prototype.construct = function (_target: unknown, args: unknown[]) {
 
 	// Get exposeInstanceMethods from type config, defaulting to false
 	const config = type.config as { exposeInstanceMethods?: boolean } | undefined;
-	const exposeInstanceMethods = config?.exposeInstanceMethods ?? false;
+	const exposeInstanceMethods = config?.exposeInstanceMethods as unknown as boolean;
 
 	// "this" argument may be passed for tracking why something happened
 	// but uncomment it there in createMnemosyne if needed

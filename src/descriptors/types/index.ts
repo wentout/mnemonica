@@ -1,7 +1,9 @@
 'use strict';
 
-import {
-	ConstructorFunction
+import type {
+	ConstructorFunction,
+	CreateTypesCollectionFunction,
+	TypesCollection
 } from '../../types';
 
 import { constants } from '../../constants';
@@ -209,8 +211,6 @@ odp( DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 		return true;
 	}
 } );
-
-import type { CreateTypesCollectionFunction, TypesCollection } from '../../types';
 
 export const types = {
 	get createTypesCollection (): CreateTypesCollectionFunction {
