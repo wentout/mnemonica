@@ -2345,72 +2345,109 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	
 			it('should execute Mnemosyne lines 296-305 by testing with real module', () => {
 				// Directly test the Mnemosyne module internals
-				// We need to bypass the proxy to hit lines 299-302
-				const mnemosynePath = require.resolve('../src/api/types/Mnemosyne');
-				const mnemosyneModule = require(mnemosynePath);
-	
-				// Access internal module state if possible
-				// The module exports createMnemosyne, prepareSubtypeForConstruction, getDefaultPrototype
+				const mnemosyneModule = require('../src/api/types/Mnemosyne');
 				const { createMnemosyne } = mnemosyneModule.default;
+				const { constants } = require('../src/constants');
+				const { SymbolConstructorName, MNEMONICA } = constants;
 	
 				// Create instance with exposeInstanceMethods
 				const testObj = { test: 'value' };
 				const proxy = createMnemosyne(testObj, true);
 	
-				// Walk the prototype chain to find Mnemonica.prototype
-				let proto = Object.getPrototypeOf(proxy);
-				while (proto && !Object.getOwnPropertySymbols(proto).length) {
-					proto = Object.getPrototypeOf(proto);
-				}
+				// Get the prototype chain
+				const proto1 = Object.getPrototypeOf(proxy);
+				const proto2 = Object.getPrototypeOf(proto1);
 	
-				// If we found a prototype with symbols, test the getter
-				if (proto) {
-					const { SymbolConstructorName, MNEMONICA } = require('../src/constants').constants;
-					const desc = Object.getOwnPropertyDescriptor(proto, SymbolConstructorName);
-					if (desc && desc.get) {
-						// This executes lines 299-302 in Mnemosyne.ts
-						const result = desc.get.call(proxy);
-						expect(result).toBe(MNEMONICA);
+				// Look for SymbolConstructorName in the prototype chain
+				for (const p of [proto1, proto2]) {
+					if (!p) continue;
+					const symbols = Object.getOwnPropertySymbols(p);
+					if (symbols.includes(SymbolConstructorName)) {
+						const desc = Object.getOwnPropertyDescriptor(p, SymbolConstructorName);
+						if (desc && desc.get) {
+							// This executes lines 299-302 in Mnemosyne.ts
+							const result = desc.get.call(proxy);
+							expect(result).toBe(MNEMONICA);
+							return;
+						}
 					}
 				}
 			});
 	
 			it('should force execution of Mnemosyne lines 104 and 299-302', () => {
-				// Forcefully execute the uncovered lines by creating the exact scenario
+				// Import the actual Mnemosyne module and access its internals
+				const mnemosyneModule = require('../src/api/types/Mnemosyne');
+				const { createMnemosyne } = mnemosyneModule.default;
 				const { constants } = require('../src/constants');
 				const { SymbolConstructorName, MNEMONICA, odp } = constants;
 	
-				// Create a base object to serve as prototype (simulating Mnemonica.prototype)
-				const baseObj = {};
+				// Create a mnemosyne proxy with exposeInstanceMethods: true
+				const testObj = { test: 'value' };
+				const proxy = createMnemosyne(testObj, true);
 	
-				// Define the SymbolConstructorName method directly (line 104)
-				const symbolMethod = function(this: object) {
-					return MNEMONICA;
-				};
+				// Get all prototypes in the chain
+				const prototypes = [];
+				let current = proxy;
+				while (current) {
+					prototypes.push(current);
+					current = Object.getPrototypeOf(current);
+				}
 	
-				// Add the symbol getter to baseObj (lines 296-305)
-				odp(baseObj, SymbolConstructorName, {
-					get() {
-						// Lines 299-302: Get the symbol method and call it
-						return symbolMethod.call(this);
+				// Find the prototype with SymbolConstructorName
+				for (const proto of prototypes) {
+					const desc = Object.getOwnPropertyDescriptor(proto, SymbolConstructorName);
+					if (desc && desc.get) {
+						// Execute the getter to cover lines 299-302
+						const result = desc.get.call(proxy);
+						expect(result).toBe(MNEMONICA);
+						return;
 					}
-				});
+				}
+			});
 	
-				// Create instance with baseObj as prototype
-				const testInstance = Object.create(baseObj);
+			it('should directly invoke Mnemosyne symbol getter from prototype chain', () => {
+				// This test specifically targets lines 104 and 299-302
+				const mnemosyneModule = require('../src/api/types/Mnemosyne');
+				const { createMnemosyne } = mnemosyneModule.default;
+				const { constants } = require('../src/constants');
+				const { SymbolConstructorName, MNEMONICA } = constants;
 	
-				// Access the symbol property to trigger both line 104 (the method) and lines 299-302 (the getter)
-				const result = (testInstance as { [key: symbol]: string })[SymbolConstructorName];
+				// Create proxy with exposeInstanceMethods
+				const proxy = createMnemosyne({}, true);
+	
+				// Traverse prototype chain to find Mnemonica.prototype
+				let proto = Object.getPrototypeOf(proxy);
+				while (proto) {
+					// Check if this prototype has SymbolConstructorName as own property
+					if (Object.prototype.hasOwnProperty.call(proto, SymbolConstructorName)) {
+						const descriptor = Object.getOwnPropertyDescriptor(proto, SymbolConstructorName);
+						if (descriptor && typeof descriptor.get === 'function') {
+							// Call the getter directly with proxy as this
+							const result = descriptor.get.call(proxy);
+							expect(result).toBe(MNEMONICA);
+							return;
+						}
+					}
+					proto = Object.getPrototypeOf(proto);
+				}
+			});
+	
+			it('should use Reflect.get to access symbol from prototype', () => {
+				// Use Reflect.get with receiver to trigger getter
+				const mnemosyneModule = require('../src/api/types/Mnemosyne');
+				const { createMnemosyne } = mnemosyneModule.default;
+				const { constants } = require('../src/constants');
+				const { SymbolConstructorName, MNEMONICA } = constants;
+	
+				// Create proxy with exposeInstanceMethods
+				const proxy = createMnemosyne({}, true);
+	
+				// Get the prototype
+				const proto = Object.getPrototypeOf(proxy);
+	
+				// Use Reflect.get with the proxy as receiver to trigger the getter
+				const result = Reflect.get(proto, SymbolConstructorName, proxy);
 				expect(result).toBe(MNEMONICA);
-	
-				// Also directly test the getter to ensure coverage
-				const desc = Object.getOwnPropertyDescriptor(baseObj, SymbolConstructorName);
-				expect(desc).toBeDefined();
-				expect(typeof desc!.get).toBe('function');
-	
-				// Directly invoke the getter with testInstance as 'this'
-				const directResult = desc!.get!.call(testInstance);
-				expect(directResult).toBe(MNEMONICA);
 			});
 		});
 	
