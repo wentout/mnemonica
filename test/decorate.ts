@@ -124,7 +124,7 @@ const myOtherDecoratedInstance = new MyOtherDecoratedClass();
 
 // debugger;
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+ 
 // @ts-ignore
 
 const MyOtherFn = MyOtherDecoratedClass.define('MyOtherFn', function (this: { prop: number }) {

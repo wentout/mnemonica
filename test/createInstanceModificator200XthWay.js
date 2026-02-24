@@ -12,14 +12,14 @@ module.exports = function () {
 		addProps
 	) {
 
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		 
 		const existentInstance = this;
 
 		try {
 			// const PreTripleSchemeClosure = function () {
 			const TripleSchemeClosure = function () {
 
-				// eslint-disable-next-line @typescript-eslint/no-this-alias
+				 
 				const Mnemosyne = this;
 				addProps(Mnemosyne);
 
@@ -27,7 +27,7 @@ module.exports = function () {
 
 				const Inherico = function () {
 
-					// eslint-disable-next-line @typescript-eslint/no-this-alias
+					 
 					const moreInherited = this;
 					// so now we have to copy all the inherited props
 					// to "this", leaving them untouched in future

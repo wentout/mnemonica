@@ -173,7 +173,6 @@ UserType.define(() => {
 			return this.user_pl_2_sign;
 		}
 	}
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	UserTypePL2.Shaper = Shaper;
 	return UserTypePL2;
@@ -280,7 +279,6 @@ const AnotherCollectionType = anotherTypesCollection.define('AnotherCollectionTy
 
 // TypeProxy .bind
 // so we will replace "root" instance of prototype chain here
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 process.TestForAddition = 'passed';
 const anotherCollectionInstance = AnotherCollectionType.bind(process)('check');
@@ -1541,7 +1539,6 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 
 					await (promisify((cb: (err?: Error | null, result?: unknown) => void) => {
 						const cbfork = callbackify(asyncInstance.fork as (...args: unknown[]) => Promise<unknown>);
-						// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 						// @ts-ignore
 						cbfork.call(asyncInstance, 'cb forked data', (err: never, result: unknown) => {
 							asyncInstanceForkCb = result as AsyncTypeInstance;

@@ -61,7 +61,7 @@ const invokePreHooks = function ( this: any ) {
   
 const invokePostHooks = function ( this: any ) {
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const creator = this;
 	const {
 		inheritedInstance,
@@ -104,7 +104,7 @@ const invokePostHooks = function ( this: any ) {
   
 const postProcessing = function ( this: any, continuationOf: any ) {
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 	const {
 		stack,
@@ -143,7 +143,7 @@ export interface ThenSpec {
   
 const addThen = function ( this: any, then: ThenSpec ) {
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 
 	self.inheritedInstance = self.inheritedInstance
@@ -166,7 +166,7 @@ const addThen = function ( this: any, then: ThenSpec ) {
   
 const makeAwaiter = function ( this: any, type: any, then?: ThenSpec ) {
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 
 	self.inheritedInstance = self.inheritedInstance
@@ -257,7 +257,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	 
 	const mc = ModificationConstructor();
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 
 	const ModificatorType = constructHandler();

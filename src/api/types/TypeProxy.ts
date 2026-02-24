@@ -114,7 +114,7 @@ const subTypeApply = (
 	const decorator = function <T extends { new (): unknown }>(cstr: T): T {
 		// const name = typeof s === 'object' ? s.name : cstr.constructor.name;
 		const { name } = cstr;
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		 
 		// @ts-ignore
 		return parentType.define(name, cstr, cfg, ...fnArgs) as unknown as T;
 	};
@@ -177,7 +177,7 @@ TypeProxy.prototype.construct = function (_target: unknown, args: unknown[]) {
 
 	// Get exposeInstanceMethods from type config, defaulting to false
 	const config = type.config as { exposeInstanceMethods?: boolean } | undefined;
-	const exposeInstanceMethods = config?.exposeInstanceMethods as unknown as boolean;
+	const exposeInstanceMethods = config!.exposeInstanceMethods as unknown as boolean;
 
 	// "this" argument may be passed for tracking why something happened
 	// but uncomment it there in createMnemosyne if needed

@@ -46,11 +46,11 @@ const getTypeChecker = (TypeName: string) => {
 		if (!instance!.constructor) {
 			return false;
 		}
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		 
 		// @ts-ignore
 		if (Reflect.getPrototypeOf(instance).constructor.name === 'Promise') {
 			// if ( instance instanceof Promise ) {
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			 
 			// @ts-ignore
 			return instance[ SymbolConstructorName ] === TypeName;
 		}
@@ -58,7 +58,7 @@ const getTypeChecker = (TypeName: string) => {
 		const constructors: {
 			string: new () => unknown
 		} = collectConstructors(instance);
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		 
 		// @ts-ignore
 		return constructors[ TypeName ] || false;
 
@@ -171,7 +171,7 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 			subtype = findSubTypeFromParent(props.__parent__, subType);
 		}
 	}
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	 
 	// @ts-ignore
 	return subtype;
 };

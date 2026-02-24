@@ -45,7 +45,7 @@ type InstanceCreatorContext = {
 export const throwModificationError = function ( this: InstanceCreatorContext, error: MnemonicaError ) {
 
 	// InstanceCreator
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 
 	const {

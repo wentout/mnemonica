@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment, space-before-function-paren */
+/* eslint-disable space-before-function-paren */
 'use strict';
 
 import type {
@@ -215,4 +215,4 @@ export const errors = descriptors.ErrorsTypes;
 
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
-/* eslint-enable @typescript-eslint/ban-ts-comment, space-before-function-paren */
+/* eslint-enable space-before-function-paren */

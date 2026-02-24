@@ -33,7 +33,7 @@ const typesCollections = new Map();
 
 const TypesCollection = function ( _config: Record<string, unknown> ) {
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 
 	const subtypes = new Map();
@@ -135,7 +135,7 @@ odp( TypesCollection.prototype, 'lookup', {
 
 odp( TypesCollection.prototype, 'registerHook', {
 	get () {
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		 
 		const self = this;
 		return function ( this: unknown, hookName: string, hookCallback: CallableFunction ) {
 			// return proto.registerHook.call( typesCollections.get( self ), hookName, hookCallback );
@@ -148,7 +148,7 @@ odp( TypesCollection.prototype, 'registerHook', {
 odp( TypesCollection.prototype, 'invokeHook', {
 	get () {
 		return function ( this: unknown, hookName: string, hookCallback: CallableFunction ) {
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			 
 			const self = this;
 			// return proto.invokeHook.call( typesCollections.get( self ), hookName, hookCallback );
 			return invokeHook.call( typesCollections.get( self ), hookName, hookCallback );
@@ -159,7 +159,7 @@ odp( TypesCollection.prototype, 'invokeHook', {
 odp( TypesCollection.prototype, 'registerFlowChecker', {
 	get () {
 		return function ( this: unknown, flowCheckerCallback: () => unknown ) {
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			 
 			const self = this;
 			return registerFlowChecker.call( typesCollections.get( self ), flowCheckerCallback );
 		}.bind( this );

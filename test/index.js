@@ -175,7 +175,7 @@ defaultTypes.registerFlowChecker((opts) => {
 });
 
 defaultTypes.registerHook('preCreation', function (opts) {
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 	typesPreCreationInvocations.push({
 		kind : 'pre',
@@ -186,7 +186,7 @@ defaultTypes.registerHook('preCreation', function (opts) {
 });
 
 defaultTypes.registerHook('postCreation', function (opts) {
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 	typesPostCreationInvocations.push({
 		kind  : 'post',
@@ -198,7 +198,7 @@ defaultTypes.registerHook('postCreation', function (opts) {
 });
 
 defaultTypes.registerHook('postCreation', function (opts) {
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 	typesPostCreationInvocations.push({
 		kind  : 'post',

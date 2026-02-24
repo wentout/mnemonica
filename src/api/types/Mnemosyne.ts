@@ -87,7 +87,7 @@ const MnemonicaProtoProps = {
 
 
 			if (this === __self__) {
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+				 
 				// @ts-expect-error 
 				forked = new (Constructor[ TypeName ])(...args);
 			} else {
@@ -105,7 +105,7 @@ const MnemonicaProtoProps = {
 	},
 
 	exception () {
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		 
 		const self = this;
 		return function (error: Error, ...args: unknown[]) {
 			const target = new.target;
@@ -265,7 +265,7 @@ const mnemosyneProxyHandlerGet = (target: object, prop: string, receiver: unknow
 
 const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMethods: boolean) {
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const instance = this;
 
 	const Mnemonica = function (this: object) {
@@ -286,7 +286,7 @@ const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMetho
 		Object.entries(MnemonicaProtoProps).forEach(([ name, method ]: [string, unknown]) => {
 			odp(Mnemonica.prototype, name, {
 				get () {
-					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+					 
 					// @ts-ignore
 					return (method as CallableFunction).call(this);
 				}
@@ -297,7 +297,7 @@ const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMetho
 			odp(Mnemonica.prototype, symbol, {
 				get () {
 					const symbolMethod = Reflect.get(MnemonicaProtoProps, symbol);
-					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+					 
 					// @ts-ignore
 					return symbolMethod.call(this);
 				}

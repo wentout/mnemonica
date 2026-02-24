@@ -90,7 +90,7 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 	};
 
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const exception = this;
 
 	odp( exception, 'args', {
@@ -136,7 +136,7 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 
 	getStack.call( exception, title, [], prepareException );
 
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	 
 	// @ts-ignore
 	stack.push( ...exception.stack );
 
@@ -166,7 +166,7 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 
 const prepareException = function ( this: object, target: unknown, error: Error, ...args: unknown[] ) {
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const instance = this;
 
 	checkThrowArgs( instance, target, error, args );

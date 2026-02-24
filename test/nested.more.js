@@ -183,9 +183,9 @@ const tests = ( opts ) => {
 					it( `must be true : ${str}`, () => {
 						try {
 							assert.isTrue( iof, str );
-						} catch ( error ) {
+						} catch ( _error ) {
 							// debugger;
-							idx; name; iof;
+							_error; idx; name; iof;
 						}
 					} );
 				} );
