@@ -54,9 +54,8 @@ Mnemonica helps create ordered sequences of data transformations using prototype
 Think of it as a mathematical function `f(x) => y` where `this` is your persistent data structure and transformations are applied sequentially.
 
 > *"O Great Mnemosyne! Please! Save us from Oblivion..."*
+>
 > — from the source, where memory persists
-
-![concept](https://raw.githubusercontent.com/mythographica/stash/master/img/LifeCycle/LifeCycle.png)
 
 **Key Features:**
 - Factory of Constructors with Prototype Chain Inheritance
