@@ -137,8 +137,7 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 	getStack.call( exception, title, [], prepareException );
 
 	 
-	// @ts-ignore
-	stack.push( ...exception.stack );
+	stack.push( ...(exception.stack as unknown as string[]) );
 
 	stack.push( '<-- with the following error -->' );
 

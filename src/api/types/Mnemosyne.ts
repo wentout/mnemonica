@@ -88,7 +88,7 @@ const MnemonicaProtoProps = {
 
 			if (this === __self__) {
 				 
-				// @ts-expect-error 
+				// @ts-expect-error  this is definitely a constructor
 				forked = new (Constructor[ TypeName ])(...args);
 			} else {
 				// fork.call ? let's do it !
@@ -287,7 +287,7 @@ const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMetho
 			odp(Mnemonica.prototype, name, {
 				get () {
 					 
-					// @ts-ignore
+					// @ts-expect-error there is a proxy and next line is callable
 					return (method as CallableFunction).call(this);
 				}
 			});
@@ -297,8 +297,6 @@ const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMetho
 			odp(Mnemonica.prototype, symbol, {
 				get () {
 					const symbolMethod = Reflect.get(MnemonicaProtoProps, symbol);
-					 
-					// @ts-ignore
 					return symbolMethod.call(this);
 				}
 			});

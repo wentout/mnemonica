@@ -551,6 +551,55 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		strictChain: false
 	});
 
+	// Coverage test for strictChain validation - types to trigger the branch at InstanceCreator.ts:141
+	const RootForStrictChain = define('RootForStrictChain', function(this: { scRootProp: boolean }) {
+		this.scRootProp = true;
+	});
+	const WillBeRenamedByStrictChain = RootForStrictChain.define('WillBeRenamedByStrictChain', function(this: { willBeRenamed: boolean }) {
+		this.willBeRenamed = true;
+	});
+	const StrictChainType = WillBeRenamedByStrictChain.define('StrictChainType', function (this: { strict_field: string }) {
+		this.strict_field = 'strict';
+		// Change parent's constructor.name to trigger strictChain validation error
+		const parent = this.parent('WillBeRenamedByStrictChain');
+		if (parent) {
+			Object.defineProperty(parent.constructor, 'name', {
+				value: 'FakeForStrictChainType',
+				configurable: true
+			});
+		}
+	}, {
+		submitStack: true,
+		strictChain: true
+	});
+	const AdditionalForStrictChain = RootForStrictChain.define('AdditionalForStrictChain', function(this: { additionalProp: string }) {
+		this.additionalProp = 'additional';
+	}, { blockErrors: false });
+
+	// Secondary set for testing Error instance with blockErrors: false
+	const RootForStrictChainS = define('RootForStrictChainS', function(this: { scRootProp: boolean }) {
+		this.scRootProp = true;
+	});
+	const WillBeRenamedByStrictChainS = RootForStrictChainS.define('WillBeRenamedByStrictChainS', function(this: { willBeRenamed: boolean }) {
+		this.willBeRenamed = true;
+	});
+	const StrictChainTypeS = WillBeRenamedByStrictChainS.define('StrictChainTypeS', function (this: { strict_field: string }) {
+		this.strict_field = 'strict';
+		const parent = this.parent('WillBeRenamedByStrictChainS');
+		if (parent) {
+			Object.defineProperty(parent.constructor, 'name', {
+				value: 'FakeForStrictChainType',
+				configurable: true
+			});
+		}
+	}, {
+		submitStack: true,
+		strictChain: true
+	});
+	const AdditionalForStrictChainS = RootForStrictChainS.define('AdditionalForStrictChainS', function(this: { additionalProp: string }) {
+		this.additionalProp = 'additional';
+	}, { blockErrors: false });
+
 	EvenMoreTypeDef.define('ThrowTypeError', require('./throw-type-error'));
 
 	const AsyncChain1st = WithAdditionalSignTypeDef.define('AsyncChain1st', async function (this: WithAdditionalSignInstance, opts: Record<string, unknown>) {
@@ -799,6 +848,79 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			it('other instances in chain should follow the rules', () => {
 				expect(evenMore instanceof userTC).toEqual(true);
 				expect(evenMore instanceof userWithoutPassword).toEqual(true);
+			});
+		});
+
+		describe('strictChain validation tests', () => {
+			// Create instances to trigger strictChain validation
+			const scRoot = new RootForStrictChain();
+			const scForRename = new scRoot.WillBeRenamedByStrictChain();
+			
+			// Create additionalSC BEFORE StrictChainType modifies the parent's constructor name
+			const additionalSC = apply(scRoot, AdditionalForStrictChain);
+			
+			let strictChainingTypeError: Error | undefined;
+			
+			try {
+				new scForRename.StrictChainType();
+			} catch (error) {
+				strictChainingTypeError = error as Error;
+			}
+
+			it('additionalSC should be kept the same', () => {
+				expect(additionalSC.constructor.name).toEqual('AdditionalForStrictChain');
+			});
+			it('additionalSC stack should be undefined', () => {
+				expect(additionalSC.stack).toEqual(undefined);
+			});
+			it('additionalSC should have scRootProp', () => {
+				expect(additionalSC.scRootProp).toEqual(true);
+			});
+			it('scRoot should be kept the same', () => {
+				expect(scRoot.constructor.name).toEqual('RootForStrictChain');
+			});
+			it('scForRename constructor.name should be renamed', () => {
+				expect(scForRename.constructor.name).toEqual('FakeForStrictChainType');
+			});
+			it('scRoot is an error', () => {
+				expect(scRoot).toBeInstanceOf(Error);
+			});
+			it('scForRename instance of Error', () => {
+				expect(scForRename).toBeInstanceOf(Error);
+			});
+			it('strictChainingTypeError should be instance of RootForStrictChain', () => {
+				expect(strictChainingTypeError).toBeInstanceOf(RootForStrictChain);
+			});
+			it('strictChainingTypeError message should match', () => {
+				expect(strictChainingTypeError?.message).toMatch(/should inherit from/);
+			});
+
+			// Secondary tests for Error instance with blockErrors: false branch coverage
+			const scRootS = new RootForStrictChainS();
+			const scForRenameS = new scRootS.WillBeRenamedByStrictChainS();
+			
+			let strictChainingTypeErrorS: Error | undefined;
+			try {
+				new scForRenameS.StrictChainTypeS();
+			} catch (error) {
+				strictChainingTypeErrorS = error as Error;
+			}
+
+			// Now scRootS is an Error instance due to the failed StrictChainTypeS construction
+			// This triggers the branch: if (self.inheritedInstance instanceof Error && !blockErrors)
+			const additionalErrorThrown = apply(scRootS, AdditionalForStrictChainS);
+
+			it('additionalErrorThrown should have correct constructor name', () => {
+				expect(additionalErrorThrown.constructor.name).toEqual('AdditionalForStrictChainS');
+			});
+			it('additionalErrorThrown is an error', () => {
+				expect(additionalErrorThrown).toBeInstanceOf(Error);
+			});
+			it('additionalErrorThrown has scRootProp', () => {
+				expect(additionalErrorThrown.scRootProp).toEqual(true);
+			});
+			it('scRootS is an error', () => {
+				expect(scRootS).toBeInstanceOf(Error);
 			});
 		});
 

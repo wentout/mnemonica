@@ -155,8 +155,7 @@ export const decorate = function <
 };
 
 
-export const registerHook = function <T extends object>(Ctor: IDEF<T>, hookType: hooksTypes, cb: hook): void {
-	// @ts-ignore
+export const registerHook = function <T extends Constructor<T>>(Ctor: DecoratedClass<T>, hookType: hooksTypes, cb: hook): void {
 	Ctor.registerHook(hookType, cb);
 };
 

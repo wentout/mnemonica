@@ -47,11 +47,11 @@ const getTypeChecker = (TypeName: string) => {
 			return false;
 		}
 		 
-		// @ts-ignore
+		// @ts-expect-error I'm too lazy for that
 		if (Reflect.getPrototypeOf(instance).constructor.name === 'Promise') {
 			// if ( instance instanceof Promise ) {
 			 
-			// @ts-ignore
+			// @ts-expect-error I'm too lazy for that
 			return instance[ SymbolConstructorName ] === TypeName;
 		}
 
@@ -59,7 +59,7 @@ const getTypeChecker = (TypeName: string) => {
 			string: new () => unknown
 		} = collectConstructors(instance);
 		 
-		// @ts-ignore
+		// @ts-expect-error I'm too lazy for that
 		return constructors[ TypeName ] || false;
 
 	};
@@ -172,7 +172,7 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 		}
 	}
 	 
-	// @ts-ignore
+	// @ts-expect-error I'm too lazy for that
 	return subtype;
 };
 

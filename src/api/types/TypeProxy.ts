@@ -115,8 +115,7 @@ const subTypeApply = (
 		// const name = typeof s === 'object' ? s.name : cstr.constructor.name;
 		const { name } = cstr;
 		 
-		// @ts-ignore
-		return parentType.define(name, cstr, cfg, ...fnArgs) as unknown as T;
+		return parentType.define(name, cstr as unknown as CallableFunction, cfg, ...fnArgs) as unknown as T;
 	};
 	return decorator;
 };

@@ -30,8 +30,7 @@ export default function () {
 		// so now we have to copy all constructor props
 		const props = Object.getOwnPropertyDescriptors(ModificatorTypePrototype);
 		props.constructor = {
-			 
-			// @ts-expect-error
+			// @ts-expect-error I'm too lazy for that
 			value : ModificatorType
 		};
 		Object.defineProperties(ModificatorType.prototype, props);
