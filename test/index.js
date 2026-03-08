@@ -20,7 +20,6 @@ const asyncConstructionTest = true;
 
 const mnemonica = require('..');
 
-
 const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, myOtherInstance } = require('./decorate');
 
 debugger;
