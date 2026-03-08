@@ -6,6 +6,25 @@ This file provides guidance to agents when working with code in this repository.
 
 **mnemonica** is an instance inheritance system for JavaScript/TypeScript that enables prototype chain-based type definitions. It allows creating types using `define()` and building inheritance hierarchies through prototype chains.
 
+### Vision & Philosophy
+
+Mnemonica solves the fundamental problem that JavaScript prototype inheritance is a Trie data structure, but developers don't realize this. Common mistakes include:
+- Using assignment instead of `Object.setPrototypeOf` (breaks `instanceof`)
+- Reusing constructors directly (corrupts existing instances' prototype chains)
+- Not understanding the Factory pattern requirement
+
+**Mnemonica forces explicit declaration of inheritance graphs**, eliminating these bugs by design. The ultimate goal is to **reduce the cost of software development and support** by making certain classes of bugs impossible.
+
+### AI Integration Vision
+
+Mnemonica enables AI agents to:
+1. **Structure thinking** through explicit constructor chains
+2. **Self-extend** by defining new features via `define()` calls
+3. **Analyze behavior** through stored invocation arguments (accessible via `getProps()`)
+4. **Become more capable** by understanding the inheritance graph
+
+The stored arguments in the prototype chain allow AI to introspect and learn from its own execution history.
+
 ## Build/Test Commands
 
 All commands run from the `core/` directory:

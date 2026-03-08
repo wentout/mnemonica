@@ -19,7 +19,7 @@ const {
 import TypesUtils from '../utils';
 
 const {
-	makeFakeModificatorType
+	makeErrorModificatorType
 } = TypesUtils;
 
 import { makeInstanceModificator } from '../types/InstanceModificator';
@@ -198,7 +198,7 @@ const prepareException = function ( this: object, target: unknown, error: Error,
 
 	ExceptionCreator.existentInstance = error;
 	 
-	ExceptionCreator.ModificatorType = makeFakeModificatorType( TypeName, function (this: Error) {
+	ExceptionCreator.ModificatorType = makeErrorModificatorType( TypeName, function (this: Error) {
 		return exceptionConsctructHandler.call( this, {
 			instance,
 			TypeName,

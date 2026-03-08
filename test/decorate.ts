@@ -21,7 +21,7 @@ class Some extends Base {
 Object.setPrototypeOf(Base.prototype, new BaseClass(deep));
 const some = new Some;
 console.log(some);
-// @ts-ignore
+// @ts-expect-error - 'deep' property is added by typeomatica's BaseClass but not in TypeScript types
 console.log('some.deep', some.deep);
 
 @Strict(deep)
@@ -33,16 +33,14 @@ class SomeS extends SBase {
 }
 const somes = new SomeS;
 console.log(somes);
-// @ts-ignore
+// @ts-expect-error - 'deep' property is added by typeomatica's BaseClass but not in TypeScript types
 console.log('somes.deep', somes.deep);
 
 // debugger;
 
-// @ts-ignore
 class BaseE extends BaseClass {
 	base_field = 555;
 }
-// @ts-ignore
 class SomeE extends BaseE {
 	field = 333;
 }
@@ -53,7 +51,6 @@ console.log(esome);
 @decorate({ blockErrors : true })
 // <-- with the following error -->
 // TypeError: Cannot read properties of undefined (reading 'value')
-// @ts-ignore
 @Strict()
 class MyDecoratedClass {
 	// class MyDecoratedClass extends BaseClass {
@@ -81,7 +78,8 @@ class MyDecoratedSubClass {
 // debugger;
 
 export const myDecoratedInstance = new MyDecoratedClass;
-export const myDecoratedInstance2 = new MyDecoratedClass;
+export const myDecoratedInstanceSecondary = new MyDecoratedClass;
+
 export const myDecoratedSubInstance = apply(myDecoratedInstance, MyDecoratedSubClass);
 
 // debugger;
@@ -109,7 +107,6 @@ export const myDecoratedSubSubInstance = apply(myDecoratedSubInstance, MyDecorat
 // debugger;
 
 @decorate()
-// @ts-ignore
 class MyOtherDecoratedClass extends BaseClass {
 	field: number;
 	constructor () {
@@ -124,9 +121,8 @@ const myOtherDecoratedInstance = new MyOtherDecoratedClass();
 
 // debugger;
 
- 
-// @ts-ignore
 
+// @ts-expect-error - define() returns TypeClass but TypeScript infers different type
 const MyOtherFn = MyOtherDecoratedClass.define('MyOtherFn', function (this: { prop: number }) {
 	this.prop = 321;
 });
@@ -168,15 +164,16 @@ export const exSupTest = new ExtendTestingSupExt;
 @decorate()
 class MidDecoratorBase {
 	field = 333;
-}
+};
 
-debugger;
+// debugger;
 // Note: TypeScript's decorator type checking has limitations with callable class types.
-// The @ts-ignore is needed because TypeScript doesn't recognize DecoratedClass as callable
-// even though the type definition correctly includes the call signature.
-// @ts-ignore
+// The @ts-expect-error is needed because TypeScript doesn't recognize DecoratedClass as callable
+// even though the type definition correctly includes the call signature. This is a known
+// TypeScript limitation with expressing both constructable and callable signatures on classes.
+// @ts-expect-error - TypeScript limitation: class types with call signatures aren't recognized as callable in decorator context
 @MidDecoratorBase()
-class MidDecoratorExt{
+class MidDecoratorExt {
 	field = 111;
 	ext = 321;
 	constructor () {
@@ -184,9 +181,9 @@ class MidDecoratorExt{
 	}
 }
 
-// @ts-ignore
+// @ts-expect-error - TypeScript limitation: class types with call signatures aren't recognized as callable in decorator context
 @MidDecoratorBase()
-class MidAddDecoratorAddExt{
+class MidAddDecoratorAddExt {
 	field = 111;
 	addition = 321;
 	constructor () {
@@ -194,11 +191,11 @@ class MidAddDecoratorAddExt{
 	}
 }
 
-// debugger;
-// @ts-ignore
+// @ts-expect-error - TypeScript limitation: class types with call signatures aren't recognized as callable in decorator context
 @MidAddDecoratorAddExt({ test : true })
-class MidAddDecoratorAddExtSub{
+class MidAddDecoratorAddExtSub {
 	field = 111;
+	ext = 321;
 	constructor () {
 		console.log('im here: ', this.field);
 	}
@@ -215,6 +212,7 @@ export const midDecoratorExt = apply(midDecoratorBase, MidDecoratorExt);
 export const midAddDecoratorBaseExt = apply(midDecoratorBase, MidAddDecoratorAddExt);
 
 try {
+	console.log('\n\nthis error ↓↓↓ must happen\n');
 	apply(midDecoratorBase, MidAddDecoratorAddExtSub);
 } catch (error) {
 	// wow
@@ -225,8 +223,24 @@ try {
 	// and this is not what happens
 	// debugger;
 	console.error(error);
+	console.log('\nthis error ↑↑↑ must been happened\n\n-------\n\n\n');
 }
 
 // debugger;
 export const midAddDecoratorSubExt = apply(midAddDecoratorBaseExt, MidAddDecoratorAddExtSub);
+// debugger;
+
+// Coverage test: manually call decorator with explicit undefined to test ?? operator
+const decoratorWithConfig = decorate(MidDecoratorBase, { blockErrors : true });
+// Cast to any to bypass type mismatch between definition (ClassDecoratorContext) and implementation (constructorOptions)
+const ManualDecoratedClass = (decoratorWithConfig as any)(
+	function ManualDecoratedClass (this: { manual_field: number }) {
+		this.manual_field = 777;
+	},
+	// Explicitly pass undefined to test ?? operator
+	undefined
+);
+
+export const manualDecoratedInstance = apply(midDecoratorBase, ManualDecoratedClass);
+
 // debugger;

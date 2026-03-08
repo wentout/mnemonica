@@ -152,17 +152,20 @@ UserType.define(() => {
 });
 
 
-const ProxyTyped = function (str) {
+const DefinedByParentConstructorPropsProxy = function (str) {
+	debugger;
 	this.str = str;
 };
-ProxyTyped.prototype = {
-	proxyTyped : true,
+DefinedByParentConstructorPropsProxy.prototype = {
+	DefinedByParentConstructorPropsProxy : true,
 	SaySomething () {
-		return `something : ${this.proxyTyped}`;
+		return `something : ${this.DefinedByParentConstructorPropsProxy}`;
 	}
 };
+
+// typedas just 
 Object.assign(UserType, {
-	ProxyTyped
+	DefinedByParentConstructorPropsProxy
 });
 
 
@@ -460,7 +463,8 @@ describe('Main Test', () => {
 		WithoutPassword.prototype = WithoutPasswordProto;
 		return WithoutPassword;
 	}, {
-		submitStack : true
+		submitStack : true,
+		strictChain : false
 	});
 
 	const WithAdditionalSignProto = {
@@ -520,7 +524,8 @@ describe('Main Test', () => {
 		EvenMore.prototype = Object.assign({}, EvenMoreProto);
 		return EvenMore;
 	}, {
-		submitStack : true
+		submitStack : true,
+		strictChain : false
 	});
 
 	const ThrowTypeError = EvenMoreTypeDef.define('ThrowTypeError', require('./throw-type-error'));
@@ -572,7 +577,7 @@ describe('Main Test', () => {
 	const userTCForkBind = userTC.fork.bind(user)(FORK_CALL_DATA);
 	const utcfcwp = userTCForkCall.WithoutPassword();
 
-	// check unchained construction
+	// check unchained construction - UserWithoutPassword has strictChain: false
 	const unchainedUserWithoutPassword = new UserWithoutPassword();
 
 	const userWithoutPassword = new userTC.WithoutPassword();
@@ -586,6 +591,7 @@ describe('Main Test', () => {
 	const moreOver = userWPWithAdditionalSign.MoreOver(moreOverStr);
 
 	const overMore = moreOver.OverMore();
+
 	const evenMore = overMore.EvenMore();
 	const empty = new EmptyType();
 	const filledEmptySign = 'FilledEmptySign';
@@ -658,7 +664,7 @@ describe('Main Test', () => {
 		derived,
 		rounded,
 		chained2,
-		merged
+		merged,
 	});
 
 	require('./async.chain')({
@@ -677,7 +683,6 @@ describe('Main Test', () => {
 			typesPostCreationInvocations,
 		});
 	}
-
 
 	describe('Type Definitions Tests', () => {
 
@@ -1333,6 +1338,188 @@ describe('Main Test', () => {
 
 			});
 		}
+
+		describe('Strict Chain PRIMARY FEATURE Tests', () => {
+
+			const RootForStrictChain = define('RootForStrictChain', function () {
+				this.scRootProp = true;
+			});
+			const WillBeRenamedByStrictChain = RootForStrictChain
+				.define('WillBeRenamedByStrictChain', function () { });
+			const AdditionalForStrictChain = RootForStrictChain
+				.define('AdditionalForStrictChain', function () { }, { blockErrors : false });
+
+			const StrictChainType = WillBeRenamedByStrictChain.define('StrictChainType', function () {
+				const parent = this.parent('WillBeRenamedByStrictChain');
+				if (parent) {
+					Object.defineProperty(parent.constructor, 'name', {
+						value        : 'FakeForStrictChainType',
+						configurable : true
+					});
+				}
+			}, {
+				submitStack : true,
+				strictChain : true
+			});
+
+			const scRoot = new RootForStrictChain;
+			const scForRename = new scRoot.WillBeRenamedByStrictChain;
+
+			let strictChainingTypeError;
+			try {
+				new scForRename.StrictChainType;
+			} catch (error) {
+				strictChainingTypeError = error;
+			}
+
+			
+			// here additionalSC is properly made in spite it is an instance of error
+			const additionalSC = apply(scRoot, AdditionalForStrictChain);
+
+			it('additionalSC should be kept the same', () => {
+				expect(additionalSC.constructor.name).is.equal('AdditionalForStrictChain');
+			});
+			it('additionalSC should be kept the same', () => {
+				expect(additionalSC.stack).is.equal(undefined);
+			});
+			it('additionalSC should be kept the same', () => {
+				expect(additionalSC.scRootProp).is.equal(true);
+			});
+
+			it('scRoot should be kept the same', () => {
+				expect(scRoot.constructor.name).is.equal('RootForStrictChain');
+			});
+			it('scForRename should NOT be kept the same', () => {
+				expect(scForRename.constructor.name).is.equal('FakeForStrictChainType');
+			});
+			it('scRoot is an error ', () => {
+				expect(scRoot).instanceOf(Error);
+			});
+			it('scForRename instance of Error', () => {
+				expect(scForRename).instanceOf(Error);
+			});
+			it('shoud not be instance of RootForStrictChain', () => {
+				expect(strictChainingTypeError).instanceOf(RootForStrictChain);
+			});
+			it('shoud NOT ot be instance of WillBeRenamedByStrictChain: because we have nominal typing', () => {
+				expect(strictChainingTypeError).is.not.instanceOf(WillBeRenamedByStrictChain);
+			});
+			it('shoud be instance of StrictChainType', () => {
+				expect(strictChainingTypeError).instanceOf(StrictChainType);
+			});
+			it('shoud be instance of WRONG_MODIFICATION_PATTERN', () => {
+				expect(strictChainingTypeError).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			});
+			it('shoud have proper message', () => {
+				expect(strictChainingTypeError.message).is
+					.equal('wrong modification pattern : should inherit from WillBeRenamedByStrictChain but made on FakeForStrictChainType');
+			});
+
+		});
+
+		describe('Strict Chain SECONDARY FEATURE Tests', () => {
+
+			const RootForStrictChainS = define('RootForStrictChainS', function () {
+				this.scRootProp = true;
+			});
+			const WillBeRenamedByStrictChainS = RootForStrictChainS
+				.define('WillBeRenamedByStrictChainS', function () { });
+			const AdditionalForStrictChainS = RootForStrictChainS
+				.define('AdditionalForStrictChainS', function () { }, { blockErrors : true });
+
+			const StrictChainTypeS = WillBeRenamedByStrictChainS.define('StrictChainType', function () {
+				const parent = this.parent('WillBeRenamedByStrictChainS');
+				if (parent) {
+					Object.defineProperty(parent.constructor, 'name', {
+						value        : 'FakeForStrictChainType',
+						configurable : true
+					});
+				}
+			}, {
+				submitStack : true,
+				strictChain : true
+			});
+
+			const scRoot = new RootForStrictChainS;
+			const scForRename = new scRoot.WillBeRenamedByStrictChainS;
+
+			if (scRoot instanceof Error) {
+				throw new Error('Bad, Bad Tests!!!');
+			}
+
+			let strictChainingTypeError;
+			try {
+				apply(scForRename, StrictChainTypeS);
+			} catch (error) {
+				strictChainingTypeError = error;
+			}
+			
+			let additionalErrorThrown;
+			try {
+				// and here if we are trying to make AdditionalForStrictChainS it throws an error
+				apply(scRoot, AdditionalForStrictChainS);
+			} catch (error) {
+				additionalErrorThrown = error;
+			}
+
+			it('additionalErrorThrown should be kept the same', () => {
+				expect(additionalErrorThrown.constructor.name).is.equal('AdditionalForStrictChainS');
+			});
+			it('additionalError is an error ', () => {
+				expect(additionalErrorThrown.scRootProp).equals(true);
+			});
+
+			it('additionalError is an error ', () => {
+				expect(additionalErrorThrown).is.instanceOf(Error);
+			});
+			it('additionalError is an error ', () => {
+				expect(additionalErrorThrown).is.instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			});
+			it('additionalError is an error ', () => {
+				expect(additionalErrorThrown).is.instanceOf(RootForStrictChainS);
+			});
+			it('additionalError is an error ', () => {
+				// because thrown directly from constructor
+				expect(additionalErrorThrown.stack).equals(undefined);
+			});
+
+
+			it('scRoot should be kept the same', () => {
+				expect(scRoot.constructor.name).is.equal('RootForStrictChainS');
+			});
+			it('scRoot is an error ', () => {
+				expect(scRoot).instanceOf(Error);
+			});
+			it('scRoot is an error ', () => {
+				expect(scRoot).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			});
+			it('scRoot is an error ', () => {
+				expect(scForRename).instanceOf(Error);
+			});
+			it('scRoot is an error ', () => {
+				expect(scForRename).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			});
+			it('shoud be instance of Error', () => {
+				expect(strictChainingTypeError).instanceOf(Error);
+			});
+			it('shoud be instance of RootForStrictChainS', () => {
+				expect(strictChainingTypeError).instanceOf(RootForStrictChainS);
+			});
+			it('shoud NOT ot be instance of WillBeRenamedByStrictChain: because we have nominal typing', () => {
+				expect(strictChainingTypeError).is.not.instanceOf(WillBeRenamedByStrictChainS);
+			});
+			it('shoud be instance of StrictChainType', () => {
+				expect(strictChainingTypeError).instanceOf(StrictChainTypeS);
+			});
+			it('shoud be instance of WRONG_MODIFICATION_PATTERN', () => {
+				expect(strictChainingTypeError).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			});
+			it('shoud have proper message', () => {
+				expect(strictChainingTypeError.message)
+					.equal('wrong modification pattern : should inherit from WillBeRenamedByStrictChainS but made on FakeForStrictChainType');
+			});
+
+		});
 
 		if (uncaughtExceptionTest) {
 			require('./uncaughtExceptionTest')({

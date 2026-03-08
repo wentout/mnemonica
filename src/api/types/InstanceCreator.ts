@@ -20,7 +20,7 @@ const {
 import TypesUtils from '../utils';
 const {
 	getExistentAsyncStack,
-	makeFakeModificatorType,
+	makeErrorModificatorType,
 } = TypesUtils;
 
 import { getStack } from '../errors';
@@ -29,7 +29,6 @@ import { throwModificationError } from '../errors/throwModificationError';
 import { _getProps, _setSelf, Props } from './Props';
 
 import { makeInstanceModificator } from './InstanceModificator';
-
   
 const invokePreHooks = function ( this: any ) {
 
@@ -103,11 +102,17 @@ const invokePostHooks = function ( this: any ) {
 
   
 const postProcessing = function ( this: any, continuationOf: any ) {
-
 	 
 	const self = this;
 	const {
 		stack,
+		type: {
+			isSubType,
+			config: {
+				strictChain,
+				blockErrors
+			}
+		}
 	} = self;
 
 	if ( !self.inheritedInstance.constructor ) {
@@ -126,6 +131,22 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 		const msg = `should inherit from ${continuationOf.TypeName} but got ${icn}`;
 		self.throwModificationError( new WRONG_MODIFICATION_PATTERN( msg, stack ) );
 		// throw new WRONG_MODIFICATION_PATTERN(msg, self.stack);
+	}
+
+	if (isSubType && strictChain) {
+		
+		if (self.inheritedInstance instanceof Error && !blockErrors) {
+			return;
+		}
+
+		const parent = self.inheritedInstance.parent();
+		const parentName = parent.constructor.name;
+		const parentTypeName = self.type.parentType.TypeName;
+		if (parentName !== parentTypeName) {
+			const msg = `should inherit from ${parentTypeName} but made on ${parentName}`;
+			self.throwModificationError( new WRONG_MODIFICATION_PATTERN( msg, stack ) );
+		}
+
 	}
 
 	_setSelf(self.inheritedInstance);
@@ -162,8 +183,6 @@ const addThen = function ( this: any, then: ThenSpec ) {
 
 };
 
-
-  
 const makeAwaiter = function ( this: any, type: any, then?: ThenSpec ) {
 
 	 
@@ -296,11 +315,13 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 
 		if ( existentInstance instanceof Error ) {
 
-			self.ModificatorType = makeFakeModificatorType( TypeName );
+			self.ModificatorType = makeErrorModificatorType( TypeName );
 
 			self.InstanceModificator = makeInstanceModificator( self );
 
-			throw new self.InstanceModificator( ...args );
+			const blockErrorsErrorInstance = new self.InstanceModificator( ...args );
+
+			throw blockErrorsErrorInstance;
 
 		}
 	}

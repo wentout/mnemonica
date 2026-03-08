@@ -6,7 +6,7 @@ debugger;
 // function defined  <T> (cstr: IDEF<T>, s: ClassDecoratorContext<typeof cstr>) {
 function defined <T extends { new (): unknown }> (cstr: T, s: ClassDecoratorContext<T>) {
 	debugger;
-	const TypeDef = define(s.name, cstr);
+	const TypeDef = define(s.name as unknown as string, cstr);
 	Object.setPrototypeOf(cstr.prototype, new TypeDef);
 }
 

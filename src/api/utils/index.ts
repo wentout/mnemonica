@@ -220,21 +220,22 @@ const isClass = (fn: CallableFunction) => {
 	*/
 };
 
-const makeFakeModificatorType = (
+const makeErrorModificatorType = (
 	TypeName: string,
-	fakeModificator = function () { }
+	ErrorModificator = function () { }
 ) => {
 
 	const modificatorBody = compileNewModificatorFunctionBody(TypeName);
 
 	// CreationHandler is now defined locally in api/types/index.ts
 	const modificatorType: any = modificatorBody(
-		fakeModificator,
+		ErrorModificator,
 		CreationHandler,
 		SymbolConstructorName
 	);
 
-	return modificatorType();
+	const result = modificatorType();
+	return result;
 
 };
 
@@ -279,7 +280,7 @@ const TypesUtils = {
 	getExistentAsyncStack,
 	checkTypeName,
 	findSubTypeFromParent,
-	makeFakeModificatorType,
+	makeErrorModificatorType,
 	reflectPrimitiveWrappers,
 };
 

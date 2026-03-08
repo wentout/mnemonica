@@ -837,8 +837,11 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 		});
 
 		describe('check uncained construction', () => {
-			it('check instance creation without chain', () => {
-				expect(unchainedUserWithoutPassword).toBeInstanceOf(UserWithoutPassword);
+			it('check instance creation without chain should throw with strictChain', () => {
+				// With strictChain enabled, unchained construction should throw
+				expect(() => {
+					const testInstance = new UserWithoutPassword();
+				}).toThrow('wrong modification pattern : should inherit from UserTypeConstructor');
 			});
 		});
 
