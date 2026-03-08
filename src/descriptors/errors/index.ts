@@ -15,7 +15,7 @@ export const ErrorsTypes: { [ index: string ]: MnemonicaErrorConstructor } = {
 
 Object.entries( ErrorMessages ).forEach( entry => {
 	const [ ErrorConstructorName, message ] = entry;
-	// eslint-disable-next-line no-shadow
+	 
 	const ErrorCtor = constructError( ErrorConstructorName, message );
 	ErrorsTypes[ ErrorConstructorName ] = ErrorCtor as MnemonicaErrorConstructor;
 } );

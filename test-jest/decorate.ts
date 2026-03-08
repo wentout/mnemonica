@@ -66,10 +66,24 @@ const MyOtherFn = (MyOtherDecoratedClass as unknown as TypeWithDefine).define('M
 
 const myOtherInstance = apply(myOtherDecoratedInstance, MyOtherFn);
 
+// Test case for coverage: manually call decorator with explicit config
+// This covers the branch: const finalOpts = extraConfig ?? opts;
+const decoratorWithConfig = decorate(MyDecoratedClass, { blockErrors: true });
+// Call decorator with explicit undefined to test ?? operator
+const MyDecoratedSubWithUndefinedConfig = decoratorWithConfig(class MyDecoratedSubWithUndefinedConfig {
+	sub_field: number;
+	constructor() {
+		this.sub_field = 999;
+	}
+}, undefined); // Explicitly pass undefined to test ?? operator
+
+const myDecoratedSubWithUndefinedConfigInstance = apply(myDecoratedInstance, MyDecoratedSubWithUndefinedConfig);
+
 export {
 	myDecoratedInstance,
 	myDecoratedInstance2,
 	myDecoratedSubInstance,
 	myDecoratedSubSubInstance,
-	myOtherInstance
+	myOtherInstance,
+	myDecoratedSubWithUndefinedConfigInstance
 };

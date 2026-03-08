@@ -18,7 +18,7 @@ import { cleanupStack, getStack } from './';
 
 import TypesUtils from '../utils';
 const {
-	makeFakeModificatorType
+	makeErrorModificatorType
 } = TypesUtils;
 
 import { utils } from '../../utils';
@@ -45,7 +45,7 @@ type InstanceCreatorContext = {
 export const throwModificationError = function ( this: InstanceCreatorContext, error: MnemonicaError ) {
 
 	// InstanceCreator
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 
 	const {
@@ -94,7 +94,7 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 		enumerable : true
 	} );
 
-	self.ModificatorType = makeFakeModificatorType( TypeName );
+	self.ModificatorType = makeErrorModificatorType( TypeName );
 
 	self.InstanceModificator = makeInstanceModificator( self as unknown as Record<string, unknown> ) as InstanceCreatorContext['InstanceModificator'];
 

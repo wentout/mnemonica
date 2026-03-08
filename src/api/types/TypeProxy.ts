@@ -114,9 +114,8 @@ const subTypeApply = (
 	const decorator = function <T extends { new (): unknown }>(cstr: T): T {
 		// const name = typeof s === 'object' ? s.name : cstr.constructor.name;
 		const { name } = cstr;
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
-		return parentType.define(name, cstr, cfg, ...fnArgs) as unknown as T;
+		 
+		return parentType.define(name, cstr as unknown as CallableFunction, cfg, ...fnArgs) as unknown as T;
 	};
 	return decorator;
 };
@@ -175,10 +174,14 @@ TypeProxy.prototype.construct = function (_target: unknown, args: unknown[]) {
 	// then we should rely on that somehow
 	const uranus = type.isSubType ? getDefaultPrototype() : Uranus;
 
+	// Get exposeInstanceMethods from type config, defaulting to false
+	const config = type.config as { exposeInstanceMethods?: boolean } | undefined;
+	const exposeInstanceMethods = config!.exposeInstanceMethods as unknown as boolean;
+
 	// "this" argument may be passed for tracking why something happened
 	// but uncomment it there in createMnemosyne if needed
 	// const mnemosyneProxy = createMnemosyne(uranus, this);
-	const mnemosyneProxy = createMnemosyne(uranus);
+	const mnemosyneProxy = createMnemosyne(uranus, exposeInstanceMethods);
 	const instance = new InstanceCreator(type, mnemosyneProxy, args);
 
 	// const instance = new InstanceCreator(type, null, args);

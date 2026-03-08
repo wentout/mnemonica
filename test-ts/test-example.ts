@@ -11,7 +11,6 @@ const FirstTypeO = define( 'SomeType', function (this: {
 }) {
 	this.first = 'FirstType';
 }, {
-	// kimi:, please it fails here, sayin there is no that option, though houd be working
 	exposeInstanceMethods: false
 });
 

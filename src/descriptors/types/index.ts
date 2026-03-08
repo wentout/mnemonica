@@ -1,7 +1,9 @@
 'use strict';
 
-import {
-	ConstructorFunction
+import type {
+	ConstructorFunction,
+	CreateTypesCollectionFunction,
+	TypesCollection
 } from '../../types';
 
 import { constants } from '../../constants';
@@ -31,7 +33,7 @@ const typesCollections = new Map();
 
 const TypesCollection = function ( _config: Record<string, unknown> ) {
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 
 	const subtypes = new Map();
@@ -133,7 +135,7 @@ odp( TypesCollection.prototype, 'lookup', {
 
 odp( TypesCollection.prototype, 'registerHook', {
 	get () {
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		 
 		const self = this;
 		return function ( this: unknown, hookName: string, hookCallback: CallableFunction ) {
 			// return proto.registerHook.call( typesCollections.get( self ), hookName, hookCallback );
@@ -146,7 +148,7 @@ odp( TypesCollection.prototype, 'registerHook', {
 odp( TypesCollection.prototype, 'invokeHook', {
 	get () {
 		return function ( this: unknown, hookName: string, hookCallback: CallableFunction ) {
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			 
 			const self = this;
 			// return proto.invokeHook.call( typesCollections.get( self ), hookName, hookCallback );
 			return invokeHook.call( typesCollections.get( self ), hookName, hookCallback );
@@ -157,7 +159,7 @@ odp( TypesCollection.prototype, 'invokeHook', {
 odp( TypesCollection.prototype, 'registerFlowChecker', {
 	get () {
 		return function ( this: unknown, flowCheckerCallback: () => unknown ) {
-			// eslint-disable-next-line @typescript-eslint/no-this-alias
+			 
 			const self = this;
 			return registerFlowChecker.call( typesCollections.get( self ), flowCheckerCallback );
 		}.bind( this );
@@ -192,7 +194,7 @@ const typesCollectionProxyHandler = {
 	}
 };
 
-const createTypesCollection = ( config = {} ) => {
+const createTypesCollection = ( config: Record<string, unknown> = {} ) => {
 
 	const typesCollection = new TypesCollection( config );
 	const typesCollectionProxy = new Proxy( typesCollection, typesCollectionProxyHandler );
@@ -211,13 +213,13 @@ odp( DEFAULT_TYPES, SymbolDefaultTypesCollection, {
 } );
 
 export const types = {
-	get createTypesCollection () {
-		return function ( config = {} ) {
-			return createTypesCollection( config );
+	get createTypesCollection (): CreateTypesCollectionFunction {
+		return function ( config: Record<string, unknown> = {} ): TypesCollection {
+			return createTypesCollection( config ) as TypesCollection;
 		};
 	},
-	get defaultTypes () {
-		return DEFAULT_TYPES;
+	get defaultTypes (): TypesCollection {
+		return DEFAULT_TYPES as TypesCollection;
 	}
 
 };

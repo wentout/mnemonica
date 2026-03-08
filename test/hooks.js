@@ -20,15 +20,15 @@ const tests = ( opts ) => {
 	describe( 'Hooks Tests', () => {
 		it( 'check invocations count', () => {
 			assert.equal( 8, userTypeHooksInvocations.length );
-			// +2
-			assert.equal( 175, typesFlowCheckerInvocations.length );
+			// +2 (increased due to strictChain check adding extra flow checks)
+			assert.equal( 188, typesFlowCheckerInvocations.length );
 			// +1
-			assert.equal( 94, typesPreCreationInvocations.length );
+			assert.equal( 102, typesPreCreationInvocations.length );
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
 			// +1
-			assert.equal( 162, typesPostCreationInvocations.length );
+			assert.equal( 172, typesPostCreationInvocations.length );
 		} );
 	} );
 

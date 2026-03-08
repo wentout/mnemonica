@@ -6,6 +6,25 @@ This file provides guidance to agents when working with code in this repository.
 
 **mnemonica** is an instance inheritance system for JavaScript/TypeScript that enables prototype chain-based type definitions. It allows creating types using `define()` and building inheritance hierarchies through prototype chains.
 
+### Vision & Philosophy
+
+Mnemonica solves the fundamental problem that JavaScript prototype inheritance is a Trie data structure, but developers don't realize this. Common mistakes include:
+- Using assignment instead of `Object.setPrototypeOf` (breaks `instanceof`)
+- Reusing constructors directly (corrupts existing instances' prototype chains)
+- Not understanding the Factory pattern requirement
+
+**Mnemonica forces explicit declaration of inheritance graphs**, eliminating these bugs by design. The ultimate goal is to **reduce the cost of software development and support** by making certain classes of bugs impossible.
+
+### AI Integration Vision
+
+Mnemonica enables AI agents to:
+1. **Structure thinking** through explicit constructor chains
+2. **Self-extend** by defining new features via `define()` calls
+3. **Analyze behavior** through stored invocation arguments (accessible via `getProps()`)
+4. **Become more capable** by understanding the inheritance graph
+
+The stored arguments in the prototype chain allow AI to introspect and learn from its own execution history.
+
 ## Build/Test Commands
 
 All commands run from the `core/` directory:
@@ -14,10 +33,10 @@ All commands run from the `core/` directory:
 # Full build with linting
 npm run build
 
-# Run all tests with coverage (requires build first)
+# Run Mocha tests with coverage (runs npm run build:all internally)
 npm run test:cov
 
-# Run Jest tests only
+# Run Jest tests with coverage
 npm run test:jest:cov
 
 # Watch mode for development
@@ -25,8 +44,10 @@ npm run watch
 ```
 
 **Critical**: The project uses TWO test frameworks:
-- **Mocha** (`npm run test:cov`): Runs on transpiled code in `build/`, requires `npm run build:all` first
+- **Mocha** (`npm run test:cov`): Runs on transpiled code in `build/`, runs `npm run build:all` internally
 - **Jest** (`npm run test:jest:cov`): Runs TypeScript directly from `src/`, faster for development
+
+**Important**: `npm run test:cov` runs `npm run build:all` internally, so it is not necessary to run `npm run build` before `npm run test:cov`.
 
 ## Code Style (Project-Specific)
 
@@ -98,12 +119,28 @@ Instances have non-enumerable internal properties accessed via `getProps()`:
 - `__args__` - Constructor arguments
 - `__collection__` - Types collection reference
 
+## Build Requirements
+
+### No Warnings Policy
+The build **must have zero warnings**. Running `npm run build` should produce **no ESLint warnings** in the `./src` directory. If there are warnings:
+1. Fix the source code causing the warning
+2. Do not modify `./tsconfig.json` or `./eslint.config.js` to suppress warnings
+
+### Configuration Files
+**Disallowed without explicit approval:**
+- Modifying `./tsconfig.json`
+- Modifying `./eslint.config.js`
+
+These configuration files define the project's strict standards. Any changes require user approval first.
+
 ## Testing Requirements
 
-- **100% coverage required** for Jest (see `jest.config.js`)
+- **100% coverage required** for Jest (statements, branches, functions, lines) - see `jest.config.js`
+- **100% coverage required** for Mocha (`npm run test:cov`)
 - Mocha tests run on built code in `build/` directory
 - Jest tests run directly on TypeScript source
 - Tests must pass with `--allow-uncaught` flag (mocha)
+- **Must run `npm run test:cov` before completing task** - this validates the build and ensures 100% coverage
 
 ## Common Patterns
 

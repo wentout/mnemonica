@@ -17,7 +17,7 @@ export const invokeHook = function ( this: any, hookType: string, opts: { [ inde
 
 	const invocationResults = new Set();
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const self = this;
 
 	if ( hop( self.hooks, hookType ) ) {

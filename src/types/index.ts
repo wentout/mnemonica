@@ -1,6 +1,9 @@
 'use strict';
 /* eslint no-unused-vars: "off" */
 
+// Props type for getProps/setProps
+export type PropsType = Record<string, unknown>;
+
 // Core type definitions for mnemonica
 
 // Base constructor function type - can be a class constructor or a function
@@ -255,14 +258,20 @@ export interface TypeAbsorber {
 }
 
 // TypesCollection interface for createTypesCollection
+// This represents the actual return type of createTypesCollection
 export interface TypesCollection {
 	define: TypeAbsorber;
 	lookup: TypeLookup;
+	registerHook(hookType: hooksTypes, cb: hook): void;
+	invokeHook(hookType: hooksTypes, opts: hooksOpts): void;
+	registerFlowChecker(cb: () => unknown): void;
 	subtypes: SubtypesMap;
+	hooks: Record<string, hook[]>;
+	[key: string]: unknown;
 }
 
 // createTypesCollection function type
-export type CreateTypesCollectionFunction = (config?: Record<string, unknown>) => TypesCollection;
+export type CreateTypesCollectionFunction = (config?: constructorOptions) => TypesCollection;
 
 // Definitor interface for nested types - callable constructor with define method
 export interface IDefinitor<P extends object, SubTypeName extends string> {
@@ -343,3 +352,71 @@ export type BindFunction = <E extends object, T extends object, S extends Proto<
 	entity: E,
 	Ctor: IDEF<T>
 ) => (...args: unknown[]) => S;
+
+// Utils object type
+export interface UtilsCollection {
+	extract: (instance: object) => Record<string, unknown>;
+	pick: (instance: object, ...args: (string | string[])[]) => Record<string, unknown>;
+	collectConstructors: (instance: object, flat?: boolean) => (CallableFunction | string)[];
+	merge: (...args: unknown[]) => unknown;
+	parse: (value: unknown) => object | undefined;
+	parent: (instance: object, strict?: boolean) => object | undefined;
+	toJSON: (instance: object) => string;
+	[key: string]: CallableFunction;
+}
+
+// Main mnemonica module interface - represents the exported module object
+export interface MnemonicaModule {
+	// Core functions
+	define: TypeAbsorber;
+	lookup: (TypeNestedPath: string) => TypeClass | undefined;
+	apply: ApplyFunction;
+	call: CallFunction;
+	bind: BindFunction;
+	decorate: <U extends Constructor<object>>(target?: object, config?: object) => DecoratedClass<U>;
+	registerHook: <T extends object>(Ctor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
+
+	// Descriptors
+	defaultTypes: TypesCollection;
+
+	// Errors
+	BASE_MNEMONICA_ERROR: MnemonicaErrorConstructor;
+	WRONG_TYPE_DEFINITION: MnemonicaErrorConstructor;
+	WRONG_INSTANCE_INVOCATION: MnemonicaErrorConstructor;
+	WRONG_MODIFICATION_PATTERN: MnemonicaErrorConstructor;
+	ALREADY_DECLARED: MnemonicaErrorConstructor;
+	WRONG_ARGUMENTS_USED: MnemonicaErrorConstructor;
+	WRONG_HOOK_TYPE: MnemonicaErrorConstructor;
+	MISSING_CALLBACK_ARGUMENT: MnemonicaErrorConstructor;
+	FLOW_CHECKER_REDEFINITION: MnemonicaErrorConstructor;
+	MISSING_HOOK_CALLBACK: MnemonicaErrorConstructor;
+	TYPENAME_MUST_BE_A_STRING: MnemonicaErrorConstructor;
+	HANDLER_MUST_BE_A_FUNCTION: MnemonicaErrorConstructor;
+	OPTIONS_ERROR: MnemonicaErrorConstructor;
+	WRONG_STACK_CLEANER: MnemonicaErrorConstructor;
+
+	// Constants
+	MNEMONICA: string;
+	MNEMOSYNE: string;
+	URANUS: string;
+	SymbolParentType: symbol;
+	SymbolConstructorName: symbol;
+	SymbolDefaultTypesCollection: symbol;
+	SymbolConfig: symbol;
+	SymbolGaia: symbol;
+	TYPE_TITLE_PREFIX: string;
+	ErrorMessages: ErrorMessages;
+
+	// Utils
+	utils: UtilsCollection;
+	getProps: (instance: object) => PropsType | undefined;
+	setProps: (instance: object, values: object) => string[] | false;
+	findSubTypeFromParent: (instance: object | undefined, subType: string) => object | null;
+	isClass: (fn: CallableFunction) => boolean;
+
+	// createTypesCollection
+	createTypesCollection: CreateTypesCollectionFunction;
+
+	// Allow additional properties
+	[key: string]: unknown;
+}

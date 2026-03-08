@@ -21,4 +21,6 @@ module.exports = {
 			lines      : 100,
 		},
 	},
+	// collectCoverage: true,
+	// coverageReporters: ['lcov', 'text', 'html'],
 };

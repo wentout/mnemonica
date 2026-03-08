@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment, space-before-function-paren */
+/* eslint-disable space-before-function-paren */
 'use strict';
 
 import type {
@@ -13,7 +13,8 @@ import type {
 	Constructor,
 	DecoratedClass,
 	TypeClass,
-	TypeAbsorber
+	TypeAbsorber,
+	MnemonicaModule
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -154,8 +155,7 @@ export const decorate = function <
 };
 
 
-export const registerHook = function <T extends object>(Ctor: IDEF<T>, hookType: hooksTypes, cb: hook): void {
-	// @ts-ignore
+export const registerHook = function <T extends Constructor<T>>(Ctor: DecoratedClass<T>, hookType: hooksTypes, cb: hook): void {
 	Ctor.registerHook(hookType, cb);
 };
 
@@ -183,7 +183,7 @@ export const mnemonica = Object.entries({
 		enumerable : true
 	});
 	return acc;
-}, {});
+}, {}) as MnemonicaModule;
 
 import * as api from './api';
 
@@ -206,10 +206,7 @@ export const {
 } = mnemonica;
 
 // Export createTypesCollection with proper type
- 
-const typedCreateTypesCollection: CreateTypesCollectionFunction = mnemonica.createTypesCollection as CreateTypesCollectionFunction;
- 
-export const createTypesCollection: CreateTypesCollectionFunction = typedCreateTypesCollection;
+export const createTypesCollection: CreateTypesCollectionFunction = mnemonica.createTypesCollection as CreateTypesCollectionFunction;
 
 
 export const defaultCollection = (defaultTypes as { subtypes: Map<string, object> }).subtypes;
@@ -217,4 +214,4 @@ export const errors = descriptors.ErrorsTypes;
 
 export { utils } from './utils';
 export { defineStackCleaner } from './utils';
-/* eslint-enable @typescript-eslint/ban-ts-comment, space-before-function-paren */
+/* eslint-enable space-before-function-paren */

@@ -19,7 +19,7 @@ const {
 import TypesUtils from '../utils';
 
 const {
-	makeFakeModificatorType
+	makeErrorModificatorType
 } = TypesUtils;
 
 import { makeInstanceModificator } from '../types/InstanceModificator';
@@ -90,7 +90,7 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 	};
 
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const exception = this;
 
 	odp( exception, 'args', {
@@ -136,9 +136,8 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 
 	getStack.call( exception, title, [], prepareException );
 
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore
-	stack.push( ...exception.stack );
+	 
+	stack.push( ...(exception.stack as unknown as string[]) );
 
 	stack.push( '<-- with the following error -->' );
 
@@ -166,7 +165,7 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 
 const prepareException = function ( this: object, target: unknown, error: Error, ...args: unknown[] ) {
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const instance = this;
 
 	checkThrowArgs( instance, target, error, args );
@@ -198,7 +197,7 @@ const prepareException = function ( this: object, target: unknown, error: Error,
 
 	ExceptionCreator.existentInstance = error;
 	 
-	ExceptionCreator.ModificatorType = makeFakeModificatorType( TypeName, function (this: Error) {
+	ExceptionCreator.ModificatorType = makeErrorModificatorType( TypeName, function (this: Error) {
 		return exceptionConsctructHandler.call( this, {
 			instance,
 			TypeName,

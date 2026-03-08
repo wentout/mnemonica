@@ -79,6 +79,12 @@ const defaultOptions = {
 		return true;
 	},
 
+	// expose instance methods (extract, pick, parent, clone, fork, exception, sibling)
+	// on the instance itself. When true (default for backward compatibility), methods are available directly
+	get exposeInstanceMethods () {
+		return true;
+	},
+
 } as Record<string, unknown>;
 
 export const constants = {

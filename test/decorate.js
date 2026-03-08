@@ -39,7 +39,7 @@ var __setFunctionName = (this && this.__setFunctionName) || function (f, name, p
     return Object.defineProperty(f, "name", { configurable: true, value: prefix ? "".concat(prefix, " ", name) : name });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.midAddDecoratorSubExt = exports.midAddDecoratorBaseExt = exports.midDecoratorExt = exports.midDecoratorBase = exports.exSupTest = exports.exTest = exports.myOtherInstance = exports.myDecoratedSubSubInstance = exports.myDecoratedSubInstance = exports.myDecoratedInstance2 = exports.myDecoratedInstance = void 0;
+exports.manualDecoratedInstance = exports.midAddDecoratorSubExt = exports.midAddDecoratorBaseExt = exports.midDecoratorExt = exports.midDecoratorBase = exports.exSupTest = exports.exTest = exports.myOtherInstance = exports.myDecoratedSubSubInstance = exports.myDecoratedSubInstance = exports.myDecoratedInstanceSecondary = exports.myDecoratedInstance = void 0;
 // fails on loading sourcemap ↓↓↓
 // npx tsc --target es6 --moduleResolution NodeNext --module NodeNext --sourceMap --inlineSources ./test/decorate.ts
 // works ↓↓↓
@@ -62,7 +62,7 @@ class Some extends Base {
 Object.setPrototypeOf(Base.prototype, new typeomatica_1.BaseClass(deep));
 const some = new Some;
 console.log(some);
-// @ts-ignore
+// @ts-expect-error - 'deep' property is added by typeomatica's BaseClass but not in TypeScript types
 console.log('some.deep', some.deep);
 let SBase = (() => {
     let _classDecorators = [(0, typeomatica_1.Strict)(deep)];
@@ -92,17 +92,15 @@ class SomeS extends SBase {
 }
 const somes = new SomeS;
 console.log(somes);
-// @ts-ignore
+// @ts-expect-error - 'deep' property is added by typeomatica's BaseClass but not in TypeScript types
 console.log('somes.deep', somes.deep);
 // debugger;
-// @ts-ignore
 class BaseE extends typeomatica_1.BaseClass {
     constructor() {
         super(...arguments);
         this.base_field = 555;
     }
 }
-// @ts-ignore
 class SomeE extends BaseE {
     constructor() {
         super(...arguments);
@@ -160,7 +158,7 @@ let MyDecoratedSubClass = (() => {
 })();
 // debugger;
 exports.myDecoratedInstance = new MyDecoratedClass;
-exports.myDecoratedInstance2 = new MyDecoratedClass;
+exports.myDecoratedInstanceSecondary = new MyDecoratedClass;
 exports.myDecoratedSubInstance = (0, __1.apply)(exports.myDecoratedInstance, MyDecoratedSubClass);
 // debugger;
 const MyFn = function () {
@@ -220,8 +218,7 @@ let MyOtherDecoratedClass = (() => {
 // debugger;
 const myOtherDecoratedInstance = new MyOtherDecoratedClass();
 // debugger;
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+// @ts-expect-error - define() returns TypeClass but TypeScript infers different type
 const MyOtherFn = MyOtherDecoratedClass.define('MyOtherFn', function () {
     this.prop = 321;
 });
@@ -305,11 +302,13 @@ let MidDecoratorBase = (() => {
     })();
     return MidDecoratorBase = _classThis;
 })();
-debugger;
+;
+// debugger;
 // Note: TypeScript's decorator type checking has limitations with callable class types.
-// The @ts-ignore is needed because TypeScript doesn't recognize DecoratedClass as callable
-// even though the type definition correctly includes the call signature.
-// @ts-ignore
+// The @ts-expect-error is needed because TypeScript doesn't recognize DecoratedClass as callable
+// even though the type definition correctly includes the call signature. This is a known
+// TypeScript limitation with expressing both constructable and callable signatures on classes.
+// @ts-expect-error - TypeScript limitation: class types with call signatures aren't recognized as callable in decorator context
 let MidDecoratorExt = (() => {
     let _classDecorators = [MidDecoratorBase()];
     let _classDescriptor;
@@ -332,7 +331,7 @@ let MidDecoratorExt = (() => {
     })();
     return MidDecoratorExt = _classThis;
 })();
-// @ts-ignore
+// @ts-expect-error - TypeScript limitation: class types with call signatures aren't recognized as callable in decorator context
 let MidAddDecoratorAddExt = (() => {
     let _classDecorators = [MidDecoratorBase()];
     let _classDescriptor;
@@ -355,8 +354,7 @@ let MidAddDecoratorAddExt = (() => {
     })();
     return MidAddDecoratorAddExt = _classThis;
 })();
-// debugger;
-// @ts-ignore
+// @ts-expect-error - TypeScript limitation: class types with call signatures aren't recognized as callable in decorator context
 let MidAddDecoratorAddExtSub = (() => {
     let _classDecorators = [MidAddDecoratorAddExt({ test: true })];
     let _classDescriptor;
@@ -365,6 +363,7 @@ let MidAddDecoratorAddExtSub = (() => {
     var MidAddDecoratorAddExtSub = _classThis = class {
         constructor() {
             this.field = 111;
+            this.ext = 321;
             console.log('im here: ', this.field);
         }
     };
@@ -385,6 +384,7 @@ exports.midDecoratorExt = (0, __1.apply)(exports.midDecoratorBase, MidDecoratorE
 // debugger;
 exports.midAddDecoratorBaseExt = (0, __1.apply)(exports.midDecoratorBase, MidAddDecoratorAddExt);
 try {
+    console.log('\n\nthis error ↓↓↓ must happen\n');
     (0, __1.apply)(exports.midDecoratorBase, MidAddDecoratorAddExtSub);
 }
 catch (error) {
@@ -396,8 +396,19 @@ catch (error) {
     // and this is not what happens
     // debugger;
     console.error(error);
+    console.log('\nthis error ↑↑↑ must been happened\n\n-------\n\n\n');
 }
 // debugger;
 exports.midAddDecoratorSubExt = (0, __1.apply)(exports.midAddDecoratorBaseExt, MidAddDecoratorAddExtSub);
+// debugger;
+// Coverage test: manually call decorator with explicit undefined to test ?? operator
+const decoratorWithConfig = (0, __1.decorate)(MidDecoratorBase, { blockErrors: true });
+// Cast to any to bypass type mismatch between definition (ClassDecoratorContext) and implementation (constructorOptions)
+const ManualDecoratedClass = decoratorWithConfig(function ManualDecoratedClass() {
+    this.manual_field = 777;
+}, 
+// Explicitly pass undefined to test ?? operator
+undefined);
+exports.manualDecoratedInstance = (0, __1.apply)(exports.midDecoratorBase, ManualDecoratedClass);
 // debugger;
 //# sourceMappingURL=decorate.js.map

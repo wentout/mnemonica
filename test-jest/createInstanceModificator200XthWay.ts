@@ -27,19 +27,16 @@ module.exports = function (): (
 		addProps: AddPropsFunction
 	): unknown {
 
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const existentInstance = this;
 
 		try {
 			const TripleSchemeClosure = function (this: unknown): unknown {
 
-				// eslint-disable-next-line @typescript-eslint/no-this-alias
 				const Mnemosyne = this;
 				addProps(Mnemosyne);
 
 				const Inherico = function (this: unknown): ModificatorType {
 
-					// eslint-disable-next-line @typescript-eslint/no-this-alias
 					const moreInherited = this;
 
 					ModificatorType.prototype = moreInherited as object;

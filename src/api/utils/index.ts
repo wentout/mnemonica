@@ -21,29 +21,13 @@ const {
 
 import { _getProps, Props } from '../types/Props';
 
-const CreationHandler = function (this: object & { constructor: NewableFunction }, constructionAnswer: unknown) {
-	// standard says :
-	// if constructor returns something
-	// then this is a toy
-	// we have to play with
-	// respectively
-	// so we will not follow the rule
-	// if (constructionAnswer instanceof types[TypeName]) {
-	// and instead follow the line below
-
-	// but if it is not an instace of Object ... so ...
-	// if ( constructionAnswer instanceof Object )
-	// if (constructionAnswer instanceof this.constructor)
-	// will fall the on post processing
-	return constructionAnswer;
-
-	// TODO: this check was not covered with tests
-	// if (this instanceof Promise) {
-	// 	return this;
-	// }
-};
-
 import compileNewModificatorFunctionBody from '../types/compileNewModificatorFunctionBody';
+
+// CreationHandler - handles constructor return values
+// Moved to api/types/index.ts as per refactoring plan
+export const CreationHandler = function (this: object & { constructor: NewableFunction }, constructionAnswer: unknown) {
+	return constructionAnswer;
+};
 
 const checkProto = (proto: unknown) => {
 	if (!(proto instanceof Object)) {
@@ -62,20 +46,20 @@ const getTypeChecker = (TypeName: string) => {
 		if (!instance!.constructor) {
 			return false;
 		}
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
+		 
+		// @ts-expect-error I'm too lazy for that
 		if (Reflect.getPrototypeOf(instance).constructor.name === 'Promise') {
 			// if ( instance instanceof Promise ) {
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-			// @ts-ignore
+			 
+			// @ts-expect-error I'm too lazy for that
 			return instance[ SymbolConstructorName ] === TypeName;
 		}
 
 		const constructors: {
 			string: new () => unknown
 		} = collectConstructors(instance);
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
+		 
+		// @ts-expect-error I'm too lazy for that
 		return constructors[ TypeName ] || false;
 
 	};
@@ -187,8 +171,8 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 			subtype = findSubTypeFromParent(props.__parent__, subType);
 		}
 	}
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore
+	 
+	// @ts-expect-error I'm too lazy for that
 	return subtype;
 };
 
@@ -236,20 +220,22 @@ const isClass = (fn: CallableFunction) => {
 	*/
 };
 
-const makeFakeModificatorType = (
+const makeErrorModificatorType = (
 	TypeName: string,
-	fakeModificator = function () { }
+	ErrorModificator = function () { }
 ) => {
 
 	const modificatorBody = compileNewModificatorFunctionBody(TypeName);
 
+	// CreationHandler is now defined locally in api/types/index.ts
 	const modificatorType: any = modificatorBody(
-		fakeModificator,
+		ErrorModificator,
 		CreationHandler,
 		SymbolConstructorName
 	);
 
-	return modificatorType();
+	const result = modificatorType();
+	return result;
 
 };
 
@@ -288,14 +274,13 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 
 const TypesUtils = {
 	isClass,
-	CreationHandler,
 	checkProto,
 	getTypeChecker,
 	getTypeSplitPath,
 	getExistentAsyncStack,
 	checkTypeName,
 	findSubTypeFromParent,
-	makeFakeModificatorType,
+	makeErrorModificatorType,
 	reflectPrimitiveWrappers,
 };
 

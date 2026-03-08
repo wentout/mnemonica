@@ -87,8 +87,8 @@ const MnemonicaProtoProps = {
 
 
 			if (this === __self__) {
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-				// @ts-expect-error 
+				 
+				// @ts-expect-error  this is definitely a constructor
 				forked = new (Constructor[ TypeName ])(...args);
 			} else {
 				// fork.call ? let's do it !
@@ -105,7 +105,7 @@ const MnemonicaProtoProps = {
 	},
 
 	exception () {
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		 
 		const self = this;
 		return function (error: Error, ...args: unknown[]) {
 			const target = new.target;
@@ -263,9 +263,9 @@ const mnemosyneProxyHandlerGet = (target: object, prop: string, receiver: unknow
 	return subtype || result;
 };
 
-const Mnemosyne = function (mnemonica: object) {
+const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMethods: boolean) {
 
-	// eslint-disable-next-line @typescript-eslint/no-this-alias
+	 
 	const instance = this;
 
 	const Mnemonica = function (this: object) {
@@ -281,26 +281,27 @@ const Mnemosyne = function (mnemonica: object) {
 	// while this just returns false, silently ... unfortunately
 	// Reflect.setPrototypeOf(Mnemonica.prototype, mnemonica);
 
-	Object.entries(MnemonicaProtoProps).forEach(([ name, method ]: [string, unknown]) => {
-		odp(Mnemonica.prototype, name, {
-			get () {
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-				// @ts-ignore
-				return (method as CallableFunction).call(this);
-			}
+	// Only add MnemonicaProtoProps methods if exposeInstanceMethods is true
+	if (exposeInstanceMethods) {
+		Object.entries(MnemonicaProtoProps).forEach(([ name, method ]: [string, unknown]) => {
+			odp(Mnemonica.prototype, name, {
+				get () {
+					 
+					// @ts-expect-error there is a proxy and next line is callable
+					return (method as CallableFunction).call(this);
+				}
+			});
 		});
-	});
 
-	Object.getOwnPropertySymbols(MnemonicaProtoProps).forEach((symbol: symbol) => {
-		odp(Mnemonica.prototype, symbol, {
-			get () {
-				const symbolMethod = Reflect.get(MnemonicaProtoProps, symbol);
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-				// @ts-ignore
-				return symbolMethod.call(this);
-			}
+		Object.getOwnPropertySymbols(MnemonicaProtoProps).forEach((symbol: symbol) => {
+			odp(Mnemonica.prototype, symbol, {
+				get () {
+					const symbolMethod = Reflect.get(MnemonicaProtoProps, symbol);
+					return symbolMethod.call(this);
+				}
+			});
 		});
-	});
+	}
 
 	// instance of self Constructor type
 	odp(Mnemonica.prototype, Symbol.hasInstance, {
@@ -314,9 +315,9 @@ const Mnemosyne = function (mnemonica: object) {
 
 	// InstanceRoots.set(instance, proto);
 
-} as ConstructorFunction<typeof MnemonicaProtoProps>;
+} as ConstructorFunction<object>;
 
-const createMnemosyne = function (Uranus: unknown) {
+const createMnemosyne = function (Uranus: unknown, exposeInstanceMethods: boolean) {
 // const createMnemosyne = function (Uranus: unknown, typeProxy: unknown) {
 // 	if (typeof Uranus === 'undefined') {
 // 		const { __type__: type, Uranus: _uranus } = typeProxy;
@@ -327,7 +328,7 @@ const createMnemosyne = function (Uranus: unknown) {
 // 	}
 
 	const uranus = reflectPrimitiveWrappers(Uranus);
-	const mnemosyne = new Mnemosyne(uranus);
+	const mnemosyne = new Mnemosyne(uranus, exposeInstanceMethods);
 	const mnemosyneProxy = new Proxy(mnemosyne, {
 		get : mnemosyneProxyHandlerGet
 	});

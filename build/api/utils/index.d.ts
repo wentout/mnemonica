@@ -1,3 +1,6 @@
+export declare const CreationHandler: (this: object & {
+    constructor: NewableFunction;
+}, constructionAnswer: unknown) => unknown;
 export type asyncStack = {
     __stack__?: string;
     __type__: {
@@ -13,16 +16,13 @@ export type parentSub = {
 };
 declare const TypesUtils: {
     isClass: (fn: CallableFunction) => boolean;
-    CreationHandler: (this: object & {
-        constructor: NewableFunction;
-    }, constructionAnswer: unknown) => unknown;
     checkProto: (proto: unknown) => void;
     getTypeChecker: (TypeName: string) => unknown;
     getTypeSplitPath: (path: string) => string[];
     getExistentAsyncStack: (existentInstance: asyncStack) => unknown;
     checkTypeName: (name: string) => void;
     findSubTypeFromParent: (instance: parentSub | object | undefined, subType: string) => parentSub | null;
-    makeFakeModificatorType: (TypeName: string, fakeModificator?: () => void) => any;
+    makeErrorModificatorType: (TypeName: string, ErrorModificator?: () => void) => any;
     reflectPrimitiveWrappers: (_thisArg: unknown) => object;
 };
 export default TypesUtils;

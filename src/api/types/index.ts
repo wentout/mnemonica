@@ -42,10 +42,9 @@ import { TypeProxy } from './TypeProxy';
 
 import compileNewModificatorFunctionBody from './compileNewModificatorFunctionBody';
 
-import TypesUtils from '../utils';
+import TypesUtils, { CreationHandler } from '../utils';
 const {
 	getTypeChecker,
-	CreationHandler,
 	getTypeSplitPath,
 	checkTypeName,
 	isClass,
