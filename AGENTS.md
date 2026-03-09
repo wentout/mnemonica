@@ -91,6 +91,29 @@ The core API is `define(TypeName, constructHandler, config?)` in `src/index.ts`.
 - `.lookup()` - find types by path
 - `.registerHook()` - register lifecycle hooks
 
+### The `lookupTyped()` Function
+Type-safe variant of `lookup()` for use with tactica-generated type definitions:
+
+```typescript
+import { lookupTyped } from 'mnemonica';
+
+// Requires TypeRegistry augmentation from tactica
+const UserType = lookupTyped('UserType');
+const user = new UserType({ name: 'John' }); // Full type safety!
+```
+
+The `lookupTyped()` function uses the same implementation as `lookup()` but provides TypeScript type safety through the `TypeRegistry` interface that tactica generates.
+
+**Key differences from `lookup()`:**
+- Returns properly typed constructor when TypeRegistry is augmented
+- Falls back to `unknown` type when registry is not augmented
+- Same runtime behavior as `lookup()`
+
+**Usage pattern with tactica:**
+1. Run `npx tactica` to generate `.tactica/types.ts`
+2. Import types in your project
+3. Use `lookupTyped()` for type-safe type retrieval
+
 ### Type System Structure
 ```
 src/

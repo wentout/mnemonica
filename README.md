@@ -356,6 +356,29 @@ const SomeType = lookup('SomeType');
 const SomeNestedType = lookup('SomeType.SomeNestedType');
 ```
 
+#### `lookupTyped(typeNestedPath)`
+
+Type-safe lookup function for use with tactica-generated type definitions. Requires TypeRegistry augmentation from tactica.
+
+```typescript
+import { lookupTyped } from 'mnemonica';
+
+// Type-safe lookup - returns properly typed constructor
+const UserType = lookupTyped('UserType');
+const user = new UserType({ name: 'John' }); // Full type safety!
+
+// Works with nested types too
+const SubType = lookupTyped('Parent.SubType');
+```
+
+To enable type safety, generate types with tactica:
+
+```bash
+npx tactica
+```
+
+Then include the generated types in your project. See [Usage with @mnemonica/tactica](#usage-with-mnemonicatactica) for details.
+
 #### `apply(entity, Constructor, args?)`
 
 Applies a constructor to an entity with an array of arguments.

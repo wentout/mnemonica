@@ -10,6 +10,7 @@ const {
 	errors,
 	define,
 	lookup,
+	lookupTyped,
 	utils: {
 		extract,
 		collectConstructors,
@@ -309,6 +310,45 @@ const tests = ( opts ) => {
 				const emShort = MoreOver.lookup( 'OverMore.EvenMore' );
 				const emFull = mnemonica.lookup( 'UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore.EvenMore' );
 				assert.equal( emShort.__type__, emFull.__type__ );
+			} );
+
+		} );
+
+		describe( 'lookupTyped test', () => {
+
+			it( 'should return type when found', () => {
+				const ut = lookupTyped( 'UserType' );
+				assert.equal( ut, UserType );
+			} );
+
+			it( 'should return undefined when not found', () => {
+				const notFound = lookupTyped( 'NonExistentType' );
+				assert.equal( notFound, undefined );
+			} );
+
+			it( 'should work with nested types', () => {
+				const wp = lookupTyped( 'UserTypeConstructor.WithoutPassword' );
+				assert.equal( wp, UserWithoutPassword );
+				const om = lookupTyped( 'UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore' );
+				assert.equal( om, OverMore );
+			} );
+
+			it( 'should work with custom this context', () => {
+				const customCollection = {
+					lookup ( path ) {
+						if ( path === 'CustomType' ) {
+							return { __type__ : { TypeName : 'CustomType' } };
+						}
+						return undefined;
+					}
+				};
+				const result = lookupTyped.call( customCollection, 'CustomType' );
+				assert.equal( result.__type__.TypeName, 'CustomType' );
+			} );
+
+			it( 'should work without this context (uses defaultTypes)', () => {
+				const ut = lookupTyped( 'UserType' );
+				assert.equal( ut, UserType );
 			} );
 
 		} );
