@@ -5,6 +5,10 @@ export { getProps, setProps } from './api/types/Props';
 export declare const defaultTypes: import("./types").TypesCollection;
 export declare const define: TypeAbsorber;
 export declare const lookup: (this: unknown, TypeNestedPath: string) => TypeClass | undefined;
+export interface TypeRegistry {
+    [key: string]: new (...args: unknown[]) => unknown;
+}
+export declare const lookupTyped: <const K extends keyof TypeRegistry>(this: unknown, TypeNestedPath: K) => TypeRegistry[K] | undefined;
 export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, ...args: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>) => (...args: unknown[]) => { [key in keyof S]: S[key]; };

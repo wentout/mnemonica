@@ -62,6 +62,7 @@ const {
 	URANUS,
 	SymbolGaia,
 	lookup,
+	lookupTyped,
 	getProps,
 	apply,
 	call,
@@ -1290,6 +1291,59 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					const emShort = MoreOverTypeDef.lookup('OverMore.EvenMore');
 					const emFull = mnemonica.lookup('UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore.EvenMore');
 					expect(emShort.__type__).toEqual(emFull.__type__);
+				});
+
+			});
+
+			describe('lookupTyped tests', () => {
+
+				it('should return type when found', () => {
+					const ut = lookupTyped('UserType');
+					expect(ut).toBeDefined();
+					expect(ut?.__type__).toEqual(UserType.__type__);
+				});
+
+				it('should return undefined when not found', () => {
+					const notFound = lookupTyped('NonExistentType');
+					expect(notFound).toBeUndefined();
+				});
+
+				it('should work with nested types', () => {
+					const wp = lookupTyped('UserTypeConstructor.WithoutPassword');
+					expect(wp).toBeDefined();
+					expect(wp?.__type__).toEqual(UserWithoutPassword.__type__);
+				});
+
+				it('should work with custom this context', () => {
+					const customCollection = {
+						lookup: (path: string) => {
+							if (path === 'CustomType') {
+								return { __type__: { TypeName: 'CustomType' } };
+							}
+							return undefined;
+						}
+					};
+					const result = lookupTyped.call(customCollection, 'CustomType' as never);
+					expect(result).toBeDefined();
+					expect((result as { __type__: { TypeName: string } }).__type__.TypeName).toEqual('CustomType');
+				});
+
+				it('should work with null this context (uses defaultTypes)', () => {
+					const ut = lookupTyped.call(null as unknown, 'UserType' as never);
+					expect(ut).toBeDefined();
+					expect(ut).toBe(UserType);
+				});
+
+				it('should work with undefined this context (uses defaultTypes)', () => {
+					const ut = lookupTyped.call(undefined as unknown, 'UserType' as never);
+					expect(ut).toBeDefined();
+					expect(ut).toBe(UserType);
+				});
+
+				it('should work when this is mnemonica (checkThis branch)', () => {
+					const ut = lookupTyped.call(mnemonica, 'UserType' as never);
+					expect(ut).toBeDefined();
+					expect(ut).toBe(UserType);
 				});
 
 			});
