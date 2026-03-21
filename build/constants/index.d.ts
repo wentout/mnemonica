@@ -21,7 +21,6 @@ export declare const constants: {
         WRONG_HOOK_TYPE: string;
         MISSING_HOOK_CALLBACK: string;
         MISSING_CALLBACK_ARGUMENT: string;
-        FLOW_CHECKER_REDEFINITION: string;
         OPTIONS_ERROR: string;
         WRONG_STACK_CLEANER: string;
     };

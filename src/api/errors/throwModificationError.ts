@@ -105,15 +105,16 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 	let isMnemonicaInstance = false;
 	while ( errorProto ) {
 		const testToProto = Reflect.getPrototypeOf( errorProto );
-		// if (testToProto === null) {
-		// 	break;
-		// }
+		if (testToProto === null) {
+			break;
+		}
 		// if (testToProto === Object.prototype) {
 		// 	break;
 		// }
 		if (
-			testToProto !== null && testToProto.constructor.name === MNEMONICA &&
-			Object.hasOwnProperty.call(testToProto, 'constructor')
+			testToProto !== null &&
+			Object.hasOwnProperty.call(testToProto, 'constructor') &&
+			testToProto.constructor.name === MNEMONICA
 		) {
 			isMnemonicaInstance = true;
 			break;

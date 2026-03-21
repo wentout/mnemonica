@@ -62,6 +62,9 @@ const UserTypeProto = {
 const mc = require('./createInstanceModificator200XthWay');
 
 const UT = function (userData) {
+	if (userData === undefined) {
+		debugger;
+	}
 	const {
 		email,
 		password
@@ -72,6 +75,7 @@ const UT = function (userData) {
 };
 Object.assign(UT.prototype, UserTypeProto);
 
+debugger;
 const UserType = mnemonica.define('UserType', UT, mc);
 
 const userTypeHooksInvocations = [];
@@ -152,7 +156,6 @@ UserType.define(() => {
 
 
 const DefinedByParentConstructorPropsProxy = function (str) {
-	debugger;
 	this.str = str;
 };
 DefinedByParentConstructorPropsProxy.prototype = {
@@ -177,7 +180,7 @@ defaultTypes.registerFlowChecker((opts) => {
 });
 
 defaultTypes.registerHook('preCreation', function (opts) {
-	 
+
 	const self = this;
 	typesPreCreationInvocations.push({
 		kind : 'pre',
@@ -188,7 +191,7 @@ defaultTypes.registerHook('preCreation', function (opts) {
 });
 
 defaultTypes.registerHook('postCreation', function (opts) {
-	 
+
 	const self = this;
 	typesPostCreationInvocations.push({
 		kind  : 'post',
@@ -200,7 +203,7 @@ defaultTypes.registerHook('postCreation', function (opts) {
 });
 
 defaultTypes.registerHook('postCreation', function (opts) {
-	 
+
 	const self = this;
 	typesPostCreationInvocations.push({
 		kind  : 'post',
@@ -265,12 +268,10 @@ const OneElseCollectionType = oneElseTypesCollection.define('OneElseCollectionTy
 });
 const oneElseCollectionInstance = new OneElseCollectionType();
 
-// debugger;
 // // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // const OneHackCollectionType = oneElseTypesCollection.define( function OneHackCollectionType () {
 // 	this.self = this;
 // } );
-
 
 const user = new UserType(USER_DATA);
 const userPL1 = new user.UserTypePL1();
@@ -284,7 +285,6 @@ try {
 } catch (err) { console.error(err); }
 
 const AsyncWOReturn = define('AsyncWOReturn', async function () {
-	// debugger;
 });
 
 const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () { }, {
@@ -360,8 +360,6 @@ const ATConstructor = async function (data) {
 };
 const AsyncType = define('AsyncType', ATConstructor);
 AsyncType.prototype = AsyncTypeProto;
-
-
 
 AsyncType.registerHook('postCreation', (hookData) => {
 	bindProtoMethods(hookData);
@@ -504,6 +502,7 @@ describe('Main Test', () => {
 		this.str = str || 're-defined OverMore str';
 	};
 	Object.assign(OMConstructor.prototype, OverMoreProto);
+
 	const OverMore = WithAdditionalSignTypeDef
 		.define('MoreOver.OverMore',
 			OMConstructor, {
@@ -517,6 +516,8 @@ describe('Main Test', () => {
 	const EvenMoreTypeDef = WithAdditionalSignTypeDef.define(`
 		MoreOver . OverMore
 	`, function () {
+
+		// it would be MoreOver . OverMore . EvenMore
 		const EvenMore = function (str) {
 			this.str = str || 're-defined EvenMore str';
 		};
@@ -626,7 +627,6 @@ describe('Main Test', () => {
 	const merged = merge(user, overMore, FORK_CALL_DATA);
 
 	// TypeProxy .apply
-	debugger;
 	const userTCdirectDAG = UserTypeConstructor.call(new Boolean(5), FORK_CALL_DATA);
 	const userTCforkDAG = userTC.fork.call(new Boolean(5), FORK_CALL_DATA);
 
@@ -915,7 +915,7 @@ describe('Main Test', () => {
 				NaN,
 				+0,
 				-0,
-				 
+
 				BigInt(0),
 				Symbol('azaza'),
 				new Proxy({}, {}),
@@ -1125,8 +1125,8 @@ describe('Main Test', () => {
 
 					assert.equal(thrown.message, 'prop is missing: missingProp');
 
-					expect( thrown.originalError ).instanceOf( Error );
-					expect( thrown.originalError ).not.instanceOf( SubOfNestedAsync );
+					expect(thrown.originalError).instanceOf(Error);
+					expect(thrown.originalError).not.instanceOf(SubOfNestedAsync);
 
 					let thrown2;
 					try {
@@ -1161,8 +1161,8 @@ describe('Main Test', () => {
 					expect(thrown3.message).exist.and.is.a('string');
 					// >>> expect(thrown2.originalError).instanceOf(Error);
 
-					expect( thrown3.exceptionReason ).instanceOf( Object );
-					expect( thrown3.exceptionReason.methodName ).equal( 'getThisPropMethod' );
+					expect(thrown3.exceptionReason).instanceOf(Object);
+					expect(thrown3.exceptionReason.methodName).equal('getThisPropMethod');
 
 					const cae = 'check additional error';
 					Object.defineProperty(nestedAsyncInstance, 'exception', {
@@ -1183,11 +1183,11 @@ describe('Main Test', () => {
 					expect(thrown4.message).exist.and.is.a('string');
 					// >>> expect(thrown2.originalError).instanceOf(Error);
 
-					expect( thrown4.exceptionReason ).instanceOf( Object );
-					expect( thrown4.exceptionReason.methodName ).equal( 'getThisPropMethod' );
+					expect(thrown4.exceptionReason).instanceOf(Object);
+					expect(thrown4.exceptionReason.methodName).equal('getThisPropMethod');
 
-					expect( thrown4.surplus[ 0 ] ).instanceOf( Error );
-					expect( thrown4.surplus[ 0 ].message ).equal( cae );
+					expect(thrown4.surplus[ 0 ]).instanceOf(Error);
+					expect(thrown4.surplus[ 0 ].message).equal(cae);
 
 				});
 
@@ -1252,11 +1252,11 @@ describe('Main Test', () => {
 
 					asyncInstanceClone.thrownForReThrow = thrown;
 					expect(thrown).instanceOf(Error);
-					expect( thrown ).instanceOf( AsyncType );
+					expect(thrown).instanceOf(AsyncType);
 					expect(thrown.message).exist.and.is.a('string');
 					assert.equal(thrown.message, 'async error');
-					expect( thrown.originalError ).instanceOf( Error );
-					expect( thrown.originalError ).not.instanceOf( AsyncType );
+					expect(thrown.originalError).instanceOf(Error);
+					expect(thrown.originalError).not.instanceOf(AsyncType);
 
 				});
 
@@ -1274,14 +1274,14 @@ describe('Main Test', () => {
 					}
 
 					expect(thrown).instanceOf(Error);
-					expect( thrown ).instanceOf( AsyncType );
+					expect(thrown).instanceOf(AsyncType);
 					expect(thrown.message).exist.and.is.a('string');
 					assert.equal(thrown.message, 'async error');
-					expect( thrown.originalError ).instanceOf( Error );
-					expect( thrown.originalError ).not.instanceOf( AsyncType );
-					expect( thrown.surplus[ 0 ] ).instanceOf( AsyncType );
+					expect(thrown.originalError).instanceOf(Error);
+					expect(thrown.originalError).not.instanceOf(AsyncType);
+					expect(thrown.surplus[ 0 ]).instanceOf(AsyncType);
 
-					expect( thrown.reasons.length ).equal( 2 );
+					expect(thrown.reasons.length).equal(2);
 
 				});
 
@@ -1371,7 +1371,7 @@ describe('Main Test', () => {
 				strictChainingTypeError = error;
 			}
 
-			
+
 			// here additionalSC is properly made in spite it is an instance of error
 			const additionalSC = apply(scRoot, AdditionalForStrictChain);
 
@@ -1452,7 +1452,7 @@ describe('Main Test', () => {
 			} catch (error) {
 				strictChainingTypeError = error;
 			}
-			
+
 			let additionalErrorThrown;
 			try {
 				// and here if we are trying to make AdditionalForStrictChainS it throws an error
@@ -1518,6 +1518,84 @@ describe('Main Test', () => {
 					.equal('wrong modification pattern : should inherit from WillBeRenamedByStrictChainS but made on FakeForStrictChainType');
 			});
 
+		});
+
+
+		describe('Strict Chain Third Test', () => {
+			let strictChainingTypeError;
+			const RuinedChain = define('RuinedChain', function () {
+			});
+			const RuinedSubChain = RuinedChain.define('RuinedChainSub', function () {
+				const to = ogp(ogp(ogp(this)));
+				Object.setPrototypeOf(to, Object.create(null));
+			});
+			try {
+				const root = new RuinedChain;
+				new root.RuinedChainSub;
+			} catch (error) {
+				strictChainingTypeError = error;
+			}
+
+			it('shoud not be instance of RuinedChain', () => {
+				expect(strictChainingTypeError).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			});
+			it('shoud not be instance of RuinedChain', () => {
+				expect(strictChainingTypeError).instanceOf(RuinedSubChain);
+			});
+			it('shoud have proper message', () => {
+				expect(strictChainingTypeError.message)
+					.equal('wrong modification pattern : should inherit from some instance');
+			});
+
+		});
+
+		describe('Assigned field Chain Test', () => {
+			const AssignedChain = define('AssignedChain', function () {
+				this.first = 123;
+			});
+			const AssignedChainSub = AssignedChain.define('AssignedChainSub', function () {
+				this.second = 321;
+			});
+			const existentObject = {};
+			existentObject.root = new AssignedChain;
+			existentObject.second =
+				new existentObject.root.AssignedChainSub;
+
+			it('shoud not be instance of AssignedChain', () => {
+				expect(existentObject.root).instanceOf(AssignedChain);
+			});
+			it('shoud not be instance of AssignedChain', () => {
+				expect(existentObject.second).instanceOf(AssignedChain);
+				expect(existentObject.second).instanceOf(AssignedChainSub);
+			});
+			it('shoud have props', () => {
+				expect(existentObject.root.first).equals(123);
+				expect(existentObject.second.first).equals(123);
+				expect(existentObject.second.second).equals(321);
+			});
+
+		});
+
+		describe('Assigned MISSING in Chain Test', () => {
+			let missningInChainError;
+			const AssignedMissingInChain = define('AssignedMissingInChain', function () {
+				this.first = 123;
+			});
+			const existentObject = {};
+			existentObject.root = new AssignedMissingInChain;
+			try {
+				existentObject.second =
+					new existentObject.root.MISSING;
+			} catch (error) {
+				missningInChainError = error;
+			}
+
+			it('shoud not be instance of AssignedChain', () => {
+				expect(existentObject.root).instanceOf(AssignedMissingInChain);
+			});
+			it('shoud not be instance of Error', () => {
+				expect(missningInChainError).instanceOf(Error);
+			});
 		});
 
 		if (uncaughtExceptionTest) {

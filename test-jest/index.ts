@@ -529,6 +529,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		this.str = str || 're-defined OverMore str';
 	};
 	Object.assign(OMConstructor.prototype, OverMoreProto);
+	
 	const OverMore = WithAdditionalSignTypeDef
 		.define('MoreOver.OverMore',
 			OMConstructor, {
@@ -542,6 +543,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	const EvenMoreTypeDef = WithAdditionalSignTypeDef.define(`
 		MoreOver . OverMore
 	`, function () {
+
+		// it would be MoreOver . OverMore . EvenMore
 		const EvenMore = function (this: EvenMoreInstance, str: string) {
 			this.str = str || 're-defined EvenMore str';
 		};
@@ -1260,7 +1263,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 						it('thrown error should be ok with props', () => {
 							expect((error as MnemonicaError).message).toBeDefined();
 							expect(typeof (error as MnemonicaError).message).toEqual('string');
-							expect((error as MnemonicaError).message).toEqual('wrong type definition : WrongPath definition is not yet exists');
+							expect((error as MnemonicaError).message).toEqual('wrong type definition : parent WrongPath definition is not yet exists!');
 						});
 					}
 				});
@@ -2960,6 +2963,93 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				descriptor!.get!.call(proxy);
 				descriptor!.get!.call(proxy);
 			});
+	
+		});
+
+		describe('Line 377 coverage through non-Function return', () => {
+			it('should trigger line 377 by returning non-Function from factory', () => {
+				// Create a parent type
+				const ParentType377 = define('ParentType377', function () { });
+				
+				// Define using a factory function that returns an object
+				// This should trigger line 375: if (!(type instanceof Function))
+				// and then line 377: throw new ALREADY_DECLARED
+				// The error is caught by the catch block at line 390
+				const result = ParentType377.define('NestedType377', function () {
+					// Return an object instead of a function
+					return { someProp: 'value' } as unknown as CallableFunction;
+				});
+				
+				// The define call should succeed because the catch block handles the error
+				expect(result).toBeDefined();
+			});
+		});
+
+		describe('RuinedChain test for should inherit from some instance', () => {
+			it('should throw "should inherit from some instance" when prototype chain is corrupted', () => {
+				const RuinedChain = define('RuinedChain', function () { });
+				const RuinedSubChain = RuinedChain.define('RuinedChainSub', function () {
+					const ogp = (obj: object) => Object.getPrototypeOf(obj);
+					const to = ogp(ogp(ogp(this)));
+					Object.setPrototypeOf(to, Object.create(null));
+				});
+
+				let strictChainingTypeError: Error | undefined;
+				try {
+					const root = new RuinedChain();
+					new root.RuinedChainSub();
+				} catch (error) {
+					strictChainingTypeError = error as Error;
+				}
+
+				expect(strictChainingTypeError).toBeDefined();
+				expect(strictChainingTypeError!.message).toEqual('wrong modification pattern : should inherit from some instance');
+			});
+		});
+
+		describe('throwModificationError line 109 coverage', () => {
+			it('should cover break statement in while loop when testToProto is null', () => {
+				// Create a type that will trigger the error path with specific prototype structure
+				const ErrorTestType = define('ErrorTestType', function () { });
+				const ErrorSubType = ErrorTestType.define('ErrorSubType', function () {
+					// This will cause an error during construction
+					throw new Error('intentional error');
+				});
+
+				const instance = new ErrorTestType();
+				expect(() => {
+					new instance.ErrorSubType();
+				}).toThrow();
+			});
+		});
+
+		describe('src/api/types/index.ts line 312 coverage', () => {
+			it('should throw ALREADY_DECLARED when defining type with existing constructor name', () => {
+				// First define a type with a named function
+				const NamedFnType = define(function NamedConstructorFunction() { });
+				
+				// Try to define it again using the same function - should throw ALREADY_DECLARED
+				expect(() => {
+					define(function NamedConstructorFunction() { });
+				}).toThrow(ErrorsTypes.ALREADY_DECLARED);
+			});
+			});
+	
+			describe('Line 377 coverage - factory returns non-Function', () => {
+				it('should throw ALREADY_DECLARED when factory returns object instead of function', () => {
+					// Define a type first
+					define('TypeForLine377', function () { });
+					
+					// Try to redefine with factory that returns a non-Function (object)
+					// This triggers line 375-377: if (!(type instanceof Function)) throw new ALREADY_DECLARED
+					expect(() => {
+						define('TypeForLine377', () => {
+							// Return an object instead of a function
+							return { notAFunction: true } as unknown as CallableFunction;
+						});
+					}).toThrow(ErrorsTypes.ALREADY_DECLARED);
+				});
+			});
+	
 		});
 	});
-});

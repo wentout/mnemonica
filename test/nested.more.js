@@ -277,7 +277,8 @@ const tests = ( opts ) => {
 					} );
 					it( 'thrown error should be ok with props', () => {
 						expect( error.message ).exist.and.is.a( 'string' );
-						assert.equal( error.message, 'wrong type definition : WrongPath definition is not yet exists' );
+						assert.equal( error.message, 'wrong type definition : parent WrongPath definition is not yet exists!' );
+						// assert.equal( error.message, 'wrong type definition : WrongPath definition is not yet exists' );
 					} );
 				}
 			} );

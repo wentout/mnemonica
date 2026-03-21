@@ -1,6 +1,6 @@
 'use strict';
 
-import { ConstructorFunction } from '../../types';
+import { _Internal_TC_ } from '../../types';
 import { constants } from '../../constants';
 const {
 	odp,
@@ -263,18 +263,20 @@ const mnemosyneProxyHandlerGet = (target: object, prop: string, receiver: unknow
 	return subtype || result;
 };
 
-const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMethods: boolean) {
-
+export const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMethods: boolean) {
 	 
 	const instance = this;
 
+	// because we must instantiate new chain for root
+	// therefore we create this constructor internally
+	// so it can not be augmented externally during instance creation
 	const Mnemonica = function (this: object) {
 		odp(this, SymbolConstructorName, {
 			get () {
 				return MNEMONICA;
 			}
 		});
-	} as ConstructorFunction<typeof MnemonicaProtoProps>;
+	} as _Internal_TC_<typeof MnemonicaProtoProps>;
 	
 	// this throws an error
 	Object.setPrototypeOf(Mnemonica.prototype, mnemonica);
@@ -315,7 +317,7 @@ const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMetho
 
 	// InstanceRoots.set(instance, proto);
 
-} as ConstructorFunction<object>;
+} as _Internal_TC_<object>;
 
 const createMnemosyne = function (Uranus: unknown, exposeInstanceMethods: boolean) {
 // const createMnemosyne = function (Uranus: unknown, typeProxy: unknown) {

@@ -120,3 +120,53 @@ throw new MyError('additional info', stack);
 - Jest tests run directly on TypeScript source
 - Always run both test suites before completing
 - **Must run `npm run test:cov` before completing task** - validates build and ensures 100% coverage
+
+## Jest Test Patterns (Follow Mocha Tests)
+
+When fixing Jest test coverage, **copy patterns from `test/environment.js`** (mocha tests). The user maintains mocha tests with 100% coverage - Jest tests should mirror those patterns.
+
+### Key Pattern: Type Re-definition Coverage
+
+For coverage of error paths like `ALREADY_DECLARED`, follow the mocha pattern:
+
+```javascript
+// From test/environment.js lines 795-846:
+define('SetSomeName', function () { });
+
+// Later, re-define with same name to trigger ALREADY_DECLARED
+define('SetSomeName', function () { });  // throws ALREADY_DECLARED
+
+// Or with factory returning anonymous function
+define('SetSomeName', () => {
+    return function () { };  // Also throws ALREADY_DECLARED
+});
+```
+
+### Translation to Jest
+
+```typescript
+// In test-jest/index.ts or test-jest/environment.ts:
+
+// First define the type
+define('TestTypeName', function () { });
+
+// Then test re-definition throws
+try {
+    define('TestTypeName', function () { });
+} catch (error) {
+    expect(error).toBeInstanceOf(ErrorsTypes.ALREADY_DECLARED);
+    expect((error as Error).message).toEqual('this type has already been declared : TestTypeName');
+}
+```
+
+### Error Constructor Name Handling
+
+Error constructor names are String objects, not primitives:
+```typescript
+// Compare as strings, not with toBeInstanceOf
+const expectedName = (err as { name: string }).name;
+const actualName = (error as Error).constructor.name;
+expect(String(actualName)).toEqual(String(expectedName));
+```
+
+**Always check `test/environment.js` first for the correct test pattern.**

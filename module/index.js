@@ -1,41 +1,35 @@
+// ESM wrapper for mnemonica
+// This module re-exports everything from the CommonJS build
 
-import mnemonica from '../build/index.js';
+// Use dynamic import to load CommonJS module
+const mnemonicaMod = await import('../build/index.js');
 
-export default mnemonica;
+// Handle both ESM default and CommonJS exports patterns
+const m = mnemonicaMod.default || mnemonicaMod;
 
-export const {
-	errors,
-	ErrorMessages,
+// Re-export all properties as named exports
+export const define = m.define;
+export const lookup = m.lookup;
+export const lookupTyped = m.lookupTyped;
+export const apply = m.apply;
+export const call = m.call;
+export const bind = m.bind;
+export const decorate = m.decorate;
+export const registerHook = m.registerHook;
 
-	// constants: strings
-	MNEMONICA,
-	MNEMOSYNE,
-	GAIA,
-	URANUS,
+// Core objects
+export const mnemonica = m.mnemonica;
+export const utils = m.utils;
+export const defaultCollection = m.defaultCollection;
+export const defaultTypes = m.defaultTypes;
 
-	TYPE_TITLE_PREFIX,
+// Utils
+export const getProps = m.getProps;
+export const setProps = m.setProps;
+export const isClass = m.isClass;
+export const findSubTypeFromParent = m.findSubTypeFromParent;
+export const errors = m.errors;
+export const defineStackCleaner = m.defineStackCleaner;
 
-	// constants: symbols
-	SymbolConstructorName,
-	SymbolSubtypeCollection,
-	SymbolGaia,
-
-	// namespaces
-	namespaces,
-	defaultNamespace,
-	createNamespace,
-	SymbolDefaultNamespace,
-
-	// types collections
-	defaultTypes,
-	createTypesCollection,
-	
-	defineStackCleaner,
-	
-	utils,
-	
-	// main
-	define,
-	lookup
-
-} = mnemonica;
+// Default export is the whole module
+export default m;

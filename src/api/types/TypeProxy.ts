@@ -1,6 +1,6 @@
 'use strict';
 
-import type { constructorOptions, ConstructorFunction } from '../../types';
+import type { constructorOptions, _Internal_TC_ } from '../../types';
 
 import TypesUtils from '../utils';
 const {
@@ -37,7 +37,7 @@ export const TypeProxy = function (__type__: TypeProxyInstance['__type__'], Uran
 	});
 	const typeProxy = new Proxy(InstanceCreator, this);
 	return typeProxy;
-} as ConstructorFunction<TypeProxyInstance>;
+} as _Internal_TC_<TypeProxyInstance>;
 
 TypeProxy.prototype.get = function (target: CallableFunction, prop: string) {
 

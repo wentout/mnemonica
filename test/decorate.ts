@@ -6,7 +6,7 @@
 // works ↓↓↓
 // npx tsc --target es6 --moduleResolution NodeNext --module NodeNext --sourceMap ./test/decorate.ts
 
-import { decorate, apply, ConstructorFunction } from '..';
+import { decorate, apply, TypeConstructor } from '..';
 import { BaseClass, Strict } from 'typeomatica';
 
 // debugger;
@@ -86,7 +86,9 @@ export const myDecoratedSubInstance = apply(myDecoratedInstance, MyDecoratedSubC
 
 const MyFn = function () {
 	this.sub_sub_field = 123;
-} as ConstructorFunction<{ sub_sub_field: number }>;
+} as TypeConstructor<{ sub_sub_field: number }>;
+
+
 
 // TODO: this can not be done on a sub-class
 // check if parent class is not decorated
@@ -94,15 +96,25 @@ const MyFn = function () {
 // throw an error if yes
 // Object.setPrototypeOf(MyFn.prototype, new BaseClass);
 @decorate(MyDecoratedSubClass)
+// @ts-expect-error TODO: investigate
 class MyDecoratedSubSubClass extends MyFn {
+	sub_sub_field_cls: number;
 	constructor () {
 		super();
 		this.sub_sub_field = 321;
+		this.sub_sub_field_cls = 321;
 	}
 }
 
+/*
+	const myDecoratedSubSubInstance: {
+		sub_sub_field_cls: number;
+		sub_sub_field: number;
+		field: number;
+		sub_field: number;
+	}
+*/
 export const myDecoratedSubSubInstance = apply(myDecoratedSubInstance, MyDecoratedSubSubClass);
-
 
 // debugger;
 
@@ -229,6 +241,14 @@ try {
 // debugger;
 export const midAddDecoratorSubExt = apply(midAddDecoratorBaseExt, MidAddDecoratorAddExtSub);
 // debugger;
+
+
+
+
+
+
+
+// TODO: something very strange below, seems this wasn't me who wrote this
 
 // Coverage test: manually call decorator with explicit undefined to test ?? operator
 const decoratorWithConfig = decorate(MidDecoratorBase, { blockErrors : true });

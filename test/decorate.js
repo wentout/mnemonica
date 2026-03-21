@@ -179,6 +179,7 @@ let MyDecoratedSubSubClass = (() => {
         constructor() {
             super();
             this.sub_sub_field = 321;
+            this.sub_sub_field_cls = 321;
         }
     };
     __setFunctionName(_classThis, "MyDecoratedSubSubClass");
@@ -191,6 +192,14 @@ let MyDecoratedSubSubClass = (() => {
     })();
     return MyDecoratedSubSubClass = _classThis;
 })();
+/*
+    const myDecoratedSubSubInstance: {
+        sub_sub_field_cls: number;
+        sub_sub_field: number;
+        field: number;
+        sub_field: number;
+    }
+*/
 exports.myDecoratedSubSubInstance = (0, __1.apply)(exports.myDecoratedSubInstance, MyDecoratedSubSubClass);
 // debugger;
 let MyOtherDecoratedClass = (() => {
@@ -401,6 +410,7 @@ catch (error) {
 // debugger;
 exports.midAddDecoratorSubExt = (0, __1.apply)(exports.midAddDecoratorBaseExt, MidAddDecoratorAddExtSub);
 // debugger;
+// TODO: something very strange below, seems this wasn't me who wrote this
 // Coverage test: manually call decorator with explicit undefined to test ?? operator
 const decoratorWithConfig = (0, __1.decorate)(MidDecoratorBase, { blockErrors: true });
 // Cast to any to bypass type mismatch between definition (ClassDecoratorContext) and implementation (constructorOptions)
