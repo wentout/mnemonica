@@ -9,7 +9,7 @@ export type IDEFWithArgs<T, Args extends unknown[] = unknown[]> = {
 } | {
     (this: T, ...args: Args): void;
 };
-export type ErrorMessageKey = 'BASE_ERROR_MESSAGE' | 'TYPENAME_MUST_BE_A_STRING' | 'HANDLER_MUST_BE_A_FUNCTION' | 'WRONG_TYPE_DEFINITION' | 'WRONG_INSTANCE_INVOCATION' | 'WRONG_MODIFICATION_PATTERN' | 'ALREADY_DECLARED' | 'WRONG_ARGUMENTS_USED' | 'WRONG_HOOK_TYPE' | 'MISSING_HOOK_CALLBACK' | 'MISSING_CALLBACK_ARGUMENT' | 'FLOW_CHECKER_REDEFINITION' | 'OPTIONS_ERROR' | 'WRONG_STACK_CLEANER';
+export type ErrorMessageKey = 'BASE_ERROR_MESSAGE' | 'HANDLER_MUST_BE_A_FUNCTION' | 'WRONG_TYPE_DEFINITION' | 'WRONG_INSTANCE_INVOCATION' | 'WRONG_MODIFICATION_PATTERN' | 'ALREADY_DECLARED' | 'WRONG_ARGUMENTS_USED' | 'WRONG_HOOK_TYPE' | 'MISSING_HOOK_CALLBACK' | 'MISSING_CALLBACK_ARGUMENT' | 'OPTIONS_ERROR' | 'WRONG_STACK_CLEANER';
 export type ErrorMessages = Record<ErrorMessageKey, string>;
 export interface MnemonicaErrorConstructor {
     new (addition?: string, stack?: string[]): Error;
@@ -24,10 +24,19 @@ export interface MnemonicaError extends Error {
     reasons?: Error[];
     surplus?: Error[];
 }
-export interface ConstructorFunction<ConstructorInstance extends object> {
+export interface _Internal_TC_<ConstructorInstance extends object> {
     new (...args: unknown[]): ConstructorInstance;
     (this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
-    prototype: ConstructorInstance;
+    readonly prototype: ConstructorInstance & {
+        readonly constructor: _Internal_TC_<ConstructorInstance>;
+    };
+}
+export interface TypeConstructor<ConstructorInstance extends object> {
+    new (...args: unknown[]): ConstructorInstance;
+    (this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
+    readonly prototype: ConstructorInstance & {
+        readonly constructor: TypeConstructor<ConstructorInstance>;
+    };
 }
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
 export type hooksOpts = {
@@ -78,12 +87,15 @@ export type CollectionDef = {
     [key: string]: unknown;
 };
 export type TypeLookup = (this: Map<string, unknown>, TypeNestedPath: string) => TypeClass | undefined;
-export type Proto<P extends object, T extends object> = Pick<P, Exclude<keyof P, keyof T>> & T;
-export type SN = Record<string, IDefinitorInstance<object, SN>>;
-export type IsHidingMethods<Config extends constructorOptions> = Config extends {
-    exposeInstanceMethods: false;
-} ? true : false;
-export type InstanceResult<N extends object, S extends SN, Config extends constructorOptions> = IsHidingMethods<Config> extends true ? N : N & MnemonicaInstance & S;
+export type Proto<P extends object, T extends object> = T & Pick<P, Exclude<keyof P, keyof T>>;
+export type ProtoFlat<P extends object, T extends object, L extends Exclude<keyof P, keyof T> = Exclude<keyof P, keyof T>> = {
+    [key in keyof T]: T[key];
+} & {
+    [key in L]: P[key];
+};
+export type Flatten<F> = {
+    [key in keyof F]: F[key];
+};
 export interface SiblingAccessor {
     (SiblingTypeName: string): TypeClass | undefined;
     [key: string]: TypeClass | undefined;
@@ -98,8 +110,13 @@ export interface MnemonicaInstance {
     fork(...forkArgs: unknown[]): object;
     exception(error: Error, ...args: unknown[]): Error;
     readonly sibling: SiblingAccessor;
-    [key: string]: unknown;
 }
+export type InstanceSelfProps = InstanceInternalProps & {
+    __self__: InstanceInternalProps & MnemonicaInstance;
+};
+export type Props = InstanceSelfProps & {
+    [key: string]: unknown;
+};
 export type InstanceInternalProps = {
     __proto_proto__: object;
     __args__: unknown[];
@@ -111,28 +128,29 @@ export type InstanceInternalProps = {
     __creator__: TypeDef;
     __timestamp__: number;
 };
-export type InstanceSelfProps = InstanceInternalProps & {
-    __self__: InstanceInternalProps & MnemonicaInstance;
-};
-export type Props = InstanceSelfProps & {
-    [key: string]: unknown;
-};
-export interface IDefinitorInstance<N extends object, S extends SN = SN, Config extends constructorOptions = constructorOptions> {
-    new (...args: unknown[]): InstanceResult<N, S, Config>;
-    (...args: unknown[]): InstanceResult<N, S, Config>;
-    define: TypeAbsorber;
-    lookup: TypeLookup;
-    registerHook(hookType: hooksTypes, cb: hook): void;
+export type IsHidingMethods<Config extends constructorOptions> = Config extends {
+    exposeInstanceMethods: false;
+} ? true : false;
+export type InstanceResult<N extends object, Config extends constructorOptions, R extends Flatten<N> = Flatten<N>, I extends {
+    [key in keyof R]: R[key];
+} = {
+    [key in keyof R]: R[key];
+}, M extends I & MnemonicaInstance = I & MnemonicaInstance> = IsHidingMethods<Config> extends true ? R : M;
+export interface IDefinitorInstance<N extends object, Config extends constructorOptions = constructorOptions, R extends InstanceResult<N, Config> = InstanceResult<N, Config>> {
     TypeName: string;
     prototype: N;
+    new (...args: unknown[]): R;
+    (...args: unknown[]): IDefinitorInstance<R, Config>;
+    define<T extends object, F extends Proto<N, T>>(TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<F, Config>;
+    lookup: TypeLookup;
+    registerHook(hookType: hooksTypes, cb: hook): void;
     subtypes: SubtypesMap;
     __type__?: TypeDef;
     collection?: CollectionDef;
-    [key: string]: unknown;
 }
 export interface TypeAbsorber {
-    <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig: IDEF<T> | object | boolean | CallableFunction, configOrUndefined: HideInstanceMethodsOptions): IDefinitorInstance<T, SN, HideInstanceMethodsOptions>;
-    <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<T, SN, constructorOptions>;
+    <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig: IDEF<T> | object | boolean | CallableFunction, configOrUndefined: HideInstanceMethodsOptions): IDefinitorInstance<T, HideInstanceMethodsOptions>;
+    <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<T, constructorOptions>;
 }
 export interface TypesCollection {
     define: TypeAbsorber;
@@ -145,10 +163,7 @@ export interface TypesCollection {
     [key: string]: unknown;
 }
 export type CreateTypesCollectionFunction = (config?: constructorOptions) => TypesCollection;
-export interface IDefinitor<P extends object, SubTypeName extends string> {
-    <PP extends object, T extends object, M extends Proto<P, Proto<PP, T>>, S extends SN & M>(this: unknown, TypeName: SubTypeName, constructHandler: IDEF<T>, proto?: PP, config?: constructorOptions): IDefinitorInstance<M, S>;
-}
-export type TypeClass = IDefinitorInstance<object, SN>;
+export type TypeClass = IDefinitorInstance<object>;
 export interface ITypeClass<T> {
     new (...args: unknown[]): T;
     (this: T, ...args: unknown[]): T;
@@ -163,8 +178,8 @@ export type TypeDescriptorInstance = {
     subtypes: object;
     TypeName: string;
 };
-export type TypeDescriptorConstructor = ConstructorFunction<TypeDescriptorInstance>;
-export type TypesCollectionConstructor = ConstructorFunction<object>;
+export type TypeDescriptorConstructor = TypeConstructor<TypeDescriptorInstance>;
+export type TypesCollectionConstructor = TypeConstructor<object>;
 export type Constructor<T = object> = new (...args: unknown[]) => T;
 export type DecoratedClass<T extends Constructor<object>> = T & (<U extends Constructor<object>>(target: U) => DecoratedClass<U>) & {
     define: TypeAbsorber;
@@ -203,7 +218,6 @@ export interface MnemonicaModule {
     WRONG_ARGUMENTS_USED: MnemonicaErrorConstructor;
     WRONG_HOOK_TYPE: MnemonicaErrorConstructor;
     MISSING_CALLBACK_ARGUMENT: MnemonicaErrorConstructor;
-    FLOW_CHECKER_REDEFINITION: MnemonicaErrorConstructor;
     MISSING_HOOK_CALLBACK: MnemonicaErrorConstructor;
     TYPENAME_MUST_BE_A_STRING: MnemonicaErrorConstructor;
     HANDLER_MUST_BE_A_FUNCTION: MnemonicaErrorConstructor;

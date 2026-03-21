@@ -1,14 +1,14 @@
-import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, Constructor, DecoratedClass, TypeClass, TypeAbsorber, MnemonicaModule } from './types';
+import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, Constructor, DecoratedClass, TypeClass, TypeAbsorber, MnemonicaModule, TypeConstructor } from './types';
 export declare const isClass: (fn: CallableFunction) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => import("./api/utils/index").parentSub | null;
-export type { IDEF, ConstructorFunction } from './types';
+export type { IDEF, TypeConstructor, _Internal_TC_, Proto, ProtoFlat } from './types';
 export { getProps, setProps } from './api/types/Props';
 export declare const defaultTypes: import("./types").TypesCollection;
 export declare const define: TypeAbsorber;
 export declare const lookup: (this: unknown, TypeNestedPath: string) => TypeClass | undefined;
 export interface TypeRegistry {
-    [key: string]: new (...args: unknown[]) => unknown;
+    [key: string]: TypeConstructor<never>;
 }
-export declare const lookupTyped: <const K extends keyof TypeRegistry>(this: unknown, TypeNestedPath: K) => TypeRegistry[K] | undefined;
+export declare const lookupTyped: <const K extends keyof TypeRegistry>(this: unknown, TypeNestedPath: K) => TypeRegistry[K];
 export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, ...args: unknown[]) => { [key in keyof S]: S[key]; };
 export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>) => (...args: unknown[]) => { [key in keyof S]: S[key]; };

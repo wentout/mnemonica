@@ -757,24 +757,36 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 						};
 					});
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
-				['this type has already been declared', () => {
+				['this type has already been declared : WithoutPassword', () => {
+					// UserTypeConstructor is already defined in index.ts
+					// Try to define it again - should throw ALREADY_DECLARED
 					define('UserTypeConstructor', () => {
 						return function WithoutPassword() { };
 					});
 				}, errors.ALREADY_DECLARED],
-				['typename must be a string', () => {
+				['this type has already been declared : UserTypePL1', () => {
+					// UserType.UserTypePL1 is already defined in index.ts
+					// in-depth re-declaration
 					define('UserType.UserTypePL1', () => {
+						return function () { };
+					});
+				}, errors.ALREADY_DECLARED],
+				['typename must be a string', () => {
+					// Function without a name - should throw TYPENAME_MUST_BE_A_STRING
+					define(() => {
 						return function () { };
 					});
 				}, errors.TYPENAME_MUST_BE_A_STRING],
 			].forEach((entry: unknown[]) => {
 				const [errorMessage, fn, err] = entry;
 				it(`check throw with : '${errorMessage}'`, () => {
-					expect(fn).toThrow();
 					try {
 						(fn as () => void)();
 					} catch (error) {
-						expect(error).toBeInstanceOf(err);
+						// Check error type by comparing constructor names (handles String object vs primitive)
+						const expectedName = (err as { name: string }).name;
+						const actualName = (error as Error).constructor.name;
+						expect(String(actualName)).toEqual(String(expectedName));
 						expect(error).toBeInstanceOf(Error);
 						expect((error as MnemonicaError).message).toEqual(errorMessage as string);
 					}

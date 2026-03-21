@@ -8,13 +8,13 @@ import type {
 	hooksTypes,
 	constructorOptions,
 	Proto,
-	SN,
 	IDefinitorInstance,
 	Constructor,
 	DecoratedClass,
 	TypeClass,
 	TypeAbsorber,
-	MnemonicaModule
+	MnemonicaModule,
+	TypeConstructor
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -23,7 +23,7 @@ export const {
 	findSubTypeFromParent,
 } = TypesUtils;
 
-export type { IDEF, ConstructorFunction } from './types';
+export type { IDEF, TypeConstructor, _Internal_TC_, Proto, ProtoFlat } from './types';
 export { getProps, setProps } from './api/types/Props';
 
 import { constants } from './constants';
@@ -45,21 +45,26 @@ function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolea
 	return pointer === mnemonica || pointer === exports;
 }
 
+
 // Define function using TypeAbsorber interface with proper type casting
 export const define = function <
 	T extends object,
 	P extends object = object,
-	N extends Proto<P, T> = Proto<P, T>
+	N extends Proto<P, T> = Proto<P, T>,
+
+	// here IDefinitorInstance is a CONSTRUCTOR !!!
+	R extends IDefinitorInstance<N> = IDefinitorInstance<N>
 >(
 	this: unknown,
-	TypeName?: string | CallableFunction,
+	TypeName?: string | CallableFunction | NewableFunction,
 	// Allow both strict IDEF and more flexible function signatures
-	constructHandler?: IDEF<T> | CallableFunction | object | boolean,
+	constructHandler?: IDEF<T> | CallableFunction | NewableFunction | object | boolean,
 	config?: constructorOptions,
-): IDefinitorInstance<N, SN, constructorOptions> {
+): R {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
-	return (types as { define: TypeAbsorber }).define(TypeName as string, constructHandler as IDEF<T>, config) as unknown as IDefinitorInstance<N, SN, constructorOptions>;
+	return (types as { define: TypeAbsorber })
+		.define(TypeName as string, constructHandler as IDEF<T>, config) as unknown as R;
 } as TypeAbsorber;
 
 export const lookup = function (
@@ -83,7 +88,7 @@ export const lookup = function (
  *   }
  */
 export interface TypeRegistry {
-	[key: string]: new (...args: unknown[]) => unknown;
+	[key: string]: TypeConstructor<never>;
 }
 
 /**
@@ -97,9 +102,10 @@ export const lookupTyped = function <
 >(
 	this: unknown,
 	TypeNestedPath: K
-): TypeRegistry[K] | undefined {
+): TypeRegistry[K]  {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	return (types as { lookup: (path: string) => unknown }).lookup(TypeNestedPath as string) as TypeRegistry[K] | undefined;
+	return (types as { lookup: (path: string) => unknown })
+		.lookup(TypeNestedPath as string) as TypeRegistry[K];
 };
 
 

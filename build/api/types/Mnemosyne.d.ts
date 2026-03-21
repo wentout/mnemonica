@@ -1,7 +1,8 @@
-import { ConstructorFunction } from '../../types';
+import { _Internal_TC_ } from '../../types';
+export declare const Mnemosyne: _Internal_TC_<object>;
 declare const _default: {
     readonly createMnemosyne: (Uranus: unknown, exposeInstanceMethods: boolean) => object;
-    readonly prepareSubtypeForConstruction: (subtypeName: string, inheritedInstance: unknown) => ConstructorFunction<{
+    readonly prepareSubtypeForConstruction: (subtypeName: string, inheritedInstance: unknown) => _Internal_TC_<{
         getExistentAsyncStack: (existentInstance: import("../utils").asyncStack) => unknown;
         postProcessing: (this: any, continuationOf: any) => void;
         makeAwaiter: (this: any, type: any, then?: import("./InstanceCreator").ThenSpec) => any;

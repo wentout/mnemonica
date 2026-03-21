@@ -1,4 +1,4 @@
-import type { constructorOptions, ConstructorFunction } from '../../types';
+import type { constructorOptions, _Internal_TC_ } from '../../types';
 export interface TypeProxyInstance {
     __type__: {
         [key: string]: unknown;
@@ -13,7 +13,7 @@ export interface TypeProxyInstance {
     apply: typeof subTypeApply;
     new (...args: unknown[]): object;
 }
-export declare const TypeProxy: ConstructorFunction<TypeProxyInstance>;
+export declare const TypeProxy: _Internal_TC_<TypeProxyInstance>;
 declare const subTypeApply: (parentType: {
     define: (n: string, c: CallableFunction, cf?: object, ...fa: unknown[]) => unknown;
 }, cfg?: constructorOptions, ...fnArgs: unknown[]) => <T extends {

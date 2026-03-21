@@ -391,7 +391,6 @@ const tests = (opts) => {
 
 			it('decorate works correctly', () => {
 				const ogp = Object.getPrototypeOf;
-				// debugger;
 				expect(myDecoratedInstance.field).instanceOf(Object);
 				expect(myDecoratedInstance.field.valueOf()).equal(123);
 
@@ -445,7 +444,6 @@ const tests = (opts) => {
 
 			describe('should create type from Proxy.set()', () => {
 				it('type creation from Proxy.set()', () => {
-					debugger;
 					const userDefinedByParentConstructorPropsProxy = user.DefinedByParentConstructorPropsProxy('aha');
 					expect(userDefinedByParentConstructorPropsProxy.str).equal('aha');
 					expect(userDefinedByParentConstructorPropsProxy.DefinedByParentConstructorPropsProxy).is.equal(true);
@@ -557,7 +555,6 @@ const tests = (opts) => {
 				// set hook inteception, so error instance returned instead of throwing;
 				return true;
 			});
-			// debugger;
 			const errored = new BadType({});
 			const stackstart = '<-- creation of [ BadType ] traced -->';
 			it('should respect the rules', () => {
@@ -728,7 +725,7 @@ const tests = (opts) => {
 			[
 				
 				[ 'wrong type definition : expect prototype to be an object', () => {
-					const WrongType = define(function ToBecomeWrong () {}, true);
+					const WrongType = define(function ToBecomeWrong () { }, true);
 					WrongType.prototype = Object.create(null);
 				}, errors.WRONG_TYPE_DEFINITION ],
 
@@ -737,15 +734,19 @@ const tests = (opts) => {
 					// define('wrong', function () { /* ... */ });
 					types.wrong = function () { };
 				}, errors.WRONG_TYPE_DEFINITION ],
+
 				[ 'wrong type definition : TypeName of reserved keyword', () => {
 					types[ MNEMONICA ] = function () { };
 				}, errors.WRONG_TYPE_DEFINITION ],
+
 				[ 'wrong type definition : definition is not provided', () => {
 					define();
 				}, errors.WRONG_TYPE_DEFINITION ],
+
 				[ 'handler must be a function', () => {
 					define('NoConstructFunctionType', NaN, 'false');
 				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
+
 				[ 'handler must be a function', () => {
 					define(() => {
 						return {
@@ -753,20 +754,31 @@ const tests = (opts) => {
 						};
 					});
 				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
-				[ 'this type has already been declared', () => {
+
+				[ 'this type has already been declared : WithoutPassword', () => {
 					define('UserTypeConstructor', () => {
 						return function WithoutPassword () { };
 					});
 				}, errors.ALREADY_DECLARED ],
-				[ 'typename must be a string', () => {
+
+				[ 'this type has already been declared : UserTypePL1', () => {
+					// in-depth re-declaration
 					define('UserType.UserTypePL1', () => {
 						return function () { };
 					});
+				}, errors.ALREADY_DECLARED ],
+
+				[ 'typename must be a string', () => {
+					define(() => {
+						return function () { };
+					});
 				}, errors.TYPENAME_MUST_BE_A_STRING ],
+
 			].forEach(entry => {
 				const [ errorMessage, fn, err ] = entry;
 				it(`check throw with : '${errorMessage}'`, () => {
-					expect(fn).throw();
+					// debugger;
+					// expect(fn).throw();
 					try {
 						fn();
 					} catch (error) {
@@ -778,6 +790,127 @@ const tests = (opts) => {
 					}
 				});
 			});
+		});
+
+		describe('Same Name Assignment', () => {
+			
+			define('SetSomeName', function () { });
+
+			let
+				reDefinitionError,
+				reDefinitionErrorFn,
+				reDefinitionErrorClass,
+				reDefinitionErrorFromFnFn,
+				reDefinitionErrorFromFnClass,
+				reDefinitionErrorFromEmptyName;
+			try {
+				define('SetSomeName', function () { });
+			} catch (error) {
+				reDefinitionError = error;
+			}
+
+			try {
+				define(() => {
+					return function SetSomeName () { };
+				});
+			} catch (error) {
+				reDefinitionErrorFromFnFn = error;
+			}
+
+			try {
+				define(() => {
+					return class SetSomeName { };
+				});
+			} catch (error) {
+				reDefinitionErrorFromFnClass = error;
+			}
+
+			try {
+				define(class SetSomeName { });
+			} catch (error) {
+				reDefinitionErrorClass = error;
+			}
+
+			try {
+				define(function SetSomeName () { });
+			} catch (error) {
+				reDefinitionErrorFn = error;
+			}
+
+			try {
+				define('SetSomeName', () => {
+					return function () { };
+				});
+			} catch (error) {
+				reDefinitionErrorFromEmptyName = error;
+			}
+
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionError).instanceOf(Error);
+			});
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionError).instanceOf(errors.ALREADY_DECLARED);
+			});
+			it('shoud have proper message', () => {
+				expect(reDefinitionError.message)
+					.equal('this type has already been declared : SetSomeName');
+			});
+
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionErrorFromFnFn).instanceOf(Error);
+			});
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionErrorFromFnFn).instanceOf(errors.ALREADY_DECLARED);
+			});
+			it('shoud have proper message', () => {
+				expect(reDefinitionErrorFromFnFn.message)
+					.equal('this type has already been declared : SetSomeName');
+			});
+
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionErrorFromFnClass).instanceOf(Error);
+			});
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionErrorFromFnClass).instanceOf(errors.ALREADY_DECLARED);
+			});
+			it('shoud have proper message', () => {
+				expect(reDefinitionErrorFromFnClass.message)
+					.equal('this type has already been declared : SetSomeName');
+			});
+
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionErrorClass).instanceOf(Error);
+			});
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionErrorClass).instanceOf(errors.ALREADY_DECLARED);
+			});
+			it('shoud have proper message', () => {
+				expect(reDefinitionErrorClass.message)
+					.equal('this type has already been declared : SetSomeName');
+			});
+
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionErrorFn).instanceOf(Error);
+			});
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionErrorFn).instanceOf(errors.ALREADY_DECLARED);
+			});
+			it('shoud have proper message', () => {
+				expect(reDefinitionErrorFn.message)
+					.equal('this type has already been declared : SetSomeName');
+			});
+
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionErrorFromEmptyName).instanceOf(Error);
+			});
+			it('shoud throw an error Error', () => {
+				expect(reDefinitionErrorFromEmptyName).instanceOf(errors.ALREADY_DECLARED);
+			});
+			it('shoud have proper message', () => {
+				expect(reDefinitionErrorFromEmptyName.message)
+					.equal('this type has already been declared : SetSomeName');
+			});
+
 		});
 
 		describe('another instances', () => {

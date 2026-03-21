@@ -1,7 +1,7 @@
 'use strict';
 
 import type {
-	ConstructorFunction,
+	_Internal_TC_,
 	CreateTypesCollectionFunction,
 	TypesCollection
 } from '../../types';
@@ -32,7 +32,6 @@ const {
 const typesCollections = new Map();
 
 const TypesCollection = function ( _config: Record<string, unknown> ) {
-
 	 
 	const self = this;
 
@@ -95,7 +94,7 @@ const TypesCollection = function ( _config: Record<string, unknown> ) {
 		}
 	} );
 
-} as ConstructorFunction<object>;
+} as _Internal_TC_<object>;
 
 odp( TypesCollection.prototype, MNEMONICA, {
 	get () {
@@ -175,7 +174,13 @@ interface TypesCollectionTarget {
 const typesCollectionProxyHandler = {
 	get ( target: TypesCollectionTarget, prop: string ) {
 		if ( target.subtypes.has( prop ) ) {
+			// access to suptype
+			// for new call or defining new type
 			return target.subtypes.get( prop );
+		}
+		if ( prop === 'define' ) {
+			// will hopefully define new type
+			return target.define;
 		}
 		return Reflect.get( target, prop );
 	},

@@ -1,7 +1,7 @@
   
 'use strict';
 
-import { ConstructorFunction } from '../../types';
+import { _Internal_TC_ } from '../../types';
 
 import {
 	constants
@@ -29,6 +29,9 @@ import { throwModificationError } from '../errors/throwModificationError';
 import { _getProps, _setSelf, Props } from './Props';
 
 import { makeInstanceModificator } from './InstanceModificator';
+import { parent } from '../../utils/parent';
+
+// import { Mnemosyne } from './Mnemosyne';
   
 const invokePreHooks = function ( this: any ) {
 
@@ -139,8 +142,12 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 			return;
 		}
 
-		const parent = self.inheritedInstance.parent();
-		const parentName = parent.constructor.name;
+		const prev = parent(self.inheritedInstance) as any;
+		if (!prev || (prev && !prev.constructor)) {
+			const msg = 'should inherit from some instance';
+			self.throwModificationError( new WRONG_MODIFICATION_PATTERN( msg, stack ) );
+		}
+		const parentName = prev.constructor.name;
 		const parentTypeName = self.type.parentType.TypeName;
 		if (parentName !== parentTypeName) {
 			const msg = `should inherit from ${parentTypeName} but made on ${parentName}`;
@@ -372,6 +379,6 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 
 	return self.inheritedInstance;
 
-} as ConstructorFunction<typeof InstanceCreatorPrototype>;
+} as _Internal_TC_<typeof InstanceCreatorPrototype>;
 
 Object.assign( InstanceCreator.prototype, InstanceCreatorPrototype );

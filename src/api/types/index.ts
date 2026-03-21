@@ -1,7 +1,7 @@
 'use strict';
 
 import {
-	ConstructorFunction,
+	_Internal_TC_,
 	TypeDescriptorInstance,
 	TypeClass,
 	constructorOptions
@@ -73,7 +73,7 @@ const TypeDescriptor = function (
 		: (types as unknown as Record<string | symbol, object>)[ MNEMOSYNE ];
 
 	if ( types.has( TypeName ) ) {
-		throw new ALREADY_DECLARED;
+		throw new ALREADY_DECLARED ( TypeName );
 	}
 
 	// const subtypes = descriptors.createTypesCollection();
@@ -123,7 +123,7 @@ const TypeDescriptor = function (
 
 	return types.get( TypeName );
 
-} as unknown as ConstructorFunction<TypeDescriptorInstance>;
+} as unknown as _Internal_TC_<TypeDescriptorInstance>;
 
 Object.assign( TypeDescriptor.prototype, hooksApi );
 
@@ -304,14 +304,23 @@ export const define = function (
 		// TODO: if ( hop( TypeOrTypeName, 'name' ) ) {
 		// TODO: if ( hop( TypeOrTypeName.constructor, 'name' ) ) {
 		if ( TypeOrTypeName.name ) {
+			
+			const Type = lookup.call( subtypes, TypeOrTypeName.name );
+
+			if ( Type ) {
+				// debugger;
+				throw new ALREADY_DECLARED( TypeOrTypeName.name );
+			}
+
 			return define.call( this, subtypes, TypeOrTypeName.name, TypeOrTypeName, config );
+
 		} else {
 			 
 			return (defineUsingType as any).call(
 				this,
 				subtypes,
 				TypeOrTypeName,
-				constructHandlerOrConfig
+				constructHandlerOrConfig ? constructHandlerOrConfig : TypeOrTypeName
 			);
 		}
 	}
@@ -323,8 +332,8 @@ export const define = function (
 		const split = getTypeSplitPath( TypeOrTypeName );
 
 		const Type = lookup.call( subtypes, split[ 0 ] );
-
-		if ( !Type ) {
+		
+		if (!Type) {
 
 			if ( split.length === 1 ) {
 				 
@@ -337,13 +346,61 @@ export const define = function (
 				);
 			}
 
-			throw new WRONG_TYPE_DEFINITION( `${split[ 0 ]} definition is not yet exists` );
+			// Existent.define('Missing.Wanted')
+			throw new WRONG_TYPE_DEFINITION( `parent ${split[ 0 ]} definition is not yet exists!` );
 		}
 
 		const TypeName = split.slice( 1 ).join( '.' );
 
 		if ( split.length > 1 ) {
 			return define.call( this, Type.subtypes as Map<string, object>, TypeName, constructHandlerOrConfig, config );
+		}
+
+
+		if (split.length === 1) {
+
+			if (constructHandlerOrConfig instanceof Function) {
+
+				// debugger;
+
+				// if (constructHandlerOrConfig.name === Type.TypeName) {
+				// 	throw new ALREADY_DECLARED( TypeOrTypeName );
+				// }
+				
+				try {
+					// debugger;
+					// we need this to extract TypeName
+					const type = constructHandlerOrConfig();
+					
+					if ( !(type instanceof Function) ) {
+						// debugger;
+						throw new ALREADY_DECLARED( TypeOrTypeName );
+					}
+
+					if ( type.name.length === 0 ) {
+						// debugger;
+						throw new ALREADY_DECLARED( TypeOrTypeName );
+					}
+
+					// if (type.name.length > 0 && type.name === Type.TypeName) {
+					// 	debugger;
+					// 	throw new ALREADY_DECLARED( TypeOrTypeName );
+					// }
+	
+				} catch {
+
+					return (defineUsingFunction as any).call(
+						this,
+						subtypes,
+						TypeOrTypeName,
+						constructHandlerOrConfig,
+						config
+					);
+
+				}
+
+			}
+
 		}
 
 		// so, here we go with

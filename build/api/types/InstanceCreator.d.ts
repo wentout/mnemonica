@@ -1,4 +1,4 @@
-import { ConstructorFunction } from '../../types';
+import { _Internal_TC_ } from '../../types';
 export interface ThenSpec {
     subtype: object;
     args: unknown[];
@@ -32,5 +32,5 @@ declare const InstanceCreatorPrototype: {
         };
     }, error: import("../../types").MnemonicaError) => void;
 };
-export declare const InstanceCreator: ConstructorFunction<typeof InstanceCreatorPrototype>;
+export declare const InstanceCreator: _Internal_TC_<typeof InstanceCreatorPrototype>;
 export {};

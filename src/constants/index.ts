@@ -34,7 +34,7 @@ const ErrorMessages = {
 	WRONG_HOOK_TYPE            : 'this hook type does not exist',
 	MISSING_HOOK_CALLBACK      : 'hook definition requires callback',
 	MISSING_CALLBACK_ARGUMENT  : 'callback is required argument',
-	FLOW_CHECKER_REDEFINITION  : 'attempt to re-define flow checker callback',
+	// FLOW_CHECKER_REDEFINITION  : 'attempt to re-define flow checker callback',
 	OPTIONS_ERROR              : 'options must be an object or a string',
 	WRONG_STACK_CLEANER        : 'wrong stack cleaner instanceof',
 	// PROTOTYPE_USED_TWICE       : '.prototype used twice',
