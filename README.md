@@ -1010,7 +1010,7 @@ user.age = 25;          // ✓ Works - number to number
 user.age = '25';        // ✗ TypeError: Type Mismatch at runtime!
 ```
 
-For complete documentation including integration patterns, error handling, and advanced usage, see [docs/typematica.md](docs/typematica.md).
+For complete documentation including integration patterns, error handling, and advanced usage, see [docs/typeomatica.md](docs/typeomatica.md).
 
 ---
 

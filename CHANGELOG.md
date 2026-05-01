@@ -36,7 +36,7 @@ changes that are called out explicitly here).
 - GitHub Actions workflow upgraded: `actions/checkout@v2` → `@v4`,
   `actions/setup-node@v1` → `@v4`. Test-job install standardised on
   `npm ci`. Matrix expanded to `[20.x, 22.x, 24.x]`.
-- `TypeØmatica.md` renamed to `docs/typematica.md` (ASCII filename); the
+- `TypeØmatica.md` renamed to `docs/typeomatica.md` (ASCII filename); the
   old path remains as a redirect stub.
 - README restructured for first-time readers: tighter intro, local ASCII
   architecture diagram, AI-agent guidance referenced from
