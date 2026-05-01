@@ -33,15 +33,22 @@
     "Mobydack <devzetsubou@gmail.com>"
   ],
   "scripts": {
-    "build": "rm -rf ./build && npx tsc --pretty --project tsconfig.json && npm run lint:src && npm run lint:test",
-    "build:all": "rm -rf ./build && npx tsc --pretty --project tsconfig.json && npm run decorate:ts && npm run lint:src && npm run lint:test",
+    "build": "rm -rf ./build && npx tsc --pretty --project tsconfig.json",
+    "build:all": "npm run build && npm run decorate:ts",
+    "verify": "npm run build && npm run lint:check",
     "example": "npm run build && node ./test/example.js",
+    "example:async": "npm run build && node ./examples/AsyncNewTest.js",
+    "example:rename": "npm run build && node ./examples/ClassReName.js",
+    "example:v8bug": "npm run build && node ./examples/v8bug.js",
     "example:ts": "npx tsc ./test-ts/*.ts && npx eslint --fix ./test-ts/*.js && node ./test-ts/test-no-types.js && node ./test-ts/test-with-types.js",
     "deopt": "node --trace-deopt --trace-opt ./node_modules/mocha/bin/mocha.js ./test/index.js",
     "decorate:ts": "npx tsc --target ES2021 --moduleResolution NodeNext --module NodeNext --sourceMap ./test/decorate.ts",
     "lint": "npx eslint",
+    "lint:check": "npx eslint ./src ./test",
     "lint:src": "npx eslint --fix ./src",
     "lint:test": "npx eslint --fix ./test",
+    "lint:fix": "npm run lint:src && npm run lint:test",
+    "pretest": "npm run decorate:ts",
     "test": "mocha --allow-uncaught --enable-source-maps test/index.js",
     "test:cov": "npm run build:all && nyc --reporter=text-summary --reporter=lcov mocha --allow-uncaught --enable-source-maps --ui bdd --reporter spec ./test/index.js",
     "debug": "npx tsc --pretty --project tsconfig.json && npx mocha --allow-uncaught --enable-source-maps --reporter spec --inspect-brk test/index",
@@ -94,14 +101,10 @@
     "typescript": "^5.9.3"
   },
   "engines": {
-    "node": ">=18 <24"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
+    "node": ">=18 <26"
   },
   "lint-staged": {
-    "*.js": "eslint --fix"
+    "src/**/*.ts": "eslint --fix",
+    "test/**/*.js": "eslint --fix"
   }
 }

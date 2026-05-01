@@ -27,7 +27,7 @@ The stored arguments in the prototype chain allow AI to introspect and learn fro
 
 ## Build/Test Commands
 
-All commands run from the `core/` directory:
+All commands run from the project root:
 
 ```bash
 # Full build with linting
@@ -145,36 +145,9 @@ declare module 'mnemonica' {
 2. Import types in your project
 3. Use `lookupTyped()` for type-safe type retrieval
 
-### Nested `lookupTyped()` (Planned Feature)
-
-**Problem:** Global `lookupTyped('Parent.Child')` returns a constructor WITHOUT the parent in the prototype chain. This breaks instance inheritance.
-
-**Solution:** Add type-safe `.lookupTyped()` method to constructors for relative lookups:
-
-```typescript
-// Type-safe relative lookup (preserves inheritance)
-const GraphNode2D = Scene2D.lookupTyped('GraphNode2D');
-const node = new GraphNode2D({ x: 10, y: 20 });
-// node has Scene2D in its prototype chain
-```
-
-**Implementation:** Requires `NestedTypeRegistry` interface augmentation alongside `TypeRegistry`:
-
-```typescript
-// .tactica/registry.ts (generated)
-declare module 'mnemonica' {
-	interface NestedTypeRegistry {
-		'Scene2D.GraphNode2D': new (...args: unknown[]) => GraphNode2DInstance;
-		'Scene2D.Camera2D': new (...args: unknown[]) => Camera2DInstance;
-	}
-}
-```
-
-**Benefits:**
-- Type-safe relative lookups
-- Preserves prototype chain/inheritance
-- IDE autocomplete for valid nested types
-- Compile-time validation of paths
+> **Roadmap.** Nested `lookupTyped()` (a type-safe `.lookupTyped()` method
+> on constructors that preserves the prototype chain) is designed but not
+> yet shipped. See the `## Roadmap` section in [README.md](README.md).
 
 ### Type System Structure
 ```
