@@ -1379,7 +1379,10 @@ describe('Main Test', () => {
 				expect(additionalSC.constructor.name).is.equal('AdditionalForStrictChain');
 			});
 			it('additionalSC should be kept the same', () => {
-				expect(additionalSC.stack).is.equal(undefined);
+				// node 20 has .stack prop, and 22+ not
+				if (parseInt(process.version.split('.').shift(), 10) > 22) {
+					expect(additionalSC.stack).is.equal(undefined);
+				}
 			});
 			it('additionalSC should be kept the same', () => {
 				expect(additionalSC.scRootProp).is.equal(true);
@@ -1478,8 +1481,11 @@ describe('Main Test', () => {
 				expect(additionalErrorThrown).is.instanceOf(RootForStrictChainS);
 			});
 			it('additionalError is an error ', () => {
-				// because thrown directly from constructor
-				expect(additionalErrorThrown.stack).equals(undefined);
+				// node 20 has .stack prop, and 22+ not
+				if (parseInt(process.version.split('.').shift(), 10) > 22) {
+					// because thrown directly from constructor
+					expect(additionalErrorThrown.stack).equals(undefined);
+				}
 			});
 
 
