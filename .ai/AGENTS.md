@@ -1,11 +1,7 @@
 # AI Agent Guidelines — mnemonica/core
 
 > **Framework-agnostic entry point for all AI agents.**
->
-> If you are a **Roo** user, the files in `.roo/rules-code/` are injected into
-> your system prompt automatically. Those files override or extend the rules
-> below where they differ. For all other agents, this directory is the
-> authoritative source.
+> This directory is the authoritative source.
 
 ---
 
@@ -30,6 +26,8 @@ inheritance graphs, making certain classes of bugs impossible by design.
 | [`CODE.md`](./CODE.md) | Coding standards: style, TypeScript rules, testing |
 | [`ARCHITECT.md`](./ARCHITECT.md) | Design guidelines: patterns, planning, constraints |
 | [`DEBUG.md`](./DEBUG.md) | Debugging guidelines: commands, common issues, logging |
+| [`ask/AGENTS.md`](./ask/AGENTS.md) | Ask mode: explaining concepts, analyzing code |
+| [`orchestrator/AGENTS.md`](./orchestrator/AGENTS.md) | Orchestrator mode: multi-step task coordination |
 
 ---
 
@@ -40,8 +38,6 @@ inheritance graphs, making certain classes of bugs impossible by design.
 1. Read [`CODE.md`](./CODE.md) — understand style rules and testing requirements.
 2. Read [`ARCHITECT.md`](./ARCHITECT.md) — understand design patterns and constraints.
 3. If debugging: read [`DEBUG.md`](./DEBUG.md).
-4. If you are a Roo user: verify `.roo/rules-code/` files are loaded in your
-   system prompt; they contain mode-specific extensions.
 
 ### Build & Test Commands
 
@@ -100,24 +96,14 @@ src/
 
 ---
 
-## Agent Framework Cross-Reference
-
-If your framework supports custom rule injection, prefer these locations:
-
-| Framework | Rule Location | Injected? |
-|-----------|---------------|-----------|
-| Roo | `.roo/rules-code/AGENTS.md` | Yes (system prompt) |
-| Roo | `.roo/rules-architect/AGENTS.md` | Yes (Architect mode) |
-| Roo | `.roo/rules-debug/AGENTS.md` | Yes (Debug mode) |
-| Generic / Other | `.ai/AGENTS.md` | No — read manually |
-| Generic / Other | `.ai/CODE.md` | No — read manually |
-| Generic / Other | `.ai/ARCHITECT.md` | No — read manually |
-| Generic / Other | `.ai/DEBUG.md` | No — read manually |
-
----
-
 ## Related Files
 
+| File | Purpose |
+|------|---------|
+| [`../SKILL.md`](../SKILL.md) | Condensed skill reference for framework injection |
+| [`../AGENTS.md`](../AGENTS.md) | Root agent guidelines (legacy Roo entrypoint) |
+| [`rules-skill/philosophy.md`](./rules-skill/philosophy.md) | HoTT concepts applied to mnemonica's self-reflection model |
+| [`rules-skill/ecosystem.md`](./rules-skill/ecosystem.md) | PACT framework: personas, collaboration modes, integration points |
+| [`rules-skill/contributing.md`](./rules-skill/contributing.md) | Behavioral guidelines for AI contributors |
+
 - Main README: [`../README.md`](../README.md)
-- Condensed skill reference: [`../SKILL.md`](../SKILL.md)
-- Root agent guidelines: [`../AGENTS.md`](../AGENTS.md)

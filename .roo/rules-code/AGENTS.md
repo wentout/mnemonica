@@ -1,12 +1,48 @@
-# Mnemonica - Code Mode Guidelines
+# AI Agent Guidelines — mnemonica/core
 
-## Role
-You are in **Code** mode. Your task is to implement features, fix bugs, and modify code following the project's strict TypeScript standards.
+> **Framework-agnostic entry point for all AI agents.**
+> This directory is the authoritative source.
 
-## Build & Test Commands
+---
+
+## What This Project Is
+
+**mnemonica** is an instance inheritance system for JavaScript / TypeScript.
+It enables prototype chain-based type definitions through the `define()`
+function, creating explicit inheritance graphs that eliminate common prototype
+bugs.
+
+Key insight: JavaScript prototype inheritance is a Trie data structure, but
+developers don't realize this. Mnemonica forces explicit declaration of
+inheritance graphs, making certain classes of bugs impossible by design.
+
+---
+
+## Files in This Directory
+
+| File | Purpose |
+|------|---------|
+| [`AGENTS.md`](./AGENTS.md) | This file — main entry point and overview |
+| [`CODE.md`](./CODE.md) | Coding standards: style, TypeScript rules, testing |
+| [`ARCHITECT.md`](./ARCHITECT.md) | Design guidelines: patterns, planning, constraints |
+| [`DEBUG.md`](./DEBUG.md) | Debugging guidelines: commands, common issues, logging |
+| [`ask/AGENTS.md`](./ask/AGENTS.md) | Ask mode: explaining concepts, analyzing code |
+| [`orchestrator/AGENTS.md`](./orchestrator/AGENTS.md) | Orchestrator mode: multi-step task coordination |
+
+---
+
+## Quick Start for Agents
+
+### Before You Write Any Code
+
+1. Read [`CODE.md`](./CODE.md) — understand style rules and testing requirements.
+2. Read [`ARCHITECT.md`](./ARCHITECT.md) — understand design patterns and constraints.
+3. If debugging: read [`DEBUG.md`](./DEBUG.md).
+
+### Build & Test Commands
 
 ```bash
-# Build TypeScript
+# Full build with linting
 npm run build
 
 # Run Mocha tests with coverage (runs npm run build:all internally)
@@ -15,158 +51,59 @@ npm run test:cov
 # Run Jest tests with coverage (TypeScript source)
 npm run test:jest:cov
 
-# Run single test file
-npx jest test-jest/types.ts
-
-# Run single Mocha test
-npx mocha --require ts-node/register test-ts/test-example.ts
-
 # Watch mode
 npm run watch
 ```
 
-**Important**: `npm run test:cov` runs `npm run build:all` internally - no need to run build first.
-**Must run `npm run test:cov` before completing task** - this validates the build and ensures 100% coverage.
+**Critical**: `npm run test:cov` runs `npm run build:all` internally. You do
+not need to run `npm run build` first.
 
-## Code Style Rules (CRITICAL)
+**Must run `npm run test:cov` before completing any task** — this validates
+build and ensures 100% coverage.
 
-### Indentation
-- **TABS ONLY** - Never use spaces for indentation
-- Tab width: 4 (editor.config)
+---
 
-### Spacing Requirements
-```typescript
-// REQUIRED: Space before function parentheses
-function myFunc () { }           // ✓ Correct
-function myFunc() { }            // ✗ Wrong
+## Architecture at a Glance
 
-const fn = function () { };      // ✓ Correct
-const fn = function() { };       // ✗ Wrong
-
-class MyClass {
-	method () { }                 // ✓ Correct
-	method() { }                  // ✗ Wrong
-}
-
-// REQUIRED: key-spacing with space after colon
-{ key: value }                   // ✓ Correct
-{ key:value }                    // ✗ Wrong
 ```
-
-### TypeScript Strictness
-- `strict: true` - All strict options enabled
-- `noUnusedLocals: true` - No unused variables
-- `noUnusedParameters: true` - No unused parameters
-- `isolatedModules: true` - Each file must be independently transpilable
-- **NO `any` or `unknown` types** - Use proper interfaces instead
-
-### Type Patterns
-```typescript
-// For proxy handlers
-type ProxyHandler<T> = {
-	get?(target: T, prop: string, receiver: unknown): unknown;
-	set?(target: T, prop: string, value: unknown, receiver: unknown): boolean;
-};
-
-// For internal instance properties
-interface MnemonicaInstance {
-	[SymbolConstructorName]?: string;
-	[SymbolParentType]?: object;
-	[SymbolSubTypes]?: Map<string, object>;
-}
+src/
+├── index.ts           # Main exports: define, lookup, apply, call, bind
+├── types/index.ts     # TypeScript type definitions
+├── constants/         # Symbols and default options
+├── descriptors/       # Type collection and error definitions
+├── api/               # Core implementation
+│   ├── types/         # TypeProxy, InstanceCreator, Mnemosyne
+│   ├── errors/        # Error handling and stack traces
+│   ├── hooks/         # Lifecycle hooks
+│   └── utils/         # Utilities
+└── utils/             # Public utilities (extract, parse, merge, etc.)
 ```
-
-## Architecture Patterns
 
 ### Proxy-Based Architecture
-- `TypeProxy` - Wraps type constructors
-- `Mnemosyne` - Instance prototype handler
-- `TypesCollection` - Registry for types
 
-### Adding Type Definitions
-```typescript
-// 1. Define interface in src/types/index.ts
-export interface NewTypeConfig {
-	property: string;
-}
+- **TypeProxy** (`src/api/types/TypeProxy.ts`): Wraps type constructors
+- **Mnemosyne** (`src/api/types/Mnemosyne.ts`): Handles instance method access
+- **TypesCollection Proxy** (`src/descriptors/types/index.ts`): Dynamic type lookup
 
-// 2. Update existing interfaces if needed
-export interface MnemonicaInstance {
-	newProperty?: NewTypeConfig;
-}
-```
+### Key Symbols
 
-### Error Handling
-```typescript
-// Use MnemonicaErrorConstructor for custom errors
-import { constructError } from '../api/errors/index.js';
+| Symbol | Purpose |
+|--------|---------|
+| `SymbolConstructorName` | Stores type name on constructors |
+| `SymbolParentType` | Links to parent type |
+| `SymbolDefaultTypesCollection` | Default collection identifier |
+| `SymbolConfig` | Type configuration storage |
 
-const MyError = constructError('MY_ERROR', 'Error message');
-throw new MyError('additional info', stack);
-```
+---
 
-## Symbols Reference
-- `SymbolConstructorName` - Type name identifier
-- `SymbolParentType` - Parent type reference
-- `SymbolSubTypes` - Subtypes map
-- `MNEMONICA` - Library namespace marker
-- `MNEMOSYNE` - Instance prototype marker
-- `GAIA` - Global type registry
-- `URANUS` - Special instance handler
+## Related Files
 
-## Testing Requirements
-- Maintain **100% code coverage** (statements, branches, functions, lines)
-- Mocha tests run on transpiled code (`build/`)
-- Jest tests run directly on TypeScript source
-- Always run both test suites before completing
-- **Must run `npm run test:cov` before completing task** - validates build and ensures 100% coverage
+| File | Purpose |
+|------|---------|
+| [`../../SKILL.md`](../../SKILL.md) | Condensed skill reference for framework injection |
+| [`../../AGENTS.md`](../../AGENTS.md) | Root agent guidelines (legacy Roo entrypoint) |
+| [`../../.ai/rules-skill/philosophy.md`](../../.ai/rules-skill/philosophy.md) | HoTT concepts applied to mnemonica's self-reflection model |
+| [`../../.ai/rules-skill/ecosystem.md`](../../.ai/rules-skill/ecosystem.md) | PACT framework: personas, collaboration modes, integration points |
+| [`../../.ai/rules-skill/contributing.md`](../../.ai/rules-skill/contributing.md) | Behavioral guidelines for AI contributors |
 
-## Jest Test Patterns (Follow Mocha Tests)
-
-When fixing Jest test coverage, **copy patterns from `test/environment.js`** (mocha tests). The user maintains mocha tests with 100% coverage - Jest tests should mirror those patterns.
-
-### Key Pattern: Type Re-definition Coverage
-
-For coverage of error paths like `ALREADY_DECLARED`, follow the mocha pattern:
-
-```javascript
-// From test/environment.js lines 795-846:
-define('SetSomeName', function () { });
-
-// Later, re-define with same name to trigger ALREADY_DECLARED
-define('SetSomeName', function () { });  // throws ALREADY_DECLARED
-
-// Or with factory returning anonymous function
-define('SetSomeName', () => {
-    return function () { };  // Also throws ALREADY_DECLARED
-});
-```
-
-### Translation to Jest
-
-```typescript
-// In test-jest/index.ts or test-jest/environment.ts:
-
-// First define the type
-define('TestTypeName', function () { });
-
-// Then test re-definition throws
-try {
-    define('TestTypeName', function () { });
-} catch (error) {
-    expect(error).toBeInstanceOf(ErrorsTypes.ALREADY_DECLARED);
-    expect((error as Error).message).toEqual('this type has already been declared : TestTypeName');
-}
-```
-
-### Error Constructor Name Handling
-
-Error constructor names are String objects, not primitives:
-```typescript
-// Compare as strings, not with toBeInstanceOf
-const expectedName = (err as { name: string }).name;
-const actualName = (error as Error).constructor.name;
-expect(String(actualName)).toEqual(String(expectedName));
-```
-
-**Always check `test/environment.js` first for the correct test pattern.**
+- Main README: [`../../README.md`](../../README.md)
