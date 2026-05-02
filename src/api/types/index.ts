@@ -1,5 +1,26 @@
 'use strict';
 
+/**
+ * Construction Pipeline (high-level flow):
+ *
+ *   define(TypeName, ctor)  →  new TypeDescriptor()  →  new TypeProxy()
+ *                                                          │
+ *                                                          ▼
+ *                                               new InstanceCreator(type, parent, args)
+ *                                                          │
+ *                                                          ▼
+ *                                               makeInstanceModificator(self)
+ *                                                          │
+ *                                                          ▼
+ *                                               ModificationConstructor.call(parent, ModificatorType, proto, _addProps)
+ *                                                          │
+ *                                                          ▼
+ *                                               user constructor runs (new ModificatorType(...args))
+ *                                                          │
+ *                                                          ▼
+ *                                               postProcessing() → invokePostHooks()
+ */
+
 import {
 	_Internal_TC_,
 	TypeDescriptorInstance,
