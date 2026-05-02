@@ -875,7 +875,10 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(additionalSC.constructor.name).toEqual('AdditionalForStrictChain');
 			});
 			it('additionalSC stack should be undefined', () => {
-				expect(additionalSC.stack).toEqual(undefined);
+				// node 20 has .stack prop, and 22+ not
+				if (parseInt(process.version.split('.').shift(), 10) > 22) {
+					expect(additionalSC.stack).toEqual(undefined);
+				}
 			});
 			it('additionalSC should have scRootProp', () => {
 				expect(additionalSC.scRootProp).toEqual(true);

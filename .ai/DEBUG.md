@@ -1,7 +1,17 @@
-# Mnemonica - Debug Mode Guidelines
+# Debugging Guidelines — mnemonica/core
+
+> **Applies to:** Investigating issues, diagnosing problems, identifying root
+> causes. Framework-agnostic.
+> **Roo override:** `.roo/rules-debug/AGENTS.md` extends these rules.
+
+---
 
 ## Role
-You are in **Debug** mode. Your task is to investigate issues, diagnose problems, and identify root causes in the mnemonica codebase.
+
+You are in **Debug** mode. Your task is to investigate issues, diagnose problems,
+and identify root causes in the mnemonica codebase.
+
+---
 
 ## Debug Commands
 
@@ -22,14 +32,17 @@ DEBUG=* npm test
 npm run build
 ```
 
+---
+
 ## Common Issue Patterns
 
 ### Proxy Handler Issues
+
 ```typescript
 // If traps are not working, check:
-1. Handler methods return correct types
-2. `get` trap returns `unknown`, not implicit `any`
-3. `set` trap returns boolean, not void
+// 1. Handler methods return correct types
+// 2. `get` trap returns `unknown`, not implicit `any`
+// 3. `set` trap returns boolean, not void
 
 // Debug proxy behavior
 const debugProxy = new Proxy(target, {
@@ -41,6 +54,7 @@ const debugProxy = new Proxy(target, {
 ```
 
 ### Type Errors
+
 ```typescript
 // Common: 'any' type assignment
 // Fix: Add proper type annotation
@@ -52,6 +66,7 @@ function method(this: SpecificType) { }
 ```
 
 ### Instance Chain Issues
+
 ```typescript
 // Check instance properties
 console.log(instance[SymbolConstructorName]);
@@ -62,9 +77,12 @@ console.log(instance[SymbolSubTypes]);
 console.log(Object.getPrototypeOf(instance));
 ```
 
+---
+
 ## Logging Strategy
 
 ### Add Temporary Logging
+
 ```typescript
 // In proxy handlers
 get(target, prop, receiver) {
@@ -80,6 +98,7 @@ constructor(message, additionalStack) {
 ```
 
 ### Stack Trace Analysis
+
 ```typescript
 // Use error stack cleaners
 import { cleanupStack } from '../api/errors/index.js';
@@ -87,6 +106,8 @@ import { cleanupStack } from '../api/errors/index.js';
 const cleaned = cleanupStack(stack.split('\n'));
 console.log('Cleaned stack:', cleaned);
 ```
+
+---
 
 ## Symbol Debugging
 
@@ -98,9 +119,12 @@ symbols.forEach(sym => {
 });
 ```
 
+---
+
 ## Test Debugging
 
 ### Mocha Tests
+
 ```bash
 # Run single test suite
 npx mocha build/test-ts/test-example.js
@@ -110,6 +134,7 @@ DEBUG=mnemonica npx mocha build/test-ts/test-example.js
 ```
 
 ### Jest Tests
+
 ```bash
 # Run with debugger
 node --inspect-brk node_modules/.bin/jest --runInBand test-jest/types.ts
@@ -117,6 +142,8 @@ node --inspect-brk node_modules/.bin/jest --runInBand test-jest/types.ts
 # With console output
 npx jest test-jest/types.ts --verbose --no-coverage
 ```
+
+---
 
 ## Issue Checklist
 
@@ -128,6 +155,8 @@ npx jest test-jest/types.ts --verbose --no-coverage
 6. [ ] Check for `any` or `unknown` types
 7. [ ] Verify symbol usage is correct
 8. [ ] Check proxy handler return types
+
+---
 
 ## Reporting Issues
 

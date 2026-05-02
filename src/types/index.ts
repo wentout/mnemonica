@@ -50,7 +50,13 @@ export interface MnemonicaError extends Error {
 	surplus?: Error[];
 }
 
-// Constructor function with prototype
+/**
+ * Internal Type Constructor.
+ * "Type" here is used in the Computer Science sense — an interface/contract
+ * describing what a constructor must satisfy (both `new`-able and callable).
+ * TC = Type Constructor; "Internal" means this is the library's own constructor
+ * shape, distinct from user-facing TypeConstructor below.
+ */
 export interface _Internal_TC_<ConstructorInstance extends object> {
 	new(...args: unknown[]): ConstructorInstance;
 	(this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
@@ -59,7 +65,19 @@ export interface _Internal_TC_<ConstructorInstance extends object> {
 	};
 }
 
-// Constructor function with prototype
+/**
+ * External Type Constructor — the shape of constructor functions returned by `define()`.
+ *
+ * In Scala's kind system, a "Type Constructor" is a kind (a type of types):
+ * not a value, but a mold describing how concrete types are formed. Here,
+ * `TypeConstructor<Instance>` is the mold `define()` stamps at invocation time
+ * from (prototype, arguments, config). The resulting constructor is simultaneously:
+ *   - a runtime value (callable, `new`-able, with `.prototype`)
+ *   - a node in the type Trie (carries `.subtypes`, participates in `instanceof`)
+ *   - a behavioral contract (the prototype chain provides `.extract()`, `.fork()`, etc.)
+ *
+ * Augmented by tactica-generated TypeRegistry to become user-specific types.
+ */
 export interface TypeConstructor<ConstructorInstance extends object> {
 	new(...args: unknown[]): ConstructorInstance;
 	(this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
@@ -152,7 +170,15 @@ export type CollectionDef = {
 // Type lookup function type: may have augmentation by Tactica re-definition
 export type TypeLookup = (this: Map<string, unknown>, TypeNestedPath: string) => TypeClass | undefined;
 
-// Proto merge type - combines parent and child types
+/**
+ * Proto merge type - combines parent and child types without property conflicts.
+ *
+ * When a subtype is defined from a parent instance, we want the child properties
+ * to take precedence. `Exclude<keyof P, keyof T>` removes overlapping keys from P,
+ * so `Pick<P, ...>` only brings in parent properties that don't clash with child.
+ *
+ * Result: child T gets all its own props, plus parent's non-overlapping props.
+ */
 export type Proto<P extends object, T extends object> = T & Pick<P, Exclude<keyof P, keyof T>>;
 
 

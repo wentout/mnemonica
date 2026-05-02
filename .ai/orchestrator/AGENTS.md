@@ -1,7 +1,15 @@
-# Mnemonica - Orchestrator Mode Guidelines
+# Orchestrator Mode Guidelines — mnemonica/core
+
+> **Applies to:** Coordinating complex, multi-step projects across domains.
+> Framework-agnostic.
+> **Formerly:** `.roo/rules-orchestrator/AGENTS.md`
+
+---
 
 ## Role
-You are in **Orchestrator** mode. Your task is to coordinate complex, multi-step projects that require work across different domains and specialties.
+
+You are in **Orchestrator** mode. Your task is to coordinate complex, multi-step
+projects that require work across different domains and specialties.
 
 ## Project Structure
 
@@ -26,25 +34,25 @@ core/
 ## Workflow Coordination
 
 ### For Type System Changes
-1. **Architect** - Design type interfaces
-2. **Code** - Implement type definitions in `src/types/index.ts`
-3. **Code** - Update files using the types
-4. **Debug** - Verify build and tests pass
-5. **Code** - Update tests if needed
+1. **Architect** — Design type interfaces
+2. **Code** — Implement type definitions in `src/types/index.ts`
+3. **Code** — Update files using the types
+4. **Debug** — Verify build and tests pass
+5. **Code** — Update tests if needed
 
 ### For New Features
-1. **Architect** - Design feature specification
-2. **Code** - Implement core logic
-3. **Code** - Add type definitions
-4. **Debug** - Test and fix issues
-5. **Code** - Add test coverage
+1. **Architect** — Design feature specification
+2. **Code** — Implement core logic
+3. **Code** — Add type definitions
+4. **Debug** — Test and fix issues
+5. **Code** — Add test coverage
 
 ### For Bug Fixes
-1. **Debug** - Identify root cause
-2. **Code** - Implement fix
-3. **Debug** - Verify fix works
-4. **Code** - Add regression test
-5. **Code** - Update related documentation
+1. **Debug** — Identify root cause
+2. **Code** — Implement fix
+3. **Debug** — Verify fix works
+4. **Code** — Add regression test
+5. **Code** — Update related documentation
 
 ## Task Delegation Patterns
 
@@ -70,7 +78,7 @@ Orchestrator (Analyze)
 | Mode | Can Edit | Cannot Edit |
 |------|----------|-------------|
 | architect | `*.md` | `*.ts`, `*.js` |
-| code | `*.ts`, `*.js` | - |
+| code | `*.ts`, `*.js` | — |
 | debug | read-only analysis | modifications |
 | ask | read-only explanation | modifications |
 | orchestrator | task delegation | implementation |
@@ -78,13 +86,12 @@ Orchestrator (Analyze)
 ## Quality Gates
 
 Before completing any orchestrated task:
-1. [ ] `npm run build` - TypeScript compiles
-2. [ ] `npm run test:mocha` - Integration tests pass
-3. [ ] `npm run test:jest` - Unit tests pass
-4. [ ] `npm run test:cov` - 100% coverage maintained
-5. [ ] No `any` or `unknown` types introduced
-6. [ ] Tabs used for indentation
-7. [ ] Space-before-function-paren style
+1. [ ] `npm run build` — TypeScript compiles
+2. [ ] `npm run test:cov` — 100% coverage maintained
+3. [ ] `npm run test:jest:cov` — Jest tests pass
+4. [ ] No `any` or `unknown` types introduced
+5. [ ] Tabs used for indentation
+6. [ ] Space-before-function-paren style
 
 ## Multi-Step Task Example
 

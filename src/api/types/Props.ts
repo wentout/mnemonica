@@ -7,6 +7,10 @@ const {
 	odp,
 } = constants;
 
+// External props storage via WeakMap keeps instance enumeration clean.
+// Instance metadata (__type__, __parent__, __args__, etc.) is stored
+// against the prototype object, not the instance itself, so it never
+// shows up in for...in, Object.keys, or JSON.stringify.
 const __props__ = new WeakMap();
 
 const nativeProps = new Set([

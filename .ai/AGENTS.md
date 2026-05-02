@@ -100,10 +100,10 @@ src/
 
 | File | Purpose |
 |------|---------|
-| [`../../SKILL.md`](../../SKILL.md) | Condensed skill reference for framework injection |
-| [`../../AGENTS.md`](../../AGENTS.md) | Root agent guidelines (legacy Roo entrypoint) |
-| [`../../.ai/rules-skill/philosophy.md`](../../.ai/rules-skill/philosophy.md) | HoTT concepts applied to mnemonica's self-reflection model |
-| [`../../.ai/rules-skill/ecosystem.md`](../../.ai/rules-skill/ecosystem.md) | PACT framework: personas, collaboration modes, integration points |
-| [`../../.ai/rules-skill/contributing.md`](../../.ai/rules-skill/contributing.md) | Behavioral guidelines for AI contributors |
+| [`../SKILL.md`](../SKILL.md) | Condensed skill reference for framework injection |
+| [`../AGENTS.md`](../AGENTS.md) | Root agent guidelines (legacy Roo entrypoint) |
+| [`rules-skill/philosophy.md`](./rules-skill/philosophy.md) | HoTT concepts applied to mnemonica's self-reflection model |
+| [`rules-skill/ecosystem.md`](./rules-skill/ecosystem.md) | PACT framework: personas, collaboration modes, integration points |
+| [`rules-skill/contributing.md`](./rules-skill/contributing.md) | Behavioral guidelines for AI contributors |
 
-- Main README: [`../../README.md`](../../README.md)
+- Main README: [`../README.md`](../README.md)

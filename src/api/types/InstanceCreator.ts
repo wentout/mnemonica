@@ -1,6 +1,20 @@
   
 'use strict';
 
+/**
+ * InstanceCreator orchestrates the full instance construction lifecycle.
+ *
+ * Pipeline stages (see also createInstanceModificator.ts and InstanceModificator.ts):
+ *   1. Setup      - extract type, config, prepare ModificationConstructor
+ *   2. Stack      - collect creation stack if submitStack or chained
+ *   3. blockErrors- if parent is Error, optionally block further construction
+ *   4. Pre-hooks  - invoke preCreation hooks on collection and type
+ *   5. Build      - makeInstanceModificator() wires prototype chain
+ *   6. Construct  - new InstanceModificator(...args) runs user constructor
+ *   7. Async      - if result is Promise, attach awaiter and subtype factories
+ *   8. Post-proc  - validate inheritance, set __self__, invoke postCreation hooks
+ */
+
 import { _Internal_TC_ } from '../../types';
 
 import {

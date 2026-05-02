@@ -1,27 +1,48 @@
 # mnemonica
 
-**Abstract technique that aids information retention: Instance Inheritance System**
+**Instance Inheritance System for JavaScript / TypeScript.**
 
-... allows us to make inherited descriptions of mappings of transformations from predecessor structured data types to the successors, as if it was math `f(x)=>y` ... and we will use `this` keyword as a persistent data structure where we will apply that transformations
+> **Using this library?** You're in the right place. &nbsp;|&nbsp;
+> **Contributing / modifying code?** Start with [`AGENTS.md`](./AGENTS.md).
+> [`SKILL.md`](./SKILL.md) is a usage quick reference only (not for contributors).
 
-![concept](https://raw.githubusercontent.com/mythographica/stash/master/img/LifeCycle/LifeCycle.png)
+Mnemonica builds typed prototype chains *between instances* (not just classes).
+You declare a type with `define(name, ctor)`; new instances inherit through
+the prototype chain from the instance they were created from. Mnemonica makes
+the inheritance graph explicit — eliminating a class of `Object.setPrototypeOf`
+and constructor-reuse bugs by design.
 
+```
+define(name, ctor)        →   TypeProxy   →   new instance.SubType()
+                                  │                     │
+                                  ▼                     ▼
+                          subtype registry      InstanceCreator
+                                  │                     │
+                                  ▼                     ▼
+                          preCreation hook       Mnemosyne
+                                                       │
+                                                       ▼
+                                                instance with
+                                                prototype chain →
+                                                parent instance
+                                                       │
+                                                       ▼
+                                                postCreation hook
+```
 
----
+Think `f(x) ⇒ y` where `this` is a persistent data structure carrying the
+transformation history. Stored constructor arguments stay introspectable via
+`getProps()`, so an instance is also a record of how it was built.
 
-# shortcuts
-
-* ?. : state : **mad science**
-* ?. : type : **asynchronous monad descriptor** => this
-* ?. : prod ready : **we wonder about**
-* ?. : example : **git clone && npm run example**
-
----
 [![Coverage Status](https://coveralls.io/repos/github/wentout/mnemonica/badge.svg?branch=master)](https://coveralls.io/github/wentout/mnemonica?branch=master)
 ![NPM](https://img.shields.io/npm/l/mnemonica)
 ![GitHub package.json version](https://img.shields.io/github/package-json/v/wentout/mnemonica)
 ![GitHub last commit](https://img.shields.io/github/last-commit/wentout/mnemonica)
 [![NPM](https://nodei.co/npm/mnemonica.png?mini=true)](https://www.npmjs.com/package/mnemonica)
+
+> Status: experimental. API is stable for the documented surface; advanced
+> internals (`_define`, `_lookup`, `defaultCollection`) are not part of the
+> stability contract.
 
 ---
 
@@ -42,9 +63,15 @@
   - [Error Handling](#error-handling)
   - [Symbols & Constants](#symbols--constants)
 - [Configuration Options](#configuration-options)
-- [AI Agent Usage Guide](#ai-agent-usage-guide)
-- [Usage with TypeØmatica](#usage-with-typeomatica)
 - [Examples](#examples)
+- [Usage with TypeØmatica](#usage-with-typeomatica)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+
+> AI agent integration guidance (introspection patterns, type discovery,
+> safe construction) lives in [AGENTS.md](AGENTS.md). It is kept separate
+> from the user-facing API reference.
 
 ---
 
@@ -78,7 +105,21 @@ Think of it as a mathematical function `f(x) => y` where `this` is your persiste
 npm install mnemonica
 ```
 
-**Requirements:** Node.js >=18 <24
+**Requirements:** Node.js `>=18 <26` (tested on 20.x, 22.x, 24.x in CI).
+
+### From a Git checkout
+
+```bash
+git clone https://github.com/wentout/mnemonica.git
+cd mnemonica
+npm ci
+npm run build      # compiles src/ → build/
+npm run test:cov   # mocha + coverage
+```
+
+The ESM entry point (`mnemonica/module`) re-exports the CommonJS build, so
+`npm run build` must succeed before `import 'mnemonica/module'` works from
+a fresh checkout.
 
 ---
 
@@ -973,116 +1014,29 @@ user.age = 25;          // ✓ Works - number to number
 user.age = '25';        // ✗ TypeError: Type Mismatch at runtime!
 ```
 
-For complete documentation including integration patterns, error handling, and advanced usage, see [TypeØmatica.md](TypeØmatica.md).
+For complete documentation including integration patterns, error handling, and advanced usage, see [docs/typeomatica.md](docs/typeomatica.md).
 
 ---
 
-## AI Agent Usage Guide
+> **AI agent guidance.** Patterns for type introspection, safe property
+> access, type discovery, instance traversal, and safe construction live
+> in [AGENTS.md](AGENTS.md). They are not duplicated here.
 
-This section helps AI agents understand and work with mnemonica programmatically.
+---
 
-### 1. Type Introspection
+## Examples
 
-Use `utils.parse(instance)` to understand instance structure:
+Runnable scripts in [`examples/`](examples/) demonstrate edge cases and
+integration patterns. See [examples/README.md](examples/README.md). Quick
+runners are wired up in `package.json`:
 
-```js
-const { utils: { parse } } = require('mnemonica');
-
-const parsed = parse(instance);
-// Returns: { name, props, self, proto, joint, parent, constructor }
+```bash
+npm run example:async    # async constructor edge case
+npm run example:rename   # constructor renaming via Object.defineProperty
+npm run example:v8bug    # documents a Node 22 .stack/.hasOwn divergence
 ```
 
-### 2. Safe Property Access
-
-Always use `getProps()` instead of direct property access:
-
-```js
-const { getProps } = require('mnemonica');
-
-const props = getProps(instance);
-// props.__type__, props.__args__, props.__parent__, props.__subtypes__, etc.
-```
-
-### 3. Type Discovery
-
-```js
-const { defaultTypes } = require('mnemonica');
-
-// List all types in default collection
-const typeNames = [...defaultTypes.subtypes.keys()];
-
-// List subtypes of a specific type
-const myType = defaultTypes.MyType;
-const subTypeNames = [...myType.subtypes.keys()];
-
-// Check if a type exists
-const hasType = defaultTypes.lookup('MyType') !== undefined;
-```
-
-### 4. Instance Traversal
-
-```js
-const { getProps } = require('mnemonica');
-
-// Walk up the inheritance chain
-function traverseChain(instance) {
-  const chain = [];
-  let current = instance;
-  
-  while (current) {
-    const props = getProps(current);
-    if (!props) break;
-    
-    chain.push({
-      typeName: props.__type__.TypeName,
-      timestamp: props.__timestamp__,
-      args: props.__args__
-    });
-    
-    current = props.__parent__;
-  }
-  
-  return chain;
-}
-```
-
-### 5. Safe Construction Patterns
-
-```js
-const { lookup } = require('mnemonica');
-
-// Always check if type exists before construction
-const MyType = lookup('MyType');
-if (MyType) {
-  const instance = new MyType(data);
-}
-
-// For nested construction with proper error handling
-try {
-  const subInstance = new instance.SubType(data);
-} catch (error) {
-  // Handle WRONG_MODIFICATION_PATTERN if SubType not defined
-  console.error('Subtype not available:', error.message);
-}
-```
-
-### 6. Analyzing Type Structure
-
-```js
-const { getProps } = require('mnemonica');
-
-function analyzeType(typeConstructor) {
-  return {
-    name: typeConstructor.TypeName,
-    isSubType: typeConstructor.isSubType,
-    subTypesCount: typeConstructor.subtypes?.size || 0,
-    hasHooks: Object.keys(typeConstructor.hooks || {}).length > 0,
-    config: typeConstructor.config
-  };
-}
-```
-
-### 7. Working with Collections
+### Working with Collections
 
 ```js
 const { createTypesCollection, defaultTypes } = require('mnemonica');
@@ -1101,10 +1055,6 @@ testCollection.registerHook('preCreation', (data) => {
   console.log('Creating in test collection:', data.TypeName);
 });
 ```
-
----
-
-## Examples
 
 ### Asynchronous Constructors
 
@@ -1169,22 +1119,51 @@ const merged = merge(instanceA, instanceB, 'args');
 
 ---
 
-## Epilogue
+## Roadmap
 
-So, now you can craft as many types as you wish, combine them, re-define them and spend much more time playing with them:
+Items below are designed but **not yet shipped**. They are documented here
+so consumers can avoid relying on them prematurely.
 
-* test : instances & arguments
-* track : moments of creation
-* check : if the order of creation is OK
-* validate : everything, 4 example use sort of TS in runtime
-* and even `.parse` them using `mnemonica.utils.parse`
+### Nested `lookupTyped()`
 
-Good Luck!
+**Problem.** Global `lookupTyped('Parent.Child')` returns a constructor
+*without* the parent in the prototype chain — that breaks instance
+inheritance.
+
+**Planned.** A type-safe `.lookupTyped()` method on constructors for
+relative lookups that preserve the chain:
+
+```typescript
+const GraphNode2D = Scene2D.lookupTyped('GraphNode2D');
+const node = new GraphNode2D({ x: 10, y: 20 });
+// node has Scene2D in its prototype chain
+```
+
+This requires a `NestedTypeRegistry` interface augmentation alongside
+`TypeRegistry` and is generated by [tactica](https://www.npmjs.com/package/typeomatica).
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch model, commit style, and
+the local build/test loop. Repository conventions, code style, and agent
+rules live in [AGENTS.md](AGENTS.md). Release notes live in
+[CHANGELOG.md](CHANGELOG.md).
+
+**Related reading:**
+- [Inheritance in JavaScript: Factory of Constructors with Prototype Chain](https://github.com/mythographica/stash/blob/master/inheritance.md)
+- [Architecture of Prototype Inheritance in JavaScript](https://dev.to/wentout/architecture-of-prototype-inheritance-in-javascript-ce6)
+- [Dead Simple type checker for JavaScript](https://dev.to/wentout/dead-simple-type-checker-for-javascript-4l40)
 
 ---
 
 ## License
 
-MIT
+MIT — Copyright (c) 2019 https://github.com/wentout
 
-Copyright (c) 2019 https://github.com/wentout
+---
+
+> *"O Great Mnemosyne! Please! Save us from Oblivion..."*
+>
+> — from the source, where memory persists

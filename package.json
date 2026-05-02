@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "0.9.99785",
+  "version": "0.9.99787",
   "description": "abstract technique that aids information retention : instance inheritance system",
   "type": "commonjs",
   "main": "./build/index.js",
@@ -33,15 +33,22 @@
     "Mobydack <devzetsubou@gmail.com>"
   ],
   "scripts": {
-    "build": "rm -rf ./build && npx tsc --pretty --project tsconfig.json && npm run lint:src && npm run lint:test",
-    "build:all": "rm -rf ./build && npx tsc --pretty --project tsconfig.json && npm run decorate:ts && npm run lint:src && npm run lint:test",
+    "build": "rm -rf ./build && npx tsc --pretty --project tsconfig.json",
+    "build:all": "npm run build && npm run decorate:ts",
+    "verify": "npm run build && npm run lint:check",
     "example": "npm run build && node ./test/example.js",
+    "example:async": "npm run build && node ./examples/AsyncNewTest.js",
+    "example:rename": "npm run build && node ./examples/ClassReName.js",
+    "example:v8bug": "npm run build && node ./examples/v8bug.js",
     "example:ts": "npx tsc ./test-ts/*.ts && npx eslint --fix ./test-ts/*.js && node ./test-ts/test-no-types.js && node ./test-ts/test-with-types.js",
     "deopt": "node --trace-deopt --trace-opt ./node_modules/mocha/bin/mocha.js ./test/index.js",
     "decorate:ts": "npx tsc --target ES2021 --moduleResolution NodeNext --module NodeNext --sourceMap ./test/decorate.ts",
     "lint": "npx eslint",
+    "lint:check": "npx eslint ./src ./test",
     "lint:src": "npx eslint --fix ./src",
     "lint:test": "npx eslint --fix ./test",
+    "lint:fix": "npm run lint:src && npm run lint:test",
+    "pretest": "npm run decorate:ts",
     "test": "mocha --allow-uncaught --enable-source-maps test/index.js",
     "test:cov": "npm run build:all && nyc --reporter=text-summary --reporter=lcov mocha --allow-uncaught --enable-source-maps --ui bdd --reporter spec ./test/index.js",
     "debug": "npx tsc --pretty --project tsconfig.json && npx mocha --allow-uncaught --enable-source-maps --reporter spec --inspect-brk test/index",
@@ -72,9 +79,9 @@
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^9.21.0",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.19.15",
-    "@typescript-eslint/eslint-plugin": "^8.57.1",
-    "@typescript-eslint/parser": "^8.57.1",
+    "@types/node": "^22.19.17",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
     "chai": "^5.3.3",
     "eslint": "^9.39.4",
     "eslint-plugin-import": "^2.32.0",
@@ -89,19 +96,15 @@
     "mocha-lcov-reporter": "^1.3.0",
     "nyc": "^17.1.0",
     "oxlint": "^0.16.12",
-    "ts-jest": "^29.4.6",
+    "ts-jest": "^29.4.9",
     "typeomatica": "^0.3.57",
     "typescript": "^5.9.3"
   },
   "engines": {
-    "node": ">=18 <24"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
+    "node": ">=18 <26"
   },
   "lint-staged": {
-    "*.js": "eslint --fix"
+    "src/**/*.ts": "eslint --fix",
+    "test/**/*.js": "eslint --fix"
   }
 }

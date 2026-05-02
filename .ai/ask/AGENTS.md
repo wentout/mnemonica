@@ -1,15 +1,20 @@
-# Mnemonica - Ask Mode Guidelines
+# Ask Mode Guidelines — mnemonica/core
+
+> **Applies to:** Explaining concepts, analyzing code, answering questions.
+> Framework-agnostic.
+> **Formerly:** `.roo/rules-ask/AGENTS.md`
+
+---
 
 ## Role
-You are in **Ask** mode. Your task is to explain concepts, analyze code, and answer questions about the mnemonica codebase.
 
-## Project Overview
+You are in **Ask** mode. Your task is to explain concepts, analyze code, and
+answer questions about the mnemonica codebase.
 
-Mnemonica is an **instance inheritance system** built on JavaScript prototype chains. It enables creating type hierarchies where instances can spawn child instances.
+## Key Concepts
 
-### Key Concepts
+### 1. Instance Inheritance
 
-#### 1. Instance Inheritance
 ```typescript
 // Define a type
 const User = define('User', function (name: string) {
@@ -23,18 +28,21 @@ const user = new User('John');
 const admin = user.Admin('privileges');
 ```
 
-#### 2. The `define()` Function
+### 2. The `define()` Function
+
 Creates type constructors with special inheritance capabilities:
 - Wraps constructors in TypeProxy
 - Registers type in TypesCollection
 - Enables `.subtypes` collection
 
-#### 3. Proxy Architecture
-- **TypeProxy** - Wraps type constructors, handles `.call`, `.apply`
-- **Mnemosyne** - Manages instance prototype chain, provides `.fork()`, `.parent()`
-- **TypesCollectionProxy** - Manages type registry, handles type lookup
+### 3. Proxy Architecture
 
-#### 4. Symbol System
+- **TypeProxy** — Wraps type constructors, handles `.call`, `.apply`
+- **Mnemosyne** — Manages instance prototype chain, provides `.fork()`, `.parent()`
+- **TypesCollectionProxy** — Manages type registry, handles type lookup
+
+### 4. Symbol System
+
 | Symbol | Purpose |
 |--------|---------|
 | `SymbolConstructorName` | Stores type name |
@@ -91,13 +99,15 @@ const TypeProxy = new Proxy(Constructor, {
 ## Common Questions
 
 ### Why strict TypeScript?
-The project enforces 100% code coverage and strict type checking to ensure reliability in the complex proxy-based architecture.
+The project enforces 100% code coverage and strict type checking to ensure
+reliability in the complex proxy-based architecture.
 
 ### Why two test frameworks?
-Mocha tests the transpiled output (integration), Jest tests TypeScript source directly (types and units).
+Mocha tests the transpiled output (integration), Jest tests TypeScript source
+directly (types and units).
 
 ### Why tabs for indentation?
-Project standard - configured in .editorconfig and eslint.config.js.
+Project standard — configured in `.editorconfig` and `eslint.config.js`.
 
 ## Documentation References
 
