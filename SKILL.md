@@ -139,8 +139,14 @@ npm run test:jest:cov # Jest tests with coverage
 npm run watch        # Watch mode
 ```
 
+## Contributing
+
+This file covers **usage** of mnemonica only. If you are modifying the library
+itself, read [`AGENTS.md`](./AGENTS.md) (or [`.ai/AGENTS.md`](./.ai/AGENTS.md)
+for framework-agnostic rules).
+
 ## External Resources
 
 - Repository: https://github.com/mythographica/mnemonica
 - Main README: [README.md](../README.md)
-- Agent Guidelines: [AGENTS.md](../AGENTS.md)
+- Contributor Guidelines: [AGENTS.md](./AGENTS.md)

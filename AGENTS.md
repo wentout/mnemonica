@@ -2,6 +2,11 @@
 
 This file provides guidance to agents when working with code in this repository.
 
+> **Note:** Framework-agnostic rules are also available in `.ai/`:
+> [`AGENTS.md`](./.ai/AGENTS.md), [`CODE.md`](./.ai/CODE.md),
+> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md).
+> These are designed for agents that do not use the Roo framework.
+
 ## Project Overview
 
 **mnemonica** is an instance inheritance system for JavaScript/TypeScript that enables prototype chain-based type definitions. It allows creating types using `define()` and building inheritance hierarchies through prototype chains.
@@ -24,6 +29,15 @@ Mnemonica enables AI agents to:
 4. **Become more capable** by understanding the inheritance graph
 
 The stored arguments in the prototype chain allow AI to introspect and learn from its own execution history.
+
+## Agent Framework Rules
+
+This repository contains additional mode-specific rules for the **Roo** agent framework in `.roo/rules-code/`:
+- Code mode rules: `.roo/rules-code/AGENTS.md`
+- Reminders (type vs interface, spacing): `.roo/rules-code/REMINDERS.md`
+- Context condensing protocol: `.roo/rules-code/CONTEXT-CONDENSING.md`
+
+If you are a Roo user, these files are injected into your system prompt automatically. If you are using a different agent framework, you should read them manually — they contain critical rules not duplicated here.
 
 ## Build/Test Commands
 

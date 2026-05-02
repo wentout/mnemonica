@@ -2,6 +2,10 @@
 
 **Instance Inheritance System for JavaScript / TypeScript.**
 
+> **Using this library?** You're in the right place. &nbsp;|&nbsp;
+> **Contributing / modifying code?** Start with [`AGENTS.md`](./AGENTS.md).
+> [`SKILL.md`](./SKILL.md) is a usage quick reference only (not for contributors).
+
 Mnemonica builds typed prototype chains *between instances* (not just classes).
 You declare a type with `define(name, ctor)`; new instances inherit through
 the prototype chain from the instance they were created from. Mnemonica makes
