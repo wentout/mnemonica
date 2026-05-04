@@ -4,6 +4,7 @@
 
 > **Using this library?** You're in the right place. &nbsp;|&nbsp;
 > **Contributing / modifying code?** Start with [`AGENTS.md`](./AGENTS.md).
+> **Using mnemonica with tactica?** Read [`.ai/TACTICA.md`](./.ai/TACTICA.md) — mnemonica without tactica is 10% of the value.
 > [`SKILL.md`](./SKILL.md) is a usage quick reference only (not for contributors).
 
 Mnemonica builds typed prototype chains *between instances* (not just classes).
@@ -78,8 +79,6 @@ transformation history. Stored constructor arguments stay introspectable via
 ## Overview
 
 Mnemonica helps create ordered sequences of data transformations using prototype chain inheritance. It combines Object Instances with Inheritance through the Prototype Chain, enabling you to create new instances inherited from existing ones.
-
-Think of it as a mathematical function `f(x) => y` where `this` is your persistent data structure and transformations are applied sequentially.
 
 > *"O Great Mnemosyne! Please! Save us from Oblivion..."*
 >
