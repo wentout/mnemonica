@@ -3,5 +3,5 @@ export declare const descriptors: {
         [index: string]: import("../types").MnemonicaErrorConstructor;
     };
     createTypesCollection: import("../types").CreateTypesCollectionFunction;
-    defaultTypes: import("../types").TypesCollection;
+    defaultTypes: import("..").TypesCollection;
 };

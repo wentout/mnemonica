@@ -23,7 +23,7 @@ export const {
 	findSubTypeFromParent,
 } = TypesUtils;
 
-export type { IDEF, TypeConstructor, _Internal_TC_, Proto, ProtoFlat } from './types';
+export type { IDEF, TypeConstructor, _Internal_TC_, Proto, ProtoFlat, hooksOpts, hook, hooksTypes, TypesCollection } from './types';
 export { getProps, setProps } from './api/types/Props';
 
 import { constants } from './constants';
