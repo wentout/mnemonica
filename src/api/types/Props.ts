@@ -1,7 +1,7 @@
 'use strict';
 
 import { constants } from '../../constants';
-import type { CollectionDef, TypeDef, Props as PropsType } from '../../types';
+import type { CollectionDef, InstanceCreatorContext, Props as PropsType, TypeDef } from '../../types';
 
 const {
 	odp,
@@ -26,7 +26,7 @@ const nativeProps = new Set([
 	'__self__',
 ]);
 
-export const _addProps = function (this: any): any {
+export const _addProps = function (this: InstanceCreatorContext): void {
 
 	 
 	const self = this;
@@ -88,7 +88,7 @@ export const _addProps = function (this: any): any {
 		const { stack } = this;
 		odp(value, '__stack__', {
 			get () {
-				return stack.join('\n');
+				return stack!.join('\n');
 			}
 		});
 	}
@@ -107,7 +107,7 @@ export const _addProps = function (this: any): any {
 	});
 
 	// __props__.set(self, value);
-	__props__.set(proto, value);
+	__props__.set(proto!, value);
 
 };
 

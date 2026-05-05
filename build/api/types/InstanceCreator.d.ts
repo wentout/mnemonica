@@ -6,8 +6,8 @@ declare const InstanceCreatorPrototype: {
     addThen: (this: InstanceCreatorContext, then: ThenSpec) => void;
     invokePreHooks: (this: InstanceCreatorContext) => void;
     invokePostHooks: (this: InstanceCreatorContext) => {
-        type: void;
-        collection: void;
+        type: Set<unknown>;
+        collection: Set<unknown>;
     };
     throwModificationError: (this: InstanceCreatorContext, error: MnemonicaError) => void;
 };

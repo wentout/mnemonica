@@ -1,5 +1,6 @@
 'use strict';
 
+
 import { collectConstructors } from './collectConstructors';
 import { extract } from './extract';
 import { parent } from './parent';

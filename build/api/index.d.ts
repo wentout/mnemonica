@@ -1,10 +1,8 @@
 export * as errors from './errors';
 export declare const hooks: {
-    invokeHook: (this: any, hookType: string, opts: {
-        [index: string]: any;
-    }) => Set<unknown>;
-    registerHook: (this: any, hookType: string, cb: CallableFunction) => void;
-    registerFlowChecker: (this: any, cb: () => unknown) => void;
+    invokeHook: (this: import("../types").Hookable, hookType: string, opts: import("..").hooksOpts) => Set<unknown>;
+    registerHook: (this: import("../types").Hookable, hookType: string, cb: CallableFunction) => void;
+    registerFlowChecker: (this: import("../types").Hookable, cb: () => unknown) => void;
 };
 export declare const types: {
     define: (this: CallableFunction, subtypes: import("./types").TypesMap, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object) => import("../types").TypeClass;

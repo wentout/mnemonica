@@ -9,8 +9,8 @@ declare const _default: {
         addThen: (this: import("../../types").InstanceCreatorContext, then: import("../../types").ThenSpec) => void;
         invokePreHooks: (this: import("../../types").InstanceCreatorContext) => void;
         invokePostHooks: (this: import("../../types").InstanceCreatorContext) => {
-            type: void;
-            collection: void;
+            type: Set<unknown>;
+            collection: Set<unknown>;
         };
         throwModificationError: (this: import("../../types").InstanceCreatorContext, error: import("../../types").MnemonicaError) => void;
     }> | undefined;

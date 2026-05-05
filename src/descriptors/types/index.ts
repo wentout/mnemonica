@@ -3,7 +3,8 @@
 import type {
 	_Internal_TC_,
 	CreateTypesCollectionFunction,
-	TypesCollection
+	TypesCollection,
+	hooksOpts
 } from '../../types';
 
 import { constants } from '../../constants';
@@ -134,10 +135,10 @@ odp( TypesCollection.prototype, 'lookup', {
 } );
 
 odp( TypesCollection.prototype, 'registerHook', {
-	get () {
+	get (this: TypesCollection) {
 		 
 		const self = this;
-		return function ( this: unknown, hookName: string, hookCallback: CallableFunction ) {
+		return function ( hookName: string, hookCallback: CallableFunction ) {
 			// return proto.registerHook.call( typesCollections.get( self ), hookName, hookCallback );
 			return registerHook.call( self, hookName, hookCallback );
 		}.bind( this );
@@ -146,23 +147,18 @@ odp( TypesCollection.prototype, 'registerHook', {
 } );
 
 odp( TypesCollection.prototype, 'invokeHook', {
-	get () {
-		return function ( this: unknown, hookName: string, hookCallback: CallableFunction ) {
-			 
-			const self = this;
-			// return proto.invokeHook.call( typesCollections.get( self ), hookName, hookCallback );
-			return invokeHook.call( typesCollections.get( self ), hookName, hookCallback );
-		}.bind( this );
+	get (this: TypesCollection) {
+		return ( hookName: string, opts: { [index: string]: unknown } ) => {
+			return invokeHook.call( typesCollections.get( this ), hookName, opts as hooksOpts );
+		};
 	}
 } );
 
 odp( TypesCollection.prototype, 'registerFlowChecker', {
-	get () {
-		return function ( this: unknown, flowCheckerCallback: () => unknown ) {
-			 
-			const self = this;
-			return registerFlowChecker.call( typesCollections.get( self ), flowCheckerCallback );
-		}.bind( this );
+	get (this: TypesCollection) {
+		return ( flowCheckerCallback: () => unknown ) => {
+			return registerFlowChecker.call( typesCollections.get( this ), flowCheckerCallback );
+		};
 	}
 } );
 

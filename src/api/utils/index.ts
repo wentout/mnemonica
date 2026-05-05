@@ -20,6 +20,7 @@ const {
 } = utils;
 
 import { _getProps, Props } from '../types/Props';
+import type { MnemonicaConstructor } from '../../types';
 
 import compileNewModificatorFunctionBody from '../types/compileNewModificatorFunctionBody';
 
@@ -223,7 +224,7 @@ const isClass = (fn: CallableFunction) => {
 const makeErrorModificatorType = (
 	TypeName: string,
 	ErrorModificator = function () { }
-) => {
+): MnemonicaConstructor => {
 
 	const modificatorBody = compileNewModificatorFunctionBody(TypeName);
 
@@ -235,7 +236,7 @@ const makeErrorModificatorType = (
 	);
 
 	const result = modificatorType();
-	return result;
+	return result as MnemonicaConstructor;
 
 };
 

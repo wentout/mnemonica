@@ -15,8 +15,8 @@
  *   8. Post-proc  - validate inheritance, set __self__, invoke postCreation hooks
  */
 
-import { _Internal_TC_, InstanceCreatorContext, ThenSpec, TypeDef, MnemonicaError } from '../../types';
 
+import { _Internal_TC_, InstanceCreatorContext, ThenSpec, TypeDef, MnemonicaError, MnemonicaConstructor } from '../../types';
 import {
 	constants
 } from '../../constants';
@@ -62,6 +62,7 @@ const invokePreHooks = function ( this: InstanceCreatorContext ) {
 
 	const hookData = {
 		type,
+		TypeName : type.TypeName,
 		existentInstance,
 		args,
 		InstanceModificator
@@ -100,6 +101,7 @@ const invokePostHooks = function ( this: InstanceCreatorContext ) {
 
 	const hookData = {
 		type,
+		TypeName : type.TypeName,
 		existentInstance,
 		inheritedInstance,
 		args,
@@ -137,7 +139,8 @@ const postProcessing = function ( this: InstanceCreatorContext, continuationOf?:
 		self.throwModificationError( new WRONG_MODIFICATION_PATTERN( msg, stack ) );
 	}
 
-	if ( !((self.inheritedInstance.constructor as unknown) as Record<symbol, unknown>)[ SymbolConstructorName ] ) {
+	const inheritedConstructor = self.inheritedInstance.constructor as MnemonicaConstructor;
+	if ( !inheritedConstructor[ SymbolConstructorName ] ) {
 		const msg = 'should inherit from mnemonica instance';
 		self.throwModificationError( new WRONG_MODIFICATION_PATTERN( msg, stack ) );
 	}
@@ -293,7 +296,7 @@ export const InstanceCreator = function ( this: InstanceCreatorContext, type: Ty
 	 
 	const self = this;
 
-	const ModificatorType = constructHandler() as unknown as new (...args: unknown[]) => object;
+	const ModificatorType = constructHandler();
 
 	Object.assign( self, {
 
@@ -321,7 +324,7 @@ export const InstanceCreator = function ( this: InstanceCreatorContext, type: Ty
 		if ( submitStack ) {
 			getStack.call( self, title, stackAddition );
 		} else {
-			self.stack = title;
+			self.stack = title as unknown as string[];
 		}
 	}
 
@@ -329,7 +332,7 @@ export const InstanceCreator = function ( this: InstanceCreatorContext, type: Ty
 
 		if ( existentInstance instanceof Error ) {
 
-			self.ModificatorType = makeErrorModificatorType( TypeName ) as new (...args: unknown[]) => object;
+			self.ModificatorType = makeErrorModificatorType( TypeName );
 
 			self.InstanceModificator = makeInstanceModificator( self );
 

@@ -1,10 +1,12 @@
 'use strict';
 
+import type { hooksOpts, Hookable } from '../../types';
+
 import { flowCheckers } from './flowCheckers';
 
 import { hop } from '../../utils/hop';
 
-export const invokeHook = function ( this: any, hookType: string, opts: { [ index: string ]: any } ) {
+export const invokeHook = function ( this: Hookable, hookType: string, opts: hooksOpts ) {
 
 	const {
 		type,
@@ -41,20 +43,20 @@ export const invokeHook = function ( this: any, hookType: string, opts: { [ inde
 			Object.assign( hookArgs, {
 				inheritedInstance,
 				throwModificationError ( error: Error ) {
-					creator.throwModificationError( error );
+					creator!.throwModificationError( error );
 				}
 			} );
 		}
 
 		 
-		this.hooks[ hookType ].forEach( ( hook: ( this: unknown, hookParams: typeof hookArgs ) => void ) => {
-			const result = hook.call( self, hookArgs );
+		this.hooks[ hookType ].forEach( ( hook: CallableFunction ) => {
+			const result = (hook as Function).call( self, hookArgs );
 			invocationResults.add( result );
 		} );
 
 		const flowChecker = flowCheckers.get( this );
 		if ( typeof flowChecker === 'function' ) {
-			flowChecker
+			(flowChecker as Function)
 				.call( this, Object.assign( {}, {
 					invocationResults,
 					hookType,

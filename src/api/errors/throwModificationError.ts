@@ -84,7 +84,7 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 		enumerable : true
 	} );
 
-	self.ModificatorType = makeErrorModificatorType( TypeName ) as new (...args: unknown[]) => object;
+	self.ModificatorType = makeErrorModificatorType( TypeName );
 
 	self.InstanceModificator = makeInstanceModificator( self );
 

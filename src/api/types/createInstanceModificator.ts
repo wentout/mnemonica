@@ -1,5 +1,6 @@
 'use strict';
 
+
 // Step 5 of construction pipeline: the default ModificationConstructor.
 // Wires the prototype chain by creating a Mnemosyne object inheriting
 // from the parent instance, attaching internal props, and linking

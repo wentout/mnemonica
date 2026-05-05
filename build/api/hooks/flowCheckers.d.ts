@@ -1,2 +1,3 @@
-export declare const flowCheckers: WeakMap<object, any>;
-export declare const registerFlowChecker: (this: any, cb: () => unknown) => void;
+import type { Hookable } from '../../types';
+export declare const flowCheckers: WeakMap<Hookable, () => unknown>;
+export declare const registerFlowChecker: (this: Hookable, cb: () => unknown) => void;

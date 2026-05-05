@@ -1,5 +1,6 @@
 'use strict';
 
+
 import { ErrorsTypes } from '../descriptors/errors';
 const {
 	WRONG_MODIFICATION_PATTERN,

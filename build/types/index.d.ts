@@ -11,6 +11,9 @@ export type IDEFWithArgs<T, Args extends unknown[] = unknown[]> = {
 };
 export type ErrorMessageKey = 'BASE_ERROR_MESSAGE' | 'HANDLER_MUST_BE_A_FUNCTION' | 'WRONG_TYPE_DEFINITION' | 'WRONG_INSTANCE_INVOCATION' | 'WRONG_MODIFICATION_PATTERN' | 'ALREADY_DECLARED' | 'WRONG_ARGUMENTS_USED' | 'WRONG_HOOK_TYPE' | 'MISSING_HOOK_CALLBACK' | 'MISSING_CALLBACK_ARGUMENT' | 'OPTIONS_ERROR' | 'WRONG_STACK_CLEANER';
 export type ErrorMessages = Record<ErrorMessageKey, string>;
+export interface HookFunction extends CallableFunction {
+    (opts: hooksOpts): unknown;
+}
 export interface MnemonicaErrorConstructor {
     new (addition?: string, stack?: string | string[]): Error;
     (name: string): Error;
@@ -40,14 +43,16 @@ export interface TypeConstructor<ConstructorInstance extends object> {
 }
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
 export type hooksOpts = {
-    TypeName?: string;
-    type?: TypeDef;
+    TypeName: string;
+    type: TypeDef;
     args: unknown[];
     existentInstance: object;
     inheritedInstance?: object;
-    creator?: object;
+    creator?: {
+        throwModificationError(error: Error): void;
+    };
 };
-export type hook = (opts: hooksOpts) => void;
+export type hook = (opts: hooksOpts) => unknown;
 export type constructorOptions = {
     ModificationConstructor?: CallableFunction;
     strictChain?: boolean;
@@ -69,22 +74,18 @@ export type TypeDef = {
     collection: CollectionDef;
     config: constructorOptions;
     parentType?: TypeDef;
-    constructHandler: () => CallableFunction;
+    constructHandler: () => MnemonicaConstructor;
     title: string;
-    hooks: Record<string, hook[]>;
-    invokeHook: (hookType: hooksTypes, opts: hooksOpts) => void;
+    hooks: Record<string, Set<CallableFunction>>;
+    invokeHook: (hookType: hooksTypes, opts: hooksOpts) => Set<unknown>;
     prototype: unknown;
     stack?: string;
     [Symbol.hasInstance]: (instance: object) => boolean;
 };
-export type CollectionDef = {
+export type CollectionDef = Hookable & {
     define: TypeAbsorber;
     lookup: TypeLookup;
-    invokeHook: (hookType: hooksTypes, opts: hooksOpts) => void;
-    registerHook: (hookType: hooksTypes, cb: hook) => void;
-    registerFlowChecker: (cb: () => unknown) => void;
     subtypes: SubtypesMap;
-    hooks: Record<string, hook[]>;
     [key: string]: unknown;
 };
 export type TypeLookup = (this: Map<string, unknown>, TypeNestedPath: string) => TypeClass | undefined;
@@ -99,13 +100,13 @@ export interface InstanceCreatorContext {
     existentInstance: object;
     args: unknown[];
     ModificationConstructor: CallableFunction;
-    ModificatorType: new (...args: unknown[]) => object;
-    InstanceModificator: new (...args: unknown[]) => object;
+    ModificatorType: MnemonicaConstructor;
+    InstanceModificator: MnemonicaConstructor;
     inheritedInstance: object | Promise<object>;
     config: constructorOptions;
     proto: object;
     __proto_proto__?: object;
-    stack?: string;
+    stack?: string[];
     getExistentAsyncStack(existentInstance: object): unknown;
     postProcessing(continuationOf?: TypeDef): void;
     makeAwaiter(type: TypeDef, then?: ThenSpec): Promise<object>;
@@ -182,15 +183,17 @@ export interface TypeAbsorber {
     <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig: IDEF<T> | object | boolean | CallableFunction, configOrUndefined: HideInstanceMethodsOptions): IDefinitorInstance<T, HideInstanceMethodsOptions>;
     <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<T, constructorOptions>;
 }
-export interface TypesCollection {
+export interface TypesCollection extends Hookable {
     define: TypeAbsorber;
     lookup: TypeLookup;
-    registerHook(hookType: hooksTypes, cb: hook): void;
-    invokeHook(hookType: hooksTypes, opts: hooksOpts): void;
-    registerFlowChecker(cb: () => unknown): void;
     subtypes: SubtypesMap;
-    hooks: Record<string, hook[]>;
     [key: string]: unknown;
+}
+export interface Hookable {
+    hooks: Record<string, Set<CallableFunction>>;
+    invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
+    registerHook(hookType: hooksTypes, cb: HookFunction): void;
+    registerFlowChecker(cb: (opts: object) => unknown): void;
 }
 export type CreateTypesCollectionFunction = (config?: constructorOptions) => TypesCollection;
 export type TypeClass = IDefinitorInstance<object>;
@@ -202,9 +205,20 @@ export interface ITypeClass<T> {
     registerHook(hookType: hooksTypes, cb: hook): void;
 }
 export type ITypeAbsorber<T> = (this: unknown, TypeName: string, constructHandler: IDEF<T>, proto?: object, config?: constructorOptions) => ITypeClass<T>;
+export interface MnemonicaConstructor extends NewableFunction {
+    new (...args: unknown[]): object;
+    (this: object, ...args: unknown[]): unknown;
+    [key: symbol]: unknown;
+}
+export interface TypeDescriptorDefine extends CallableFunction {
+    (TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object): TypeClass;
+}
+export interface TypeDescriptorLookup extends CallableFunction {
+    (TypeNestedPath: string): TypeClass | undefined;
+}
 export type TypeDescriptorInstance = {
-    define: CallableFunction;
-    lookup: CallableFunction;
+    define: TypeDescriptorDefine;
+    lookup: TypeDescriptorLookup;
     subtypes: Map<string, object>;
     TypeName: string;
 };
