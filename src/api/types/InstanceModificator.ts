@@ -9,15 +9,6 @@ import type {
 } from '../../types';
 import { _addProps } from './Props';
 
-interface ModificationConstructor extends CallableFunction {
-	(
-		this: object,
-		ModificatorType: MnemonicaConstructor,
-		ModificatorTypePrototype: object,
-		_addProps: CallableFunction
-	): MnemonicaConstructor;
-}
-
 export const makeInstanceModificator = ( self: InstanceCreatorContext ): MnemonicaConstructor => {
 
 	const {
@@ -27,11 +18,13 @@ export const makeInstanceModificator = ( self: InstanceCreatorContext ): Mnemoni
 		proto,
 	} = self;
 
-	const result = (ModificationConstructor as ModificationConstructor).call(
+	const result = ModificationConstructor.call(
 		existentInstance,
 		ModificatorType,
-		Object.assign( {},
-			proto ),
+		Object.assign(
+			{},
+			proto
+		),
 		( __proto_proto__: unknown ) => {
 			self.__proto_proto__ = __proto_proto__ as object;
 			_addProps.call( self );

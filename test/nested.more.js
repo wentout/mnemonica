@@ -169,9 +169,11 @@ const tests = ( opts ) => {
 						iof = evenMore instanceof base[ name ];
 						base = base[ name ];
 					} else if ( !base ) {
-						return { idx, name, iof };
+						const baseResult = { idx, name, iof };
+						return baseResult;
 					}
-					return { idx, name, iof };
+					const chainResult = { idx, name, iof };
+					return chainResult;
 				} )
 				.reverse()
 				.forEach( props => {
@@ -338,7 +340,8 @@ const tests = ( opts ) => {
 				const customCollection = {
 					lookup ( path ) {
 						if ( path === 'CustomType' ) {
-							return { __type__ : { TypeName : 'CustomType' } };
+							const lookupResult = { __type__ : { TypeName : 'CustomType' } };
+							return lookupResult;
 						}
 						return undefined;
 					}

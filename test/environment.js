@@ -749,9 +749,10 @@ const tests = (opts) => {
 
 				[ 'handler must be a function', () => {
 					define(() => {
-						return {
+						const result = {
 							name : null
 						};
+						return result;
 					});
 				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
 

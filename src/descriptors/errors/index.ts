@@ -16,8 +16,10 @@ export const ErrorsTypes: { [ index: string ]: MnemonicaErrorConstructor } = {
 Object.entries( ErrorMessages ).forEach( entry => {
 	const [ ErrorConstructorName, message ] = entry;
 	 
-	const ErrorCtor = constructError( ErrorConstructorName,
-		message );
+	const ErrorCtor = constructError(
+		ErrorConstructorName,
+		message 
+	);
 	ErrorsTypes[ ErrorConstructorName ] = ErrorCtor as MnemonicaErrorConstructor;
 } );
 

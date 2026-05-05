@@ -118,9 +118,11 @@ export const constants = {
 	},
 	get 'odp' () {
 		return <T extends object>( o: T, p: PropertyKey, attributes: PropertyDescriptor ): T => {
-			return Object.defineProperty( o,
+			return Object.defineProperty(
+				o,
 				p,
-				attributes ) as T;
+				attributes 
+			) as T;
 		};
 	},
 

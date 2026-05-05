@@ -68,12 +68,18 @@ const getTypeChecker = (TypeName: string) => {
 const getTypeSplitPath = (path: string) => {
 	const split = path
 		// beautifull names
-		.replace(/\n|\t| /g,
-			'')
-		.replace(/\[(\w+)\]/g,
-			'.$1')
-		.replace(/^\./,
-			'')
+		.replace(
+			/\n|\t| /g,
+			''
+		)
+		.replace(
+			/\[(\w+)\]/g,
+			'.$1'
+		)
+		.replace(
+			/^\./,
+			''
+		)
 		.split(/\.|\/|:/);
 	return split;
 };
@@ -102,13 +108,15 @@ const getExistentAsyncStack = (existentInstance: asyncStack): unknown => {
 		const pstack = props
 			.__stack__
 			.split('\n')
-			.reduce((arr: string[], line: string) => {
-				if (line.length) {
-					arr.push(line);
-				}
-				return arr;
-			},
-			[]);
+			.reduce(
+				(arr: string[], line: string) => {
+					if (line.length) {
+						arr.push(line);
+					}
+					return arr;
+				},
+				[]
+			);
 
 		proto = proto.parent();
 
@@ -117,8 +125,10 @@ const getExistentAsyncStack = (existentInstance: asyncStack): unknown => {
 		if (proto && protoProps && protoProps.__type__) {
 
 			if (protoProps.__type__.isSubType) {
-				stack.push(...pstack.slice(0,
-					1));
+				stack.push(...pstack.slice(
+					0,
+					1
+				));
 			} else {
 				stack.push(...pstack);
 			}
@@ -172,8 +182,10 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 			const _subtype = props.__type__.subtypes.get(subType);
 			subtype = _subtype;
 		} else {
-			subtype = findSubTypeFromParent(props.__parent__,
-				subType);
+			subtype = findSubTypeFromParent(
+				props.__parent__,
+				subType
+			);
 		}
 	}
 	 
@@ -251,7 +263,8 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 
 	if (_thisArg === null) {
 		thisArg = Object.create(null);
-		odp(thisArg,
+		odp(
+			thisArg,
 			Symbol.toPrimitive,
 			{
 				get () {
@@ -259,7 +272,8 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 						return _thisArg;
 					};
 				}
-			});
+			}
+		);
 	}
 
 	if (
@@ -267,7 +281,8 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 		_thisArg instanceof Boolean ||
 		_thisArg instanceof String
 	) {
-		odp(thisArg,
+		odp(
+			thisArg,
 			Symbol.toPrimitive,
 			{
 				get () {
@@ -275,7 +290,8 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 						return (_thisArg as String | Number | Boolean).valueOf();
 					};
 				}
-			});
+			}
+		);
 	}
 
 	return thisArg;

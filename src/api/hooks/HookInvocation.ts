@@ -55,11 +55,13 @@ export class HookInvocation {
 		};
 
 		if (this.inheritedInstance !== undefined) {
-			Object.assign(result,
+			Object.assign(
+				result,
 				{
 					inheritedInstance      : this.inheritedInstance,
 					throwModificationError : this._throwModificationError,
-				});
+				}
+			);
 		}
 
 		return result;

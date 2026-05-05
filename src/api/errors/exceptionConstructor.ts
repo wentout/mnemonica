@@ -51,29 +51,35 @@ const checkThrowArgs = ( instance: unknown, target: unknown, error: Error, args:
 		return;
 	}
 
-	odp( wrongThrow,
+	odp(
+		wrongThrow,
 		'instance',
 		{
 			get () {
 				return instance;
 			}
-		} );
+		} 
+	);
 
-	odp( wrongThrow,
+	odp(
+		wrongThrow,
 		'error',
 		{
 			get () {
 				return error;
 			}
-		} );
+		} 
+	);
 
-	odp( wrongThrow,
+	odp(
+		wrongThrow,
 		'args',
 		{
 			get () {
 				return args;
 			}
-		} );
+		} 
+	);
 
 	throw wrongThrow;
 
@@ -99,31 +105,38 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 	 
 	const exception = this;
 
-	odp( exception,
+	odp(
+		exception,
 		'args',
 		{
 			get () {
 				return args;
 			}
-		} );
+		} 
+	);
 
-	odp( exception,
+	odp(
+		exception,
 		'originalError',
 		{
 			get () {
 				return error;
 			}
-		} );
+		} 
+	);
 
-	odp( exception,
+	odp(
+		exception,
 		'instance',
 		{
 			get () {
 				return instance;
 			}
-		} );
+		} 
+	);
 
-	odp( exception,
+	odp(
+		exception,
 		'extract',
 		{
 			get () {
@@ -131,17 +144,21 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 					return instance.extract();
 				};
 			}
-		} );
+		} 
+	);
 
-	odp( exception,
+	odp(
+		exception,
 		'parse',
 		{
 			get () {
 				return () => {
-					return parse( instance );
+					const result = parse( instance );
+					return result;
 				};
 			}
-		} );
+		} 
+	);
 
 	// real error stack
 	const errorStack = exception.stack!.split( '\n' );
@@ -150,10 +167,12 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 
 	const title = `\n<-- lifecycle of [ ${TypeName} ] traced -->`;
 
-	getStack.call( exception,
+	getStack.call(
+		exception,
 		title,
 		[],
-		prepareException );
+		prepareException 
+	);
 
 	 
 	stack.push( ...(exception.stack as unknown as string[]) );
@@ -171,13 +190,15 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 
 	const exceptionStack = cleanupStack( stack ).join( '\n' );
 
-	odp( exception,
+	odp(
+		exception,
 		'stack',
 		{
 			get () {
 				return exceptionStack;
 			}
-		});
+		}
+	);
 
 	return exception;
 
@@ -189,10 +210,12 @@ const prepareException = function ( this: object, target: unknown, error: Error,
 	 
 	const instance = this;
 
-	checkThrowArgs( instance,
+	checkThrowArgs(
+		instance,
 		target,
 		error,
-		args );
+		args 
+	);
 
 	const props = _getProps(instance) as Props;
 
@@ -216,23 +239,29 @@ const prepareException = function ( this: object, target: unknown, error: Error,
 	*/
 
 	const ExceptionCreator = Object.create( __creator__ );
-	ExceptionCreator.config = Object.assign( {},
-		__creator__.config );
+	ExceptionCreator.config = Object.assign(
+		{},
+		__creator__.config 
+	);
 	ExceptionCreator.config.blockErrors = false;
 
 	ExceptionCreator.existentInstance = error;
 	 
-	ExceptionCreator.ModificatorType = makeErrorModificatorType( TypeName,
+	ExceptionCreator.ModificatorType = makeErrorModificatorType(
+		TypeName,
 		function (this: Error) {
-			return exceptionConsctructHandler.call( this,
+			return exceptionConsctructHandler.call(
+				this,
 				{
 					instance,
 					TypeName,
 					typeStack,
 					args,
 					error
-				} );
-		} );
+				} 
+			);
+		} 
+	);
 
 	ExceptionCreator.InstanceModificator = makeInstanceModificator( ExceptionCreator );
 

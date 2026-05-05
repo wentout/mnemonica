@@ -46,13 +46,17 @@ export interface TypeProxyInstance extends TypeProxyGetHandler, TypeProxySetHand
 }
 
 export const TypeProxy = function (__type__: TypeProxyType, Uranus: unknown) {
-	Object.assign(this,
+	Object.assign(
+		this,
 		{
 			__type__,
 			Uranus
-		});
-	const typeProxy = new Proxy(InstanceCreator,
-		this);
+		}
+	);
+	const typeProxy = new Proxy(
+		InstanceCreator,
+		this
+	);
 	return typeProxy;
 } as _Internal_TC_<TypeProxyInstance>;
 
@@ -72,8 +76,10 @@ TypeProxy.prototype.get = function (this: TypeProxyInstance, target: CallableFun
 
 	// used for existent props with value
 	// undefined || null || false
-	if (hop(type,
-		prop)) {
+	if (hop(
+		type,
+		prop
+	)) {
 		return propDeclaration;
 	}
 
@@ -82,8 +88,10 @@ TypeProxy.prototype.get = function (this: TypeProxyInstance, target: CallableFun
 		return type.subtypes.get(prop);
 	}
 
-	return Reflect.get(target,
-		prop);
+	return Reflect.get(
+		target,
+		prop
+	);
 
 };
 
@@ -94,8 +102,10 @@ TypeProxy.prototype.set = function (this: TypeProxyInstance, _target: unknown, n
 	// is about setting a prototype to Type
 	if (name === 'prototype') {
 		checkProto(value);
-		Object.assign(type.proto,
-			value);
+		Object.assign(
+			type.proto,
+			value
+		);
 		return true;
 	}
 
@@ -107,8 +117,10 @@ TypeProxy.prototype.set = function (this: TypeProxyInstance, _target: unknown, n
 		throw new WRONG_TYPE_DEFINITION('should use function for type definition');
 	}
 
-	type.define(name,
-		value);
+	type.define(
+		name,
+		value
+	);
 	return true;
 
 };
@@ -120,9 +132,12 @@ const subTypeApply = (
 ) => {
 	const decorator = function <T extends { new (): unknown }>(cstr: T): T {
 		const { name } = cstr;
-		return parentType.define(name,
-cstr as unknown as CallableFunction,
-cfg) as unknown as T;
+		const defineResult = parentType.define(
+			name,
+			cstr,
+			cfg
+		);
+		return defineResult as unknown as T;
 	};
 	return decorator;
 };
@@ -138,26 +153,32 @@ const primaryTypeApply = function (
 	const type = this.__type__;
 	// case of decorator like usage
 	if (Uranus === undefined) {
-		const decorator = subTypeApply(type,
-			args[ 0 ]);
+		const decorator = subTypeApply(
+			type,
+			args[ 0 ]
+		);
 		return decorator;
 	}
 
 	// this is the scenario, when we .call or .apply or .bind
 	// our PrimaryType whick is === instance of current TypeProxy
-	const InstanceCreatorProxy = new TypeProxy(type,
-		Uranus);
+	const InstanceCreatorProxy = new TypeProxy(
+		type,
+		Uranus
+	);
 	const instance = new InstanceCreatorProxy(...args);
 	return instance;
 };
 
-Object.defineProperty(TypeProxy.prototype,
+Object.defineProperty(
+	TypeProxy.prototype,
 	'apply',
 	{
 		get () {
 			return primaryTypeApply;
 		}
-	});
+	}
+);
 
 // this always is initial type creation ...
 // so no way to invoke this otherwise than direct type call
@@ -179,11 +200,15 @@ TypeProxy.prototype.construct = function (this: TypeProxyInstance, _target: unkn
 	const config = type.config as { exposeInstanceMethods?: boolean } | undefined;
 	const exposeInstanceMethods = config!.exposeInstanceMethods as unknown as boolean;
 
-	const mnemosyneProxy = createMnemosyne(uranus,
-		exposeInstanceMethods);
-	const instance = new InstanceCreator(type,
+	const mnemosyneProxy = createMnemosyne(
+		uranus,
+		exposeInstanceMethods
+	);
+	const instance = new InstanceCreator(
+		type,
 		mnemosyneProxy,
-		args);
+		args
+	);
 
 	return instance;
 

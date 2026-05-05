@@ -56,8 +56,10 @@ const getClassConstructor = (
 		constructor ( ...args: unknown[] ) {
 			const answer = super( ...args );
 			// debugger;
-			const result = CreationHandler.call( this,
-				answer );
+			const result = CreationHandler.call(
+				this,
+				answer 
+			);
 			return result as object;
 		}
 	};
@@ -67,10 +69,14 @@ const getFunctionConstructor = (
 	ConstructHandler: ConstructHandler,
 	CreationHandler: CreationHandler,
 ) => {
-	const newable = hop( ConstructHandler,
-		'prototype' ) &&
-		hop( ConstructHandler.prototype,
-			'constructor' ) &&
+	const newable = hop(
+		ConstructHandler,
+		'prototype' 
+	) &&
+		hop(
+			ConstructHandler.prototype,
+			'constructor' 
+		) &&
 		(ConstructHandler.prototype.constructor == ConstructHandler);
 
 	return function ( this: object, ...args: unknown[] ) {
@@ -79,8 +85,10 @@ const getFunctionConstructor = (
 		// 	debugger;
 		// }
 		if ( !newable ) {
-			answer = ConstructHandler.call( this,
-				...args );
+			answer = ConstructHandler.call(
+				this,
+				...args 
+			);
 		} else {
 			const _proto = ConstructHandler.prototype;
 			// !!! it MUST be strict replacement !!!
@@ -89,8 +97,10 @@ const getFunctionConstructor = (
 			answer = new (ConstructHandler as unknown as new (...args: unknown[]) => object)( ...args );
 			ConstructHandler.prototype = _proto;
 		}
-		const result = CreationHandler.call( this,
-			answer );
+		const result = CreationHandler.call(
+			this,
+			answer 
+		);
 		return result;
 	};
 };
@@ -120,20 +130,24 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 				) as unknown as ModificationBody;
 			}
 			ModificationBody.prototype.constructor = ModificationBody;
-			Object.defineProperty( ModificationBody.prototype.constructor,
+			Object.defineProperty(
+				ModificationBody.prototype.constructor,
 				'name',
 				{
 					value    : FunctionName,
 					writable : false
-				} );
-			Object.defineProperty( ModificationBody,
+				} 
+			);
+			Object.defineProperty(
+				ModificationBody,
 				SymbolConstructorName,
 				{
 					get () {
 					// return new String( FunctionName );
 						return FunctionName;
 					}
-				} );
+				} 
+			);
 			// Object.freeze( ModificationBody.prototype.constructor );
 			// Object.freeze( ModificationBody.prototype );
 			// Object.freeze( ModificationBody );

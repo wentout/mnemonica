@@ -51,8 +51,10 @@ export const parse = ( self: object ) => {
 	// props.constructor = undefined;
 	delete ( props as { constructor?: unknown } ).constructor;
 
-	const joint = extract( Object.assign( {},
-		proto ) as Record<string, unknown> );
+	const joint = extract( Object.assign(
+		{},
+		proto 
+	) as Record<string, unknown> );
 	delete ( joint as { constructor?: unknown } ).constructor;
 
 	const parent = protoProto;
@@ -64,7 +66,7 @@ export const parse = ( self: object ) => {
 	// 	parent = Reflect.getPrototypeOf( protoProto );
 	// }
 
-	return {
+	const result = {
 
 		name,
 
@@ -79,4 +81,5 @@ export const parse = ( self: object ) => {
 		parent,
 
 	};
+	return result;
 };

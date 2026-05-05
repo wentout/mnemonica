@@ -42,8 +42,10 @@ export const collectConstructors = (self: object, asSequence = false) => {
 		if (proto.constructor) {
 			const constructorName = proto.constructor.name;
 			if (constructorName === MNEMONICA && !mnemonicaReached) {
-				if (Object.hasOwnProperty.call(proto,
-					'constructor')) {
+				if (Object.hasOwnProperty.call(
+					proto,
+					'constructor'
+				)) {
 					addToSequence(constructorName);
 					addToSequence(MNEMOSYNE);
 					mnemonicaReached = true;

@@ -107,11 +107,21 @@ export type hooksOpts = {
 // Hook callback type
 export type hook = (opts: hooksOpts) => unknown;
 
+// ModificationConstructor: wires prototype chain during instance creation
+export interface ModificationConstructor extends CallableFunction {
+	(
+		this: object,
+		ModificatorType: MnemonicaConstructor,
+		ModificatorTypePrototype: object,
+		_addProps: CallableFunction
+	): MnemonicaConstructor;
+}
+
 // Constructor options for define - default (exposeInstanceMethods defaults to true behavior)
 export type constructorOptions = {
 	// explicit declaration we wish use
 	// an old style based constructors
-	ModificationConstructor?: CallableFunction,
+	ModificationConstructor?: () => ModificationConstructor,
 	// shall or not we use strict checking
 	// for creation sub-instances Only from current type
 	// or we might use up-nested sub-instances from chain
@@ -185,7 +195,7 @@ export interface InstanceCreatorContext {
 	TypeName: string;
 	existentInstance: object;
 	args: unknown[];
-	ModificationConstructor: CallableFunction;
+	ModificationConstructor: ModificationConstructor;
 	ModificatorType: MnemonicaConstructor;
 	InstanceModificator: MnemonicaConstructor;
 	inheritedInstance: object | Promise<object>;

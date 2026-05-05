@@ -23,12 +23,16 @@ export const invokeHook = function ( this: Hookable, hookType: string, opts: hoo
 
 	const self = this;
 
-	if ( hop( self.hooks,
-		hookType ) ) {
+	if ( hop(
+		self.hooks,
+		hookType 
+	) ) {
 
-		const builder = new HookInvocation(type,
+		const builder = new HookInvocation(
+			type,
 			existentInstance,
-			args);
+			args
+		);
 
 		if ( typeof inheritedInstance === 'object' ) {
 			builder.withInheritedInstance( inheritedInstance );
@@ -40,19 +44,20 @@ export const invokeHook = function ( this: Hookable, hookType: string, opts: hoo
 		const hookArgs = builder.build();
 
 		self.hooks[ hookType ].forEach( ( hook: HookFunction ) => {
-			const result = (hook as Function).call( self,
-				hookArgs );
+			const result = hook.call(
+				self,
+				hookArgs
+			);
 			invocationResults.add( result );
 		} );
 
 		const flowChecker = flowCheckers.get( this );
 		if ( typeof flowChecker === 'function' ) {
-			(flowChecker as Function).call( this,
-				{
-					...hookArgs,
-					invocationResults,
-					hookType,
-				} );
+			(flowChecker as unknown as (opts: object) => unknown)({
+				...hookArgs,
+				invocationResults,
+				hookType,
+			});
 		}
 
 	}

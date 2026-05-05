@@ -20,8 +20,10 @@ export const merge = ( a: object, b: object, ...args: unknown[] ): object => {
 		throw new WRONG_ARGUMENTS_USED( 'A should have A.fork()' );
 	}
 
-	const aa = fork.call( b,
-		...args );
+	const aa = fork.call(
+		b,
+		...args 
+	);
 	return aa as object;
 
 };

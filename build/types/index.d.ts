@@ -53,8 +53,11 @@ export type hooksOpts = {
     };
 };
 export type hook = (opts: hooksOpts) => unknown;
+export interface ModificationConstructor extends CallableFunction {
+    (this: object, ModificatorType: MnemonicaConstructor, ModificatorTypePrototype: object, _addProps: CallableFunction): MnemonicaConstructor;
+}
 export type constructorOptions = {
-    ModificationConstructor?: CallableFunction;
+    ModificationConstructor?: () => ModificationConstructor;
     strictChain?: boolean;
     blockErrors?: boolean;
     submitStack?: boolean;
@@ -99,7 +102,7 @@ export interface InstanceCreatorContext {
     TypeName: string;
     existentInstance: object;
     args: unknown[];
-    ModificationConstructor: CallableFunction;
+    ModificationConstructor: ModificationConstructor;
     ModificatorType: MnemonicaConstructor;
     InstanceModificator: MnemonicaConstructor;
     inheritedInstance: object | Promise<object>;

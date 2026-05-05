@@ -751,11 +751,12 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 					define('NoConstructFunctionType', NaN, 'false' as unknown as object);
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
 				['handler must be a function', () => {
-					define(() => {
-						return {
-							name: null
-						};
-					});
+				define(() => {
+					const result = {
+						name: null
+					};
+					return result;
+				});
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
 				['this type has already been declared : WithoutPassword', () => {
 					// UserTypeConstructor is already defined in index.ts

@@ -46,85 +46,105 @@ export const _addProps = function (this: InstanceCreatorContext): void {
 
 	const value = Object.create(null);
 
-	odp(value,
+	odp(
+		value,
 		'__proto_proto__',
 		{
 			get () {
 				return proto;
 			}
-		});
+		}
+	);
 
-	odp(value,
+	odp(
+		value,
 		'__args__',
 		{
 			get () {
 				return args;
 			}
-		});
+		}
+	);
 
-	odp(value,
+	odp(
+		value,
 		'__collection__',
 		{
 			get () {
 				return collection;
 			}
-		});
+		}
+	);
 
-	odp(value,
+	odp(
+		value,
 		'__subtypes__',
 		{
 			get () {
 				return subtypes;
 			}
-		});
+		}
+	);
 
-	odp(value,
+	odp(
+		value,
 		'__type__',
 		{
 			get () {
 				return type;
 			}
-		});
+		}
+	);
 
-	odp(value,
+	odp(
+		value,
 		'__parent__',
 		{
 			get () {
 				return existentInstance;
 			}
-		});
+		}
+	);
 
 	if (submitStack) {
 		const { stack } = this;
-		odp(value,
+		odp(
+			value,
 			'__stack__',
 			{
 				get () {
 					return stack!.join('\n');
 				}
-			});
+			}
+		);
 	}
 
-	odp(value,
+	odp(
+		value,
 		'__creator__',
 		{
 			get () {
 				return self;
 			}
-		});
+		}
+	);
 
 	const timestamp = Date.now();
-	odp(value,
+	odp(
+		value,
 		'__timestamp__',
 		{
 			get () {
 				return timestamp;
 			}
-		});
+		}
+	);
 
 	// __props__.set(self, value);
-	__props__.set(proto!,
-		value);
+	__props__.set(
+proto!,
+value
+	);
 
 };
 
@@ -152,8 +172,11 @@ export const _getProps = (instance: object, base?: object): PropsType | undefine
 		if (base === undefined) {
 			base = instance;
 		}
-		return _getProps(proto,
-			base);
+		const nestedResult = _getProps(
+			proto,
+			base
+		);
+		return nestedResult;
 	}
 	return result;
 };
@@ -161,15 +184,19 @@ export const _getProps = (instance: object, base?: object): PropsType | undefine
 export const _setSelf = (instance: object): void => {
 	// const props = __props__.get(instance);
 	const props = _getProps(instance);
-	Object.defineProperty(props,
+	Object.defineProperty(
+		props,
 		'__self__',
 		{
 			get () {
 				return instance;
 			}
-		});
-	__props__.set(instance,
-		props);
+		}
+	);
+	__props__.set(
+		instance,
+		props
+	);
 };
 
 export const getProps = (instance: object): PropsType | undefined => {
@@ -180,10 +207,14 @@ export const getProps = (instance: object): PropsType | undefined => {
 			const descriptors = Object.getOwnPropertyDescriptors(props);
 			const additions = Object.getOwnPropertyDescriptors(_additions);
 			const answer = {};
-			Object.defineProperties(answer,
-				additions);
-			Object.defineProperties(answer,
-				descriptors);
+			Object.defineProperties(
+				answer,
+				additions
+			);
+			Object.defineProperties(
+				answer,
+				descriptors
+			);
 			return answer as PropsType;
 		} else {
 			return props;
@@ -201,13 +232,17 @@ export const setProps = (instance: object, _values: object): string[] | false =>
 		Object.entries(values).forEach(([ name, value ]) => {
 			if (!nativeProps.has(name)) {
 				written.push(name);
-				Object.defineProperty(allowed,
+				Object.defineProperty(
+					allowed,
 					name,
-					value);
+					value
+				);
 			}
 		});
-		__props__.set(props,
-			allowed);
+		__props__.set(
+			props,
+			allowed
+		);
 		return written;
 	}
 	return false;
