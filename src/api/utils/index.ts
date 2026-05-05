@@ -228,7 +228,7 @@ const makeErrorModificatorType = (
 	const modificatorBody = compileNewModificatorFunctionBody(TypeName);
 
 	// CreationHandler is now defined locally in api/types/index.ts
-	const modificatorType: any = modificatorBody(
+	const modificatorType = modificatorBody(
 		ErrorModificator,
 		CreationHandler,
 		SymbolConstructorName

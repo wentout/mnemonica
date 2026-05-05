@@ -4,31 +4,15 @@ declare const _default: {
     readonly createMnemosyne: (Uranus: unknown, exposeInstanceMethods: boolean) => object;
     readonly prepareSubtypeForConstruction: (subtypeName: string, inheritedInstance: unknown) => _Internal_TC_<{
         getExistentAsyncStack: (existentInstance: import("../utils").asyncStack) => unknown;
-        postProcessing: (this: any, continuationOf: any) => void;
-        makeAwaiter: (this: any, type: any, then?: import("./InstanceCreator").ThenSpec) => any;
-        addThen: (this: any, then: import("./InstanceCreator").ThenSpec) => void;
-        invokePreHooks: (this: any) => void;
-        invokePostHooks: (this: any) => {
+        postProcessing: (this: import("../../types").InstanceCreatorContext, continuationOf?: import("./Props").TypeDef) => void;
+        makeAwaiter: (this: import("../../types").InstanceCreatorContext, type: import("./Props").TypeDef, then?: import("../../types").ThenSpec) => object;
+        addThen: (this: import("../../types").InstanceCreatorContext, then: import("../../types").ThenSpec) => void;
+        invokePreHooks: (this: import("../../types").InstanceCreatorContext) => void;
+        invokePostHooks: (this: import("../../types").InstanceCreatorContext) => {
             type: void;
             collection: void;
         };
-        throwModificationError: (this: {
-            [key: string]: unknown;
-            TypeName: string;
-            type: {
-                stack: string;
-            };
-            args: unknown[];
-            ModificatorType: CallableFunction;
-            InstanceModificator: new (...args: unknown[]) => {
-                stack: string[];
-            };
-            inheritedInstance?: unknown;
-            invokePostHooks(): {
-                type: Set<unknown>;
-                collection: Set<unknown>;
-            };
-        }, error: import("../../types").MnemonicaError) => void;
+        throwModificationError: (this: import("../../types").InstanceCreatorContext, error: import("../../types").MnemonicaError) => void;
     }> | undefined;
     readonly getDefaultPrototype: () => any;
 };

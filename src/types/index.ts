@@ -33,7 +33,7 @@ export type ErrorMessages = Record<ErrorMessageKey, string>;
 
 // Error constructor from constructError - constructable function with prototype
 export interface MnemonicaErrorConstructor {
-	new(addition?: string, stack?: string[]): Error;
+	new(addition?: string, stack?: string | string[]): Error;
 	(name: string): Error;
 	prototype: {
 		constructor: CallableFunction;
@@ -95,7 +95,7 @@ export type hooksOpts = {
 	type?: TypeDef;
 	args: unknown[];
 	existentInstance: object;
-	inheritedInstance: object;
+	inheritedInstance?: object;
 	creator?: object;
 };
 
@@ -153,6 +153,7 @@ export type TypeDef = {
 	invokeHook: (hookType: hooksTypes, opts: hooksOpts) => void;
 	prototype: unknown;
 	stack?: string;
+	[Symbol.hasInstance]: (instance: object) => boolean;
 };
 
 // Collection definition
@@ -169,6 +170,37 @@ export type CollectionDef = {
 
 // Type lookup function type: may have augmentation by Tactica re-definition
 export type TypeLookup = (this: Map<string, unknown>, TypeNestedPath: string) => TypeClass | undefined;
+
+// Specification for chained subtype creation with .then()
+export interface ThenSpec {
+	subtype: object;
+	args: unknown[];
+	name?: string;
+}
+
+// Context object passed through the InstanceCreator pipeline
+export interface InstanceCreatorContext {
+	type: TypeDef;
+	TypeName: string;
+	existentInstance: object;
+	args: unknown[];
+	ModificationConstructor: CallableFunction;
+	ModificatorType: new (...args: unknown[]) => object;
+	InstanceModificator: new (...args: unknown[]) => object;
+	inheritedInstance: object | Promise<object>;
+	config: constructorOptions;
+	proto: object;
+	__proto_proto__?: object;
+	stack?: string;
+
+	getExistentAsyncStack(existentInstance: object): unknown;
+	postProcessing(continuationOf?: TypeDef): void;
+	makeAwaiter(type: TypeDef, then?: ThenSpec): Promise<object>;
+	addThen(then: ThenSpec): void;
+	invokePreHooks(): void;
+	invokePostHooks(): { type: Set<unknown>; collection: Set<unknown> };
+	throwModificationError(error: MnemonicaError): void;
+}
 
 /**
  * Proto merge type - combines parent and child types without property conflicts.
@@ -387,7 +419,7 @@ export type ITypeAbsorber<T> = (
 export type TypeDescriptorInstance = {
 	define: CallableFunction;
 	lookup: CallableFunction;
-	subtypes: object;
+	subtypes: Map<string, object>;
 	TypeName: string;
 };
 
@@ -416,19 +448,19 @@ export type ConstructorFactory<T> = () => Constructor<T>;
 // Apply/Call/Bind function types
 export type ApplyFunction = <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Ctor: IDEF<T>,
+	Constructor: IDEF<T>,
 	args?: unknown[]
 ) => S;
 
 export type CallFunction = <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Ctor: IDEF<T>,
+	Constructor: IDEF<T>,
 	...args: unknown[]
 ) => S;
 
 export type BindFunction = <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Ctor: IDEF<T>
+	Constructor: IDEF<T>
 ) => (...args: unknown[]) => S;
 
 // Utils object type
@@ -452,7 +484,7 @@ export interface MnemonicaModule {
 	call: CallFunction;
 	bind: BindFunction;
 	decorate: <U extends Constructor<object>>(target?: object, config?: object) => DecoratedClass<U>;
-	registerHook: <T extends object>(Ctor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
+	registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
 
 	// Descriptors
 	defaultTypes: TypesCollection;

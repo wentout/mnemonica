@@ -4,9 +4,19 @@
 // Called from InstanceCreator after pre-hooks. Delegates to ModificationConstructor
 // (see createInstanceModificator.ts) to wire the prototype chain and attach props.
 
+import type { InstanceCreatorContext } from '../../types';
 import { _addProps } from './Props';
 
-export const makeInstanceModificator = ( self: any ) => {
+interface ModificationConstructor extends CallableFunction {
+	(
+		this: object,
+		ModificatorType: new (...args: unknown[]) => object,
+		ModificatorTypePrototype: object,
+		_addProps: CallableFunction
+	): unknown;
+}
+
+export const makeInstanceModificator = ( self: InstanceCreatorContext ): new (...args: unknown[]) => object => {
 
 	const {
 		ModificationConstructor,
@@ -15,15 +25,15 @@ export const makeInstanceModificator = ( self: any ) => {
 		proto,
 	} = self;
 
-	const result = ModificationConstructor.call(
+	const result = (ModificationConstructor as ModificationConstructor).call(
 		existentInstance,
 		ModificatorType,
 		Object.assign( {}, proto ),
 		( __proto_proto__: unknown ) => {
-			self.__proto_proto__ = __proto_proto__;
+			self.__proto_proto__ = __proto_proto__ as object;
 			_addProps.call( self );
 		}
 	);
 
-	return result;
+	return result as new (...args: unknown[]) => object;
 };

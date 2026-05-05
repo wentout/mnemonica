@@ -15,7 +15,7 @@
  *   8. Post-proc  - validate inheritance, set __self__, invoke postCreation hooks
  */
 
-import { _Internal_TC_ } from '../../types';
+import { _Internal_TC_, InstanceCreatorContext, ThenSpec, TypeDef, MnemonicaError } from '../../types';
 
 import {
 	constants
@@ -47,7 +47,7 @@ import { parent } from '../../utils/parent';
 
 // import { Mnemosyne } from './Mnemosyne';
   
-const invokePreHooks = function ( this: any ) {
+const invokePreHooks = function ( this: InstanceCreatorContext ) {
 
 	const {
 		type,
@@ -75,7 +75,7 @@ const invokePreHooks = function ( this: any ) {
 
 
   
-const invokePostHooks = function ( this: any ) {
+const invokePostHooks = function ( this: InstanceCreatorContext ) {
 
 	 
 	const creator = this;
@@ -118,7 +118,7 @@ const invokePostHooks = function ( this: any ) {
 
 
   
-const postProcessing = function ( this: any, continuationOf: any ) {
+const postProcessing = function ( this: InstanceCreatorContext, continuationOf?: TypeDef ) {
 	 
 	const self = this;
 	const {
@@ -137,7 +137,7 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 		self.throwModificationError( new WRONG_MODIFICATION_PATTERN( msg, stack ) );
 	}
 
-	if ( !self.inheritedInstance.constructor[ SymbolConstructorName ] ) {
+	if ( !((self.inheritedInstance.constructor as unknown) as Record<symbol, unknown>)[ SymbolConstructorName ] ) {
 		const msg = 'should inherit from mnemonica instance';
 		self.throwModificationError( new WRONG_MODIFICATION_PATTERN( msg, stack ) );
 	}
@@ -156,13 +156,13 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 			return;
 		}
 
-		const prev = parent(self.inheritedInstance) as any;
+		const prev = parent(self.inheritedInstance) as object | null;
 		if (!prev || (prev && !prev.constructor)) {
 			const msg = 'should inherit from some instance';
 			self.throwModificationError( new WRONG_MODIFICATION_PATTERN( msg, stack ) );
 		}
-		const parentName = prev.constructor.name;
-		const parentTypeName = self.type.parentType.TypeName;
+		const parentName = prev!.constructor.name;
+		const parentTypeName = self.type.parentType!.TypeName;
 		if (parentName !== parentTypeName) {
 			const msg = `should inherit from ${parentTypeName} but made on ${parentName}`;
 			self.throwModificationError( new WRONG_MODIFICATION_PATTERN( msg, stack ) );
@@ -176,40 +176,33 @@ const postProcessing = function ( this: any, continuationOf: any ) {
 
 };
 
-export interface ThenSpec {
-	subtype: object;
-	args: unknown[];
-	name?: string;
-}
-
-  
-const addThen = function ( this: any, then: ThenSpec ) {
+const addThen = function ( this: InstanceCreatorContext, then: ThenSpec ) {
 
 	 
 	const self = this;
 
-	self.inheritedInstance = self.inheritedInstance
+	self.inheritedInstance = (self.inheritedInstance as Promise<object>)
 		.then( () => {
 			self.inheritedInstance =
-				new InstanceCreator(
-					then.subtype,
-					self.inheritedInstance,
-					then.args,
-					// was chained :
-					true
-					// self.existentInstance
-				) as unknown as Promise<unknown>;
+			new InstanceCreator(
+				then.subtype as TypeDef,
+				self.inheritedInstance as object,
+				then.args,
+				// was chained :
+				true
+				// self.existentInstance
+			) as unknown as Promise<object>;
 			return self.inheritedInstance;
 		} );
 
 };
 
-const makeAwaiter = function ( this: any, type: any, then?: ThenSpec ) {
+const makeAwaiter = function ( this: InstanceCreatorContext, type: TypeDef, then?: ThenSpec ) {
 
 	 
 	const self = this;
 
-	self.inheritedInstance = self.inheritedInstance
+	self.inheritedInstance = (self.inheritedInstance as Promise<object>)
 		.then( ( instance: unknown ) => {
 
 			if ( typeof instance !== 'object' ) {
@@ -221,19 +214,19 @@ const makeAwaiter = function ( this: any, type: any, then?: ThenSpec ) {
 				}
 			}
 
-			if ( !( instance instanceof self.type ) ) {
+			if ( instance === null || !( instance instanceof self.type ) ) {
 				 
-				const icn = (instance as any).constructor.name;
+				const icn = (instance as object).constructor.name;
 				const msg = `should inherit from ${type.TypeName} but got ${icn}`;
 				throw new WRONG_MODIFICATION_PATTERN( msg, self.stack );
 			}
 
-			self.inheritedInstance = instance;
+			self.inheritedInstance = instance as object;
 
-			const props = _getProps(self.inheritedInstance) as Props;
+			const props = _getProps(self.inheritedInstance as object) as Props;
 
 			 
-			if ( props.__self__ !== (self.inheritedInstance as unknown) ) {
+			if ( props.__self__ !== self.inheritedInstance ) {
 				self.postProcessing( type );
 			}
 
@@ -254,8 +247,8 @@ const makeAwaiter = function ( this: any, type: any, then?: ThenSpec ) {
 
 	type.subtypes.forEach( ( subtype: object, name: string ) => {
 		 
-		(self.inheritedInstance as any)[ name ] = ( ...args: unknown[] ) => {
-			self.inheritedInstance = self.makeAwaiter( subtype, {
+		(self.inheritedInstance as Record<string, unknown>)[ name ] = ( ...args: unknown[] ) => {
+			self.inheritedInstance = self.makeAwaiter( subtype as TypeDef, {
 				name,
 				subtype,
 				args,
@@ -279,7 +272,7 @@ const InstanceCreatorPrototype = {
 };
 
   
-export const InstanceCreator = function ( this: any, type: any, existentInstance: unknown, args: unknown[], chained: boolean ) {
+export const InstanceCreator = function ( this: InstanceCreatorContext, type: TypeDef, existentInstance: object, args: unknown[], chained: boolean ) {
 
 	const {
 		constructHandler,
@@ -295,12 +288,12 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	} = config;
 
 	 
-	const mc = ModificationConstructor();
+	const mc = ModificationConstructor!() as CallableFunction;
 
 	 
 	const self = this;
 
-	const ModificatorType = constructHandler();
+	const ModificatorType = constructHandler() as unknown as new (...args: unknown[]) => object;
 
 	Object.assign( self, {
 
@@ -323,7 +316,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 	} );
 
 	if ( submitStack || chained ) {
-		const stackAddition: string[] = chained ? self.getExistentAsyncStack( existentInstance ) : [];
+		const stackAddition: string[] = chained ? self.getExistentAsyncStack( existentInstance ) as string[] : [];
 		const title = `\n<-- creation of [ ${TypeName} ] traced -->`;
 		if ( submitStack ) {
 			getStack.call( self, title, stackAddition );
@@ -336,7 +329,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 
 		if ( existentInstance instanceof Error ) {
 
-			self.ModificatorType = makeErrorModificatorType( TypeName );
+			self.ModificatorType = makeErrorModificatorType( TypeName ) as new (...args: unknown[]) => object;
 
 			self.InstanceModificator = makeInstanceModificator( self );
 
@@ -361,7 +354,7 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 
 		} catch ( error ) {
 
-			self.throwModificationError( error );
+			self.throwModificationError( error as MnemonicaError );
 
 		}
 
@@ -393,6 +386,6 @@ export const InstanceCreator = function ( this: any, type: any, existentInstance
 
 	return self.inheritedInstance;
 
-} as _Internal_TC_<typeof InstanceCreatorPrototype>;
+} as unknown as _Internal_TC_<typeof InstanceCreatorPrototype>;
 
 Object.assign( InstanceCreator.prototype, InstanceCreatorPrototype );

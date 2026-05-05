@@ -25,6 +25,8 @@ import {
 	_Internal_TC_,
 	TypeDescriptorInstance,
 	TypeClass,
+	TypeDef,
+	CollectionDef,
 	constructorOptions
 } from '../../types';
 
@@ -61,7 +63,7 @@ const {
 import * as hooksApi from '../hooks';
 import { TypeProxy } from './TypeProxy';
 
-import compileNewModificatorFunctionBody from './compileNewModificatorFunctionBody';
+import compileNewModificatorFunctionBody, { ConstructHandler } from './compileNewModificatorFunctionBody';
 
 import TypesUtils, { CreationHandler } from '../utils';
 const {
@@ -73,10 +75,15 @@ const {
 
 import { getStack } from '../errors';
 
+export type TypesMap = Map<string, object> & {
+	[SymbolParentType]?: TypeDef;
+	[MNEMOSYNE]?: CollectionDef;
+};
+
 const TypeDescriptor = function (
 	this: TypeDescriptorInstance,
 	defineOrigin: CallableFunction,
-	types: Map<string, object>,
+	types: TypesMap,
 	TypeName: string,
 	constructHandler: CallableFunction,
 	proto: { [ index: string ]: unknown },
@@ -85,13 +92,13 @@ const TypeDescriptor = function (
 
 	// here "types" refers to subtypes of type or collection object {}
 
-	const parentType = (types as unknown as Record<symbol, object>)[ SymbolParentType ] || null;
+	const parentType = types[ SymbolParentType ] || null;
 
 	const isSubType = parentType ? true : false;
 
 	const collection = isSubType
 		? (parentType as Record<string, unknown>).collection as object
-		: (types as unknown as Record<string | symbol, object>)[ MNEMOSYNE ];
+		: types[ MNEMOSYNE ];
 
 	if ( types.has( TypeName ) ) {
 		throw new ALREADY_DECLARED ( TypeName );
@@ -154,14 +161,14 @@ TypeDescriptor.prototype.define = function (
 	constructHandlerOrConfig?: CallableFunction | object,
 	config?: object
 ) {
-	return define.call( define, this.subtypes as Map<string, object>, TypeOrTypeName, constructHandlerOrConfig, config );
+	return define.call( define, this.subtypes as TypesMap, TypeOrTypeName, constructHandlerOrConfig, config );
 };
 
 TypeDescriptor.prototype.lookup = function (
 	this: TypeDescriptorInstance,
 	TypeNestedPath: string
 ) {
-	return lookup.call( this.subtypes as Map<string, object>, TypeNestedPath );
+	return lookup.call( this.subtypes as TypesMap, TypeNestedPath );
 };
 
 odp( TypeDescriptor.prototype, Symbol.hasInstance, {
@@ -176,7 +183,7 @@ and constructHandlerGetter is that function
 */
 const defineUsingType = function (
 	this: CallableFunction,
-	subtypes: Map<string, object>,
+	subtypes: TypesMap,
 	constructHandlerGetter: () => CallableFunction,
 	config: constructorOptions | undefined
 ) {
@@ -254,7 +261,7 @@ as a constructor for instances creations
 */
 const defineUsingFunction = function (
 	this: CallableFunction,
-	subtypes: Map<string, object>,
+	subtypes: TypesMap,
 	TypeName: string,
 	constructHandler: CallableFunction = function () { },
 	config: constructorOptions = {}
@@ -268,7 +275,7 @@ const defineUsingFunction = function (
 	const modificatorBody = compileNewModificatorFunctionBody( TypeName, asClass );
 
 	const makeConstructHandler = modificatorBody(
-		constructHandler,
+		constructHandler as ConstructHandler,
 		CreationHandler,
 		SymbolConstructorName
 	);
@@ -315,7 +322,7 @@ const defineUsingFunction = function (
 
 export const define = function (
 	this: CallableFunction,
-	subtypes: Map<string, object>,
+	subtypes: TypesMap,
 	TypeOrTypeName: string | CallableFunction,
 	constructHandlerOrConfig?: CallableFunction | object,
 	config?: object
@@ -374,7 +381,7 @@ export const define = function (
 		const TypeName = split.slice( 1 ).join( '.' );
 
 		if ( split.length > 1 ) {
-			return define.call( this, Type.subtypes as Map<string, object>, TypeName, constructHandlerOrConfig, config );
+			return define.call( this, Type.subtypes as unknown as TypesMap, TypeName, constructHandlerOrConfig, config );
 		}
 
 
@@ -429,7 +436,7 @@ export const define = function (
 		// from the next step
 		return define.call(
 			this as unknown as CallableFunction,
-			Type.subtypes as Map<string, object>,
+			Type.subtypes as unknown as TypesMap,
 			constructHandlerOrConfig as CallableFunction,
 			config
 		);
@@ -441,7 +448,7 @@ export const define = function (
 };
 
 export const lookup = function (
-	this: Map<string, object>,
+	this: TypesMap,
 	TypeNestedPath: string
 ): TypeClass | undefined {
 
@@ -465,7 +472,7 @@ export const lookup = function (
 	if (!type) {
 		return undefined;
 	}
-	return lookup.call( type.subtypes as Map<string, object>, NextNestedPath );
+	return lookup.call( type.subtypes as unknown as TypesMap, NextNestedPath );
 
 };
 

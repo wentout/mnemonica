@@ -20,6 +20,7 @@ const {
 
 // here is TypesCollection.define() method
 import { define, lookup } from '../../api/types';
+import type { TypesMap } from '../../api/types';
 
 import * as hooksAPI from '../../api/hooks';
 
@@ -114,7 +115,7 @@ odp( TypesCollection.prototype, 'define', {
 			config?: object
 		) {
 			// this - define function of mnemonica interface
-			return define.call( this as CallableFunction, subtypes as Map<string, object>, TypeOrTypeName, constructHandlerOrConfig, config );
+			return define.call( this as CallableFunction, subtypes as TypesMap, TypeOrTypeName, constructHandlerOrConfig, config );
 		};
 	},
 	enumerable : true
@@ -126,7 +127,7 @@ odp( TypesCollection.prototype, 'lookup', {
 			this: { subtypes: Map<string, object> },
 			TypeNestedPath: string
 		) {
-			return lookup.call( this.subtypes, TypeNestedPath );
+			return lookup.call( this.subtypes as unknown as TypesMap, TypeNestedPath );
 		}.bind( this );
 	},
 	enumerable : true
@@ -167,7 +168,7 @@ odp( TypesCollection.prototype, 'registerFlowChecker', {
 
 
 interface TypesCollectionTarget {
-	subtypes: Map<string, object>;
+	subtypes: TypesMap;
 	define: (name: string, ctor: FunctionConstructor) => object;
 }
 

@@ -12,7 +12,7 @@ export type IDEFWithArgs<T, Args extends unknown[] = unknown[]> = {
 export type ErrorMessageKey = 'BASE_ERROR_MESSAGE' | 'HANDLER_MUST_BE_A_FUNCTION' | 'WRONG_TYPE_DEFINITION' | 'WRONG_INSTANCE_INVOCATION' | 'WRONG_MODIFICATION_PATTERN' | 'ALREADY_DECLARED' | 'WRONG_ARGUMENTS_USED' | 'WRONG_HOOK_TYPE' | 'MISSING_HOOK_CALLBACK' | 'MISSING_CALLBACK_ARGUMENT' | 'OPTIONS_ERROR' | 'WRONG_STACK_CLEANER';
 export type ErrorMessages = Record<ErrorMessageKey, string>;
 export interface MnemonicaErrorConstructor {
-    new (addition?: string, stack?: string[]): Error;
+    new (addition?: string, stack?: string | string[]): Error;
     (name: string): Error;
     prototype: {
         constructor: CallableFunction;
@@ -44,7 +44,7 @@ export type hooksOpts = {
     type?: TypeDef;
     args: unknown[];
     existentInstance: object;
-    inheritedInstance: object;
+    inheritedInstance?: object;
     creator?: object;
 };
 export type hook = (opts: hooksOpts) => void;
@@ -75,6 +75,7 @@ export type TypeDef = {
     invokeHook: (hookType: hooksTypes, opts: hooksOpts) => void;
     prototype: unknown;
     stack?: string;
+    [Symbol.hasInstance]: (instance: object) => boolean;
 };
 export type CollectionDef = {
     define: TypeAbsorber;
@@ -87,6 +88,35 @@ export type CollectionDef = {
     [key: string]: unknown;
 };
 export type TypeLookup = (this: Map<string, unknown>, TypeNestedPath: string) => TypeClass | undefined;
+export interface ThenSpec {
+    subtype: object;
+    args: unknown[];
+    name?: string;
+}
+export interface InstanceCreatorContext {
+    type: TypeDef;
+    TypeName: string;
+    existentInstance: object;
+    args: unknown[];
+    ModificationConstructor: CallableFunction;
+    ModificatorType: new (...args: unknown[]) => object;
+    InstanceModificator: new (...args: unknown[]) => object;
+    inheritedInstance: object | Promise<object>;
+    config: constructorOptions;
+    proto: object;
+    __proto_proto__?: object;
+    stack?: string;
+    getExistentAsyncStack(existentInstance: object): unknown;
+    postProcessing(continuationOf?: TypeDef): void;
+    makeAwaiter(type: TypeDef, then?: ThenSpec): Promise<object>;
+    addThen(then: ThenSpec): void;
+    invokePreHooks(): void;
+    invokePostHooks(): {
+        type: Set<unknown>;
+        collection: Set<unknown>;
+    };
+    throwModificationError(error: MnemonicaError): void;
+}
 export type Proto<P extends object, T extends object> = T & Pick<P, Exclude<keyof P, keyof T>>;
 export type ProtoFlat<P extends object, T extends object, L extends Exclude<keyof P, keyof T> = Exclude<keyof P, keyof T>> = {
     [key in keyof T]: T[key];
@@ -175,7 +205,7 @@ export type ITypeAbsorber<T> = (this: unknown, TypeName: string, constructHandle
 export type TypeDescriptorInstance = {
     define: CallableFunction;
     lookup: CallableFunction;
-    subtypes: object;
+    subtypes: Map<string, object>;
     TypeName: string;
 };
 export type TypeDescriptorConstructor = TypeConstructor<TypeDescriptorInstance>;
@@ -188,9 +218,9 @@ export type DecoratedClass<T extends Constructor<object>> = T & (<U extends Cons
     TypeName: string;
 };
 export type ConstructorFactory<T> = () => Constructor<T>;
-export type ApplyFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, args?: unknown[]) => S;
-export type CallFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, ...args: unknown[]) => S;
-export type BindFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>) => (...args: unknown[]) => S;
+export type ApplyFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]) => S;
+export type CallFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, ...args: unknown[]) => S;
+export type BindFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>) => (...args: unknown[]) => S;
 export interface UtilsCollection {
     extract: (instance: object) => Record<string, unknown>;
     pick: (instance: object, ...args: (string | string[])[]) => Record<string, unknown>;
@@ -208,7 +238,7 @@ export interface MnemonicaModule {
     call: CallFunction;
     bind: BindFunction;
     decorate: <U extends Constructor<object>>(target?: object, config?: object) => DecoratedClass<U>;
-    registerHook: <T extends object>(Ctor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
+    registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
     defaultTypes: TypesCollection;
     BASE_MNEMONICA_ERROR: MnemonicaErrorConstructor;
     WRONG_TYPE_DEFINITION: MnemonicaErrorConstructor;

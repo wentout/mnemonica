@@ -22,7 +22,7 @@ declare const TypesUtils: {
     getExistentAsyncStack: (existentInstance: asyncStack) => unknown;
     checkTypeName: (name: string) => void;
     findSubTypeFromParent: (instance: parentSub | object | undefined, subType: string) => parentSub | null;
-    makeErrorModificatorType: (TypeName: string, ErrorModificator?: () => void) => any;
+    makeErrorModificatorType: (TypeName: string, ErrorModificator?: () => void) => new (...args: unknown[]) => object;
     reflectPrimitiveWrappers: (_thisArg: unknown) => object;
 };
 export default TypesUtils;

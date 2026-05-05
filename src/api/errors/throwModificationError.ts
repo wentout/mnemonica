@@ -1,6 +1,6 @@
 'use strict';
 
-import type { MnemonicaError } from '../../types';
+import type { MnemonicaError, InstanceCreatorContext } from '../../types';
 
 import { constants } from '../../constants';
 const {
@@ -30,18 +30,6 @@ const {
 
 import { makeInstanceModificator } from '../types/InstanceModificator';
 
-// Instance creator context type
-type InstanceCreatorContext = {
-	TypeName: string;
-	type: { stack: string };
-	args: unknown[];
-	ModificatorType: CallableFunction;
-	InstanceModificator: new (...args: unknown[]) => { stack: string[] };
-	inheritedInstance?: unknown;
-	invokePostHooks(): { type: Set<unknown>; collection: Set<unknown> };
-	[key: string]: unknown;
-};
-
 export const throwModificationError = function ( this: InstanceCreatorContext, error: MnemonicaError ) {
 
 	// InstanceCreator
@@ -54,7 +42,9 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 			stack: typeStack
 		},
 		args
-	} = self;
+	} = self as InstanceCreatorContext & {
+		type: { stack: string[] }
+	};
 
 	// if ( error[ SymbolConstructorName ] ) {
 	// 	debugger;
@@ -94,9 +84,9 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 		enumerable : true
 	} );
 
-	self.ModificatorType = makeErrorModificatorType( TypeName );
+	self.ModificatorType = makeErrorModificatorType( TypeName ) as new (...args: unknown[]) => object;
 
-	self.InstanceModificator = makeInstanceModificator( self as unknown as Record<string, unknown> ) as InstanceCreatorContext['InstanceModificator'];
+	self.InstanceModificator = makeInstanceModificator( self );
 
 	// let erroredInstance = new self.InstanceModificator();
 	const erroredInstance = new self.InstanceModificator();
@@ -144,7 +134,7 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 
 		getStack.call( erroredInstance, title, [], throwModificationError );
 
-		stack.push( ...erroredInstance.stack );
+		stack.push( ...(erroredInstance as { stack: string[] }).stack );
 
 		const errorStack = (error.stack as string ).split( '\n' );
 
