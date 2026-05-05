@@ -76,7 +76,7 @@ export type TypeDef = {
     parentType?: TypeDef;
     constructHandler: () => MnemonicaConstructor;
     title: string;
-    hooks: Record<string, Set<CallableFunction>>;
+    hooks: Record<string, Set<HookFunction>>;
     invokeHook: (hookType: hooksTypes, opts: hooksOpts) => Set<unknown>;
     prototype: unknown;
     stack?: string;
@@ -190,7 +190,7 @@ export interface TypesCollection extends Hookable {
     [key: string]: unknown;
 }
 export interface Hookable {
-    hooks: Record<string, Set<CallableFunction>>;
+    hooks: Record<string, Set<HookFunction>>;
     invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
     registerHook(hookType: hooksTypes, cb: HookFunction): void;
     registerFlowChecker(cb: (opts: object) => unknown): void;

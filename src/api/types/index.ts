@@ -109,43 +109,53 @@ const TypeDescriptor = function (
 
 	const title = `${TYPE_TITLE_PREFIX}${TypeName}`;
 
-	config = Object.assign( {}, (collection as Record<symbol, unknown>)[ SymbolConfig ], config );
+	config = Object.assign( {},
+		(collection as Record<symbol, unknown>)[ SymbolConfig ],
+		config );
 
-	const type = Object.assign( this, {
+	const type = Object.assign( this,
+		{
 
-		get constructHandler () {
-			return constructHandler;
-		},
+			get constructHandler () {
+				return constructHandler;
+			},
 
 
-		TypeName,
-		proto,
+			TypeName,
+			proto,
 
-		isSubType,
-		subtypes,
-		parentType,
+			isSubType,
+			subtypes,
+			parentType,
 
-		collection,
+			collection,
 
-		title,
+			title,
 
-		config,
+			config,
 
-		hooks : Object.create( null )
+			hooks : Object.create( null )
 
-	} );
+		} );
 
-	getStack.call( this, `Definition of [ ${TypeName} ] made at:`, [], defineOrigin );
+	getStack.call( this,
+		`Definition of [ ${TypeName} ] made at:`,
+		[],
+		defineOrigin );
 
-	odp( subtypes, SymbolParentType, {
-		get () {
-			return type;
-		}
-	} );
+	odp( subtypes,
+		SymbolParentType,
+		{
+			get () {
+				return type;
+			}
+		} );
 
 	// const Uranus = isSubType ? Object.create(null) : proto;
 	const Uranus = isSubType ? undefined : proto;
-	types.set( TypeName, new TypeProxy( type, Uranus ) );
+	types.set( TypeName,
+		new TypeProxy( type,
+			Uranus ) );
 	
 	// types.set( TypeName, new TypeProxy( type ) );
 
@@ -153,7 +163,8 @@ const TypeDescriptor = function (
 
 } as unknown as _Internal_TC_<TypeDescriptorInstance>;
 
-Object.assign( TypeDescriptor.prototype, hooksApi );
+Object.assign( TypeDescriptor.prototype,
+	hooksApi );
 
 TypeDescriptor.prototype.define = function (
 	this: TypeDescriptorInstance,
@@ -161,21 +172,28 @@ TypeDescriptor.prototype.define = function (
 	constructHandlerOrConfig?: CallableFunction | object,
 	config?: object
 ) {
-	return define.call( define, this.subtypes as TypesMap, TypeOrTypeName, constructHandlerOrConfig, config );
+	return define.call( define,
+this.subtypes as TypesMap,
+TypeOrTypeName,
+constructHandlerOrConfig,
+config );
 };
 
 TypeDescriptor.prototype.lookup = function (
 	this: TypeDescriptorInstance,
 	TypeNestedPath: string
 ) {
-	return lookup.call( this.subtypes as TypesMap, TypeNestedPath );
+	return lookup.call( this.subtypes as TypesMap,
+		TypeNestedPath );
 };
 
-odp( TypeDescriptor.prototype, Symbol.hasInstance, {
-	get (this: TypeDescriptorInstance) {
-		return getTypeChecker( this.TypeName );
-	}
-} );
+odp( TypeDescriptor.prototype,
+	Symbol.hasInstance,
+	{
+		get (this: TypeDescriptorInstance) {
+			return getTypeChecker( this.TypeName );
+		}
+	} );
 
 /*
 here we use function to retreive a contructor
@@ -205,17 +223,20 @@ const defineUsingType = function (
 	const makeConstructHandler = () => {
 		const constructHandler = constructHandlerGetter();
 		// constructHandler[SymbolConstructorName] = TypeName;
-		odp( constructHandler, SymbolConstructorName, {
-			get () {
-				return TypeName;
-			}
-		} );
+		odp( constructHandler,
+			SymbolConstructorName,
+			{
+				get () {
+					return TypeName;
+				}
+			} );
 		
 		// this was checking for class / function
 		// functions has .writable prototype
 		// and classes are has not
 		const protoDesc = Object
-			.getOwnPropertyDescriptor( constructHandler, 'prototype' ) as PropertyDescriptor | undefined;
+			.getOwnPropertyDescriptor( constructHandler,
+				'prototype' ) as PropertyDescriptor | undefined;
 		if ( protoDesc && protoDesc.writable ) {
 			// constructHandler.prototype = {};
 			constructHandler.prototype = getDefaultPrototype();
@@ -237,7 +258,8 @@ const defineUsingType = function (
 	};
 
 	if ( typeof config === 'object' ) {
-		config = Object.assign( {}, config );
+		config = Object.assign( {},
+			config );
 	} else {
 		config = {};
 	}
@@ -272,7 +294,8 @@ const defineUsingFunction = function (
 	}
 
 	const asClass = isClass( constructHandler );
-	const modificatorBody = compileNewModificatorFunctionBody( TypeName, asClass );
+	const modificatorBody = compileNewModificatorFunctionBody( TypeName,
+		asClass );
 
 	const makeConstructHandler = modificatorBody(
 		constructHandler as ConstructHandler,
@@ -294,7 +317,8 @@ const defineUsingFunction = function (
 	config.asClass = asClass;
 
 	const proto = (
-		hop( constructHandler, 'prototype' ) &&
+		hop( constructHandler,
+			'prototype' ) &&
 		// using ↓↓↓ cause for proxy in chain is instanceof fails
 		// and also fails for just Object.create(null)
 		( typeof constructHandler.prototype === 'object' )
@@ -333,14 +357,19 @@ export const define = function (
 		// TODO: if ( hop( TypeOrTypeName.constructor, 'name' ) ) {
 		if ( TypeOrTypeName.name ) {
 			
-			const Type = lookup.call( subtypes, TypeOrTypeName.name );
+			const Type = lookup.call( subtypes,
+				TypeOrTypeName.name );
 
 			if ( Type ) {
 				// debugger;
 				throw new ALREADY_DECLARED( TypeOrTypeName.name );
 			}
 
-			return define.call( this, subtypes, TypeOrTypeName.name, TypeOrTypeName, config );
+			return define.call( this,
+				subtypes,
+				TypeOrTypeName.name,
+				TypeOrTypeName,
+				config );
 
 		} else {
 			 
@@ -359,7 +388,8 @@ export const define = function (
 
 		const split = getTypeSplitPath( TypeOrTypeName );
 
-		const Type = lookup.call( subtypes, split[ 0 ] );
+		const Type = lookup.call( subtypes,
+			split[ 0 ] );
 		
 		if (!Type) {
 
@@ -381,7 +411,13 @@ export const define = function (
 		const TypeName = split.slice( 1 ).join( '.' );
 
 		if ( split.length > 1 ) {
-			return define.call( this, Type.subtypes as unknown as TypesMap, TypeName, constructHandlerOrConfig, config );
+			return define.call(
+				this,
+Type.subtypes as unknown as TypesMap,
+TypeName,
+constructHandlerOrConfig,
+config
+			);
 		}
 
 
@@ -472,7 +508,8 @@ export const lookup = function (
 	if (!type) {
 		return undefined;
 	}
-	return lookup.call( type.subtypes as unknown as TypesMap, NextNestedPath );
+	return lookup.call( type.subtypes as unknown as TypesMap,
+		NextNestedPath );
 
 };
 

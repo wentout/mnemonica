@@ -27,14 +27,18 @@ export const parse = ( self: object ) => {
 	const protoConstructor = ( proto as { constructor: { name: string } } ).constructor;
 
 	if ( selfConstructor.name.toString() !== protoConstructor.name.toString() ) {
-		throw new WRONG_ARGUMENTS_USED( `have to use "instance" itself: '${selfConstructor.name}' vs '${protoConstructor.name}'` );
+		const msg = 'have to use "instance" itself: ' +
+			`'${selfConstructor.name}' vs '${protoConstructor.name}'`;
+		throw new WRONG_ARGUMENTS_USED( msg );
 	}
 
 	const protoProto: unknown = Reflect.getPrototypeOf( proto );
 	if ( protoProto ) {
 		const protoProtoConstructor = ( protoProto as { constructor?: { name: string } } ).constructor;
 		if ( protoProtoConstructor && protoConstructor.name.toString() !== protoProtoConstructor.name.toString() ) {
-			throw new WRONG_ARGUMENTS_USED( `have to use "instance" itself: '${protoConstructor.name}' vs '${protoProtoConstructor.name}'` );
+			const msg2 = 'have to use "instance" itself: ' +
+				`'${protoConstructor.name}' vs '${protoProtoConstructor.name}'`;
+			throw new WRONG_ARGUMENTS_USED( msg2 );
 		}
 	}
 
@@ -47,7 +51,8 @@ export const parse = ( self: object ) => {
 	// props.constructor = undefined;
 	delete ( props as { constructor?: unknown } ).constructor;
 
-	const joint = extract( Object.assign( {}, proto ) as Record<string, unknown> );
+	const joint = extract( Object.assign( {},
+		proto ) as Record<string, unknown> );
 	delete ( joint as { constructor?: unknown } ).constructor;
 
 	const parent = protoProto;

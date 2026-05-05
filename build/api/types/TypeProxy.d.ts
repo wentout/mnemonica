@@ -1,22 +1,25 @@
-import type { constructorOptions, _Internal_TC_ } from '../../types';
-export interface TypeProxyInstance {
-    __type__: {
-        [key: string]: unknown;
-        proto: object;
-        subtypes: Map<string, unknown>;
-        define: (n: string, c: CallableFunction, cf?: object, ...fa: unknown[]) => unknown;
-    };
-    Uranus: unknown;
+import type { constructorOptions, _Internal_TC_, TypeDef, TypeDescriptorDefine } from '../../types';
+interface TypeProxyType extends TypeDef {
+    define: TypeDescriptorDefine;
+    [key: string]: unknown;
+}
+interface TypeProxyGetHandler {
     get(target: CallableFunction, prop: string): unknown;
-    set(target: unknown, name: string, value: unknown): boolean;
-    construct(target: unknown, args: unknown[]): object;
+}
+interface TypeProxySetHandler {
+    set(_target: unknown, name: string, value: unknown): boolean;
+}
+interface TypeProxyConstructHandler {
+    construct(_target: unknown, args: unknown[]): object;
+}
+export interface TypeProxyInstance extends TypeProxyGetHandler, TypeProxySetHandler, TypeProxyConstructHandler {
+    __type__: TypeProxyType;
+    Uranus: unknown;
     apply: typeof subTypeApply;
     new (...args: unknown[]): object;
 }
 export declare const TypeProxy: _Internal_TC_<TypeProxyInstance>;
-declare const subTypeApply: (parentType: {
-    define: (n: string, c: CallableFunction, cf?: object, ...fa: unknown[]) => unknown;
-}, cfg?: constructorOptions, ...fnArgs: unknown[]) => <T extends {
+declare const subTypeApply: (parentType: TypeProxyType, cfg?: constructorOptions) => <T extends {
     new (): unknown;
 }>(cstr: T) => T;
 export {};

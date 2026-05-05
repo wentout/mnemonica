@@ -1,7 +1,7 @@
 export * as errors from './errors';
 export declare const hooks: {
     invokeHook: (this: import("../types").Hookable, hookType: string, opts: import("..").hooksOpts) => Set<unknown>;
-    registerHook: (this: import("../types").Hookable, hookType: string, cb: CallableFunction) => void;
+    registerHook: (this: import("../types").Hookable, hookType: string, cb: import("../types").HookFunction) => void;
     registerFlowChecker: (this: import("../types").Hookable, cb: () => unknown) => void;
 };
 export declare const types: {

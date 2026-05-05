@@ -19,6 +19,7 @@ export const registerFlowChecker = function (this: Hookable, cb: () => unknown )
 	// 	throw new FLOW_CHECKER_REDEFINITION;
 	// }
 
-	flowCheckers.set( this, cb );
+	flowCheckers.set( this,
+		cb );
 
 };

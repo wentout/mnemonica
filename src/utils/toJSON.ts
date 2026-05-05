@@ -32,7 +32,9 @@ export const toJSON = ( instance: object ) => {
 		o += `"${name}":${value},`;
 		return o;
 
-	}, '{' )
-		.replace( /,$/, '}' );
+	},
+	'{' )
+		.replace( /,$/,
+			'}' );
 
 };

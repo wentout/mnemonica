@@ -205,6 +205,20 @@ The build **must have zero warnings**. Running `npm run build` should produce **
 
 These configuration files define the project's strict standards. Any changes require user approval first.
 
+## Preserving Design Comments and Memory Notes
+
+When refactoring or reformatting code, **preserve all comments that carry design intent, architectural rationale, or developer memory**. This includes:
+
+- Inline comments explaining *why* a non-obvious approach was chosen (e.g. `// "this" argument may be passed for tracking why something happened`)
+- Comments marking intentional workarounds for JS/Node version differences (e.g. `// starting from Node.js v22 we should define this property through odp`)
+- Comments describing what a code section is *about* (e.g. `// this is a direct Sub-Type invocation`)
+- TODOs and commented-out code that documents explored but rejected alternatives
+- Debugger statements left as breadcrumbs for future investigation
+
+**Do NOT remove comments because they seem like "clutter" or because the code is now typed.** TypeScript types answer "what" — comments answer "why". Both are necessary.
+
+If a comment becomes technically inaccurate after a change, update it rather than deleting it.
+
 ## Testing Requirements
 
 - **100% coverage required** for Jest (statements, branches, functions, lines) - see `jest.config.js`

@@ -1,6 +1,8 @@
 'use strict';
 
-import type { MnemonicaError, InstanceCreatorContext } from '../../types';
+import type {
+	MnemonicaError, InstanceCreatorContext 
+} from '../../types';
 
 import { constants } from '../../constants';
 const {
@@ -10,16 +12,14 @@ const {
 
 
 import { ErrorsTypes } from '../../descriptors/errors';
-const {
-	BASE_MNEMONICA_ERROR
-} = ErrorsTypes;
+const { BASE_MNEMONICA_ERROR } = ErrorsTypes;
 
-import { cleanupStack, getStack } from './';
+import {
+	cleanupStack, getStack 
+} from './';
 
 import TypesUtils from '../utils';
-const {
-	makeErrorModificatorType
-} = TypesUtils;
+const { makeErrorModificatorType } = TypesUtils;
 
 import { utils } from '../../utils';
 const {
@@ -38,9 +38,7 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 
 	const {
 		TypeName,
-		type: {
-			stack: typeStack
-		},
+		type: { stack: typeStack },
 		args
 	} = self as InstanceCreatorContext & {
 		type: { stack: string[] }
@@ -61,28 +59,34 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 
 	}
 
-	odp( error, 'exceptionReason', {
-		get () {
-			return exceptionReason;
-		},
-		enumerable : true
-	} );
+	odp( error,
+		'exceptionReason',
+		{
+			get () {
+				return exceptionReason;
+			},
+			enumerable : true
+		} );
 
 	const reasons: Error[] = [ exceptionReason ];
 
-	odp( error, 'reasons', {
-		get () {
-			return reasons;
-		},
-		enumerable : true
-	} );
+	odp( error,
+		'reasons',
+		{
+			get () {
+				return reasons;
+			},
+			enumerable : true
+		} );
 	const surplus: Error[] = [];
-	odp( error, 'surplus', {
-		get () {
-			return surplus;
-		},
-		enumerable : true
-	} );
+	odp( error,
+		'surplus',
+		{
+			get () {
+				return surplus;
+			},
+			enumerable : true
+		} );
 
 	self.ModificatorType = makeErrorModificatorType( TypeName );
 
@@ -103,7 +107,8 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 		// }
 		if (
 			testToProto !== null &&
-			Object.hasOwnProperty.call(testToProto, 'constructor') &&
+			Object.hasOwnProperty.call(testToProto,
+				'constructor') &&
 			testToProto.constructor.name === MNEMONICA
 		) {
 			isMnemonicaInstance = true;
@@ -113,7 +118,8 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 	}
 
 	// Reflect.setPrototypeOf( errorProto, error);
-	const result = Reflect.setPrototypeOf( errorProto as object, error);
+	const result = Reflect.setPrototypeOf( errorProto as object,
+		error);
 	// let result = Reflect.setPrototypeOf( errorProto, error);
 	// if (result === false) {
 	// 	Object.setPrototypeOf(errorProto, error);
@@ -132,7 +138,10 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 
 		const title = `\n<-- creation of [ ${TypeName} ] traced -->`;
 
-		getStack.call( erroredInstance, title, [], throwModificationError );
+		getStack.call( erroredInstance,
+			title,
+			[],
+			throwModificationError );
 
 		stack.push( ...(erroredInstance as { stack: string[] }).stack );
 
@@ -158,11 +167,13 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 	// is gathering value from deep chain and while comparing it with 
 	// assignment operator, then it will not create this property 
 	// so we need direct property declaration here ...
-	odp( erroredInstance, 'stack', {
-		get () {
-			return erroredInstanceStack;
-		}
-	} );
+	odp( erroredInstance,
+		'stack',
+		{
+			get () {
+				return erroredInstanceStack;
+			}
+		} );
 
 	self.inheritedInstance = erroredInstance;
 
@@ -184,40 +195,50 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 
 		// if hooks had some interception: stop
 
-		odp( erroredInstance, 'args', {
-			get () {
-				return args;
-			}
-		} );
+		odp( erroredInstance,
+			'args',
+			{
+				get () {
+					return args;
+				}
+			} );
 
-		odp( erroredInstance, 'originalError', {
-			get () {
-				return error;
-			}
-		} );
+		odp( erroredInstance,
+			'originalError',
+			{
+				get () {
+					return error;
+				}
+			} );
 
-		odp( erroredInstance, 'instance', {
-			get () {
-				return erroredInstance;
-			}
-		} );
+		odp( erroredInstance,
+			'instance',
+			{
+				get () {
+					return erroredInstance;
+				}
+			} );
 
-		odp( erroredInstance, 'extract', {
-			get () {
-				return () => {
-					const _parent = parent(erroredInstance);
-					return extract(_parent);
-				};
-			}
-		} );
+		odp( erroredInstance,
+			'extract',
+			{
+				get () {
+					return () => {
+						const _parent = parent(erroredInstance);
+						return extract(_parent);
+					};
+				}
+			} );
 
-		odp( erroredInstance, 'parse', {
-			get () {
-				return () => {
-					return parse( erroredInstance );
-				};
-			}
-		} );
+		odp( erroredInstance,
+			'parse',
+			{
+				get () {
+					return () => {
+						return parse( erroredInstance );
+					};
+				}
+			} );
 	}
 
 	throw erroredInstance;

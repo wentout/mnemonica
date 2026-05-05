@@ -154,7 +154,7 @@ export type TypeDef = {
 	parentType?: TypeDef;
 	constructHandler: () => MnemonicaConstructor;
 	title: string;
-	hooks: Record<string, Set<CallableFunction>>;
+	hooks: Record<string, Set<HookFunction>>;
 	invokeHook: (hookType: hooksTypes, opts: hooksOpts) => Set<unknown>;
 	prototype: unknown;
 	stack?: string;
@@ -390,7 +390,7 @@ export interface TypesCollection extends Hookable {
 
 // Shared interface for objects that support hooks (TypeDef and CollectionDef)
 export interface Hookable {
-	hooks: Record<string, Set<CallableFunction>>;
+	hooks: Record<string, Set<HookFunction>>;
 	invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
 	registerHook(hookType: hooksTypes, cb: HookFunction): void;
 	registerFlowChecker(cb: (opts: object) => unknown): void;
@@ -430,7 +430,11 @@ export interface MnemonicaConstructor extends NewableFunction {
 
 // Type descriptor instance — internal shape of TypeDescriptor objects
 export interface TypeDescriptorDefine extends CallableFunction {
-	(TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object): TypeClass;
+	(
+		TypeOrTypeName: string | CallableFunction,
+		constructHandlerOrConfig?: CallableFunction | object,
+		config?: object
+	): TypeClass;
 }
 
 export interface TypeDescriptorLookup extends CallableFunction {

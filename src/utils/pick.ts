@@ -1,9 +1,7 @@
 'use strict';
 
 import { ErrorsTypes } from '../descriptors/errors';
-const {
-	WRONG_INSTANCE_INVOCATION
-} = ErrorsTypes;
+const { WRONG_INSTANCE_INVOCATION } = ErrorsTypes;
 
 export const pick = ( instance: object, ...args: (string | string[])[] ) => {
 
@@ -19,13 +17,15 @@ export const pick = ( instance: object, ...args: (string | string[])[] ) => {
 			arr.push( el );
 		}
 		return arr;
-	}, [] );
+	},
+	[] );
 
 	const record = instance as Record<string, unknown>;
 	const picked = props.reduce( ( obj: { [ index: string ]: unknown }, name: string ) => {
 		obj[ name ] = record[ name ];
 		return obj;
-	}, {} );
+	},
+	{} );
 
 	return picked;
 
