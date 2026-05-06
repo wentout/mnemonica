@@ -43,15 +43,7 @@ Creates type constructors with special inheritance capabilities:
 
 ### 4. Symbol System
 
-| Symbol | Purpose |
-|--------|---------|
-| `SymbolConstructorName` | Stores type name |
-| `SymbolParentType` | Links to parent instance |
-| `SymbolSubTypes` | Registry of child types |
-| `MNEMONICA` | Library namespace marker |
-| `MNEMOSYNE` | Instance prototype marker |
-| `GAIA` | Global type registry |
-| `URANUS` | Special instance handler |
+See [`../AGENTS.md`](../AGENTS.md) for the complete symbol reference table.
 
 ## Code Analysis Guidelines
 
@@ -108,6 +100,13 @@ directly (types and units).
 
 ### Why tabs for indentation?
 Project standard — configured in `.editorconfig` and `eslint.config.js`.
+
+### How do async constructors work?
+mnemonica supports async constructors natively. `await new AsyncType()` returns
+the resolved instance (with `awaitReturn: true`, the default). Async subtypes
+must be invoked as methods on the parent instance: `await parent.AsyncChild()`.
+See `docs/async-constructors.md` for the `super()` return-value pattern and
+native async class wrapping.
 
 ## Documentation References
 

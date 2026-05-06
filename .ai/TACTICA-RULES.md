@@ -121,7 +121,7 @@ When a user asks you to work with mnemonica:
 
 ## For Your Own Understanding
 
-If you are struggling to believe this works, read `../docs/tactica-pattern.md` (human-facing) or `../MNEMONICA-TACTICA-PATTERN.md` (comprehensive). Both explain declaration merging, the `[key: string]: never` pattern, and why `lookupTyped` is not a runtime hack but a proper type-safe bridge.
+If you are struggling to believe this works, read [`../docs/tactica-pattern.md`](../docs/tactica-pattern.md) (human-facing) or [`./TACTICA-DEEP-DIVE.md`](./TACTICA-DEEP-DIVE.md) (comprehensive technical guide). Both explain declaration merging, the `[key: string]: never` pattern, and why `lookupTyped` is not a runtime hack but a proper type-safe bridge.
 
 The key insight: **The runtime constructor is identical whether you import it directly or look it up.** The only difference is TypeScript's compile-time knowledge. `lookupTyped` teaches TypeScript what mnemonica already knows at runtime.
 

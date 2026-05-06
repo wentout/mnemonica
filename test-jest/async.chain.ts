@@ -504,4 +504,56 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 
 	});
 
+	describe('async super() return value propagation', () => {
+
+		let asyncParentInstance: MnemonicaInstance & { parentAsyncValue: string };
+		let asyncChildInstance: MnemonicaInstance & { parentAsyncValue: string; childAsyncValue: string };
+
+		const sleep = (time: number) => {
+			return new Promise<void>((resolve) => setTimeout(resolve, time));
+		};
+
+		const AsyncParentType = define('AsyncParentType', async function (this: MnemonicaInstance) {
+			await sleep(50);
+			(this as typeof asyncParentInstance).parentAsyncValue = 'parent';
+			return this;
+		});
+
+		const AsyncChildType = AsyncParentType.define('AsyncChildType', async function (this: MnemonicaInstance) {
+			await sleep(50);
+			(this as typeof asyncChildInstance).childAsyncValue = 'child';
+			return this;
+		});
+
+		beforeAll(async function () {
+			asyncParentInstance = await new AsyncParentType() as typeof asyncParentInstance;
+			asyncChildInstance = await asyncParentInstance.AsyncChildType() as typeof asyncChildInstance;
+		});
+
+		it('parent instance should have parent property', () => {
+			expect(asyncParentInstance.parentAsyncValue).toEqual('parent');
+		});
+
+		it('child instance should have parent property', () => {
+			expect(asyncChildInstance.parentAsyncValue).toEqual('parent');
+		});
+
+		it('child instance should have child property', () => {
+			expect(asyncChildInstance.childAsyncValue).toEqual('child');
+		});
+
+		it('child instance should be instanceof AsyncParentType', () => {
+			expect(asyncChildInstance).toBeInstanceOf(AsyncParentType);
+		});
+
+		it('child instance should be instanceof AsyncChildType', () => {
+			expect(asyncChildInstance).toBeInstanceOf(AsyncChildType);
+		});
+
+		it('parent instance should not be instanceof AsyncChildType', () => {
+			expect(asyncParentInstance).not.toBeInstanceOf(AsyncChildType);
+		});
+
+	});
+
 };

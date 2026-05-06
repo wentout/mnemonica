@@ -156,4 +156,4 @@ Design [feature]:
 - Respect the dual test framework
 - Follow strict TypeScript rules
 - Use tabs for indentation
-- No `any` or `unknown` types
+- `any` is permitted where necessary (see CODE.md for full type rules)

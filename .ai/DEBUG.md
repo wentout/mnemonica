@@ -32,6 +32,16 @@ DEBUG=* npm test
 npm run build
 ```
 
+### Build Output Inspection
+
+When running `npm run build` or `npm run build:all`, **check the beginning of the
+output** for errors and warnings. Build failures (TypeScript compilation errors,
+ESLint issues, etc.) often appear at the start of the output. Do not rely only on
+the end of the output or `tail` for build status.
+
+For test passing confirmations (e.g., `npm run test:cov`), checking the end of
+the output is acceptable.
+
 ---
 
 ## Common Issue Patterns
@@ -148,13 +158,15 @@ npx jest test-jest/types.ts --verbose --no-coverage
 ## Issue Checklist
 
 1. [ ] Check TypeScript compilation: `npm run build`
-2. [ ] Run Mocha tests: `npm run test:mocha`
-3. [ ] Run Jest tests: `npm run test:jest`
-4. [ ] Check test coverage: `npm run test:cov`
-5. [ ] Verify indentation (tabs not spaces)
-6. [ ] Check for `any` or `unknown` types
-7. [ ] Verify symbol usage is correct
-8. [ ] Check proxy handler return types
+2. [ ] Check build output **at the beginning** for errors/warnings (not just tail)
+3. [ ] Run Mocha tests: `npm run test:mocha`
+4. [ ] Run Jest tests: `npm run test:jest`
+5. [ ] Check test coverage: `npm run test:cov`
+6. [ ] Verify indentation (tabs not spaces)
+7. [ ] Check for bare `Function` / `CallableFunction` / `NewableFunction` types
+8. [ ] Verify symbol usage is correct
+9. [ ] Check proxy handler return types
+10. [ ] Verify return statements use intermediate variables
 
 ---
 

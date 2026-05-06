@@ -89,8 +89,8 @@ The epiphany: **The runtime object is identical. The only difference is TypeScri
 ## Phase 4: Documentation (Session 7)
 
 The agent documents everything:
-- `MNEMONICA-TACTICA-PATTERN.md` — comprehensive technical guide
-- `core/.ai/TACTICA.md` — agent instructions
+- `core/.ai/TACTICA-DEEP-DIVE.md` — comprehensive technical guide
+- `core/.ai/TACTICA-RULES.md` — agent instructions
 - `core/docs/tactica-pattern.md` — human-friendly explanation
 - `tactica/docs/lookupTyped-pattern.md` — consumption guide
 
@@ -128,7 +128,7 @@ The agent cannot feel wonder. But it can note that a library designed to make pr
 If you are reading this, you are likely at Phase 0, 1, or 2.
 
 **Your shortcut:**
-1. Read `core/.ai/TACTICA.md` (agent instructions)
+1. Read `core/.ai/TACTICA-RULES.md` (agent instructions)
 2. Read `core/docs/tactica-pattern.md` (human explanation)
 3. Check if `.tactica/` exists. If not, run `npx tactica`.
 4. Replace all direct imports + casts with `lookupTyped`.

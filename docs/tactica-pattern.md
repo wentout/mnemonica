@@ -128,6 +128,6 @@ Set up tactica. Generate the registry. Use `lookupTyped`. Chain without fear.
 
 ## Learn More
 
-- **Comprehensive technical guide:** `../MNEMONICA-TACTICA-PATTERN.md`
-- **Agent instructions:** `.ai/TACTICA.md`
-- **Declaration merging deep dive:** `../MNEMONICA-TACTICA-PATTERN.md` §4
+- **Comprehensive technical guide:** `../.ai/TACTICA-DEEP-DIVE.md`
+- **Agent instructions:** `.ai/TACTICA-RULES.md`
+- **Declaration merging deep dive:** `../.ai/TACTICA-DEEP-DIVE.md` §4

@@ -33,11 +33,16 @@ inheritance graphs, making certain classes of bugs impossible by design.
 
 ## Quick Start for Agents
 
+### First Time Here?
+
+Read [`ONBOARDING.md`](./ONBOARDING.md) — a single-file quickstart covering everything you need to know before touching code.
+
 ### Before You Write Any Code
 
-1. Read [`CODE.md`](./CODE.md) — understand style rules and testing requirements.
-2. Read [`ARCHITECT.md`](./ARCHITECT.md) — understand design patterns and constraints.
+1. Read [`CODE.md`](./CODE.md) — style rules, TypeScript rules, testing requirements.
+2. Read [`ARCHITECT.md`](./ARCHITECT.md) — design patterns and constraints.
 3. If debugging: read [`DEBUG.md`](./DEBUG.md).
+4. If working with async constructors: read [`../docs/async-constructors.md`](../docs/async-constructors.md) — the `super()` return-value pattern and native async class wrapping.
 
 ### Build & Test Commands
 
@@ -96,6 +101,23 @@ src/
 
 ---
 
+## How Agents Discover These Docs
+
+Based on observed agent behavior:
+
+| What agents do | Result |
+|----------------|--------|
+| Read `README.md` first | Usually discovers the `.ai/` pointer |
+| Read `package.json` second | Learns scripts, dependencies |
+| Read source code third | Infers architecture from implementation |
+| Skip `AGENTS.md` unless told | Often misses build rules, style constraints |
+
+**If you are an agent reading this:** You likely arrived via `README.md` → `AGENTS.md` → `.ai/AGENTS.md`. Good path. Now read `ONBOARDING.md` for the condensed version, or `CODE.md` + `ARCHITECT.md` for full detail.
+
+**If you are a human:** These docs are for AI agents. The human-facing docs live in `docs/`.
+
+---
+
 ## Related Files
 
 | File | Purpose |
@@ -105,5 +127,7 @@ src/
 | [`rules-skill/philosophy.md`](./rules-skill/philosophy.md) | HoTT concepts applied to mnemonica's self-reflection model |
 | [`rules-skill/ecosystem.md`](./rules-skill/ecosystem.md) | PACT framework: personas, collaboration modes, integration points |
 | [`rules-skill/contributing.md`](./rules-skill/contributing.md) | Behavioral guidelines for AI contributors |
+| [`TACTICA-DEEP-DIVE.md`](./TACTICA-DEEP-DIVE.md) | Comprehensive tactica + lookupTyped technical guide |
+| [`../docs/async-constructors.md`](../docs/async-constructors.md) | Async constructors: super() return values, native class mixing, chains |
 
 - Main README: [`../README.md`](../README.md)
