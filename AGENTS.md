@@ -1,6 +1,9 @@
 # AGENTS.md
 
-This file provides guidance to agents when working with code in this repository.
+> **First:** Read the root [`/AGENTS.md`](/AGENTS.md) for Rule #1 (PAUSE AND ASK)
+> — the highest-priority rule that overrides everything else.
+
+This file provides guidance specific to **mnemonica/core**.
 
 > **Note:** Framework-agnostic rules are also available in `.ai/`:
 > [`AGENTS.md`](./.ai/AGENTS.md), [`CODE.md`](./.ai/CODE.md),
