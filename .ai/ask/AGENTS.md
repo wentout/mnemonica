@@ -2,7 +2,6 @@
 
 > **Applies to:** Explaining concepts, analyzing code, answering questions.
 > Framework-agnostic.
-> **Formerly:** `.roo/rules-ask/AGENTS.md`
 
 ---
 

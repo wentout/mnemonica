@@ -1,7 +1,7 @@
 # Coding Standards — mnemonica/core
 
 > **Applies to:** All code changes. Framework-agnostic.
-> **Roo override:** `.roo/rules-code/AGENTS.md` extends these rules.
+> See also `.ai/rules/CODING.md` for extended coding rules.
 
 ---
 

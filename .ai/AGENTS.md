@@ -26,8 +26,13 @@ inheritance graphs, making certain classes of bugs impossible by design.
 | [`CODE.md`](./CODE.md) | Coding standards: style, TypeScript rules, testing |
 | [`ARCHITECT.md`](./ARCHITECT.md) | Design guidelines: patterns, planning, constraints |
 | [`DEBUG.md`](./DEBUG.md) | Debugging guidelines: commands, common issues, logging |
+| [`async_init.md`](./async_init.md) | Async class constructor support: wrapper pattern, `Symbol.hasInstance`, tests |
 | [`ask/AGENTS.md`](./ask/AGENTS.md) | Ask mode: explaining concepts, analyzing code |
 | [`orchestrator/AGENTS.md`](./orchestrator/AGENTS.md) | Orchestrator mode: multi-step task coordination |
+| [`rules/CODING.md`](./rules/CODING.md) | Extended coding rules: models vs controllers, raw* prefix, full file reading |
+| [`rules/REMINDERS.md`](./rules/REMINDERS.md) | Quick reference: type vs interface, spacing, before-task checklist |
+| [`rules/CONTEXT-CONDENSING.md`](./rules/CONTEXT-CONDENSING.md) | Recovery protocol when context condenses |
+| [`task-templates/`](./task-templates/) | Reusable task templates |
 
 ---
 
@@ -123,7 +128,7 @@ Based on observed agent behavior:
 | File | Purpose |
 |------|---------|
 | [`../SKILL.md`](../SKILL.md) | Condensed skill reference for framework injection |
-| [`../AGENTS.md`](../AGENTS.md) | Root agent guidelines (legacy Roo entrypoint) |
+| [`../AGENTS.md`](../AGENTS.md) | Root agent guidelines |
 | [`rules-skill/philosophy.md`](./rules-skill/philosophy.md) | HoTT concepts applied to mnemonica's self-reflection model |
 | [`rules-skill/ecosystem.md`](./rules-skill/ecosystem.md) | PACT framework: personas, collaboration modes, integration points |
 | [`rules-skill/contributing.md`](./rules-skill/contributing.md) | Behavioral guidelines for AI contributors |

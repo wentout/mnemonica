@@ -2,7 +2,6 @@
 
 > **Applies to:** Investigating issues, diagnosing problems, identifying root
 > causes. Framework-agnostic.
-> **Roo override:** `.roo/rules-debug/AGENTS.md` extends these rules.
 
 ---
 

@@ -2,7 +2,6 @@
 
 > **Applies to:** Coordinating complex, multi-step projects across domains.
 > Framework-agnostic.
-> **Formerly:** `.roo/rules-orchestrator/AGENTS.md`
 
 ---
 

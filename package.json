@@ -53,6 +53,7 @@
     "test:cov": "npm run build:all && nyc --reporter=text-summary --reporter=lcov mocha --allow-uncaught --enable-source-maps --ui bdd --reporter spec ./test/index.js",
     "debug": "npx tsc --pretty --project tsconfig.json && npx mocha --allow-uncaught --enable-source-maps --reporter spec --inspect-brk test/index",
     "test:jest": "npx jest",
+    "test:async_init": "mocha --allow-uncaught test_async/index.js",
     "test:jest:cov": "npx jest --collectCoverage",
     "test:jest:debug": "npx --node-options=--inspect-brk jest",
     "test:mjs": "npm run build && node --experimental-modules ./test/test.mjs",

@@ -2,7 +2,6 @@
 
 > **Applies to:** Planning, designing, and strategizing changes without modifying
 > implementation files. Framework-agnostic.
-> **Roo override:** `.roo/rules-architect/AGENTS.md` extends these rules.
 
 ---
 

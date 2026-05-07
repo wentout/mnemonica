@@ -1149,8 +1149,7 @@ This requires a `NestedTypeRegistry` interface augmentation alongside
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for branch model, commit style, and
 the local build/test loop. Repository conventions, code style, and agent
-rules live in [AGENTS.md](AGENTS.md). Release notes live in
-[CHANGELOG.md](CHANGELOG.md).
+rules live in [AGENTS.md](AGENTS.md). 
 
 **Related reading:**
 - [Inheritance in JavaScript: Factory of Constructors with Prototype Chain](https://github.com/mythographica/stash/blob/master/inheritance.md)

@@ -2,7 +2,7 @@
 
 Thanks for your interest in mnemonica. This document covers the local
 development loop. Repository conventions and code style live in
-[AGENTS.md](AGENTS.md); release notes live in [CHANGELOG.md](CHANGELOG.md).
+[AGENTS.md](AGENTS.md).
 
 ## Development environment
 
@@ -71,7 +71,7 @@ Per [AGENTS.md](AGENTS.md):
 
 ## Releasing
 
-1. Update `CHANGELOG.md` with the new version's notes.
+1. Update release notes.
 2. Bump `version` in `package.json`.
 3. `npm run verify` (build + lint:check).
 4. `npm run test:cov && npm run test:jest:cov` (both 100% coverage).

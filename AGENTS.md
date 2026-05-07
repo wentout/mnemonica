@@ -4,8 +4,9 @@ This file provides guidance to agents when working with code in this repository.
 
 > **Note:** Framework-agnostic rules are also available in `.ai/`:
 > [`AGENTS.md`](./.ai/AGENTS.md), [`CODE.md`](./.ai/CODE.md),
-> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md).
-> These are designed for agents that do not use the Roo framework.
+> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md),
+> [`async_init.md`](./.ai/async_init.md).
+> These rules apply to all agent frameworks.
 
 ## Project Overview
 
@@ -32,12 +33,12 @@ The stored arguments in the prototype chain allow AI to introspect and learn fro
 
 ## Agent Framework Rules
 
-This repository contains additional mode-specific rules for the **Roo** agent framework in `.roo/rules-code/`:
-- Code mode rules: `.roo/rules-code/AGENTS.md`
-- Reminders (type vs interface, spacing): `.roo/rules-code/REMINDERS.md`
-- Context condensing protocol: `.roo/rules-code/CONTEXT-CONDENSING.md`
+This repository contains additional mode-specific rules in `.ai/rules/`:
+- Code mode rules: `.ai/rules/CODING.md`
+- Reminders (type vs interface, spacing): `.ai/rules/REMINDERS.md`
+- Context condensing protocol: `.ai/rules/CONTEXT-CONDENSING.md`
 
-If you are a Roo user, these files are injected into your system prompt automatically. If you are using a different agent framework, you should read them manually — they contain critical rules not duplicated here.
+These files contain critical rules not duplicated in the main AGENTS.md. All agents should read them manually.
 
 ## Build/Test Commands
 
