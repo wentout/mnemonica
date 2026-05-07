@@ -42,12 +42,12 @@ export interface TypeConstructor<ConstructorInstance extends object> {
     };
 }
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
-export type hooksOpts = {
+export type hooksOpts<P = object, T = P> = {
     TypeName: string;
     type: TypeDef;
     args: unknown[];
-    existentInstance: object;
-    inheritedInstance?: object;
+    existentInstance: P;
+    inheritedInstance?: T;
     creator?: {
         throwModificationError(error: Error): void;
     };
