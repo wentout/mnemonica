@@ -7,12 +7,6 @@
 > **Using mnemonica with tactica?** Read [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) — mnemonica without tactica is 10% of the value.
 > [`SKILL.md`](./SKILL.md) is a usage quick reference only (not for contributors).
 
-Mnemonica builds typed prototype chains *between instances* (not just classes).
-You declare a type with `define(name, ctor)`; new instances inherit through
-the prototype chain from the instance they were created from. Mnemonica makes
-the inheritance graph explicit — eliminating a class of `Object.setPrototypeOf`
-and constructor-reuse bugs by design.
-
 ```
 define(name, ctor)        →   TypeProxy   →   new instance.SubType()
                                   │                     │
@@ -34,6 +28,8 @@ define(name, ctor)        →   TypeProxy   →   new instance.SubType()
 Think `f(x) ⇒ y` where `this` is a persistent data structure carrying the
 transformation history. Stored constructor arguments stay introspectable via
 `getProps()`, so an instance is also a record of how it was built.
+
+---
 
 [![Coverage Status](https://coveralls.io/repos/github/wentout/mnemonica/badge.svg?branch=master)](https://coveralls.io/github/wentout/mnemonica?branch=master)
 ![NPM](https://img.shields.io/npm/l/mnemonica)
@@ -131,7 +127,7 @@ a fresh checkout.
 ```js
 const { define } = require('mnemonica');
 
-// Define a type
+// Define a type — stored in the default global collection automatically
 const UserType = define('UserType', function (data) {
   Object.assign(this, data);
 });
@@ -306,7 +302,7 @@ import {
   CallFunction,                  // call(entity, Ctor, ...args) => S
   BindFunction,                  // bind(entity, Ctor) => (...args) => S
   
-  // createTypesCollection types
+  // createTypesCollection types — use only when you need isolation
   CreateTypesCollectionFunction, // (config?: constructorOptions) => TypesCollection
   TypesCollection,               // Interface returned by createTypesCollection
   
@@ -551,18 +547,43 @@ These types enable complete type safety when defining and using mnemonica types 
 
 ### Type Management
 
-#### `defaultTypes`
+#### `defaultTypes` — start here
 
-The default types collection. All types defined with the top-level `define()` are stored here.
+The default types collection. All types defined with the top-level `define()` are stored here automatically. **This is what you want for most applications.**
 
 ```js
-const { defaultTypes } = require('mnemonica');
-const MyType = defaultTypes.MyType;
+const { define } = require('mnemonica');
+
+// Stored in defaultTypes — no extra imports needed
+const UserType = define('UserType', function (data) {
+  Object.assign(this, data);
+});
+
+// Look it up later anywhere in your program
+const { lookup } = require('mnemonica');
+const User = lookup('UserType');
 ```
 
-#### `createTypesCollection(config?)`
+#### `createTypesCollection(config?)` — use only when you need isolation
 
-Creates a new isolated types collection.
+Creates a new **isolated** types collection. Types defined in one collection are invisible to another. This is useful for:
+
+- **Testing** — prevent test suites from polluting each other's type namespace
+- **Plugins / libraries** — ship self-contained mnemonica types without colliding with the host app's types
+- **Multi-tenant contexts** — truly separate type namespaces per tenant
+
+> **Important:** Collections have **no names** and **no global registry**. Once you create one, you must pass the pointer around yourself. If you lose the reference, the collection and its types are unreachable. This is boilerplate you pay for isolation.
+
+```js
+const { createTypesCollection } = require('mnemonica');
+
+// Create isolated collection — keep this pointer!
+const myCollection = createTypesCollection();
+const MyType = myCollection.define('MyType', function () {});
+
+// You MUST use myCollection to look it up — lookup('MyType') won't find it
+const FoundType = myCollection.lookup('MyType');
+```
 
 ```js
 const { createTypesCollection } = require('mnemonica');
@@ -1037,24 +1058,17 @@ npm run example:rename   # constructor renaming via Object.defineProperty
 npm run example:v8bug    # documents a Node 22 .stack/.hasOwn divergence
 ```
 
-### Working with Collections
+### When to Use `createTypesCollection`
 
 ```js
-const { createTypesCollection, defaultTypes } = require('mnemonica');
+const { createTypesCollection } = require('mnemonica');
 
-// Create isolated collection for testing
-const testCollection = createTypesCollection({
-  strictChain: false,
-  blockErrors: false
-});
-
-// Define types in isolation
+// ✅ Good: test isolation — prevents suite A's types from leaking into suite B
+const testCollection = createTypesCollection({ strictChain: false });
 const TestType = testCollection.define('TestType', function () {});
 
-// Register collection-level hooks
-testCollection.registerHook('preCreation', (data) => {
-  console.log('Creating in test collection:', data.TypeName);
-});
+// ❌ Unnecessary: for a normal app, just use define() — it goes into defaultTypes
+//    Don't create a collection just to recreate the behavior you already have.
 ```
 
 ### Asynchronous Constructors
