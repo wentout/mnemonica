@@ -1,5 +1,6 @@
 'use strict';
 
+
 import { constants } from '../../constants';
 
 const {
@@ -9,28 +10,37 @@ const {
 	ErrorMessages,
 } = constants;
 
-const {
-	BASE_ERROR_MESSAGE
-} = ErrorMessages;
+const { BASE_ERROR_MESSAGE } = ErrorMessages;
 
 export const stackCleaners: RegExp[] = [];
 
 export const cleanupStack = ( stack: string[] ) => {
-	const cleaned: string[] = stack.reduce( ( arr: string[], line: string ) => {
-		stackCleaners.forEach( cleanerRegExp => {
-			if ( !cleanerRegExp.test( line ) ) {
-				arr.push( line );
-			}
-		} );
-		return arr;
-	}, [] );
+	const cleaned: string[] = stack.reduce(
+		( arr: string[], line: string ) => {
+			stackCleaners.forEach( cleanerRegExp => {
+				if ( !cleanerRegExp.test( line ) ) {
+					arr.push( line );
+				}
+			} );
+			return arr;
+		},
+		[] 
+	);
 	return cleaned.length ? cleaned : stack;
 };
 
-export const getStack = function ( this: any, title: string, stackAddition: string[], tillFunction?: CallableFunction ) {
+export const getStack = function (
+	this: any,
+	title: string,
+	stackAddition: string[],
+	tillFunction?: CallableFunction
+) {
 
 	if ( Error.captureStackTrace ) {
-		Error.captureStackTrace( this, tillFunction || getStack );
+		Error.captureStackTrace(
+			this,
+			tillFunction || getStack 
+		);
 	} else {
 		this.stack = ( new Error() ).stack;
 	}
@@ -54,11 +64,15 @@ export class BASE_MNEMONICA_ERROR extends Error {
 
 		super( message );
 		const BaseStack: string = this.stack as string;
-		odp( this, 'BaseStack', {
-			get () {
-				return BaseStack;
-			}
-		} );
+		odp(
+			this,
+			'BaseStack',
+			{
+				get () {
+					return BaseStack;
+				}
+			} 
+		);
 
 		const stack = cleanupStack( BaseStack.split( '\n' ) );
 
@@ -76,18 +90,25 @@ export class BASE_MNEMONICA_ERROR extends Error {
 
 }
 
-Object.defineProperty( BASE_MNEMONICA_ERROR.prototype.constructor, 'name', {
-	get () {
-		return new String( 'BASE_MNEMONICA_ERROR' );
-	}
-} );
+Object.defineProperty(
+	BASE_MNEMONICA_ERROR.prototype.constructor,
+	'name',
+	{
+		get () {
+			return new String( 'BASE_MNEMONICA_ERROR' );
+		}
+	} 
+);
 
 
 export const constructError = ( name: string, message: string ) => {
 	const NamedErrorConstructor = class extends BASE_MNEMONICA_ERROR {
 		constructor ( addition: string, stack: string[] ) {
 			const saying = addition ? `${message} : ${addition}` : `${message}`;
-			super( saying, stack );
+			super(
+				saying,
+				stack 
+			);
 		}
 	};
 
@@ -99,10 +120,14 @@ export const constructError = ( name: string, message: string ) => {
 		},
 	};
 	reNamer[ name ] = NamedErrorConstructor;
-	Object.defineProperty( reNamer[ name ].prototype.constructor, 'name', {
-		get () {
-			return new String( name );
-		}
-	} );
+	Object.defineProperty(
+		reNamer[ name ].prototype.constructor,
+		'name',
+		{
+			get () {
+				return new String( name );
+			}
+		} 
+	);
 	return reNamer[ name ];
 };

@@ -23,8 +23,13 @@ export const {
 	findSubTypeFromParent,
 } = TypesUtils;
 
-export type { IDEF, TypeConstructor, _Internal_TC_, Proto, ProtoFlat } from './types';
-export { getProps, setProps } from './api/types/Props';
+export type {
+	IDEF, TypeConstructor, _Internal_TC_, Proto, ProtoFlat,
+	hooksOpts, hook, hooksTypes, TypesCollection
+} from './types';
+export {
+	getProps, setProps 
+} from './api/types/Props';
 
 import { constants } from './constants';
 const { odp } = constants;
@@ -37,9 +42,7 @@ const { WRONG_MODIFICATION_PATTERN } = descriptors.ErrorsTypes;
 import mnemosynes from './api/types/Mnemosyne';
 const { prepareSubtypeForConstruction } = mnemosynes;
 
-export const {
-	defaultTypes,
-} = descriptors;
+export const { defaultTypes, } = descriptors;
 
 function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolean {
 	return pointer === mnemonica || pointer === exports;
@@ -64,7 +67,11 @@ export const define = function <
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
 	return (types as { define: TypeAbsorber })
-		.define(TypeName as string, constructHandler as IDEF<T>, config) as unknown as R;
+		.define(
+TypeName as string,
+constructHandler as IDEF<T>,
+config
+		) as unknown as R;
 } as TypeAbsorber;
 
 export const lookup = function (
@@ -128,10 +135,14 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 	// debugger;
 	// @ts-expect-error - extracting TypeName from function
 	const { TypeName } = Ctor;
-	const Cstr = prepareSubtypeForConstruction(TypeName, entity) as { new(...ars: unknown[]): unknown };
+	const Cstr = prepareSubtypeForConstruction(
+		TypeName,
+		entity
+	) as { new(...ars: unknown[]): unknown };
 	// TODO: check lines below and if Constructor is not mnemonized ...
 	if (Cstr === undefined) {
-		throw new (WRONG_MODIFICATION_PATTERN as unknown as new (msg: string) => Error)(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
+		const ErrorCtor = WRONG_MODIFICATION_PATTERN as unknown as new (msg: string) => Error;
+		throw new ErrorCtor(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
 	}
 	const result = new Cstr(...args);
 	// @ts-expect-error - returning result as merged proto type
@@ -146,7 +157,11 @@ export const apply = function <E extends object, T extends object, S extends Pro
 ): {
 		[key in keyof S]: S[key]
 	} {
-	return $run<E, T, S>(entity, Ctor, args);
+	return $run<E, T, S>(
+		entity,
+		Ctor,
+		args
+	);
 };
 
 // TODO: call type .by instance .with arguments
@@ -157,7 +172,11 @@ export const call = function <E extends object, T extends object, S extends Prot
 ): {
 		[key in keyof S]: S[key]
 	} {
-	return $run<E, T, S>(entity, Ctor, args);
+	return $run<E, T, S>(
+		entity,
+		Ctor,
+		args
+	);
 };
 
 // TODO: bind type .with instance → (...args)
@@ -168,7 +187,11 @@ export const bind = function <E extends object, T extends object, S extends Prot
 	[key in keyof S]: S[key]
 } {
 	return (...args: unknown[]) => {
-		return $run<E, T, S>(entity, Ctor, args);
+		return $run<E, T, S>(
+			entity,
+			Ctor,
+			args
+		);
 	};
 };
 
@@ -189,19 +212,36 @@ export const decorate = function <
 	const decorator = function <U extends Constructor<object>>(cstr: U): DecoratedClass<U> {
 		const { name } = cstr;
 		if (parentType === undefined) {
-			return define(name, cstr as IDEF<object>, opts) as unknown as DecoratedClass<U>;
+			const decoratorResult = define(
+				name,
+cstr as IDEF<object>,
+opts
+			) as unknown as DecoratedClass<U>;
+			return decoratorResult;
 		}
 		const parent = parentType as unknown as {
 			define: TypeAbsorber;
 		};
-		return parent.define(name, cstr as IDEF<object>, opts) as unknown as DecoratedClass<U>;
+		const defineResult = parent.define(
+			name,
+cstr as IDEF<object>,
+opts
+		) as unknown as DecoratedClass<U>;
+		return defineResult;
 	};
 	return decorator;
 };
 
 
-export const registerHook = function <T extends Constructor<T>>(Ctor: DecoratedClass<T>, hookType: hooksTypes, cb: hook): void {
-	Ctor.registerHook(hookType, cb);
+export const registerHook = function <T extends Constructor<T>>(
+	Ctor: DecoratedClass<T>,
+	hookType: hooksTypes,
+	cb: hook
+): void {
+	Ctor.registerHook(
+		hookType,
+		cb
+	);
 };
 
 export const mnemonica = Object.entries({
@@ -219,16 +259,23 @@ export const mnemonica = Object.entries({
 	...errorsApi,
 	...constants,
 
-}).reduce((acc: { [index: string]: unknown }, entry: [string, unknown]) => {
-	const [ name, code ] = entry;
-	odp(acc, name, {
-		get() {
-			return code;
-		},
-		enumerable : true
-	});
-	return acc;
-}, {}) as MnemonicaModule;
+}).reduce(
+	(acc: { [index: string]: unknown }, entry: [string, unknown]) => {
+		const [ name, code ] = entry;
+		odp(
+			acc,
+			name,
+			{
+				get() {
+					return code;
+				},
+				enumerable : true
+			}
+		);
+		return acc;
+	},
+	{}
+) as MnemonicaModule;
 
 import * as api from './api';
 
@@ -251,7 +298,8 @@ export const {
 } = mnemonica;
 
 // Export createTypesCollection with proper type
-export const createTypesCollection: CreateTypesCollectionFunction = mnemonica.createTypesCollection as CreateTypesCollectionFunction;
+export const createTypesCollection: CreateTypesCollectionFunction =
+	mnemonica.createTypesCollection as CreateTypesCollectionFunction;
 
 
 export const defaultCollection = (defaultTypes as { subtypes: Map<string, object> }).subtypes;

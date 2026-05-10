@@ -2,7 +2,6 @@
 
 > **Applies to:** Planning, designing, and strategizing changes without modifying
 > implementation files. Framework-agnostic.
-> **Roo override:** `.roo/rules-architect/AGENTS.md` extends these rules.
 
 ---
 
@@ -59,24 +58,18 @@ interface InstanceInternalProps {
 
 ### Symbol System
 
-| Symbol | Purpose |
-|--------|---------|
-| `SymbolConstructorName` | Identifies the type name |
-| `SymbolParentType` | Links to parent instance |
-| `SymbolSubTypes` | Registry of child types |
-| `MNEMONICA` | Library namespace marker |
-| `MNEMOSYNE` | Instance prototype marker |
-| `GAIA` | Global type collection |
-| `URANUS` | Special instance handler |
+See [`AGENTS.md`](./AGENTS.md) for the complete symbol reference table.
 
 ---
 
 ## Design Principles
 
 ### Type Safety
-- Strict TypeScript with no `any` or `unknown`
+- Strict TypeScript with `strict: true`
 - All functions must have explicit return types
 - Types must be complete and reusable
+- `any` is permitted where necessary (eslint `@typescript-eslint/no-explicit-any` is off)
+- Never use bare `Function`, `CallableFunction`, or `NewableFunction` — define purpose-specific interfaces
 
 ### Proxy Handler Design
 

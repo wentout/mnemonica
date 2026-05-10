@@ -1,11 +1,15 @@
 # AGENTS.md
 
-This file provides guidance to agents when working with code in this repository.
+> **First:** Read the root [`/AGENTS.md`](/AGENTS.md) for Rule #1 (PAUSE AND ASK)
+> — the highest-priority rule that overrides everything else.
+
+This file provides guidance specific to **mnemonica/core**.
 
 > **Note:** Framework-agnostic rules are also available in `.ai/`:
 > [`AGENTS.md`](./.ai/AGENTS.md), [`CODE.md`](./.ai/CODE.md),
-> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md).
-> These are designed for agents that do not use the Roo framework.
+> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md),
+> [`async_init.md`](./.ai/async_init.md).
+> These rules apply to all agent frameworks.
 
 ## Project Overview
 
@@ -32,12 +36,12 @@ The stored arguments in the prototype chain allow AI to introspect and learn fro
 
 ## Agent Framework Rules
 
-This repository contains additional mode-specific rules for the **Roo** agent framework in `.roo/rules-code/`:
-- Code mode rules: `.roo/rules-code/AGENTS.md`
-- Reminders (type vs interface, spacing): `.roo/rules-code/REMINDERS.md`
-- Context condensing protocol: `.roo/rules-code/CONTEXT-CONDENSING.md`
+This repository contains additional mode-specific rules in `.ai/rules/`:
+- Code mode rules: `.ai/rules/CODING.md`
+- Reminders (type vs interface, spacing): `.ai/rules/REMINDERS.md`
+- Context condensing protocol: `.ai/rules/CONTEXT-CONDENSING.md`
 
-If you are a Roo user, these files are injected into your system prompt automatically. If you are using a different agent framework, you should read them manually — they contain critical rules not duplicated here.
+These files contain critical rules not duplicated in the main AGENTS.md. All agents should read them manually.
 
 ## Build/Test Commands
 
@@ -198,12 +202,89 @@ The build **must have zero warnings**. Running `npm run build` should produce **
 1. Fix the source code causing the warning
 2. Do not modify `./tsconfig.json` or `./eslint.config.js` to suppress warnings
 
+### Build Output Inspection
+When running `npm run build` or `npm run build:all`, **check the beginning of the output** for errors and warnings. Build failures (TypeScript compilation errors, ESLint issues, etc.) often appear at the start of the output. Do not rely only on the end of the output or `tail` for build status.
+
+For test passing confirmations (e.g., `npm run test:cov`), checking the end of the output is acceptable.
+
 ### Configuration Files
 **Disallowed without explicit approval:**
 - Modifying `./tsconfig.json`
 - Modifying `./eslint.config.js`
 
 These configuration files define the project's strict standards. Any changes require user approval first.
+
+## Return Statement Design Rule
+
+**Always use an intermediate variable before returning.** This is critical for debuggability with `npm run debug` and Chrome Dev Tools.
+
+### Prohibited patterns:
+```typescript
+// BAD — cannot inspect the returned value in debugger
+return { target, name };
+return SomeFnInvocation(arg);
+return new TypeDescriptor(...);
+```
+
+### Required pattern:
+```typescript
+// GOOD — can set breakpoint on return and inspect result
+const result = {
+	target : subtypes,
+	name   : head,
+};
+return result;
+
+const result = SomeFnInvocation(arg);
+return result;
+
+const result = new TypeDescriptor(
+	origin, target, name, handler, proto, config
+);
+return result;
+```
+
+This applies to **all** `return` statements where the expression is anything other than a bare variable or literal. The rule exists because Chrome Dev Tools' debugger cannot show the evaluated result of a complex expression on the `return` line — you must step past it, at which point the frame has already exited.
+
+## TypeScript Type Rules
+
+### Never use bare `Function`, `CallableFunction`, or `NewableFunction`
+These are escape hatches from the type system. Always define and use purpose-specific interfaces that extend them.
+
+### Prohibited:
+```typescript
+function foo(handler: Function) { }
+const result = something() as CallableFunction;
+interface Bad { fn: NewableFunction; }
+```
+
+### Required:
+```typescript
+interface ConstructHandler extends CallableFunction {
+	(this: object, ...args: unknown[]): unknown;
+	prototype: object;
+}
+
+function foo(handler: ConstructHandler) { }
+```
+
+Existing allowed exceptions (do not change without approval):
+- `src/types/index.ts` — central type definitions may use `CallableFunction`/`NewableFunction` as base types for exported interfaces
+- `src/api/types/compileNewModificatorFunctionBody.ts` — `ConstructHandler`/`CreationHandler` interfaces already exist
+
+## Preserving Design Comments and Memory Notes
+
+When refactoring or reformatting code, **preserve all comments that carry design intent, architectural rationale, or developer memory**. This includes:
+
+- Inline comments explaining *why* a non-obvious approach was chosen (e.g. `// "this" argument may be passed for tracking why something happened`)
+- Comments marking intentional workarounds for JS/Node version differences (e.g. `// starting from Node.js v22 we should define this property through odp`)
+- Comments describing what a code section is *about* (e.g. `// this is a direct Sub-Type invocation`)
+- TODOs and commented-out code that documents explored but rejected alternatives
+- Debugger statements left as breadcrumbs for future investigation
+
+**Do NOT remove comments because they seem like "clutter" or because the code is now typed.** TypeScript types answer "what" — comments answer "why". Both are necessary.
+
+If a comment becomes technically inaccurate after a change, update it rather than deleting it.
 
 ## Testing Requirements
 

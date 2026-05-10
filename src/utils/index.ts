@@ -1,5 +1,6 @@
 'use strict';
 
+
 import { collectConstructors } from './collectConstructors';
 import { extract } from './extract';
 import { parent } from './parent';
@@ -28,18 +29,25 @@ const utilsUnWrapped = {
 
 const wrapThis = ( method: CallableFunction ) => {
 	return function ( this: object, instance: object | undefined, ...args: unknown[] ) {
-		return method( instance !== undefined ? instance : this, ...args );
+		const result = method(
+			instance !== undefined ? instance : this,
+			...args 
+		);
+		return result;
 	};
 };
 
 export const utils: { [ index: string ]: CallableFunction } = {
 
 	...Object.entries( utilsUnWrapped )
-		.reduce( ( methods: { [ index: string ]: CallableFunction }, util ) => {
-			const [ name, fn ] = util;
-			methods[ name ] = wrapThis( fn );
-			return methods;
-		}, {} ),
+		.reduce(
+			( methods: { [ index: string ]: CallableFunction }, util ) => {
+				const [ name, fn ] = util;
+				methods[ name ] = wrapThis( fn );
+				return methods;
+			},
+			{} 
+		),
 
 };
 

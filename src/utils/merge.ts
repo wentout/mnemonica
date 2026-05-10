@@ -1,9 +1,7 @@
 'use strict';
 
 import { ErrorsTypes } from '../descriptors/errors';
-const {
-	WRONG_ARGUMENTS_USED
-} = ErrorsTypes;
+const { WRONG_ARGUMENTS_USED } = ErrorsTypes;
 
 export const merge = ( a: object, b: object, ...args: unknown[] ): object => {
 
@@ -22,7 +20,10 @@ export const merge = ( a: object, b: object, ...args: unknown[] ): object => {
 		throw new WRONG_ARGUMENTS_USED( 'A should have A.fork()' );
 	}
 
-	const aa = fork.call( b, ...args );
+	const aa = fork.call(
+		b,
+		...args 
+	);
 	return aa as object;
 
 };

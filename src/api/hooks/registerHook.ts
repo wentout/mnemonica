@@ -1,5 +1,9 @@
 'use strict';
 
+import type {
+	Hookable, HookFunction 
+} from '../../types';
+
 import { ErrorsTypes } from '../../descriptors/errors';
 const {
 	WRONG_HOOK_TYPE,
@@ -12,7 +16,7 @@ const hooksTypes = [
 	'creationError',
 ];
 
-export const registerHook = function ( this: any, hookType: string, cb: CallableFunction ) {
+export const registerHook = function ( this: Hookable, hookType: string, cb: HookFunction ) {
 
 	if ( !hooksTypes.includes( hookType ) ) {
 		throw new WRONG_HOOK_TYPE;

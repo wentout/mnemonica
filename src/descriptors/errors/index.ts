@@ -2,11 +2,11 @@
 
 import type { MnemonicaErrorConstructor } from '../../types';
 import { constants } from '../../constants';
-import { BASE_MNEMONICA_ERROR, constructError } from '../../api/errors';
+import {
+	BASE_MNEMONICA_ERROR, constructError 
+} from '../../api/errors';
 
-const {
-	ErrorMessages,
-} = constants;
+const { ErrorMessages, } = constants;
 
 // ErrorsTypes is dynamically built - using MnemonicaErrorConstructor to indicate these are constructable
 export const ErrorsTypes: { [ index: string ]: MnemonicaErrorConstructor } = {
@@ -16,7 +16,10 @@ export const ErrorsTypes: { [ index: string ]: MnemonicaErrorConstructor } = {
 Object.entries( ErrorMessages ).forEach( entry => {
 	const [ ErrorConstructorName, message ] = entry;
 	 
-	const ErrorCtor = constructError( ErrorConstructorName, message );
+	const ErrorCtor = constructError(
+		ErrorConstructorName,
+		message 
+	);
 	ErrorsTypes[ ErrorConstructorName ] = ErrorCtor as MnemonicaErrorConstructor;
 } );
 

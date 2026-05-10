@@ -1,1 +1,2 @@
-export declare const registerHook: (this: any, hookType: string, cb: CallableFunction) => void;
+import type { Hookable, HookFunction } from '../../types';
+export declare const registerHook: (this: Hookable, hookType: string, cb: HookFunction) => void;

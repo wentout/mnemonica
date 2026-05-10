@@ -3,9 +3,7 @@
 import { ErrorsTypes } from '../descriptors/errors';
 import { stackCleaners } from '../api/errors';
 
-const {
-	WRONG_STACK_CLEANER
-} = ErrorsTypes;
+const { WRONG_STACK_CLEANER } = ErrorsTypes;
 
 export const defineStackCleaner = (regexp:RegExp) => {
 	if ( !( regexp instanceof RegExp ) ) {

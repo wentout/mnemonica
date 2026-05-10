@@ -81,13 +81,14 @@ module.exports = function (): (
 			}
 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-			return ModificationConstructor()
+			const result = ModificationConstructor()
 				.call(
 					existentInstance,
 					ModificatorType,
 					ModificatorTypePrototype,
 					addProps
 				);
+			return result;
 		}
 	};
 

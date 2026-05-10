@@ -1,11 +1,11 @@
 'use strict';
 
 import { ErrorsTypes } from '../descriptors/errors';
-const {
-	WRONG_INSTANCE_INVOCATION
-} = ErrorsTypes;
+const { WRONG_INSTANCE_INVOCATION } = ErrorsTypes;
 
-import { _getProps, Props } from '../api/types/Props';
+import {
+	_getProps, Props 
+} from '../api/types/Props';
 
 // seek for firts parent instance
 // of instance prototype chain
@@ -23,23 +23,20 @@ export const parent = ( instance: object, path?: string ): unknown => {
 		return;
 	}
 
-	const {
-		__parent__: p
-	} = props;
+	const { __parent__: p } = props;
 
 	if ( !path ) {
 		return p;
 	}
 
-	const {
-		constructor: {
-			name
-		}
-	} = p;
+	const { constructor: { name } } = p;
 
 	// seek throuh parent instances
 	// about the fist constructor with this name
 	return name === path ?
-		p : parent( p as object, path );
+		p : parent(
+ p as object,
+ path 
+		);
 
 };

@@ -25,7 +25,10 @@ import {
 	_Internal_TC_,
 	TypeDescriptorInstance,
 	TypeClass,
-	constructorOptions
+	TypeDef,
+	CollectionDef,
+	constructorOptions,
+	ModificationConstructor
 } from '../../types';
 
 import { hop } from '../../utils/hop';
@@ -61,7 +64,7 @@ const {
 import * as hooksApi from '../hooks';
 import { TypeProxy } from './TypeProxy';
 
-import compileNewModificatorFunctionBody from './compileNewModificatorFunctionBody';
+import compileNewModificatorFunctionBody, { ConstructHandler } from './compileNewModificatorFunctionBody';
 
 import TypesUtils, { CreationHandler } from '../utils';
 const {
@@ -73,28 +76,33 @@ const {
 
 import { getStack } from '../errors';
 
+export type TypesMap = Map<string, object> & {
+	[SymbolParentType]?: TypeDef;
+	[MNEMOSYNE]?: CollectionDef;
+};
+
 const TypeDescriptor = function (
 	this: TypeDescriptorInstance,
 	defineOrigin: CallableFunction,
-	types: Map<string, object>,
+	types: TypesMap,
 	TypeName: string,
 	constructHandler: CallableFunction,
-	proto: { [ index: string ]: unknown },
-	config: { [ index: string ]: unknown },
+	proto: { [index: string]: unknown },
+	config: { [index: string]: unknown },
 ) {
 
 	// here "types" refers to subtypes of type or collection object {}
 
-	const parentType = (types as unknown as Record<symbol, object>)[ SymbolParentType ] || null;
+	const parentType = types[ SymbolParentType ] || null;
 
 	const isSubType = parentType ? true : false;
 
 	const collection = isSubType
 		? (parentType as Record<string, unknown>).collection as object
-		: (types as unknown as Record<string | symbol, object>)[ MNEMOSYNE ];
+		: types[ MNEMOSYNE ];
 
-	if ( types.has( TypeName ) ) {
-		throw new ALREADY_DECLARED ( TypeName );
+	if (types.has(TypeName)) {
+		throw new ALREADY_DECLARED(TypeName);
 	}
 
 	// const subtypes = descriptors.createTypesCollection();
@@ -102,51 +110,75 @@ const TypeDescriptor = function (
 
 	const title = `${TYPE_TITLE_PREFIX}${TypeName}`;
 
-	config = Object.assign( {}, (collection as Record<symbol, unknown>)[ SymbolConfig ], config );
+	config = Object.assign(
+		{},
+		(collection as Record<symbol, unknown>)[ SymbolConfig ],
+		config
+	);
 
-	const type = Object.assign( this, {
+	const type = Object.assign(
+		this,
+		{
 
-		get constructHandler () {
-			return constructHandler;
-		},
+			get constructHandler () {
+				return constructHandler;
+			},
 
 
-		TypeName,
-		proto,
+			TypeName,
+			proto,
 
-		isSubType,
-		subtypes,
-		parentType,
+			isSubType,
+			subtypes,
+			parentType,
 
-		collection,
+			collection,
 
-		title,
+			title,
 
-		config,
+			config,
 
-		hooks : Object.create( null )
+			hooks : Object.create(null)
 
-	} );
-
-	getStack.call( this, `Definition of [ ${TypeName} ] made at:`, [], defineOrigin );
-
-	odp( subtypes, SymbolParentType, {
-		get () {
-			return type;
 		}
-	} );
+	);
+
+	getStack.call(
+		this,
+		`Definition of [ ${TypeName} ] made at:`,
+		[],
+		defineOrigin
+	);
+
+	odp(
+		subtypes,
+		SymbolParentType, {
+			get () {
+				return type;
+			}
+		}
+	);
 
 	// const Uranus = isSubType ? Object.create(null) : proto;
 	const Uranus = isSubType ? undefined : proto;
-	types.set( TypeName, new TypeProxy( type, Uranus ) );
-	
+	types.set(
+		TypeName,
+		new TypeProxy(
+			type,
+			Uranus
+		)
+	);
+
 	// types.set( TypeName, new TypeProxy( type ) );
 
-	return types.get( TypeName );
+	return types.get(TypeName);
 
 } as unknown as _Internal_TC_<TypeDescriptorInstance>;
 
-Object.assign( TypeDescriptor.prototype, hooksApi );
+Object.assign(
+	TypeDescriptor.prototype,
+	hooksApi
+);
 
 TypeDescriptor.prototype.define = function (
 	this: TypeDescriptorInstance,
@@ -154,318 +186,355 @@ TypeDescriptor.prototype.define = function (
 	constructHandlerOrConfig?: CallableFunction | object,
 	config?: object
 ) {
-	return define.call( define, this.subtypes as Map<string, object>, TypeOrTypeName, constructHandlerOrConfig, config );
+	return define.call(
+		define,
+		this.subtypes as TypesMap,
+		TypeOrTypeName,
+		constructHandlerOrConfig,
+		config
+	);
 };
 
 TypeDescriptor.prototype.lookup = function (
 	this: TypeDescriptorInstance,
 	TypeNestedPath: string
 ) {
-	return lookup.call( this.subtypes as Map<string, object>, TypeNestedPath );
-};
-
-odp( TypeDescriptor.prototype, Symbol.hasInstance, {
-	get (this: TypeDescriptorInstance) {
-		return getTypeChecker( this.TypeName );
-	}
-} );
-
-/*
-here we use function to retreive a contructor
-and constructHandlerGetter is that function
-*/
-const defineUsingType = function (
-	this: CallableFunction,
-	subtypes: Map<string, object>,
-	constructHandlerGetter: () => CallableFunction,
-	config: constructorOptions | undefined
-) {
-	// we need this to extract TypeName
-	const type = constructHandlerGetter();
-
-	if ( typeof type !== 'function' ) {
-		throw new HANDLER_MUST_BE_A_FUNCTION;
-	}
-
-	const TypeName = type.name;
-
-	if ( !TypeName ) {
-		throw new TYPENAME_MUST_BE_A_STRING;
-	}
-
-	const asClass = isClass( type );
-
-	const makeConstructHandler = () => {
-		const constructHandler = constructHandlerGetter();
-		// constructHandler[SymbolConstructorName] = TypeName;
-		odp( constructHandler, SymbolConstructorName, {
-			get () {
-				return TypeName;
-			}
-		} );
-		
-		// this was checking for class / function
-		// functions has .writable prototype
-		// and classes are has not
-		const protoDesc = Object
-			.getOwnPropertyDescriptor( constructHandler, 'prototype' ) as PropertyDescriptor | undefined;
-		if ( protoDesc && protoDesc.writable ) {
-			// constructHandler.prototype = {};
-			constructHandler.prototype = getDefaultPrototype();
-		}
-		
-		// TODO:
-		// side-way, non correctly working
-		// with createInstanceModificator for line
-		// Object.defineProperties(ModificatorType.prototype, props);
-		// for repeatable instance creations
-		// ↓↓↓ ↓↓↓ ↓↓↓
-		// else {
-		// 	// so let use Object.setPrototypeOf instead
-		// 	// Object.setPrototypeOf(Object.getPrototypeOf(constructHandler.prototype), getDefaultPrototype());
-		// 	Object.setPrototypeOf(constructHandler.prototype, getDefaultPrototype());
-		// }
-
-		return constructHandler;
-	};
-
-	if ( typeof config === 'object' ) {
-		config = Object.assign( {}, config );
-	} else {
-		config = {};
-	}
-
-	config.asClass = asClass;
-
-	return new TypeDescriptor(
-		this,
-		subtypes,
-		TypeName,
-		makeConstructHandler,
-		type.prototype,
-		config
+	return lookup.call(
+this.subtypes as TypesMap,
+TypeNestedPath
 	);
 };
 
+odp(
+	TypeDescriptor.prototype,
+	Symbol.hasInstance, {
+		get (this: TypeDescriptorInstance) {
+			const result = getTypeChecker(this.TypeName);
+			return result;
+		}
+	}
+);
 
-/*
-here we directly passing constructHandler
-as a constructor for instances creations
-*/
-const defineUsingFunction = function (
-	this: CallableFunction,
-	subtypes: Map<string, object>,
-	TypeName: string,
-	constructHandler: CallableFunction = function () { },
-	config: constructorOptions = {}
-) {
+// ============================================================
+// PATH RESOLUTION
+// Resolves a dot-separated path to the target types map and
+// the final type name. Recurses into parent subtypes for
+// nested paths (e.g. 'Parent.Child' → Parent.subtypes + 'Child').
+// Returns the parent TypeClass when the head segment resolves
+// to an existing type — needed for lazy-getter subtype definition.
+// ============================================================
 
-	if ( typeof constructHandler !== 'function' ) {
-		throw new HANDLER_MUST_BE_A_FUNCTION;
+const resolveDefinitionContext = function (
+	subtypes: TypesMap,
+	path: string
+): {
+		target: TypesMap;
+		name: string;
+		parent?: TypeClass;
+	} {
+	const split = getTypeSplitPath(path);
+	const [ head, ...rest ] = split;
+	const parent = lookup.call(
+		subtypes,
+		head
+	);
+
+	if (!parent) {
+		if (rest.length > 0) {
+			throw new WRONG_TYPE_DEFINITION(`parent ${head} definition is not yet exists!`);
+		}
+		const noParentResult = { target : subtypes, name : head };
+		return noParentResult;
 	}
 
-	const asClass = isClass( constructHandler );
-	const modificatorBody = compileNewModificatorFunctionBody( TypeName, asClass );
+	if (rest.length > 0) {
+		const nestedResult = resolveDefinitionContext(
+parent.subtypes as TypesMap,
+rest.join('.')
+		);
+		return nestedResult;
+	}
+
+	const resolvedResult = { target : subtypes, name : head, parent };
+	return resolvedResult;
+};
+
+// ============================================================
+// DUPLICATE GUARD
+// ============================================================
+
+const checkDuplicate = function (target: TypesMap, name: string): void {
+	const existing = lookup.call(
+		target,
+		name
+	);
+	if (existing) {
+		throw new ALREADY_DECLARED(name);
+	}
+};
+
+// ============================================================
+// LAZY GETTER DETECTION
+// A lazy getter is a function that, when called, returns a
+// named constructor. Used for late-bound type definitions.
+// If the call throws or returns a non-named function, it is
+// treated as a direct handler instead.
+// ============================================================
+
+const isLazyGetter = function (handler: CallableFunction): boolean {
+	try {
+		const result = handler();
+		return result instanceof Function && result.name.length > 0;
+	} catch {
+		return false;
+	}
+};
+
+// ============================================================
+// CONSTRUCTION STRATEGIES
+// Two branches, same return type, no recursion.
+// Both receive the resolved context and return TypeDescriptor.
+// ============================================================
+
+const createFromDirectHandler = function (
+	defineOrigin: CallableFunction,
+	target: TypesMap,
+	name: string,
+	handler?: CallableFunction,
+	config?: constructorOptions
+) {
+	handler = handler || function () { };
+	const asClass = isClass(handler);
+	const modificatorBody = compileNewModificatorFunctionBody(
+		name,
+		asClass
+	);
 
 	const makeConstructHandler = modificatorBody(
-		constructHandler,
+		handler as ConstructHandler,
 		CreationHandler,
 		SymbolConstructorName
 	);
 
-	if ( config instanceof Function ) {
+	if (config instanceof Function) {
 		config = {
-			ModificationConstructor : config
+			ModificationConstructor : config as () => ModificationConstructor
 		};
 	}
 
-	if ( typeof config !== 'object' ) {
-		config = {};
-	}
-
-
-	config.asClass = asClass;
+	config!.asClass = asClass;
 
 	const proto = (
-		hop( constructHandler, 'prototype' ) &&
-		// using ↓↓↓ cause for proxy in chain is instanceof fails
-		// and also fails for just Object.create(null)
-		( typeof constructHandler.prototype === 'object' )
-	// ) ? constructHandler.prototype : Object.create(null);
-	) ? constructHandler.prototype : getDefaultPrototype();
-	
-	// let proto = {};
-	// if ( hop( constructHandler, 'prototype' ) && ( constructHandler.prototype instanceof Object ) ) {
-	// 	proto = Object.assign( {}, constructHandler.prototype );
-	// 	Object.setPrototypeOf( proto, constructHandler.prototype );
-	// }
+		hop(
+			handler,
+			'prototype'
+		) &&
+		(typeof handler.prototype === 'object')
+	) ? handler.prototype : getDefaultPrototype();
 
 	return new TypeDescriptor(
-		this,
-		subtypes,
-		TypeName,
+		defineOrigin,
+		target,
+		name,
 		makeConstructHandler,
-		// proto prop for TypeDescriptor
 		proto,
+		config
+	) as unknown as TypeClass;
+};
+
+const createFromLazyGetter = function (
+	defineOrigin: CallableFunction,
+	target: TypesMap,
+	name: string,
+	getter: () => CallableFunction,
+	config: constructorOptions
+) {
+	const type = getter();
+
+	if (typeof type !== 'function') {
+		throw new HANDLER_MUST_BE_A_FUNCTION;
+	}
+
+	const TypeName = type.name || name;
+	if (!TypeName) {
+		throw new TYPENAME_MUST_BE_A_STRING;
+	}
+
+	const asClass = isClass(type);
+
+	const makeConstructHandler = () => {
+		const constructHandler = getter();
+		odp(
+			constructHandler,
+			SymbolConstructorName, {
+				get () {
+					return TypeName;
+				}
+			}
+		);
+
+		const protoDesc = Object
+			.getOwnPropertyDescriptor(
+				constructHandler,
+				'prototype'
+			) as PropertyDescriptor | undefined;
+		if (protoDesc && protoDesc.writable) {
+			constructHandler.prototype = getDefaultPrototype();
+		}
+
+		return constructHandler;
+	};
+
+	config = Object.assign(
+		{},
 		config
 	);
 
+	config.asClass = asClass;
+
+	return new TypeDescriptor(
+		defineOrigin,
+		target,
+		TypeName,
+		makeConstructHandler,
+		type.prototype,
+		config
+	) as unknown as TypeClass;
 };
 
+// ============================================================
+// MAIN DISPATCHER
+// All branches funnel here. Recursion is isolated to path
+// resolution (resolveDefinitionContext) and the single case
+// of a named function passed as the first argument.
+// ============================================================
 
 export const define = function (
 	this: CallableFunction,
-	subtypes: Map<string, object>,
+	subtypes: TypesMap,
 	TypeOrTypeName: string | CallableFunction,
 	constructHandlerOrConfig?: CallableFunction | object,
 	config?: object
 ): TypeClass {
 
-	if ( typeof TypeOrTypeName === 'function' ) {
-		// TODO: if ( hop( TypeOrTypeName, 'name' ) ) {
-		// TODO: if ( hop( TypeOrTypeName.constructor, 'name' ) ) {
-		if ( TypeOrTypeName.name ) {
-			
-			const Type = lookup.call( subtypes, TypeOrTypeName.name );
+	if (!config || (typeof config !== 'object' && typeof config !== 'function')) {
+		config = {};
+	}
 
-			if ( Type ) {
-				// debugger;
-				throw new ALREADY_DECLARED( TypeOrTypeName.name );
-			}
-
-			return define.call( this, subtypes, TypeOrTypeName.name, TypeOrTypeName, config );
-
-		} else {
-			 
-			return (defineUsingType as any).call(
+	// --- Branch: function passed as first arg ---
+	if (typeof TypeOrTypeName === 'function') {
+		const fn = TypeOrTypeName;
+		if (fn.name) {
+			checkDuplicate(
+				subtypes,
+				fn.name
+			);
+			const defineResult = define.call(
 				this,
 				subtypes,
-				TypeOrTypeName,
-				constructHandlerOrConfig ? constructHandlerOrConfig : TypeOrTypeName
+				fn.name,
+				fn,
+				config
 			);
+			return defineResult;
 		}
-	}
-
-	if ( typeof TypeOrTypeName === 'string' ) {
-
-		checkTypeName( TypeOrTypeName );
-
-		const split = getTypeSplitPath( TypeOrTypeName );
-
-		const Type = lookup.call( subtypes, split[ 0 ] );
-		
-		if (!Type) {
-
-			if ( split.length === 1 ) {
-				 
-				return (defineUsingFunction as any).call(
-					this,
-					subtypes,
-					TypeOrTypeName,
-					constructHandlerOrConfig,
-					config
-				);
-			}
-
-			// Existent.define('Missing.Wanted')
-			throw new WRONG_TYPE_DEFINITION( `parent ${split[ 0 ]} definition is not yet exists!` );
-		}
-
-		const TypeName = split.slice( 1 ).join( '.' );
-
-		if ( split.length > 1 ) {
-			return define.call( this, Type.subtypes as Map<string, object>, TypeName, constructHandlerOrConfig, config );
-		}
-
-
-		if (split.length === 1) {
-
-			if (constructHandlerOrConfig instanceof Function) {
-
-				// debugger;
-
-				// if (constructHandlerOrConfig.name === Type.TypeName) {
-				// 	throw new ALREADY_DECLARED( TypeOrTypeName );
-				// }
-				
-				try {
-					// debugger;
-					// we need this to extract TypeName
-					const type = constructHandlerOrConfig();
-					
-					if ( !(type instanceof Function) ) {
-						// debugger;
-						throw new ALREADY_DECLARED( TypeOrTypeName );
-					}
-
-					if ( type.name.length === 0 ) {
-						// debugger;
-						throw new ALREADY_DECLARED( TypeOrTypeName );
-					}
-
-					// if (type.name.length > 0 && type.name === Type.TypeName) {
-					// 	debugger;
-					// 	throw new ALREADY_DECLARED( TypeOrTypeName );
-					// }
-	
-				} catch {
-
-					return (defineUsingFunction as any).call(
-						this,
-						subtypes,
-						TypeOrTypeName,
-						constructHandlerOrConfig,
-						config
-					);
-
-				}
-
-			}
-
-		}
-
-		// so, here we go with
-		// defineUsingType.call
-		// from the next step
-		return define.call(
-			this as unknown as CallableFunction,
-			Type.subtypes as Map<string, object>,
-			constructHandlerOrConfig as CallableFunction,
-			config
+		// Anonymous function: constructHandlerOrConfig may hold the config
+		const lazyConfig = typeof constructHandlerOrConfig === 'object' && constructHandlerOrConfig !== null
+			? constructHandlerOrConfig as constructorOptions
+			: config as constructorOptions;
+		const lazyResult = createFromLazyGetter(
+			this,
+			subtypes,
+			'',
+			fn as () => CallableFunction,
+			lazyConfig
 		);
-
+		return lazyResult;
 	}
 
-	throw new WRONG_TYPE_DEFINITION( 'definition is not provided' );
+	// --- Branch: string path passed as first arg ---
+	if (typeof TypeOrTypeName !== 'string') {
+		throw new WRONG_TYPE_DEFINITION('definition is not provided');
+	}
+	checkTypeName(TypeOrTypeName);
 
+	let handler: CallableFunction | undefined;
+	if (typeof constructHandlerOrConfig === 'function') {
+		handler = constructHandlerOrConfig;
+	} else if (typeof constructHandlerOrConfig === 'object') {
+		config = constructHandlerOrConfig as constructorOptions;
+	}
+
+	const {
+		target, name, parent
+	} = resolveDefinitionContext(
+		subtypes,
+		TypeOrTypeName
+	);
+
+	// Existing type with no handler: error (matches original fallthrough)
+	if (parent && !handler) {
+		throw new WRONG_TYPE_DEFINITION('definition is not provided');
+	}
+
+	// If the path resolved to an existing type and the handler
+	// is a lazy getter, define the getter's returned constructor
+	// as a subtype of the existing type.
+	if (parent && handler && isLazyGetter(handler)) {
+		const lazyType = (handler as () => CallableFunction)();
+		checkDuplicate(
+parent.subtypes as TypesMap,
+lazyType.name
+		);
+		const lazyParentResult = createFromLazyGetter(
+			this,
+			parent.subtypes as TypesMap,
+			lazyType.name,
+			handler as () => CallableFunction,
+			config as constructorOptions
+		);
+		return lazyParentResult;
+	}
+
+	const result = createFromDirectHandler(
+		this,
+		target,
+		name,
+		handler,
+		config as constructorOptions
+	);
+	return result;
 };
 
 export const lookup = function (
-	this: Map<string, object>,
+	this: TypesMap,
 	TypeNestedPath: string
 ): TypeClass | undefined {
 
-	if ( typeof TypeNestedPath !== 'string' ) {
-		throw new WRONG_TYPE_DEFINITION( 'arg : type nested path must be a string' );
+	if (typeof TypeNestedPath !== 'string') {
+		throw new WRONG_TYPE_DEFINITION('arg : type nested path must be a string');
 	}
 
-	if ( !TypeNestedPath.length ) {
-		throw new WRONG_TYPE_DEFINITION( 'arg : type nested path has no path' );
+	if (!TypeNestedPath.length) {
+		throw new WRONG_TYPE_DEFINITION('arg : type nested path has no path');
 	}
 
-	const split = getTypeSplitPath( TypeNestedPath );
+	const split = getTypeSplitPath(TypeNestedPath);
 
 	const [ name ] = split;
-	const type = this.get( name ) as TypeClass | undefined;
-	if ( split.length === 1 ) {
+	const type = this.get(name) as TypeClass | undefined;
+	if (split.length === 1) {
 		return type;
 	}
 
-	const NextNestedPath = split.slice( 1 ).join( '.' );
+	const NextNestedPath = split.slice(1).join('.');
 	if (!type) {
 		return undefined;
 	}
-	return lookup.call( type.subtypes as Map<string, object>, NextNestedPath );
+	return lookup.call(
+type.subtypes as unknown as TypesMap,
+NextNestedPath
+	);
 
 };
 

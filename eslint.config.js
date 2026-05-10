@@ -48,6 +48,13 @@ const commonRules = {
 	'line-comment-position': ['warn', {
 		position: 'above',
 	}],
+	'max-len': ['error', { code: 120, tabWidth: 4, ignoreUrls: true }],
+	'object-curly-newline': ['error', {
+		ImportDeclaration: { multiline: true, minProperties: 2 },
+		ExportDeclaration: { multiline: true, minProperties: 2 },
+		ObjectPattern: { multiline: true, minProperties: 3 },
+	}],
+	'function-paren-newline': ['error', 'multiline'],
 	'@typescript-eslint/no-var-requires': 'off',
 	'@typescript-eslint/no-empty-function': 'off',
 	'@typescript-eslint/no-explicit-any': 'off',
@@ -87,7 +94,12 @@ module.exports = [
 		files: ['test/**/*.{js,ts}'],
 		languageOptions: commonLanguageOptions,
 		plugins: commonPlugins,
-		rules: commonRules,
+		rules: {
+			...commonRules,
+			'max-len': 'off',
+			'object-curly-newline': 'off',
+			'function-paren-newline': 'off',
+		},
 	},
 	// Config for build directory (relaxed rules)
 	{
@@ -113,6 +125,8 @@ module.exports = [
 			'node_modules/**',
 			'.eslintrc.js',
 			'eslint.config.js',
+			'coverage/**',
+			'coveragejest/**',
 		],
 	},
 ];

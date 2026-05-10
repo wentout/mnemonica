@@ -25,7 +25,9 @@ import exceptionConstructor from '../errors/exceptionConstructor';
 
 import { InstanceCreator } from './InstanceCreator';
 
-import { _getProps, Props } from './Props';
+import {
+	_getProps, Props 
+} from './Props';
 
 const getDefaultPrototype = () => {
 	return Object.create(null);
@@ -37,19 +39,28 @@ const MnemonicaProtoProps = {
 
 	extract () {
 		return function (this: object) {
-			return extract(this);
+			const result = extract(this);
+			return result;
 		};
 	},
 
 	pick () {
 		return function (this: object, ...args: (string | string[])[]) {
-			return pick(this, ...args);
+			const result = pick(
+				this,
+				...args
+			);
+			return result;
 		};
 	},
 
 	parent () {
 		return function (this: object, constructorLookupPath: string) {
-			return parent(this, constructorLookupPath);
+			const result = parent(
+				this,
+				constructorLookupPath
+			);
+			return result;
 		};
 	},
 
@@ -92,7 +103,11 @@ const MnemonicaProtoProps = {
 				forked = new (Constructor[ TypeName ])(...args);
 			} else {
 				// fork.call ? let's do it !
-				forked = new InstanceCreator(type, reflectPrimitiveWrappers(this), args);
+				forked = new InstanceCreator(
+					type,
+					reflectPrimitiveWrappers(this),
+					args
+				);
 			}
 
 			return forked;
@@ -109,7 +124,12 @@ const MnemonicaProtoProps = {
 		const self = this;
 		return function (error: Error, ...args: unknown[]) {
 			const target = new.target;
-			return exceptionConstructor.call(self, target, error, ...args);
+			return exceptionConstructor.call(
+				self,
+				target,
+				error,
+				...args
+			);
 		};
 	},
 
@@ -118,21 +138,24 @@ const MnemonicaProtoProps = {
 		const siblings = (SiblingTypeName: string) => {
 
 			const props = _getProps(this) as Props;
-			const {
-				__collection__: collection,
-			} = props;
+			const { __collection__: collection, } = props;
 			const sibling: unknown = collection[ SiblingTypeName ];
 			return sibling;
 		};
 
-		return new Proxy(siblings, {
-			get (_, prop: string) {
-				return siblings(prop);
-			},
-			apply (_, __, args,) {
-				return siblings(args[ 0 ]);
+		return new Proxy(
+			siblings,
+			{
+				get (_, prop: string) {
+					const result = siblings(prop);
+					return result;
+				},
+				apply (_, __, args,) {
+					const result = siblings(args[ 0 ]);
+					return result;
+				}
 			}
-		});
+		);
 	}
 
 };
@@ -162,43 +185,61 @@ const staticProps = [
 	.concat(Object.keys(MnemonicaProtoProps))
 	.concat(Object.getOwnPropertyNames(Object.prototype))
 	.concat(Object.getOwnPropertyNames(Function.prototype))
-	.reduce((obj, key) => {
-		obj[ key ] = true;
-		return obj;
-	}, Object.create(null));
+	.reduce(
+		(obj, key) => {
+			obj[ key ] = true;
+			return obj;
+		},
+		Object.create(null)
+	);
 
 // tslint:disable-next-line: only-arrow-functions
 const makeSubTypeProxy = function (subtype: any, inheritedInstance: unknown) {
 
-	const subtypeProxy = new Proxy(InstanceCreator, {
+	const subtypeProxy = new Proxy(
+		InstanceCreator,
+		{
 
-		get (Target, _prop) {
+			get (Target, _prop) {
 
-			if (_prop === Symbol.hasInstance) {
-				return getTypeChecker(subtype.TypeName);
-			}
+				if (_prop === Symbol.hasInstance) {
+					const result = getTypeChecker(subtype.TypeName);
+					return result;
+				}
 
-			return Reflect.get(Target, _prop);
+				return Reflect.get(
+					Target,
+					_prop
+				);
 
-		},
+			},
 
-		construct (Target, _args) {
-			return new Target(subtype, inheritedInstance, _args);
-		},
+			construct (Target, _args) {
+				return new Target(
+					subtype,
+					inheritedInstance,
+					_args
+				);
+			},
 
-		apply (Target, thisArg, _args) {
+			apply (Target, thisArg, _args) {
 
-			if (thisArg === undefined) {
-				thisArg = inheritedInstance;
-			}
+				if (thisArg === undefined) {
+					thisArg = inheritedInstance;
+				}
 
-			const existentInstance = reflectPrimitiveWrappers(thisArg);
+				const existentInstance = reflectPrimitiveWrappers(thisArg);
 
-			const entity = new Target(subtype, existentInstance, _args);
-			return entity;
-		},
+				const entity = new Target(
+					subtype,
+					existentInstance,
+					_args
+				);
+				return entity;
+			},
 
-	});
+		}
+	);
 
 	return subtypeProxy;
 };
@@ -214,9 +255,7 @@ const prepareSubtypeForConstruction = function (subtypeName: string, inheritedIn
 
 	const {
 		__type__: {
-			config: {
-				strictChain
-			},
+			config: { strictChain },
 			subtypes
 		},
 	} = props;
@@ -226,9 +265,15 @@ const prepareSubtypeForConstruction = function (subtypeName: string, inheritedIn
 		subtypes.get(subtypeName) :
 		strictChain ?
 			undefined :
-			findSubTypeFromParent(inheritedInstance as object, subtypeName);
+			findSubTypeFromParent(
+inheritedInstance as object,
+subtypeName
+			);
 
-	return subtype ? makeSubTypeProxy(subtype, inheritedInstance) : undefined;
+	return subtype ? makeSubTypeProxy(
+		subtype,
+		inheritedInstance
+	) : undefined;
 };
 
 const mnemosyneProxyHandlerGet = (target: object, prop: string, receiver: unknown) => {
@@ -239,7 +284,11 @@ const mnemosyneProxyHandlerGet = (target: object, prop: string, receiver: unknow
 	// nave not yet checked other staticProps,
 	// just fixed this below
 	// while using conditional for staticProps
-	const result = Reflect.get(target, prop, receiver);
+	const result = Reflect.get(
+		target,
+		prop,
+		receiver
+	);
 
 	if (result !== undefined) {
 		return result;
@@ -259,7 +308,10 @@ const mnemosyneProxyHandlerGet = (target: object, prop: string, receiver: unknow
 		return result;
 	}
 
-	const subtype = prepareSubtypeForConstruction(prop, receiver);
+	const subtype = prepareSubtypeForConstruction(
+		prop,
+		receiver
+	);
 	return subtype || result;
 };
 
@@ -271,49 +323,75 @@ export const Mnemosyne = function (this: object, mnemonica: object, exposeInstan
 	// therefore we create this constructor internally
 	// so it can not be augmented externally during instance creation
 	const Mnemonica = function (this: object) {
-		odp(this, SymbolConstructorName, {
-			get () {
-				return MNEMONICA;
+		odp(
+			this,
+			SymbolConstructorName,
+			{
+				get () {
+					return MNEMONICA;
+				}
 			}
-		});
+		);
 	} as _Internal_TC_<typeof MnemonicaProtoProps>;
 	
 	// this throws an error
-	Object.setPrototypeOf(Mnemonica.prototype, mnemonica);
+	Object.setPrototypeOf(
+		Mnemonica.prototype,
+		mnemonica
+	);
 	// while this just returns false, silently ... unfortunately
 	// Reflect.setPrototypeOf(Mnemonica.prototype, mnemonica);
 
 	// Only add MnemonicaProtoProps methods if exposeInstanceMethods is true
 	if (exposeInstanceMethods) {
 		Object.entries(MnemonicaProtoProps).forEach(([ name, method ]: [string, unknown]) => {
-			odp(Mnemonica.prototype, name, {
-				get () {
+			odp(
+				Mnemonica.prototype,
+				name,
+				{
+					get () {
 					 
-					// @ts-expect-error there is a proxy and next line is callable
-					return (method as CallableFunction).call(this);
+						// @ts-expect-error there is a proxy and next line is callable
+						return method.call(this);
+					}
 				}
-			});
+			);
 		});
 
 		Object.getOwnPropertySymbols(MnemonicaProtoProps).forEach((symbol: symbol) => {
-			odp(Mnemonica.prototype, symbol, {
-				get () {
-					const symbolMethod = Reflect.get(MnemonicaProtoProps, symbol);
-					return symbolMethod.call(this);
+			odp(
+				Mnemonica.prototype,
+				symbol,
+				{
+					get () {
+						const symbolMethod = Reflect.get(
+							MnemonicaProtoProps,
+							symbol
+						);
+						return symbolMethod.call(this);
+					}
 				}
-			});
+			);
 		});
 	}
 
 	// instance of self Constructor type
-	odp(Mnemonica.prototype, Symbol.hasInstance, {
-		get () {
-			return getTypeChecker(this.constructor.name);
+	odp(
+		Mnemonica.prototype,
+		Symbol.hasInstance,
+		{
+			get () {
+				const result = getTypeChecker(this.constructor.name);
+				return result;
+			}
 		}
-	});
+	);
 
 	const proto = new Mnemonica();
-	Reflect.setPrototypeOf(instance, proto);
+	Reflect.setPrototypeOf(
+		instance,
+		proto
+	);
 
 	// InstanceRoots.set(instance, proto);
 
@@ -330,10 +408,16 @@ const createMnemosyne = function (Uranus: unknown, exposeInstanceMethods: boolea
 // 	}
 
 	const uranus = reflectPrimitiveWrappers(Uranus);
-	const mnemosyne = new Mnemosyne(uranus, exposeInstanceMethods);
-	const mnemosyneProxy = new Proxy(mnemosyne, {
-		get : mnemosyneProxyHandlerGet
-	});
+	const mnemosyne = new Mnemosyne(
+		uranus,
+		exposeInstanceMethods
+	);
+	const mnemosyneProxy = new Proxy(
+		mnemosyne,
+		{
+			get : mnemosyneProxyHandlerGet
+		}
+	);
 
 	return mnemosyneProxy;
 };

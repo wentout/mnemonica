@@ -1,64 +1,63 @@
 'use strict';
 
+import type {
+	hooksOpts, Hookable, HookFunction 
+} from '../../types';
+
 import { flowCheckers } from './flowCheckers';
+import { HookInvocation } from './HookInvocation';
 
 import { hop } from '../../utils/hop';
 
-export const invokeHook = function ( this: any, hookType: string, opts: { [ index: string ]: any } ) {
+export const invokeHook = function ( this: Hookable, hookType: string, opts: hooksOpts ) {
 
 	const {
 		type,
 		existentInstance,
 		inheritedInstance,
 		args,
-		// InstanceModificator,
 		creator
 	} = opts;
 
-	const invocationResults = new Set();
+	const invocationResults = new Set<unknown>();
 
-	 
 	const self = this;
 
-	if ( hop( self.hooks, hookType ) ) {
+	if ( hop(
+		self.hooks,
+		hookType 
+	) ) {
 
-		// "this" referes to
-		// type, if called from types
-
-		const {
-			TypeName,
-			// parentType,
-		} = type;
-
-		const hookArgs = {
+		const builder = new HookInvocation(
 			type,
-			TypeName,
 			existentInstance,
-			args,
-		};
+			args
+		);
 
 		if ( typeof inheritedInstance === 'object' ) {
-			Object.assign( hookArgs, {
-				inheritedInstance,
-				throwModificationError ( error: Error ) {
-					creator.throwModificationError( error );
-				}
-			} );
+			builder.withInheritedInstance( inheritedInstance );
+		}
+		if ( creator ) {
+			builder.withCreator( creator );
 		}
 
-		 
-		this.hooks[ hookType ].forEach( ( hook: ( this: unknown, hookParams: typeof hookArgs ) => void ) => {
-			const result = hook.call( self, hookArgs );
+		const hookArgs = builder.build();
+
+		self.hooks[ hookType ].forEach( ( hook: HookFunction ) => {
+			const result = hook.call(
+				self,
+				hookArgs
+			);
 			invocationResults.add( result );
 		} );
 
 		const flowChecker = flowCheckers.get( this );
 		if ( typeof flowChecker === 'function' ) {
-			flowChecker
-				.call( this, Object.assign( {}, {
-					invocationResults,
-					hookType,
-				}, hookArgs ) );
+			(flowChecker as unknown as (opts: object) => unknown)({
+				...hookArgs,
+				invocationResults,
+				hookType,
+			});
 		}
 
 	}

@@ -1323,9 +1323,10 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				it('should work with custom this context', () => {
 					const customCollection = {
 						lookup: (path: string) => {
-							if (path === 'CustomType') {
-								return { __type__: { TypeName: 'CustomType' } };
-							}
+						if (path === 'CustomType') {
+							const result = { __type__: { TypeName: 'CustomType' } };
+							return result;
+						}
 							return undefined;
 						}
 					};
@@ -2980,7 +2981,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				// The error is caught by the catch block at line 390
 				const result = ParentType377.define('NestedType377', function () {
 					// Return an object instead of a function
-					return { someProp: 'value' } as unknown as CallableFunction;
+					const fnResult = { someProp: 'value' } as unknown as CallableFunction;
+					return fnResult;
 				});
 				
 				// The define call should succeed because the catch block handles the error
@@ -3048,9 +3050,61 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					expect(() => {
 						define('TypeForLine377', () => {
 							// Return an object instead of a function
-							return { notAFunction: true } as unknown as CallableFunction;
+							const fnResult = { notAFunction: true } as unknown as CallableFunction;
+							return fnResult;
 						});
 					}).toThrow(ErrorsTypes.ALREADY_DECLARED);
+				});
+			});
+
+			describe('isLazyGetter catch coverage', () => {
+				it('should throw ALREADY_DECLARED when factory throws', () => {
+					define('TypeForLazyCatch', function () { });
+					expect(() => {
+						define('TypeForLazyCatch', () => {
+							throw new Error('factory throws');
+						});
+					}).toThrow(ErrorsTypes.ALREADY_DECLARED);
+				});
+			});
+
+			describe('config instanceof Function coverage', () => {
+				it('should cover config instanceof Function in createFromDirectHandler', () => {
+					const { mnemonica: _mnemonica } = require('../src/index');
+					const { defaultOptions: { ModificationConstructor: defaultMC } } = _mnemonica;
+					const FnConfigTypeUnique = define('FnConfigTypeUnique', function (this: { value: number }) {
+						this.value = 789;
+					}, defaultMC);
+					const instance = new FnConfigTypeUnique();
+					expect(instance.value).toBe(789);
+				});
+			});
+
+			describe('string define with object as second arg', () => {
+				it('should treat object second arg as config', () => {
+					const uniqueName = `ObjConfigType_${Date.now()}`;
+					const ObjConfigType = define(uniqueName, { strictChain: false } as unknown as CallableFunction);
+					expect(ObjConfigType).toBeDefined();
+					expect(ObjConfigType.TypeName).toBe(uniqueName);
+				});
+			});
+
+			describe('new type with no handler', () => {
+				it('should use default empty handler', () => {
+					const uniqueName = `DefaultHandlerType_${Date.now()}`;
+					const DefaultHandlerType = define(uniqueName);
+					expect(DefaultHandlerType).toBeDefined();
+					const instance = new DefaultHandlerType();
+					expect(instance).toBeDefined();
+				});
+			});
+
+			describe('existing type with no handler', () => {
+				it('should throw WRONG_TYPE_DEFINITION', () => {
+					define('ExistingNoHandler', function () { });
+					expect(() => {
+						define('ExistingNoHandler');
+					}).toThrow(ErrorsTypes.WRONG_TYPE_DEFINITION);
 				});
 			});
 	

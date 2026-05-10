@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "0.9.99787",
+  "version": "0.9.99788",
   "description": "abstract technique that aids information retention : instance inheritance system",
   "type": "commonjs",
   "main": "./build/index.js",
@@ -11,6 +11,7 @@
       "default": "./build/index.js"
     },
     "./module": {
+      "types": "./build/index.d.ts",
       "import": "./module/index.js",
       "browser": "./module/index.js",
       "require": "./build/index.js",
@@ -53,6 +54,7 @@
     "test:cov": "npm run build:all && nyc --reporter=text-summary --reporter=lcov mocha --allow-uncaught --enable-source-maps --ui bdd --reporter spec ./test/index.js",
     "debug": "npx tsc --pretty --project tsconfig.json && npx mocha --allow-uncaught --enable-source-maps --reporter spec --inspect-brk test/index",
     "test:jest": "npx jest",
+    "test:async_init": "mocha --allow-uncaught test_async/index.js",
     "test:jest:cov": "npx jest --collectCoverage",
     "test:jest:debug": "npx --node-options=--inspect-brk jest",
     "test:mjs": "npm run build && node --experimental-modules ./test/test.mjs",

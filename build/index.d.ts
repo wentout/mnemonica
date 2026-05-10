@@ -1,6 +1,6 @@
 import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, Constructor, DecoratedClass, TypeClass, TypeAbsorber, MnemonicaModule, TypeConstructor } from './types';
 export declare const isClass: (fn: CallableFunction) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => import("./api/utils/index").parentSub | null;
-export type { IDEF, TypeConstructor, _Internal_TC_, Proto, ProtoFlat } from './types';
+export type { IDEF, TypeConstructor, _Internal_TC_, Proto, ProtoFlat, hooksOpts, hook, hooksTypes, TypesCollection } from './types';
 export { getProps, setProps } from './api/types/Props';
 export declare const defaultTypes: import("./types").TypesCollection;
 export declare const define: TypeAbsorber;
@@ -15,7 +15,7 @@ export declare const bind: <E extends object, T extends object, S extends Proto<
 export declare const decorate: <T extends Constructor<object> | constructorOptions | undefined = undefined>(target?: T, config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
 export declare const registerHook: <T extends Constructor<T>>(Ctor: DecoratedClass<T>, hookType: hooksTypes, cb: hook) => void;
 export declare const mnemonica: MnemonicaModule;
-export declare const _define: (this: CallableFunction, subtypes: Map<string, object>, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object) => TypeClass, _lookup: (this: Map<string, object>, TypeNestedPath: string) => TypeClass | undefined;
+export declare const _define: (this: CallableFunction, subtypes: import("./api/types").TypesMap, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object) => TypeClass, _lookup: (this: import("./api/types").TypesMap, TypeNestedPath: string) => TypeClass | undefined;
 export declare const SymbolParentType: symbol, SymbolConstructorName: symbol, SymbolDefaultTypesCollection: symbol, SymbolConfig: symbol, MNEMONICA: string, MNEMOSYNE: string, TYPE_TITLE_PREFIX: string, ErrorMessages: import("./types").ErrorMessages;
 export declare const createTypesCollection: CreateTypesCollectionFunction;
 export declare const defaultCollection: Map<string, object>;

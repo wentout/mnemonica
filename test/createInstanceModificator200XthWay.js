@@ -95,13 +95,14 @@ module.exports = function () {
 				process.exit(1);
 			}
 
-			return ModificationConstructor()
+			const result = ModificationConstructor()
 				.call(
 					existentInstance,
 					ModificatorType,
 					ModificatorTypePrototype,
 					addProps
 				);
+			return result;
 		}
 	};
 
