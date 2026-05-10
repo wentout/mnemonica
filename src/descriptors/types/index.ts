@@ -265,12 +265,15 @@ const typesCollectionProxyHandler = {
 	},
 	// Object.prototype.hasOwnProperty.call
 	getOwnPropertyDescriptor ( target: TypesCollectionTarget, prop: string ) {
-		return target.subtypes.has( prop ) ? {
-			configurable : true,
-			enumerable   : true,
-			writable     : false,
-			value        : target.subtypes.get( prop )
-		} : undefined;
+		if ( target.subtypes.has( prop ) ) {
+			return {
+				configurable : true,
+				enumerable   : true,
+				writable     : false,
+				value        : target.subtypes.get( prop )
+			};
+		}
+		return Reflect.getOwnPropertyDescriptor( target, prop );
 	}
 };
 
