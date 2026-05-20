@@ -14,6 +14,10 @@ const { BASE_ERROR_MESSAGE } = ErrorMessages;
 
 export const stackCleaners: RegExp[] = [];
 
+export interface StackableInstance {
+	stack?: string | string[];
+}
+
 export const cleanupStack = ( stack: string[] ) => {
 	const cleaned: string[] = stack.reduce(
 		( arr: string[], line: string ) => {
@@ -30,7 +34,7 @@ export const cleanupStack = ( stack: string[] ) => {
 };
 
 export const getStack = function (
-	this: any,
+	this: StackableInstance,
 	title: string,
 	stackAddition: string[],
 	tillFunction?: CallableFunction
@@ -39,13 +43,13 @@ export const getStack = function (
 	if ( Error.captureStackTrace ) {
 		Error.captureStackTrace(
 			this,
-			tillFunction || getStack 
+			tillFunction || getStack
 		);
 	} else {
 		this.stack = ( new Error() ).stack;
 	}
 
-	this.stack = this.stack.split( '\n' ).slice( 1 );
+	this.stack = (this.stack as string).split( '\n' ).slice( 1 );
 	this.stack = cleanupStack( this.stack );
 
 	this.stack.unshift( title );

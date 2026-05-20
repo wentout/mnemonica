@@ -10,6 +10,7 @@ export type asyncStack = {
     parent: () => asyncStack;
 };
 export type parentSub = {
+    TypeName: string;
     __type__: {
         subtypes: Map<string, parentSub>;
     };

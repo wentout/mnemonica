@@ -28,8 +28,15 @@ import {
 	TypeDef,
 	CollectionDef,
 	constructorOptions,
-	ModificationConstructor
+	TypeAbsorber,
+	ModificationConstructorFactory,
 } from '../../types';
+
+// Lazy getter: a function that, when called, returns the actual constructor function.
+// Used when define() receives an anonymous function wrapping the real constructor.
+interface LazyTypeGetter extends CallableFunction {
+	(): ConstructHandler;
+}
 
 import { hop } from '../../utils/hop';
 
@@ -74,7 +81,10 @@ const {
 	isClass,
 } = TypesUtils;
 
-import { getStack } from '../errors';
+import {
+	getStack,
+	StackableInstance,
+} from '../errors';
 
 export type TypesMap = Map<string, object> & {
 	[SymbolParentType]?: TypeDef;
@@ -83,7 +93,7 @@ export type TypesMap = Map<string, object> & {
 
 const TypeDescriptor = function (
 	this: TypeDescriptorInstance,
-	defineOrigin: CallableFunction,
+	defineOrigin: TypeAbsorber,
 	types: TypesMap,
 	TypeName: string,
 	constructHandler: CallableFunction,
@@ -144,7 +154,7 @@ const TypeDescriptor = function (
 	);
 
 	getStack.call(
-		this,
+		this as StackableInstance,
 		`Definition of [ ${TypeName} ] made at:`,
 		[],
 		defineOrigin
@@ -281,9 +291,12 @@ const checkDuplicate = function (target: TypesMap, name: string): void {
 // treated as a direct handler instead.
 // ============================================================
 
-const isLazyGetter = function (handler: CallableFunction): boolean {
+const isLazyGetter = function (handler: ConstructHandler | LazyTypeGetter): boolean {
 	try {
-		const result = handler();
+		// Probe: try to call as a lazy getter. If it succeeds and returns a named
+		// function, it's a lazy getter. Otherwise (throws or returns non-function),
+		// it's a direct handler. The cast is the probe — runtime decides which it is.
+		const result = (handler as LazyTypeGetter)();
 		return result instanceof Function && result.name.length > 0;
 	} catch {
 		return false;
@@ -297,10 +310,10 @@ const isLazyGetter = function (handler: CallableFunction): boolean {
 // ============================================================
 
 const createFromDirectHandler = function (
-	defineOrigin: CallableFunction,
+	defineOrigin: TypeAbsorber,
 	target: TypesMap,
 	name: string,
-	handler?: CallableFunction,
+	handler?: ConstructHandler,
 	config?: constructorOptions
 ) {
 	handler = handler || function () { };
@@ -318,7 +331,7 @@ const createFromDirectHandler = function (
 
 	if (config instanceof Function) {
 		config = {
-			ModificationConstructor : config as () => ModificationConstructor
+			ModificationConstructor : config as ModificationConstructorFactory
 		};
 	}
 
@@ -343,10 +356,10 @@ const createFromDirectHandler = function (
 };
 
 const createFromLazyGetter = function (
-	defineOrigin: CallableFunction,
+	defineOrigin: TypeAbsorber,
 	target: TypesMap,
 	name: string,
-	getter: () => CallableFunction,
+	getter: LazyTypeGetter,
 	config: constructorOptions
 ) {
 	const type = getter();
@@ -410,7 +423,7 @@ const createFromLazyGetter = function (
 // ============================================================
 
 export const define = function (
-	this: CallableFunction,
+	this: unknown,
 	subtypes: TypesMap,
 	TypeOrTypeName: string | CallableFunction,
 	constructHandlerOrConfig?: CallableFunction | object,
@@ -443,10 +456,10 @@ export const define = function (
 			? constructHandlerOrConfig as constructorOptions
 			: config as constructorOptions;
 		const lazyResult = createFromLazyGetter(
-			this,
+			this as TypeAbsorber,
 			subtypes,
 			'',
-			fn as () => CallableFunction,
+			fn as LazyTypeGetter,
 			lazyConfig
 		);
 		return lazyResult;
@@ -458,9 +471,9 @@ export const define = function (
 	}
 	checkTypeName(TypeOrTypeName);
 
-	let handler: CallableFunction | undefined;
+	let handler: ConstructHandler | LazyTypeGetter | undefined;
 	if (typeof constructHandlerOrConfig === 'function') {
-		handler = constructHandlerOrConfig;
+		handler = constructHandlerOrConfig as ConstructHandler | LazyTypeGetter;
 	} else if (typeof constructHandlerOrConfig === 'object') {
 		config = constructHandlerOrConfig as constructorOptions;
 	}
@@ -481,23 +494,23 @@ export const define = function (
 	// is a lazy getter, define the getter's returned constructor
 	// as a subtype of the existing type.
 	if (parent && handler && isLazyGetter(handler)) {
-		const lazyType = (handler as () => CallableFunction)();
+		const lazyType = (handler as LazyTypeGetter)();
 		checkDuplicate(
 parent.subtypes as TypesMap,
 lazyType.name
 		);
 		const lazyParentResult = createFromLazyGetter(
-			this,
+			this as TypeAbsorber,
 			parent.subtypes as TypesMap,
 			lazyType.name,
-			handler as () => CallableFunction,
+			handler as LazyTypeGetter,
 			config as constructorOptions
 		);
 		return lazyParentResult;
 	}
 
 	const result = createFromDirectHandler(
-		this,
+		this as TypeAbsorber,
 		target,
 		name,
 		handler,

@@ -1,6 +1,10 @@
 'use strict';
 
 import { _Internal_TC_ } from '../../types';
+
+interface SubtypeEntry {
+	TypeName: string;
+}
 import { constants } from '../../constants';
 const {
 	odp,
@@ -194,7 +198,7 @@ const staticProps = [
 	);
 
 // tslint:disable-next-line: only-arrow-functions
-const makeSubTypeProxy = function (subtype: any, inheritedInstance: unknown) {
+const makeSubTypeProxy = function (subtype: SubtypeEntry, inheritedInstance: unknown) {
 
 	const subtypeProxy = new Proxy(
 		InstanceCreator,

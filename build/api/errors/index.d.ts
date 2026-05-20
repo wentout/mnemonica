@@ -1,7 +1,10 @@
 declare const SymbolConstructorName: symbol;
 export declare const stackCleaners: RegExp[];
+export interface StackableInstance {
+    stack?: string | string[];
+}
 export declare const cleanupStack: (stack: string[]) => string[];
-export declare const getStack: (this: any, title: string, stackAddition: string[], tillFunction?: CallableFunction) => any;
+export declare const getStack: (this: StackableInstance, title: string, stackAddition: string[], tillFunction?: CallableFunction) => string[];
 export declare class BASE_MNEMONICA_ERROR extends Error {
     static [SymbolConstructorName]: String;
     constructor(message: string | undefined, additionalStack: string[]);

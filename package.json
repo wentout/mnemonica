@@ -1,7 +1,7 @@
 {
   "name": "mnemonica",
   "version": "0.9.99788",
-  "description": "abstract technique that aids information retention : instance inheritance system",
+  "description": "AI-agent ready instance inheritance system for JavaScript/TypeScript via prototype chains",
   "type": "commonjs",
   "main": "./build/index.js",
   "types": "./build/index.d.ts",
@@ -72,7 +72,16 @@
     "ETL",
     "DFD",
     "inheritance",
-    "mnemonica"
+    "instance-inheritance",
+    "prototype-inheritance",
+    "prototype-chain",
+    "typescript",
+    "nodejs",
+    "decorator",
+    "data-flow",
+    "mnemonica",
+    "ai-agents",
+    "agent-ready"
   ],
   "author": "went.out@gmail.com",
   "license": "MIT",

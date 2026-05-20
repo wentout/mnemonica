@@ -66,10 +66,30 @@ const obj = {
 - `noUnusedLocals: true` — unused variables cause errors
 - `noUnusedParameters: true` — unused parameters cause errors
 - `isolatedModules: true` — each file must be independently transpilable
-- **NO `any` or `unknown` types** — Use proper interfaces instead
+- **NO `any`** — use purpose-specific interfaces instead
 
 ## ESLint Exceptions
 
-- `@typescript-eslint/no-explicit-any`: **off** — `any` is allowed
+- `@typescript-eslint/no-explicit-any`: **error** — `any` is forbidden
 - `@typescript-eslint/no-var-requires`: **off** — CommonJS requires allowed
 - `new-cap`: **off** — constructor naming not enforced
+
+## Function Type Rules
+
+**Never use bare `Function`, `CallableFunction`, or `NewableFunction` as parameter or return types.** Define a purpose-specific interface that extends them:
+
+```typescript
+// ✗ Wrong
+function foo (handler: Function) { }
+
+// ✓ Correct
+interface ConstructHandler extends CallableFunction {
+	(this: object, ...args: unknown[]): unknown;
+	prototype: object;
+}
+function foo (handler: ConstructHandler) { }
+```
+
+Allowed exceptions (do not change without approval):
+- `src/types/index.ts` — central type definitions use `CallableFunction`/`NewableFunction` as base types for exported interfaces
+- `src/api/types/compileNewModificatorFunctionBody.ts` — `ConstructHandler`/`CreationHandler` interfaces already defined there

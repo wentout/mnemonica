@@ -34,72 +34,46 @@ Mnemonica enables AI agents to:
 
 The stored arguments in the prototype chain allow AI to introspect and learn from its own execution history.
 
-## Agent Framework Rules
+## Agent Reading Guide
 
-This repository contains additional mode-specific rules in `.ai/rules/`:
-- Code mode rules: `.ai/rules/CODING.md`
-- Reminders (type vs interface, spacing): `.ai/rules/REMINDERS.md`
-- Context condensing protocol: `.ai/rules/CONTEXT-CONDENSING.md`
+Load the docs that match your change type. The wrong context produces broken code; the right context is a short read.
 
-These files contain critical rules not duplicated in the main AGENTS.md. All agents should read them manually.
+| Change type | Read before starting |
+|---|---|
+| Any `src/` change | This file + [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) |
+| Involves `define()` / type graph | + [`.ai/rules-skill/define-patterns.md`](./.ai/rules-skill/define-patterns.md) |
+| Involves hooks | + [`.ai/rules-skill/hooks.md`](./.ai/rules-skill/hooks.md) |
+| Involves async constructors | + [`.ai/rules-skill/async-constructors.md`](./.ai/rules-skill/async-constructors.md) + [`.ai/async_init.md`](./.ai/async_init.md) |
+| Involves TypeScript types | + [`.ai/rules-skill/type-system.md`](./.ai/rules-skill/type-system.md) |
+| Involves proxy internals | + [`.ai/rules-skill/proxy-architecture.md`](./.ai/rules-skill/proxy-architecture.md) |
+| Uses tactica / `lookupTyped` | + [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) |
+| Docs-only change | README section you're touching only |
+
+**This file + `.ai/ONBOARDING.md` are the always-required baseline for any `src/` edit.**
+
+### Framework-specific rules
+
+Mode-specific files in `.ai/rules/`:
+- [`.ai/rules/CODING.md`](./.ai/rules/CODING.md) — universal coding rules
+- [`.ai/rules/REMINDERS.md`](./.ai/rules/REMINDERS.md) — type vs interface, spacing reminders
+- [`.ai/rules/CONTEXT-CONDENSING.md`](./.ai/rules/CONTEXT-CONDENSING.md) — context recovery protocol
 
 ## Build/Test Commands
 
-All commands run from the project root:
+See [`.ai/rules-skill/testing.md`](./.ai/rules-skill/testing.md) for the full command reference, dual-framework details, and coverage requirements. Summary:
 
 ```bash
-# Full build with linting
-npm run build
-
-# Run Mocha tests with coverage (runs npm run build:all internally)
-npm run test:cov
-
-# Run Jest tests with coverage
-npm run test:jest:cov
-
-# Watch mode for development
-npm run watch
+npm run build          # full build with linting
+npm run test:cov       # Mocha + coverage (runs build:all internally)
+npm run test:jest:cov  # Jest on TypeScript source
+npm run watch          # watch mode
 ```
 
-**Critical**: The project uses TWO test frameworks:
-- **Mocha** (`npm run test:cov`): Runs on transpiled code in `build/`, runs `npm run build:all` internally
-- **Jest** (`npm run test:jest:cov`): Runs TypeScript directly from `src/`, faster for development
-
-**Important**: `npm run test:cov` runs `npm run build:all` internally, so it is not necessary to run `npm run build` before `npm run test:cov`.
+**Must run `npm run test:cov` before completing any task.**
 
 ## Code Style (Project-Specific)
 
-### Indentation
-- **Tabs** for indentation (not spaces) - enforced by eslint
-- See `.editorconfig`: `indent_style = tab`, `indent_size = 4`
-
-### Function Spacing
-- **Always** space before function parentheses:
-  ```typescript
-  function myFunc () { }  // ✓ correct
-  function myFunc() { }   // ✗ wrong
-  ```
-
-### Key Spacing
-- Align colons in object literals:
-  ```typescript
-  const obj = {
-  	key1 : value1,
-  	key2 : value2,  // colons aligned
-  };
-  ```
-
-### TypeScript Strictness
-- `strict: true` enabled
-- `noImplicitAny: true` (implicit)
-- `noUnusedLocals: true` - unused variables cause errors
-- `noUnusedParameters: true` - unused parameters cause errors
-- `isolatedModules: true` - each file must be independently transpilable
-
-### ESLint Exceptions
-- `@typescript-eslint/no-explicit-any`: **off** - `any` is allowed
-- `@typescript-eslint/no-var-requires`: **off** - CommonJS requires allowed
-- `new-cap`: **off** - constructor naming not enforced
+See [`.ai/rules-skill/code-style.md`](./.ai/rules-skill/code-style.md) for the full style reference. Key rules: tabs only, space before function parens, colons aligned in object literals, `strict: true`, **no `any`** (`no-explicit-any: error`).
 
 ## Architecture Patterns
 
@@ -248,29 +222,7 @@ This applies to **all** `return` statements where the expression is anything oth
 
 ## TypeScript Type Rules
 
-### Never use bare `Function`, `CallableFunction`, or `NewableFunction`
-These are escape hatches from the type system. Always define and use purpose-specific interfaces that extend them.
-
-### Prohibited:
-```typescript
-function foo(handler: Function) { }
-const result = something() as CallableFunction;
-interface Bad { fn: NewableFunction; }
-```
-
-### Required:
-```typescript
-interface ConstructHandler extends CallableFunction {
-	(this: object, ...args: unknown[]): unknown;
-	prototype: object;
-}
-
-function foo(handler: ConstructHandler) { }
-```
-
-Existing allowed exceptions (do not change without approval):
-- `src/types/index.ts` — central type definitions may use `CallableFunction`/`NewableFunction` as base types for exported interfaces
-- `src/api/types/compileNewModificatorFunctionBody.ts` — `ConstructHandler`/`CreationHandler` interfaces already exist
+**Never use bare `Function`, `CallableFunction`, or `NewableFunction` as types** — always define a purpose-specific interface that extends them. See [`.ai/rules-skill/code-style.md`](./.ai/rules-skill/code-style.md) for examples and allowed exceptions.
 
 ## Preserving Design Comments and Memory Notes
 
@@ -288,12 +240,7 @@ If a comment becomes technically inaccurate after a change, update it rather tha
 
 ## Testing Requirements
 
-- **100% coverage required** for Jest (statements, branches, functions, lines) - see `jest.config.js`
-- **100% coverage required** for Mocha (`npm run test:cov`)
-- Mocha tests run on built code in `build/` directory
-- Jest tests run directly on TypeScript source
-- Tests must pass with `--allow-uncaught` flag (mocha)
-- **Must run `npm run test:cov` before completing task** - this validates the build and ensures 100% coverage
+See [`.ai/rules-skill/testing.md`](./.ai/rules-skill/testing.md) for full coverage requirements and patterns. 100% required on both Mocha and Jest. Must run `npm run test:cov` before completing any task.
 
 ## Common Patterns
 

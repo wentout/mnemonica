@@ -151,7 +151,7 @@ odp(
 			) {
 			// this - define function of mnemonica interface
 				const result = define.call(
-					this,
+					this as unknown,
 					subtypes as TypesMap,
 					TypeOrTypeName,
 					constructHandlerOrConfig,

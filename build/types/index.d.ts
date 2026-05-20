@@ -1,10 +1,5 @@
 export type PropsType = Record<string, unknown>;
-export type IDEF<T> = {
-    new (): T;
-} | {
-    (this: T, ...args: unknown[]): void;
-};
-export type IDEFWithArgs<T, Args extends unknown[] = unknown[]> = {
+export type IDEF<T, Args extends unknown[] = unknown[]> = {
     new (): T;
 } | {
     (this: T, ...args: Args): void;
@@ -52,12 +47,20 @@ export type hooksOpts<P = object, T = P> = {
         throwModificationError(error: Error): void;
     };
 };
-export type hook = (opts: hooksOpts) => unknown;
+export interface hook extends CallableFunction {
+    (opts: hooksOpts): unknown;
+}
+export interface AddPropsCallback extends CallableFunction {
+    (proto: object): void;
+}
 export interface ModificationConstructor extends CallableFunction {
-    (this: object, ModificatorType: MnemonicaConstructor, ModificatorTypePrototype: object, _addProps: CallableFunction): MnemonicaConstructor;
+    (this: object, ModificatorType: MnemonicaConstructor, ModificatorTypePrototype: object, _addProps: AddPropsCallback): MnemonicaConstructor;
+}
+export interface ModificationConstructorFactory extends CallableFunction {
+    (): ModificationConstructor;
 }
 export type constructorOptions = {
-    ModificationConstructor?: () => ModificationConstructor;
+    ModificationConstructor?: ModificationConstructorFactory;
     strictChain?: boolean;
     blockErrors?: boolean;
     submitStack?: boolean;
@@ -91,7 +94,9 @@ export type CollectionDef = Hookable & {
     subtypes: SubtypesMap;
     [key: string]: unknown;
 };
-export type TypeLookup = (this: Map<string, unknown>, TypeNestedPath: string) => TypeClass | undefined;
+export interface TypeLookup extends CallableFunction {
+    (this: Map<string, unknown>, TypeNestedPath: string): TypeClass | undefined;
+}
 export interface ThenSpec {
     subtype: object;
     args: unknown[];
@@ -182,7 +187,7 @@ export interface IDefinitorInstance<N extends object, Config extends constructor
     __type__?: TypeDef;
     collection?: CollectionDef;
 }
-export interface TypeAbsorber {
+export interface TypeAbsorber extends CallableFunction {
     <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig: IDEF<T> | object | boolean | CallableFunction, configOrUndefined: HideInstanceMethodsOptions): IDefinitorInstance<T, HideInstanceMethodsOptions>;
     <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<T, constructorOptions>;
 }
@@ -200,14 +205,6 @@ export interface Hookable {
 }
 export type CreateTypesCollectionFunction = (config?: constructorOptions) => TypesCollection;
 export type TypeClass = IDefinitorInstance<object>;
-export interface ITypeClass<T> {
-    new (...args: unknown[]): T;
-    (this: T, ...args: unknown[]): T;
-    define: ITypeAbsorber<T>;
-    lookup: TypeLookup;
-    registerHook(hookType: hooksTypes, cb: hook): void;
-}
-export type ITypeAbsorber<T> = (this: unknown, TypeName: string, constructHandler: IDEF<T>, proto?: object, config?: constructorOptions) => ITypeClass<T>;
 export interface MnemonicaConstructor extends NewableFunction {
     new (...args: unknown[]): object;
     (this: object, ...args: unknown[]): unknown;
@@ -225,8 +222,6 @@ export type TypeDescriptorInstance = {
     subtypes: Map<string, object>;
     TypeName: string;
 };
-export type TypeDescriptorConstructor = TypeConstructor<TypeDescriptorInstance>;
-export type TypesCollectionConstructor = TypeConstructor<object>;
 export type Constructor<T = object> = new (...args: unknown[]) => T;
 export type DecoratedClass<T extends Constructor<object>> = T & (<U extends Constructor<object>>(target: U) => DecoratedClass<U>) & {
     define: TypeAbsorber;
@@ -234,7 +229,6 @@ export type DecoratedClass<T extends Constructor<object>> = T & (<U extends Cons
     lookup: TypeLookup;
     TypeName: string;
 };
-export type ConstructorFactory<T> = () => Constructor<T>;
 export type ApplyFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]) => S;
 export type CallFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, ...args: unknown[]) => S;
 export type BindFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>) => (...args: unknown[]) => S;

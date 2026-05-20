@@ -1,5 +1,8 @@
 'use strict';
 
+import type {
+	MnemonicaConstructor, AddPropsCallback 
+} from '../../types';
 
 // Step 5 of construction pipeline: the default ModificationConstructor.
 // Wires the prototype chain by creating a Mnemosyne object inheriting
@@ -10,9 +13,9 @@ export default function () {
 
 	const CreateInstanceModificator = function (
 		this: object,
-		ModificatorType: CallableFunction,
+		ModificatorType: MnemonicaConstructor,
 		ModificatorTypePrototype: { [index: string]: unknown },
-		_addProps: CallableFunction
+		_addProps: AddPropsCallback
 	) {
 
 		 

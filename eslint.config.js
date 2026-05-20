@@ -57,7 +57,7 @@ const commonRules = {
 	'function-paren-newline': ['error', 'multiline'],
 	'@typescript-eslint/no-var-requires': 'off',
 	'@typescript-eslint/no-empty-function': 'off',
-	'@typescript-eslint/no-explicit-any': 'off',
+	'@typescript-eslint/no-explicit-any': 'error',
 	'@typescript-eslint/no-require-imports': 'off',
 	'@typescript-eslint/no-this-alias': 'off',
 	'@typescript-eslint/ban-ts-comment': 'warn',

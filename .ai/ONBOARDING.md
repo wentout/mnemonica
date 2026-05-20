@@ -82,7 +82,7 @@ return { target, name };
 
 ### TypeScript Types
 - `strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`
-- `any` is allowed (`@typescript-eslint/no-explicit-any: off`)
+- **No `any`** (`@typescript-eslint/no-explicit-any: error`) — use purpose-specific interfaces
 - **Never** use bare `Function`, `CallableFunction`, or `NewableFunction` — define purpose-specific interfaces
 
 ---
