@@ -20,10 +20,15 @@
   },
   "files": [
     "README.md",
+    "FOR_HUMANS.md",
     "LICENSE",
     "AGENTS.md",
     "SKILL.md",
+    "CONTRIBUTING.md",
     ".ai",
+    "docs",
+    "examples",
+    "src",
     "module",
     "build"
   ],
