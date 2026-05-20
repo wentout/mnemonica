@@ -9,6 +9,8 @@
 > **Contributing / modifying code?** Start with [`AGENTS.md`](./AGENTS.md), then read [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) for the full agent guide.
 > **Using mnemonica with tactica?** Read [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) — mnemonica without tactica is 10% of the value.
 > [`SKILL.md`](./SKILL.md) is a usage quick reference only (not for contributors).
+>
+> **For AI agents:** `AGENTS.md`, `SKILL.md`, and the entire `.ai/` directory ship inside the npm package, so they are available at `node_modules/mnemonica/` after `npm install`.
 
 ```
 define(name, ctor)        →   TypeProxy   →   new instance.SubType()

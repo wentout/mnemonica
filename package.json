@@ -21,6 +21,9 @@
   "files": [
     "README.md",
     "LICENSE",
+    "AGENTS.md",
+    "SKILL.md",
+    ".ai",
     "module",
     "build"
   ],
