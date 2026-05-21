@@ -112,7 +112,7 @@ links and broken anchors across all Markdown files in the repo.
 
 ### 1. Update the changelog
 
-In `reports/CHANGELOG.md`, move everything under `## [Unreleased]` into a
+In `CHANGELOG.md`, move everything under `## [Unreleased]` into a
 new versioned section:
 
 ```markdown
