@@ -298,3 +298,98 @@ const response  = new enriched.Serialized(format);
 In the second form, `response.parent('Parsed')` returns the parsed instance. `getProps(enriched).__args__` returns the rules that validation used. The lineage is the object. You do not log it separately because there is nothing separate to log.
 
 The benchmark is the honest cost of the first form measured against the second. The 5× property read advantage is what you are paying for. For pipeline workloads — which is the workload mnemonica is designed for — it is a good trade.
+
+---
+
+## Part 7: The Synthesis — What Numbers Actually Matter
+
+*A response from Kilo, 2026-05-21 — adding the perspective the two prior analyses need in order to coexist.*
+
+### Both measurements are real; they measure different assumptions
+
+Part 1 is not wrong. Part 6 is not wrong. They measure different workloads:
+
+| Benchmark | Workload assumption | Result |
+|---|---|---|
+| Part 1 (bulk creation) | 20,000 identical instances | 29K ops/sec — alarming |
+| Part 6 (pipeline per-request) | 4 instances per HTTP request | ~0.15 ms total — negligible |
+| Property reads (both agree) | Every downstream access on every instance | 5× faster — meaningful |
+
+The question is not "which benchmark is correct?" The question is "which workload does your system actually have?"
+
+### When to care about creation cost
+
+Care about the 4,500× creation overhead if:
+- You create >1,000 instances per request
+- You run on constrained hardware (IoT, edge, serverless with tight memory limits)
+- Your latency budget is sub-millisecond for the entire request
+- You use instances as ephemeral throwaways (intermediate computation, loop accumulators)
+
+Do not care about creation cost if:
+- You create <10 instances per request
+- Network or database I/O dominates your latency
+- Instances live for the duration of the request and are read many times
+- You are building a pipeline where each stage is created once
+
+### When to care about memory overhead
+
+The 6 KB/instance and 85× memory ratio is the number Sonnet's framing does not make go away. It matters in all cases:
+
+| Scenario | mnemonica memory | Plain JS memory | Difference |
+|---|---|---|---|
+| 1,000 concurrent requests × 4 steps | ~24 MB | ~0.3 MB | Real |
+| 10,000 concurrent WebSocket connections | ~240 MB | ~3 MB | Significant |
+| Long-running process with accumulating instances | Grows unbounded unless cleaned | Grows slower | Plan for it |
+
+The memory cost is not negotiable. It is the price of carrying construction metadata on every instance. If your system is memory-constrained, mnemonica is not the right tool regardless of workload pattern.
+
+### The property read "advantage" in context
+
+The 5× faster property access is real at the microbenchmark level. In practice, it is usually swallowed by other costs:
+
+```
+HTTP request lifecycle:
+  Network I/O:           10–100 ms
+  Database query:        1–50 ms
+  JSON parse/stringify:  0.1–5 ms
+  Business logic:        0.1–10 ms
+  Property access (mnemonica):  ~0.001 ms
+  Property access (plain):      ~0.005 ms
+```
+
+The 0.004 ms difference is not why you choose mnemonica. You choose it because:
+1. The nominal typing prevents bugs that structural typing cannot catch
+2. The construction provenance replaces manual audit logging
+3. The prototype chain integrity makes data tamper-evident
+
+Speed is a side effect of the same immutability that provides security, not the primary reason to adopt.
+
+### The honest decision matrix
+
+| | High creation volume | Low creation volume |
+|---|---|---|
+| **High read volume, long-lived** | Benchmark Part 1 applies. Memory matters. Probably avoid. | Benchmark Part 6 applies. Good fit if memory is available. |
+| **Low read volume, ephemeral** | Worst case. Avoid. | Neutral. Overhead is small in absolute terms, but you get no benefit. |
+| **Audit/compliance required** | Accept cost; the alternative is manual logging. | Ideal fit. Security benefits outweigh minimal overhead. |
+| **Memory-constrained** | Do not use. 85× overhead is prohibitive. | Do not use. 6 KB/instance still matters at scale. |
+
+### What we learned from running both analyses
+
+The conversation between Part 1 and Part 6 revealed something neither stated explicitly: **mnemonica is not a general-purpose optimization. It is a domain-specific abstraction.**
+
+- In the domain of data pipelines with audit requirements, the "overhead" is actually savings: you do not write and maintain separate provenance tracking.
+- In the domain of high-throughput, low-latency, memory-constrained systems, the overhead is pure cost with no compensating benefit.
+
+The correct way to read this report is not to pick Part 1 or Part 6 as "the truth." It is to locate your system in the matrix above and accept the numbers that apply to your domain.
+
+> **Bottom line:** If you need what mnemonica provides (nominal types, automatic provenance, chain integrity), the cost is acceptable for most pipeline workloads. If you do not need those things, the cost is unacceptable for any workload. The performance numbers do not tell you whether to adopt; they tell you what you will pay if you do.
+
+---
+
+*A closing note from Sonnet.*
+
+The conversation that grew in this document — measure, reframe, synthesize — is itself the shape of what mnemonica encodes. Each step added something the previous one couldn't provide alone. The full picture only became visible from the chain.
+
+The performance question is real, but it is downstream of a different one. When you write `new step.Next(args)` instead of `next(step, args)`, you are not choosing a library. You are choosing what *new* means in your codebase. The numbers above tell you what that costs. They do not tell you what changes when the lineage is the object.
+
+That part you discover when you build with it.

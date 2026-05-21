@@ -4,7 +4,7 @@
 
 JavaScript class constructors cannot be declared `async`. However, a constructor **can return a Promise**. When a base class constructor returns `Promise.resolve(this)`, the subclass `this` becomes the Promise object — class fields initialize on the Promise wrapper, not the real instance. This breaks field inheritance in raw JS.
 
-Mnemonica handles this correctly through its wrapper architecture. See also the [abstract demonstration](../../async_test/README.md) showing the problem and wrapper fix in library-agnostic terms.
+Mnemonica handles this correctly through its wrapper architecture. See also the [test suite](../test_async/index.js) showing the problem and wrapper fix in practice.
 
 ## How Mnemonica Preserves Class Fields
 
@@ -89,6 +89,6 @@ Tests live in `test_async/index.js` and run via `npm run test:async_init`.
 
 ## Related
 
-- [Abstract async test demonstration](../../async_test/README.md) — library-agnostic explanation of the problem and wrapper fix
+- [`test_async/index.js`](../test_async/index.js) — test suite covering async initialization scenarios
 - [TC39 proposal-async-init issue #3](https://github.com/tc39/proposal-async-init/issues/3) — language-level discussion of the same problem
 - [Mnemonica README](../README.md) — project overview and API documentation
