@@ -502,6 +502,58 @@ const tests = ( opts ) => {
 
 	} );
 
+	describe( 'async super() return value propagation', () => {
+
+		let asyncParentInstance;
+		let asyncChildInstance;
+
+		const sleep = ( time ) => {
+			return new Promise( ( resolve ) => setTimeout( resolve, time ) );
+		};
+
+		const AsyncParentType = define( 'AsyncParentType', async function () {
+			await sleep( 50 );
+			this.parentAsyncValue = 'parent';
+			return this;
+		} );
+
+		const AsyncChildType = AsyncParentType.define( 'AsyncChildType', async function () {
+			await sleep( 50 );
+			this.childAsyncValue = 'child';
+			return this;
+		} );
+
+		before( async function () {
+			asyncParentInstance = await new AsyncParentType();
+			asyncChildInstance = await asyncParentInstance.AsyncChildType();
+		} );
+
+		it( 'parent instance should have parent property', () => {
+			expect( asyncParentInstance.parentAsyncValue ).equal( 'parent' );
+		} );
+
+		it( 'child instance should have parent property', () => {
+			expect( asyncChildInstance.parentAsyncValue ).equal( 'parent' );
+		} );
+
+		it( 'child instance should have child property', () => {
+			expect( asyncChildInstance.childAsyncValue ).equal( 'child' );
+		} );
+
+		it( 'child instance should be instanceof AsyncParentType', () => {
+			expect( asyncChildInstance ).instanceOf( AsyncParentType );
+		} );
+
+		it( 'child instance should be instanceof AsyncChildType', () => {
+			expect( asyncChildInstance ).instanceOf( AsyncChildType );
+		} );
+
+		it( 'parent instance should not be instanceof AsyncChildType', () => {
+			expect( asyncParentInstance ).not.instanceOf( AsyncChildType );
+		} );
+
+	} );
+
 };
 
 module.exports = tests;

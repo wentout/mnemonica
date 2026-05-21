@@ -46,14 +46,18 @@ declare module 'mnemonica' {
 }
 ```
 
-## Without Tactica vs With Tactica
+## Unaugmented vs Augmented `TypeRegistry`
 
-| Feature | Without Tactica | With Tactica |
-|---------|----------------|--------------|
-| Constructor retrieval | `lookup('Name')` | `lookupTyped('Name')` |
+The axis that actually matters is whether `TypeRegistry` has been augmented for your types — not whether tactica is involved. Tactica is one way to produce the augmentation; hand-writing it is another. Runtime behaviour is identical either way.
+
+| Feature | Unaugmented `TypeRegistry` | Augmented `TypeRegistry` |
+|---------|---------------------------|--------------------------|
+| Constructor retrieval | `lookup('Name')` returns `unknown` | `lookupTyped('Name')` returns typed constructor |
 | Type safety | Runtime only | Compile-time + runtime |
-| TypeRegistry | Empty (never) | Augmented with user types |
+| Registry default | `[key: string]: TypeConstructor<never>` | Per-key constructor signatures |
 | Instance properties | `any` / `unknown` | Fully typed |
+
+Two ways to augment: hand-written `.d.ts` (small projects, learning) or [`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica) (auto-generated, recommended for non-trivial projects). See [`../../docs/typed-lookup.md`](../../docs/typed-lookup.md) for both paths side by side.
 
 ## Before/After: Adding a Type to TypeRegistry
 
@@ -64,9 +68,9 @@ const user = new UserType({ name: 'John' });
 // user is typed as unknown — no IntelliSense for properties
 ```
 
-**After** (tactica-generated, typed)
+**After** (TypeRegistry augmented — either hand-written or tactica-generated; runtime is identical)
 ```typescript
-// .tactica/registry.ts (auto-generated)
+// In a .d.ts file (hand-written) or .tactica/registry.ts (tactica-generated)
 declare module 'mnemonica' {
 	interface TypeRegistry {
 		'UserType': new (...args: [UserData]) => UserTypeInstance;

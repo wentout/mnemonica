@@ -115,7 +115,8 @@ const tests = ( opts ) => {
 				// }
 
 				if ( name === 'parent' ) {
-					return compare( value, sampleValue );
+					const cmpResult = compare( value, sampleValue );
+					return cmpResult;
 				}
 
 				if ( name === 'self' ) {

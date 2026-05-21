@@ -2,7 +2,6 @@
 
 > **Applies to:** Coordinating complex, multi-step projects across domains.
 > Framework-agnostic.
-> **Formerly:** `.roo/rules-orchestrator/AGENTS.md`
 
 ---
 
@@ -156,4 +155,4 @@ Design [feature]:
 - Respect the dual test framework
 - Follow strict TypeScript rules
 - Use tabs for indentation
-- No `any` or `unknown` types
+- **No `any`** (`@typescript-eslint/no-explicit-any: error`) — define proper types

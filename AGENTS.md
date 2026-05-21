@@ -1,101 +1,86 @@
 # AGENTS.md
 
-This file provides guidance to agents when working with code in this repository.
+This file provides guidance specific to **mnemonica/core** for AI agents
+modifying the library itself. If you are *using* mnemonica in your own
+project, start with [`README.md`](./README.md).
+
+---
+
+## Rule #1 — Non-negotiable: PAUSE AND ASK
+
+**This is the highest-priority rule. It overrides everything else in this file.**
+
+You MUST pause and ask the user before proceeding if any of these is true:
+
+1. **An editing error occurred** — `Edit` failed, `Write` produced unexpected
+   results, or any tool returned an error.
+2. **You are uncertain** — about what change to make, how a function works,
+   or what the user intended.
+3. **You are filling gaps with assumption** — "probably", "likely",
+   "I think", "it should work" are signals to stop.
+
+When in doubt: STOP, ask a clear specific question, WAIT for the answer.
+Do not invent workarounds (no `sed`, no `python -c`, no console hacks).
+
+The reason this rule exists: wrong assumptions waste both your time and the
+user's. The library encodes non-obvious design intent (data-flow vs control-flow,
+`define()` semantics, the proxy architecture, the return-via-variable rule).
+Confident guesses produce code that compiles but corrupts the design.
+
+---
 
 > **Note:** Framework-agnostic rules are also available in `.ai/`:
 > [`AGENTS.md`](./.ai/AGENTS.md), [`CODE.md`](./.ai/CODE.md),
-> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md).
-> These are designed for agents that do not use the Roo framework.
+> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md),
+> [`async_init.md`](./.ai/async_init.md).
+> These rules apply to all agent frameworks.
 
-## Project Overview
+## What and why
 
-**mnemonica** is an instance inheritance system for JavaScript/TypeScript that enables prototype chain-based type definitions. It allows creating types using `define()` and building inheritance hierarchies through prototype chains.
+For the library's thesis, the four data mistakes it eliminates, the Trie observation, the pipeline pattern, and the HoTT framing, read [`README.md`](./README.md). This file assumes you have.
 
-### Vision & Philosophy
+The short version for editors: mnemonica is an instance inheritance system; `define()` declares types; subtypes are constructed from parent *instances* via `new instance.SubType(args)`; the prototype chain back to root IS the identity; construction context is stored in a WeakMap and exposed via `getProps()`.
 
-Mnemonica solves the fundamental problem that JavaScript prototype inheritance is a Trie data structure, but developers don't realize this. Common mistakes include:
-- Using assignment instead of `Object.setPrototypeOf` (breaks `instanceof`)
-- Reusing constructors directly (corrupts existing instances' prototype chains)
-- Not understanding the Factory pattern requirement
+## Agent Reading Guide
 
-**Mnemonica forces explicit declaration of inheritance graphs**, eliminating these bugs by design. The ultimate goal is to **reduce the cost of software development and support** by making certain classes of bugs impossible.
+Load the docs that match your change type. The wrong context produces broken code; the right context is a short read.
 
-### AI Integration Vision
+| Change type | Read before starting |
+|---|---|
+| Any `src/` change | This file + [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) |
+| Involves `define()` / type graph | + [`.ai/rules-skill/define-patterns.md`](./.ai/rules-skill/define-patterns.md) |
+| Involves hooks | + [`.ai/rules-skill/hooks.md`](./.ai/rules-skill/hooks.md) |
+| Involves async constructors | + [`.ai/rules-skill/async-constructors.md`](./.ai/rules-skill/async-constructors.md) + [`.ai/async_init.md`](./.ai/async_init.md) |
+| Involves TypeScript types | + [`.ai/rules-skill/type-system.md`](./.ai/rules-skill/type-system.md) |
+| Involves proxy internals | + [`.ai/rules-skill/proxy-architecture.md`](./.ai/rules-skill/proxy-architecture.md) |
+| Uses tactica / `lookupTyped` | + [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) |
+| Docs-only change | README section you're touching only |
 
-Mnemonica enables AI agents to:
-1. **Structure thinking** through explicit constructor chains
-2. **Self-extend** by defining new features via `define()` calls
-3. **Analyze behavior** through stored invocation arguments (accessible via `getProps()`)
-4. **Become more capable** by understanding the inheritance graph
+**This file + `.ai/ONBOARDING.md` are the always-required baseline for any `src/` edit.**
 
-The stored arguments in the prototype chain allow AI to introspect and learn from its own execution history.
+### Framework-specific rules
 
-## Agent Framework Rules
-
-This repository contains additional mode-specific rules for the **Roo** agent framework in `.roo/rules-code/`:
-- Code mode rules: `.roo/rules-code/AGENTS.md`
-- Reminders (type vs interface, spacing): `.roo/rules-code/REMINDERS.md`
-- Context condensing protocol: `.roo/rules-code/CONTEXT-CONDENSING.md`
-
-If you are a Roo user, these files are injected into your system prompt automatically. If you are using a different agent framework, you should read them manually — they contain critical rules not duplicated here.
+Mode-specific files in `.ai/rules/`:
+- [`.ai/rules/CODING.md`](./.ai/rules/CODING.md) — universal coding rules
+- [`.ai/rules/REMINDERS.md`](./.ai/rules/REMINDERS.md) — type vs interface, spacing reminders
+- [`.ai/rules/CONTEXT-CONDENSING.md`](./.ai/rules/CONTEXT-CONDENSING.md) — context recovery protocol
 
 ## Build/Test Commands
 
-All commands run from the project root:
+See [`.ai/rules-skill/testing.md`](./.ai/rules-skill/testing.md) for the full command reference, dual-framework details, and coverage requirements. Summary:
 
 ```bash
-# Full build with linting
-npm run build
-
-# Run Mocha tests with coverage (runs npm run build:all internally)
-npm run test:cov
-
-# Run Jest tests with coverage
-npm run test:jest:cov
-
-# Watch mode for development
-npm run watch
+npm run build          # full build with linting
+npm run test:cov       # Mocha + coverage (runs build:all internally)
+npm run test:jest:cov  # Jest on TypeScript source
+npm run watch          # watch mode
 ```
 
-**Critical**: The project uses TWO test frameworks:
-- **Mocha** (`npm run test:cov`): Runs on transpiled code in `build/`, runs `npm run build:all` internally
-- **Jest** (`npm run test:jest:cov`): Runs TypeScript directly from `src/`, faster for development
-
-**Important**: `npm run test:cov` runs `npm run build:all` internally, so it is not necessary to run `npm run build` before `npm run test:cov`.
+**Must run `npm run test:cov` before completing any task.**
 
 ## Code Style (Project-Specific)
 
-### Indentation
-- **Tabs** for indentation (not spaces) - enforced by eslint
-- See `.editorconfig`: `indent_style = tab`, `indent_size = 4`
-
-### Function Spacing
-- **Always** space before function parentheses:
-  ```typescript
-  function myFunc () { }  // ✓ correct
-  function myFunc() { }   // ✗ wrong
-  ```
-
-### Key Spacing
-- Align colons in object literals:
-  ```typescript
-  const obj = {
-  	key1 : value1,
-  	key2 : value2,  // colons aligned
-  };
-  ```
-
-### TypeScript Strictness
-- `strict: true` enabled
-- `noImplicitAny: true` (implicit)
-- `noUnusedLocals: true` - unused variables cause errors
-- `noUnusedParameters: true` - unused parameters cause errors
-- `isolatedModules: true` - each file must be independently transpilable
-
-### ESLint Exceptions
-- `@typescript-eslint/no-explicit-any`: **off** - `any` is allowed
-- `@typescript-eslint/no-var-requires`: **off** - CommonJS requires allowed
-- `new-cap`: **off** - constructor naming not enforced
+See [`.ai/rules-skill/code-style.md`](./.ai/rules-skill/code-style.md) for the full style reference. Key rules: tabs only, space before function parens, colons aligned in object literals, `strict: true`, **no `any`** (`no-explicit-any: error`).
 
 ## Architecture Patterns
 
@@ -106,38 +91,24 @@ The core API is `define(TypeName, constructHandler, config?)` in `src/index.ts`.
 - `.registerHook()` - register lifecycle hooks
 
 ### The `lookupTyped()` Function
-Type-safe variant of `lookup()` for use with tactica-generated type definitions:
 
-```typescript
-import { lookupTyped } from 'mnemonica';
-
-// Requires TypeRegistry augmentation from tactica
-const UserType = lookupTyped('UserType');
-const user = new UserType({ name: 'John' }); // Full type safety!
-```
-
-The `lookupTyped()` function uses the same implementation as `lookup()` but provides TypeScript type safety through the `TypeRegistry` interface that tactica generates.
-
-**How It Works:**
-
-The `TypeRegistry` interface uses a `[key: string]: never` pattern:
+For user-facing semantics, see [`README.md`](./README.md) and [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` exposes a `[key: string]: never` index so that any lookup against an unaugmented registry is a compile-time error.
 
 ```typescript
 // In mnemonica core (src/index.ts)
 export interface TypeRegistry {
-	[key: string]: never;  // Prevents usage without augmentation
+	[key: string]: never;  // forces augmentation before keys resolve to real types
 }
 
-// The lookupTyped function constrains keys to valid registry entries
 export const lookupTyped = function <const K extends keyof TypeRegistry>(
 	TypeNestedPath: K
 ): TypeRegistry[K] {
-	// Runtime delegates to lookup(), types are compile-time only
+	// Runtime delegates to lookup(); type safety is compile-time only.
 	return types.lookup(TypeNestedPath as string) as TypeRegistry[K];
 };
 ```
 
-**Augmentation Pattern (generated by tactica):**
+Tactica generates the augmentation:
 
 ```typescript
 // In .tactica/registry.ts (generated)
@@ -149,19 +120,11 @@ declare module 'mnemonica' {
 }
 ```
 
-**Key differences from `lookup()`:**
-- Returns properly typed constructor when TypeRegistry is augmented
-- Falls back to `unknown` type when registry is not augmented
-- Same runtime behavior as `lookup()`
-
-**Usage pattern with tactica:**
-1. Run `npx tactica` to generate `.tactica/types.ts`
-2. Import types in your project
-3. Use `lookupTyped()` for type-safe type retrieval
+Runtime behavior is identical to `lookup()`; the only difference is the compile-time constraint on the key.
 
 > **Roadmap.** Nested `lookupTyped()` (a type-safe `.lookupTyped()` method
 > on constructors that preserves the prototype chain) is designed but not
-> yet shipped. See the `## Roadmap` section in [README.md](README.md).
+> yet shipped.
 
 ### Type System Structure
 ```
@@ -185,11 +148,10 @@ The library makes heavy use of JavaScript Proxies:
 - **TypesCollection Proxy** (`src/descriptors/types/index.ts`): Dynamic type lookup
 
 ### Internal Instance Properties
-Instances have non-enumerable internal properties accessed via `getProps()`:
-- `__type__` - Type definition object
-- `__parent__` - Parent instance reference
-- `__args__` - Constructor arguments
-- `__collection__` - Types collection reference
+
+Stored in a `WeakMap` keyed by the instance, not as own properties on the instance itself. Access via `getProps(instance)`. For the full property list (9 entries, with meanings) see the **Internal instance properties** table in [`README.md`](./README.md) — that table is the canonical reference.
+
+`setProps(instance, values)` is the mutating counterpart; rarely needed and considered advanced.
 
 ## Build Requirements
 
@@ -198,6 +160,11 @@ The build **must have zero warnings**. Running `npm run build` should produce **
 1. Fix the source code causing the warning
 2. Do not modify `./tsconfig.json` or `./eslint.config.js` to suppress warnings
 
+### Build Output Inspection
+When running `npm run build` or `npm run build:all`, **check the beginning of the output** for errors and warnings. Build failures (TypeScript compilation errors, ESLint issues, etc.) often appear at the start of the output. Do not rely only on the end of the output or `tail` for build status.
+
+For test passing confirmations (e.g., `npm run test:cov`), checking the end of the output is acceptable.
+
 ### Configuration Files
 **Disallowed without explicit approval:**
 - Modifying `./tsconfig.json`
@@ -205,14 +172,59 @@ The build **must have zero warnings**. Running `npm run build` should produce **
 
 These configuration files define the project's strict standards. Any changes require user approval first.
 
+## Return Statement Design Rule
+
+**Always use an intermediate variable before returning.** This is critical for debuggability with `npm run debug` and Chrome Dev Tools.
+
+### Prohibited patterns:
+```typescript
+// BAD — cannot inspect the returned value in debugger
+return { target, name };
+return SomeFnInvocation(arg);
+return new TypeDescriptor(...);
+```
+
+### Required pattern:
+```typescript
+// GOOD — can set breakpoint on return and inspect result
+const result = {
+	target : subtypes,
+	name   : head,
+};
+return result;
+
+const result = SomeFnInvocation(arg);
+return result;
+
+const result = new TypeDescriptor(
+	origin, target, name, handler, proto, config
+);
+return result;
+```
+
+This applies to **all** `return` statements where the expression is anything other than a bare variable or literal. The rule exists because Chrome Dev Tools' debugger cannot show the evaluated result of a complex expression on the `return` line — you must step past it, at which point the frame has already exited.
+
+## TypeScript Type Rules
+
+**Never use bare `Function`, `CallableFunction`, or `NewableFunction` as types** — always define a purpose-specific interface that extends them. See [`.ai/rules-skill/code-style.md`](./.ai/rules-skill/code-style.md) for examples and allowed exceptions.
+
+## Preserving Design Comments and Memory Notes
+
+When refactoring or reformatting code, **preserve all comments that carry design intent, architectural rationale, or developer memory**. This includes:
+
+- Inline comments explaining *why* a non-obvious approach was chosen (e.g. `// "this" argument may be passed for tracking why something happened`)
+- Comments marking intentional workarounds for JS/Node version differences (e.g. `// starting from Node.js v22 we should define this property through odp`)
+- Comments describing what a code section is *about* (e.g. `// this is a direct Sub-Type invocation`)
+- TODOs and commented-out code that documents explored but rejected alternatives
+- Debugger statements left as breadcrumbs for future investigation
+
+**Do NOT remove comments because they seem like "clutter" or because the code is now typed.** TypeScript types answer "what" — comments answer "why". Both are necessary.
+
+If a comment becomes technically inaccurate after a change, update it rather than deleting it.
+
 ## Testing Requirements
 
-- **100% coverage required** for Jest (statements, branches, functions, lines) - see `jest.config.js`
-- **100% coverage required** for Mocha (`npm run test:cov`)
-- Mocha tests run on built code in `build/` directory
-- Jest tests run directly on TypeScript source
-- Tests must pass with `--allow-uncaught` flag (mocha)
-- **Must run `npm run test:cov` before completing task** - this validates the build and ensures 100% coverage
+See [`.ai/rules-skill/testing.md`](./.ai/rules-skill/testing.md) for full coverage requirements and patterns. 100% required on both Mocha and Jest. Must run `npm run test:cov` before completing any task.
 
 ## Common Patterns
 

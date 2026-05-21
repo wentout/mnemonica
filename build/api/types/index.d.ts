@@ -1,3 +1,4 @@
 import { TypeClass } from '../../types';
-export declare const define: (this: CallableFunction, subtypes: Map<string, object>, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object) => TypeClass;
-export declare const lookup: (this: Map<string, object>, TypeNestedPath: string) => TypeClass | undefined;
+export type TypesMap = Map<string, object> & {};
+export declare const define: (this: unknown, subtypes: TypesMap, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object) => TypeClass;
+export declare const lookup: (this: TypesMap, TypeNestedPath: string) => TypeClass | undefined;

@@ -1,1 +1,2 @@
-export declare const makeInstanceModificator: (self: any) => any;
+import type { InstanceCreatorContext, MnemonicaConstructor } from '../../types';
+export declare const makeInstanceModificator: (self: InstanceCreatorContext) => MnemonicaConstructor;

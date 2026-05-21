@@ -250,7 +250,8 @@ Object.keys( evenMoreConstructors )
 				}
 			}
 		}
-		return { idx, name, iof };
+		const result = { idx, name, iof };
+		return result;
 	} )
 	.reverse()
 	.forEach( ( { idx, name, iof } = it ) => console.log( idx, `${name}`, ` >> evenMore instanceof ${name} : `, iof ) );

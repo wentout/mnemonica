@@ -1,9 +1,7 @@
 'use strict';
 
 import { ErrorsTypes } from '../descriptors/errors';
-const {
-	WRONG_INSTANCE_INVOCATION
-} = ErrorsTypes;
+const { WRONG_INSTANCE_INVOCATION } = ErrorsTypes;
 
 // import { hop } from './hop';
 

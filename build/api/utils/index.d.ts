@@ -1,3 +1,5 @@
+import type { MnemonicaConstructor } from '../../types';
+import { ConstructHandler } from '../types/compileNewModificatorFunctionBody';
 export declare const CreationHandler: (this: object & {
     constructor: NewableFunction;
 }, constructionAnswer: unknown) => unknown;
@@ -9,20 +11,21 @@ export type asyncStack = {
     parent: () => asyncStack;
 };
 export type parentSub = {
+    TypeName: string;
     __type__: {
         subtypes: Map<string, parentSub>;
     };
     __parent__: parentSub;
 };
 declare const TypesUtils: {
-    isClass: (fn: CallableFunction) => boolean;
+    isClass: (fn: ConstructHandler) => boolean;
     checkProto: (proto: unknown) => void;
     getTypeChecker: (TypeName: string) => unknown;
     getTypeSplitPath: (path: string) => string[];
     getExistentAsyncStack: (existentInstance: asyncStack) => unknown;
     checkTypeName: (name: string) => void;
     findSubTypeFromParent: (instance: parentSub | object | undefined, subType: string) => parentSub | null;
-    makeErrorModificatorType: (TypeName: string, ErrorModificator?: () => void) => any;
+    makeErrorModificatorType: (TypeName: string, ErrorModificator?: () => void) => MnemonicaConstructor;
     reflectPrimitiveWrappers: (_thisArg: unknown) => object;
 };
 export default TypesUtils;

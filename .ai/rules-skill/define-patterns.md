@@ -26,6 +26,20 @@ const SubType = MyType.define('SubType', function (this: SubType, extra: string)
 });
 ```
 
+## Functional vs Class-Based — Both Are Equally Supported
+
+`define()` (functional) and `@decorate()` (class-based) are runtime equivalents. Choose based on the style of the surrounding codebase — never assume one is preferred over the other.
+
+| | Functional (`define`) | Class-based (`@decorate`) |
+|---|---|---|
+| Define a type | `define('User', function(data) { ... })` | `@decorate() class User { constructor(data) { ... } }` |
+| Define a subtype | `User.define('Admin', function() { ... })` | `@decorate(User) class Admin { ... }` |
+| Create instance | `new User(data)` | `new User(data)` |
+| Create subtype | `new user.Admin()` | `new user.Admin()` |
+| Config options | third arg: `define('T', fn, config)` | first/second arg: `@decorate(Parent, config)` |
+
+When working in a codebase that uses one style: **stay consistent with that style** rather than mixing.
+
 ## Calling Conventions
 
 ### 1. Modern (explicit name)

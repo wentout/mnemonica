@@ -22,6 +22,10 @@ Activate this skill when:
 - User asks about tactica-generated types or `.tactica/` directory
 - Task involves: type definitions, hooks, async constructors, error handling
 
+## Functional vs Class-Based — Both Are Equally Supported
+
+`define()` and `@decorate()` are runtime equivalents. When working in a codebase, **match the style already in use**. See [rules-skill/define-patterns.md](.ai/rules-skill/define-patterns.md) for a side-by-side comparison.
+
 ## High-priority checklist: Adding a new type
 
 When the task involves adding or modifying a type definition:
@@ -100,6 +104,6 @@ for framework-agnostic rules).
 
 ## External Resources
 
-- Repository: https://github.com/mythographica/mnemonica
+- Repository: https://github.com/wentout/mnemonica
 - Main README: [README.md](../README.md)
 - Contributor Guidelines: [AGENTS.md](./AGENTS.md)

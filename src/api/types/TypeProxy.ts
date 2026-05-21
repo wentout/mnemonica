@@ -1,67 +1,85 @@
 'use strict';
 
-import type { constructorOptions, _Internal_TC_ } from '../../types';
+import type {
+	constructorOptions, _Internal_TC_, TypeDef, TypeDescriptorDefine 
+} from '../../types';
 
 import TypesUtils from '../utils';
-const {
-	checkProto,
-} = TypesUtils;
+const { checkProto, } = TypesUtils;
 
 import { hop } from '../../utils/hop';
 
 import { ErrorsTypes } from '../../descriptors/errors';
-const {
-	WRONG_TYPE_DEFINITION,
-} = ErrorsTypes;
+const { WRONG_TYPE_DEFINITION, } = ErrorsTypes;
 
 import mnemosynes from './Mnemosyne';
 const { createMnemosyne, getDefaultPrototype } = mnemosynes;
 
 import { InstanceCreator } from './InstanceCreator';
 
-// Type for TypeProxy instance
-export interface TypeProxyInstance {
-	__type__: { [key: string]: unknown; proto: object; subtypes: Map<string, unknown>; define: (n: string, c: CallableFunction, cf?: object, ...fa: unknown[]) => unknown };
+// The runtime object stored in __type__ is a TypeDescriptor instance,
+// which has all TypeDef properties plus define/lookup methods.
+interface TypeProxyType extends TypeDef {
+	define: TypeDescriptorDefine;
+	[key: string]: unknown;
+}
+
+// Proxy trap handler signatures
+interface TypeProxyGetHandler {
+	get(target: _Internal_TC_<object>, prop: string): unknown;
+}
+
+interface TypeProxySetHandler {
+	set(_target: unknown, name: string, value: unknown): boolean;
+}
+
+interface TypeProxyConstructHandler {
+	construct(_target: unknown, args: unknown[]): object;
+}
+
+// Type for TypeProxy instance — data + traps
+export interface TypeProxyInstance extends TypeProxyGetHandler, TypeProxySetHandler, TypeProxyConstructHandler {
+	__type__: TypeProxyType;
 	Uranus: unknown;
-	get(target: CallableFunction, prop: string): unknown;
-	set(target: unknown, name: string, value: unknown): boolean;
-	construct(target: unknown, args: unknown[]): object;
 	apply: typeof subTypeApply;
 	new (...args: unknown[]): object;
 }
 
-export const TypeProxy = function (__type__: TypeProxyInstance['__type__'], Uranus: unknown) {
-	Object.assign(this, {
-		__type__,
-		Uranus
-	});
-	const typeProxy = new Proxy(InstanceCreator, this);
+export const TypeProxy = function (__type__: TypeProxyType, Uranus: unknown) {
+	Object.assign(
+		this,
+		{
+			__type__,
+			Uranus
+		}
+	);
+	const typeProxy = new Proxy(
+		InstanceCreator,
+		this
+	);
 	return typeProxy;
 } as _Internal_TC_<TypeProxyInstance>;
 
-TypeProxy.prototype.get = function (target: CallableFunction, prop: string) {
+TypeProxy.prototype.get = function (this: TypeProxyInstance, target: _Internal_TC_<object>, prop: string) {
 
-	// const props = _getProps(this) as Props;
-
-	const {
-		__type__: type
-	} = this;
+	const { __type__: type } = this;
 
 	// prototype of proxy
-	// const instance = Reflect.getPrototypeOf(receiver);
-
 	if (prop === 'prototype') {
 		return type.proto;
 	}
 
-	const propDeclaration = type[ prop ];
+	const propDeclaration = (type as Record<string, unknown>)[ prop ];
 	if (propDeclaration) {
 		return propDeclaration;
 	}
 
 	// used for existent props with value
 	// undefined || null || false
-	if (hop(type, prop)) {
+	if (hop(
+		type,
+		prop
+	)) {
 		return propDeclaration;
 	}
 
@@ -70,20 +88,24 @@ TypeProxy.prototype.get = function (target: CallableFunction, prop: string) {
 		return type.subtypes.get(prop);
 	}
 
-	return Reflect.get(target, prop);
+	return Reflect.get(
+		target,
+		prop
+	);
 
 };
 
-TypeProxy.prototype.set = function (_target: unknown, name: string, value: unknown) {
+TypeProxy.prototype.set = function (this: TypeProxyInstance, _target: unknown, name: string, value: unknown) {
 
-	const {
-		__type__: type
-	} = this;
+	const { __type__: type } = this;
 
 	// is about setting a prototype to Type
 	if (name === 'prototype') {
 		checkProto(value);
-		Object.assign(type.proto, value);
+		Object.assign(
+			type.proto,
+			value
+		);
 		return true;
 	}
 
@@ -95,27 +117,27 @@ TypeProxy.prototype.set = function (_target: unknown, name: string, value: unkno
 		throw new WRONG_TYPE_DEFINITION('should use function for type definition');
 	}
 
-	const TypeName = name;
-	const Constructor = value;
-
-	type.define(TypeName, Constructor);
+	type.define(
+		name,
+		value
+	);
 	return true;
 
 };
 
-
 // share decorator from primary type
 const subTypeApply = (
-	parentType: { define: (n: string, c: CallableFunction, cf?: object, ...fa: unknown[]) => unknown },
-	cfg?: constructorOptions,
-	...fnArgs: unknown[]
+	parentType: TypeProxyType,
+	cfg?: constructorOptions
 ) => {
-	// const decorator = function <T extends { new (): unknown }>(cstr: T, s?: ClassDecoratorContext<T>): T {
 	const decorator = function <T extends { new (): unknown }>(cstr: T): T {
-		// const name = typeof s === 'object' ? s.name : cstr.constructor.name;
 		const { name } = cstr;
-		 
-		return parentType.define(name, cstr as unknown as CallableFunction, cfg, ...fnArgs) as unknown as T;
+		const defineResult = parentType.define(
+			name,
+			cstr,
+			cfg
+		);
+		return defineResult as unknown as T;
 	};
 	return decorator;
 };
@@ -131,36 +153,36 @@ const primaryTypeApply = function (
 	const type = this.__type__;
 	// case of decorator like usage
 	if (Uranus === undefined) {
-		// so instead of
-		// instance = this.construct(null, args);
-		// we will return decorator
-		const decorator = subTypeApply(type, args[ 0 ]);
+		const decorator = subTypeApply(
+			type,
+			args[ 0 ]
+		);
 		return decorator;
 	}
 
 	// this is the scenario, when we .call or .apply or .bind
 	// our PrimaryType whick is === instance of current TypeProxy
-	const InstanceCreatorProxy = new TypeProxy(type, Uranus);
+	const InstanceCreatorProxy = new TypeProxy(
+		type,
+		Uranus
+	);
 	const instance = new InstanceCreatorProxy(...args);
 	return instance;
 };
 
-Object.defineProperty(TypeProxy.prototype, 'apply', {
-	get () {
-		// const type = this.__type__;
-		return primaryTypeApply;
-		// const answer = !type.isSubType ? primaryTypeApply : 
-		// 	(__: unknown, ___: unknown, config?: constructorOptions, ...args: unknown[]) => {
-		// 		return subTypeApply(type, config, ...args);
-		// 	};
-		// return answer;
+Object.defineProperty(
+	TypeProxy.prototype,
+	'apply',
+	{
+		get () {
+			return primaryTypeApply;
+		}
 	}
-});
-
+);
 
 // this always is initial type creation ...
 // so no way to invoke this otherwise than direct type call
-TypeProxy.prototype.construct = function (_target: unknown, args: unknown[]) {
+TypeProxy.prototype.construct = function (this: TypeProxyInstance, _target: unknown, args: unknown[]) {
 
 	// new.target id equal with target here
 
@@ -178,13 +200,16 @@ TypeProxy.prototype.construct = function (_target: unknown, args: unknown[]) {
 	const config = type.config as { exposeInstanceMethods?: boolean } | undefined;
 	const exposeInstanceMethods = config!.exposeInstanceMethods as unknown as boolean;
 
-	// "this" argument may be passed for tracking why something happened
-	// but uncomment it there in createMnemosyne if needed
-	// const mnemosyneProxy = createMnemosyne(uranus, this);
-	const mnemosyneProxy = createMnemosyne(uranus, exposeInstanceMethods);
-	const instance = new InstanceCreator(type, mnemosyneProxy, args);
+	const mnemosyneProxy = createMnemosyne(
+		uranus,
+		exposeInstanceMethods
+	);
+	const instance = new InstanceCreator(
+		type,
+		mnemosyneProxy,
+		args
+	);
 
-	// const instance = new InstanceCreator(type, null, args);
 	return instance;
 
 };

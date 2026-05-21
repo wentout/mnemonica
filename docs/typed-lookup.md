@@ -1,0 +1,157 @@
+# Typed lookup with `lookupTyped()` — with or without tactica
+
+`lookupTyped()` is a runtime lookup with compile-time type safety. The type safety comes from one mechanism: declaration merging on the `TypeRegistry` interface that mnemonica exports.
+
+```typescript
+// src/index.ts (mnemonica core)
+export interface TypeRegistry {
+    [key: string]: TypeConstructor<never>;
+}
+
+export const lookupTyped = function <const K extends keyof TypeRegistry>(
+    path: K
+): TypeRegistry[K] {
+    return lookup(path as string) as TypeRegistry[K];
+};
+```
+
+The `[key: string]: TypeConstructor<never>` index makes any lookup against an unaugmented registry resolve to a useless type. Until you (or a tool) augment `TypeRegistry`, `lookupTyped('Anything')` returns nothing useful at compile time.
+
+Two ways to do the augmentation: **by hand**, or via **[`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica)**. Runtime behavior is identical. The trade-off is purely maintenance overhead.
+
+---
+
+## Without tactica — hand-augmented `TypeRegistry`
+
+Define your types as usual:
+
+```typescript
+// src/types.ts
+import { define } from 'mnemonica';
+
+export const Person = define('Person', function (this: { name: string }, data: { name: string }) {
+    this.name = data.name;
+});
+
+export const Employee = Person.define('Employee', function (this: { role: string }, data: { role: string }) {
+    this.role = data.role;
+});
+```
+
+Write a `.d.ts` file (or any `.ts` file outside the build output) with the augmentation and the matching instance shapes:
+
+```typescript
+// types/mnemonica-registry.d.ts
+import type { ProtoFlat } from 'mnemonica';
+
+// Instance shapes — what `lookupTyped` returns will construct.
+export type PersonInstance = {
+    name : string;
+    // Subtypes available on instances of this type:
+    Employee : new (data: { role: string }) => EmployeeInstance;
+};
+
+export type EmployeeInstance = ProtoFlat<PersonInstance, {
+    role     : string;
+    Employee : undefined; // can't re-instantiate the same level
+}>;
+
+declare module 'mnemonica' {
+    interface TypeRegistry {
+        'Person'          : new (data: { name: string }) => PersonInstance;
+        'Person.Employee' : new (data: { role: string }) => EmployeeInstance;
+    }
+}
+```
+
+Include the `.d.ts` in `tsconfig.json`:
+
+```json
+{
+    "include": ["src/**/*.ts", "types/**/*.d.ts"]
+}
+```
+
+Use it:
+
+```typescript
+import { lookupTyped } from 'mnemonica';
+
+const Person   = lookupTyped('Person');           // fully typed
+const Employee = lookupTyped('Person.Employee');  // fully typed
+
+const alice    = new Person({ name: 'Alice' });
+const engineer = new alice.Employee({ role: 'Engineer' });  // alice.Employee is typed
+```
+
+`ProtoFlat<Parent, OwnProps>` is exported from `mnemonica` and merges the parent's instance shape with the subtype's own properties. The pattern is exactly what tactica generates — see the real example at `finecut/express/.tactica/types.ts` in this project's ecosystem.
+
+---
+
+## With tactica — generated augmentation
+
+Install:
+
+```bash
+npm install --save-dev @mnemonica/tactica
+```
+
+Configure as a TypeScript Language Service Plugin in `tsconfig.json`:
+
+```json
+{
+    "compilerOptions": {
+        "plugins": [{
+            "name"      : "@mnemonica/tactica",
+            "outputDir" : ".tactica",
+            "include"   : ["src/**/*.ts"]
+        }]
+    },
+    "include": ["src/**/*.ts", ".tactica/**/*.ts"]
+}
+```
+
+Tactica scans your `define()` and `@decorate()` calls and generates `.tactica/types.ts` + `.tactica/registry.ts`. The generated registry has the same shape as the hand-written one above, but tactica also fills in instance-level subtypes (`alice.Employee`) automatically and uses `ProtoFlat<Parent, ...>` for nested types so they merge correctly.
+
+You write nothing for the augmentation; tactica regenerates as your types evolve. See [`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica) for the full configuration surface.
+
+---
+
+## When to choose which
+
+**Hand-augmented** is fine for:
+
+- Small projects (a handful of types)
+- Bootstrap / learning — writing the augmentation by hand is the fastest way to understand what `lookupTyped()` actually does
+- Projects that want to keep the `TypeRegistry` surface stable and curated, independent of source-code churn
+- Environments where adding a TypeScript Language Service plugin is inconvenient
+
+**Tactica** is the right choice when:
+
+- You have many types or expect the type graph to grow
+- You don't want to maintain the augmentation by hand as `define()` calls are added or refactored
+- You want full instance-subtype typing (`alice.Employee`) without writing it
+- You're already on a TS-LSP-friendly setup
+
+The runtime is identical either way. There is no "tactica path" vs "non-tactica path" in mnemonica core itself — there is only the `TypeRegistry` augmentation, and two ways to produce it.
+
+---
+
+## What is forbidden either way
+
+Regardless of how you produce the augmentation, two patterns are anti-patterns. They typically show up as workarounds when the augmentation is missing, and the fix is to augment correctly (manually or via tactica), not to cast around the type system:
+
+```typescript
+// ❌ never
+const requestData = new RequestData({ ... }) as unknown as RequestDataT;
+const child       = new (instance as any).Child({ ... });
+```
+
+```typescript
+// ✓ instead
+const RequestData = lookupTyped('RequestData');
+const requestData = new RequestData({ ... });
+const child       = new requestData.Child({ ... });
+```
+
+See [`../.ai/TACTICA-RULES.md`](../.ai/TACTICA-RULES.md) for the full anti-pattern list.

@@ -1604,6 +1604,46 @@ describe('Main Test', () => {
 			});
 		});
 
+		describe('define() coverage for refactored paths', () => {
+			it('should cover isLazyGetter catch (factory throws)', () => {
+				define('ParentTypeForCatch', function () {});
+				let thrownError;
+				try {
+					define('ParentTypeForCatch', () => {
+						throw new Error('factory throws');
+					});
+				} catch (error) {
+					thrownError = error;
+				}
+				expect(thrownError).instanceOf(errors.ALREADY_DECLARED);
+			});
+
+			it('should cover config as object in string branch', () => {
+				const ConfigAsSecondArg = define('ConfigAsSecondArg', { strictChain : false });
+				expect(ConfigAsSecondArg).to.exist;
+				expect(ConfigAsSecondArg.config.strictChain).to.equal(false);
+			});
+
+			it('should cover default handler parameter', () => {
+				const DefaultHandlerType = define(`DefaultHandlerType_${Date.now()}`);
+				expect(DefaultHandlerType).to.exist;
+				const instance = new DefaultHandlerType();
+				expect(instance).to.exist;
+			});
+
+			it('should throw WRONG_TYPE_DEFINITION for existing type with no handler', () => {
+				define('ExistingTypeNoHandler', function () {});
+				let thrownError;
+				try {
+					define('ExistingTypeNoHandler');
+				} catch (error) {
+					thrownError = error;
+				}
+				expect(thrownError).instanceOf(errors.WRONG_TYPE_DEFINITION);
+				expect(thrownError.message).to.equal('wrong type definition : definition is not provided');
+			});
+		});
+
 		if (uncaughtExceptionTest) {
 			require('./uncaughtExceptionTest')({
 				evenMore,

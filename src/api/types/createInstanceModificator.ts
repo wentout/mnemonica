@@ -1,5 +1,9 @@
 'use strict';
 
+import type {
+	MnemonicaConstructor, AddPropsCallback 
+} from '../../types';
+
 // Step 5 of construction pipeline: the default ModificationConstructor.
 // Wires the prototype chain by creating a Mnemosyne object inheriting
 // from the parent instance, attaching internal props, and linking
@@ -9,9 +13,9 @@ export default function () {
 
 	const CreateInstanceModificator = function (
 		this: object,
-		ModificatorType: CallableFunction,
+		ModificatorType: MnemonicaConstructor,
 		ModificatorTypePrototype: { [index: string]: unknown },
-		_addProps: CallableFunction
+		_addProps: AddPropsCallback
 	) {
 
 		 
@@ -19,17 +23,24 @@ export default function () {
 
 		// inherited
 		const Mnemosyne = {};
-		Reflect.setPrototypeOf(Mnemosyne, existentInstance);
+		Reflect.setPrototypeOf(
+			Mnemosyne,
+			existentInstance
+		);
 		_addProps(Mnemosyne);
 
 		// about to setup constructor property for new instance
 		// Object.defineProperty(inherited, 'constructor', {
-		Object.defineProperty(Mnemosyne, 'constructor', {
-			get () {
-				return ModificatorType;
-			},
-			enumerable : false
-		});
+		Object.defineProperty(
+			Mnemosyne,
+			'constructor',
+			{
+				get () {
+					return ModificatorType;
+				},
+				enumerable : false
+			}
+		);
 
 		// modification itself
 		// so now we have to copy all constructor props
@@ -38,11 +49,17 @@ export default function () {
 			// @ts-expect-error I'm too lazy for that
 			value : ModificatorType
 		};
-		Object.defineProperties(ModificatorType.prototype, props);
+		Object.defineProperties(
+			ModificatorType.prototype,
+			props
+		);
 
 		// and set the prototype inherited
 		// Reflect.setPrototypeOf(ModificatorType.prototype, inherited);
-		Reflect.setPrototypeOf(ModificatorType.prototype, Mnemosyne);
+		Reflect.setPrototypeOf(
+			ModificatorType.prototype,
+			Mnemosyne
+		);
 
 		return ModificatorType;
 

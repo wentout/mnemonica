@@ -6,7 +6,7 @@
 // works ↓↓↓
 // npx tsc --target es6 --moduleResolution NodeNext --module NodeNext --sourceMap ./test/decorate.ts
 
-import { decorate, apply, TypeConstructor } from '..';
+import { decorate, apply, TypeConstructor, IDEF } from '..';
 import { BaseClass, Strict } from 'typeomatica';
 
 // debugger;
@@ -252,8 +252,15 @@ export const midAddDecoratorSubExt = apply(midAddDecoratorBaseExt, MidAddDecorat
 
 // Coverage test: manually call decorator with explicit undefined to test ?? operator
 const decoratorWithConfig = decorate(MidDecoratorBase, { blockErrors : true });
-// Cast to any to bypass type mismatch between definition (ClassDecoratorContext) and implementation (constructorOptions)
-const ManualDecoratedClass = (decoratorWithConfig as any)(
+
+// Plain function (no new-signature) passed to bypass ClassDecoratorContext — intentional test of non-class path
+interface ManualConstructorFn extends CallableFunction {
+	(this: { manual_field: number }): void;
+}
+interface ManualDecoratorFn extends CallableFunction {
+	(cstr: ManualConstructorFn, ctx?: unknown): IDEF<object>;
+}
+const ManualDecoratedClass = (decoratorWithConfig as unknown as ManualDecoratorFn)(
 	function ManualDecoratedClass (this: { manual_field: number }) {
 		this.manual_field = 777;
 	},

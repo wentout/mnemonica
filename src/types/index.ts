@@ -6,10 +6,10 @@ export type PropsType = Record<string, unknown>;
 
 // Core type definitions for mnemonica
 
-// Base constructor function type - can be a class constructor or a function
-export type IDEF<T> = { new(): T } | { (this: T, ...args: unknown[]): void };
-// More flexible version that accepts typed arguments for common patterns
-export type IDEFWithArgs<T, Args extends unknown[] = unknown[]> = { new(): T } | { (this: T, ...args: Args): void };
+// Base constructor function type - can be a class constructor or a function.
+// Args defaults to unknown[] so IDEF<T> is backwards compatible;
+// supply Args to get typed constructor params: IDEF<MyType, [string, number]>
+export type IDEF<T, Args extends unknown[] = unknown[]> = { new(): T } | { (this: T, ...args: Args): void };
 
 // Error message types - all error messages are strings
 export type ErrorMessageKey =
@@ -31,12 +31,17 @@ export type ErrorMessageKey =
 // Error messages object type
 export type ErrorMessages = Record<ErrorMessageKey, string>;
 
+// Hook callback — passed to registerHook and invoked by invokeHook
+export interface hook extends CallableFunction {
+	(opts: hooksOpts): unknown;
+}
+
 // Error constructor from constructError - constructable function with prototype
 export interface MnemonicaErrorConstructor {
-	new(addition?: string, stack?: string[]): Error;
+	new(addition?: string, stack?: string | string[]): Error;
 	(name: string): Error;
 	prototype: {
-		constructor: CallableFunction;
+		constructor: MnemonicaErrorConstructor;
 	};
 }
 
@@ -66,47 +71,64 @@ export interface _Internal_TC_<ConstructorInstance extends object> {
 }
 
 /**
- * External Type Constructor — the shape of constructor functions returned by `define()`.
- *
- * In Scala's kind system, a "Type Constructor" is a kind (a type of types):
- * not a value, but a mold describing how concrete types are formed. Here,
- * `TypeConstructor<Instance>` is the mold `define()` stamps at invocation time
- * from (prototype, arguments, config). The resulting constructor is simultaneously:
- *   - a runtime value (callable, `new`-able, with `.prototype`)
- *   - a node in the type Trie (carries `.subtypes`, participates in `instanceof`)
- *   - a behavioral contract (the prototype chain provides `.extract()`, `.fork()`, etc.)
- *
+ * Public alias for _Internal_TC_ — the shape of constructor functions returned by `define()`.
  * Augmented by tactica-generated TypeRegistry to become user-specific types.
+ * Kept as a named alias (rather than inlining _Internal_TC_) so tactica can reference it
+ * cleanly in generated declaration files.
  */
-export interface TypeConstructor<ConstructorInstance extends object> {
-	new(...args: unknown[]): ConstructorInstance;
-	(this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
-	readonly prototype: ConstructorInstance & {
-		readonly constructor: TypeConstructor<ConstructorInstance>
-	};
-}
+export type TypeConstructor<ConstructorInstance extends object> = _Internal_TC_<ConstructorInstance>;
 
 // Hook types
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
 
 // Hook options passed to hook callbacks
-export type hooksOpts = {
-	TypeName?: string;
-	type?: TypeDef;
+// P = parent / existent instance (proto)
+// T = child / inherited instance (type being created)
+export type hooksOpts<P = object, T = P> = {
+	TypeName: string;
+	type: TypeDef;
 	args: unknown[];
-	existentInstance: object;
-	inheritedInstance: object;
-	creator?: object;
+	existentInstance: P;
+	inheritedInstance?: T;
+	creator?: { throwModificationError(error: Error): void };
 };
 
-// Hook callback type
-export type hook = (opts: hooksOpts) => void;
+// Callback passed into ModificationConstructor to attach internal props to the prototype
+export interface AddPropsCallback extends CallableFunction {
+	(proto: object): void;
+}
+
+// ModificationConstructor: wires prototype chain during instance creation
+export interface ModificationConstructor extends CallableFunction {
+	(
+		this: object,
+		ModificatorType: MnemonicaConstructor,
+		ModificatorTypePrototype: object,
+		_addProps: AddPropsCallback
+	): MnemonicaConstructor;
+}
+
+// Factory that returns a ModificationConstructor (used in constructorOptions)
+export interface ModificationConstructorFactory extends CallableFunction {
+	(): ModificationConstructor;
+}
+
+// Factory that returns a MnemonicaConstructor (stored in TypeDef.constructHandler)
+export interface MnemonicaConstructorFactory extends CallableFunction {
+	(): MnemonicaConstructor;
+}
+
+// Marks the top of a captured stack trace (passed to Error.captureStackTrace as constructorOpt)
+export interface StackBoundary extends CallableFunction {}
+
+// A wrappable utility method — any callable that wrapThis() can proxy
+export interface WrappableMethod extends CallableFunction {}
 
 // Constructor options for define - default (exposeInstanceMethods defaults to true behavior)
 export type constructorOptions = {
 	// explicit declaration we wish use
 	// an old style based constructors
-	ModificationConstructor?: CallableFunction,
+	ModificationConstructor?: ModificationConstructorFactory,
 	// shall or not we use strict checking
 	// for creation sub-instances Only from current type
 	// or we might use up-nested sub-instances from chain
@@ -147,28 +169,58 @@ export type TypeDef = {
 	collection: CollectionDef;
 	config: constructorOptions;
 	parentType?: TypeDef;
-	constructHandler: () => CallableFunction;
+	constructHandler: MnemonicaConstructorFactory;
 	title: string;
-	hooks: Record<string, hook[]>;
-	invokeHook: (hookType: hooksTypes, opts: hooksOpts) => void;
+	hooks: Record<string, Set<hook>>;
+	invokeHook: (hookType: hooksTypes, opts: hooksOpts) => Set<unknown>;
 	prototype: unknown;
 	stack?: string;
+	[Symbol.hasInstance]: (instance: object) => boolean;
 };
 
 // Collection definition
-export type CollectionDef = {
+export type CollectionDef = Hookable & {
 	define: TypeAbsorber;
 	lookup: TypeLookup;
-	invokeHook: (hookType: hooksTypes, opts: hooksOpts) => void;
-	registerHook: (hookType: hooksTypes, cb: hook) => void;
-	registerFlowChecker: (cb: () => unknown) => void;
 	subtypes: SubtypesMap;
-	hooks: Record<string, hook[]>;
 	[key: string]: unknown;
 };
 
 // Type lookup function type: may have augmentation by Tactica re-definition
-export type TypeLookup = (this: Map<string, unknown>, TypeNestedPath: string) => TypeClass | undefined;
+export interface TypeLookup extends CallableFunction {
+	(this: Map<string, unknown>, TypeNestedPath: string): TypeClass | undefined;
+}
+
+// Specification for chained subtype creation with .then()
+export interface ThenSpec {
+	subtype: object;
+	args: unknown[];
+	name?: string;
+}
+
+// Context object passed through the InstanceCreator pipeline
+export interface InstanceCreatorContext {
+	type: TypeDef;
+	TypeName: string;
+	existentInstance: object;
+	args: unknown[];
+	ModificationConstructor: ModificationConstructor;
+	ModificatorType: MnemonicaConstructor;
+	InstanceModificator: MnemonicaConstructor;
+	inheritedInstance: object | Promise<object>;
+	config: constructorOptions;
+	proto: object;
+	__proto_proto__?: object;
+	stack?: string[];
+
+	getExistentAsyncStack(existentInstance: object): unknown;
+	postProcessing(continuationOf?: TypeDef): void;
+	makeAwaiter(type: TypeDef, then?: ThenSpec): Promise<object>;
+	addThen(then: ThenSpec): void;
+	invokePreHooks(): void;
+	invokePostHooks(): { type: Set<unknown>; collection: Set<unknown> };
+	throwModificationError(error: MnemonicaError): void;
+}
 
 /**
  * Proto merge type - combines parent and child types without property conflicts.
@@ -223,16 +275,6 @@ export interface MnemonicaInstance {
 
 // Instance properties for __self__ reference
 // This merges internal props with the instance methods
-export type InstanceSelfProps = InstanceInternalProps & {
-	__self__: InstanceInternalProps & MnemonicaInstance;
-};
-
-// Combined Props type for internal used inside of ./src
-export type Props = InstanceSelfProps & {
-	[key: string]: unknown;
-};
-
-
 // Internal instance properties (non-enumerable)
 // These are always present on instances but accessed via getProps/setProps
 export type InstanceInternalProps = {
@@ -243,28 +285,27 @@ export type InstanceInternalProps = {
 	__type__: TypeDef;
 	__parent__: object;
 	__stack__?: string;
-	__creator__: TypeDef;
+	__creator__: InstanceCreatorContext;
 	__timestamp__: number;
-	// __self__: InstanceInternalProps & MnemonicaInstance;3333
 };
 
+// Combined Props type for internal use inside ./src
+export type Props = InstanceInternalProps & {
+	__self__: InstanceInternalProps & MnemonicaInstance;
+	[key: string]: unknown;
+};
 
-// Helper type to detect if exposeInstanceMethods is explicitly false
+// Helper type: true when exposeInstanceMethods is explicitly false
 export type IsHidingMethods<Config extends constructorOptions> =
   Config extends { exposeInstanceMethods: false } ? true : false;
 
-// Combined instance type based on config
+// Combined instance type based on config:
+//   hiding → Flatten<N> (user props only)
+//   showing → Flatten<N> & MnemonicaInstance (user props + extract/fork/etc.)
 export type InstanceResult<
   N extends object,
   Config extends constructorOptions,
-  R extends Flatten<N> = Flatten<N>,
-  I extends { [key in keyof R]: R[key] } = { [key in keyof R]: R[key] },
-  M extends I & MnemonicaInstance = I & MnemonicaInstance
-> = IsHidingMethods<Config> extends true
-	// Only user-defined properties (hiding MnemonicaInstance & subtypes)
-  ? R
-	// User props + instance methods + subtypes
-  : M;
+> = IsHidingMethods<Config> extends true ? Flatten<N> : Flatten<N> & MnemonicaInstance;
 
 // Definitor instance - the constructor function returned by define
 // N = instance type (properties available on instances)
@@ -328,7 +369,7 @@ export interface IDefinitorInstance<
 // 2. Legacy: define(constructHandler, config?) - TypeName from constructor name
 // 3. Nested: parentType.define(TypeName, constructHandler, config?)
 // Using interface with overloads to properly handle exposeInstanceMethods option
-export interface TypeAbsorber {
+export interface TypeAbsorber extends CallableFunction {
 	// Overload: with exposeInstanceMethods: false - hide instance methods
 	<T extends object>(
 		this: unknown,
@@ -348,15 +389,19 @@ export interface TypeAbsorber {
 
 // TypesCollection interface for createTypesCollection
 // This represents the actual return type of createTypesCollection
-export interface TypesCollection {
+export interface TypesCollection extends Hookable {
 	define: TypeAbsorber;
 	lookup: TypeLookup;
-	registerHook(hookType: hooksTypes, cb: hook): void;
-	invokeHook(hookType: hooksTypes, opts: hooksOpts): void;
-	registerFlowChecker(cb: () => unknown): void;
 	subtypes: SubtypesMap;
-	hooks: Record<string, hook[]>;
 	[key: string]: unknown;
+}
+
+// Shared interface for objects that support hooks (TypeDef and CollectionDef)
+export interface Hookable {
+	hooks: Record<string, Set<hook>>;
+	invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
+	registerHook(hookType: hooksTypes, cb: hook): void;
+	registerFlowChecker(cb: (opts: object) => unknown): void;
 }
 
 // createTypesCollection function type
@@ -365,37 +410,33 @@ export type CreateTypesCollectionFunction = (config?: constructorOptions) => Typ
 // Type class - base type constructor
 export type TypeClass = IDefinitorInstance<object>;
 
-// Generic type class
-export interface ITypeClass<T> {
-	new(...args: unknown[]): T;
-	(this: T, ...args: unknown[]): T;
-	define: ITypeAbsorber<T>;
-	lookup: TypeLookup;
-	registerHook(hookType: hooksTypes, cb: hook): void;
+// Mnemonica constructor — the constructor function returned by constructHandler()
+// Has SymbolConstructorName attached and is both newable and callable
+export interface MnemonicaConstructor extends NewableFunction {
+	new (...args: unknown[]): object;
+	(this: object, ...args: unknown[]): unknown;
+	[key: symbol]: unknown;
 }
 
-// Generic type absorber
-export type ITypeAbsorber<T> = (
-	this: unknown,
-	TypeName: string,
-	constructHandler: IDEF<T>,
-	proto?: object,
-	config?: constructorOptions
-) => ITypeClass<T>;
+// Type descriptor instance — internal shape of TypeDescriptor objects
+export interface TypeDescriptorDefine extends CallableFunction {
+	(
+		TypeOrTypeName: string | CallableFunction,
+		constructHandlerOrConfig?: CallableFunction | object,
+		config?: object
+	): TypeClass;
+}
 
-// Type descriptor instance
+export interface TypeDescriptorLookup extends CallableFunction {
+	(TypeNestedPath: string): TypeClass | undefined;
+}
+
 export type TypeDescriptorInstance = {
-	define: CallableFunction;
-	lookup: CallableFunction;
-	subtypes: object;
+	define: TypeDescriptorDefine;
+	lookup: TypeDescriptorLookup;
+	subtypes: Map<string, object>;
 	TypeName: string;
 };
-
-// TypeDescriptor constructor type
-export type TypeDescriptorConstructor = TypeConstructor<TypeDescriptorInstance>;
-
-// TypesCollection constructor type
-export type TypesCollectionConstructor = TypeConstructor<object>;
 
 // Constructor type for decorate function
 export type Constructor<T = object> = new (...args: unknown[]) => T;
@@ -410,25 +451,22 @@ export type DecoratedClass<T extends Constructor<object>> =
 		TypeName: string;
 	};
 
-// Function that returns a constructor (factory pattern)
-export type ConstructorFactory<T> = () => Constructor<T>;
-
 // Apply/Call/Bind function types
 export type ApplyFunction = <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Ctor: IDEF<T>,
+	Constructor: IDEF<T>,
 	args?: unknown[]
 ) => S;
 
 export type CallFunction = <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Ctor: IDEF<T>,
+	Constructor: IDEF<T>,
 	...args: unknown[]
 ) => S;
 
 export type BindFunction = <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Ctor: IDEF<T>
+	Constructor: IDEF<T>
 ) => (...args: unknown[]) => S;
 
 // Utils object type
@@ -452,7 +490,7 @@ export interface MnemonicaModule {
 	call: CallFunction;
 	bind: BindFunction;
 	decorate: <U extends Constructor<object>>(target?: object, config?: object) => DecoratedClass<U>;
-	registerHook: <T extends object>(Ctor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
+	registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
 
 	// Descriptors
 	defaultTypes: TypesCollection;

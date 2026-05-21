@@ -9,22 +9,22 @@ const {
 	WRONG_INSTANCE_INVOCATION
 } = ErrorsTypes;
 
-import { cleanupStack, getStack } from '../errors';
+import {
+	cleanupStack, getStack 
+} from '../errors';
 
 import { utils } from '../../utils';
-const {
-	parse
-} = utils;
+const { parse } = utils;
 
 import TypesUtils from '../utils';
 
-const {
-	makeErrorModificatorType
-} = TypesUtils;
+const { makeErrorModificatorType } = TypesUtils;
 
 import { makeInstanceModificator } from '../types/InstanceModificator';
 
-import { _getProps, Props } from '../types/Props';
+import {
+	_getProps, Props 
+} from '../types/Props';
 
 const checkThrowArgs = ( instance: unknown, target: unknown, error: Error, args: unknown[] ) => {
 
@@ -51,23 +51,35 @@ const checkThrowArgs = ( instance: unknown, target: unknown, error: Error, args:
 		return;
 	}
 
-	odp( wrongThrow, 'instance', {
-		get () {
-			return instance;
-		}
-	} );
+	odp(
+		wrongThrow,
+		'instance',
+		{
+			get () {
+				return instance;
+			}
+		} 
+	);
 
-	odp( wrongThrow, 'error', {
-		get () {
-			return error;
-		}
-	} );
+	odp(
+		wrongThrow,
+		'error',
+		{
+			get () {
+				return error;
+			}
+		} 
+	);
 
-	odp( wrongThrow, 'args', {
-		get () {
-			return args;
-		}
-	} );
+	odp(
+		wrongThrow,
+		'args',
+		{
+			get () {
+				return args;
+			}
+		} 
+	);
 
 	throw wrongThrow;
 
@@ -93,39 +105,60 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 	 
 	const exception = this;
 
-	odp( exception, 'args', {
-		get () {
-			return args;
-		}
-	} );
+	odp(
+		exception,
+		'args',
+		{
+			get () {
+				return args;
+			}
+		} 
+	);
 
-	odp( exception, 'originalError', {
-		get () {
-			return error;
-		}
-	} );
+	odp(
+		exception,
+		'originalError',
+		{
+			get () {
+				return error;
+			}
+		} 
+	);
 
-	odp( exception, 'instance', {
-		get () {
-			return instance;
-		}
-	} );
+	odp(
+		exception,
+		'instance',
+		{
+			get () {
+				return instance;
+			}
+		} 
+	);
 
-	odp( exception, 'extract', {
-		get () {
-			return () => {
-				return instance.extract();
-			};
-		}
-	} );
+	odp(
+		exception,
+		'extract',
+		{
+			get () {
+				return () => {
+					return instance.extract();
+				};
+			}
+		} 
+	);
 
-	odp( exception, 'parse', {
-		get () {
-			return () => {
-				return parse( instance );
-			};
-		}
-	} );
+	odp(
+		exception,
+		'parse',
+		{
+			get () {
+				return () => {
+					const result = parse( instance );
+					return result;
+				};
+			}
+		} 
+	);
 
 	// real error stack
 	const errorStack = exception.stack!.split( '\n' );
@@ -134,7 +167,12 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 
 	const title = `\n<-- lifecycle of [ ${TypeName} ] traced -->`;
 
-	getStack.call( exception, title, [], prepareException );
+	getStack.call(
+		exception,
+		title,
+		[],
+		prepareException 
+	);
 
 	 
 	stack.push( ...(exception.stack as unknown as string[]) );
@@ -152,11 +190,15 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 
 	const exceptionStack = cleanupStack( stack ).join( '\n' );
 
-	odp( exception, 'stack', {
-		get () {
-			return exceptionStack;
+	odp(
+		exception,
+		'stack',
+		{
+			get () {
+				return exceptionStack;
+			}
 		}
-	});
+	);
 
 	return exception;
 
@@ -168,7 +210,12 @@ const prepareException = function ( this: object, target: unknown, error: Error,
 	 
 	const instance = this;
 
-	checkThrowArgs( instance, target, error, args );
+	checkThrowArgs(
+		instance,
+		target,
+		error,
+		args 
+	);
 
 	const props = _getProps(instance) as Props;
 
@@ -192,20 +239,29 @@ const prepareException = function ( this: object, target: unknown, error: Error,
 	*/
 
 	const ExceptionCreator = Object.create( __creator__ );
-	ExceptionCreator.config = Object.assign( {}, __creator__.config );
+	ExceptionCreator.config = Object.assign(
+		{},
+		__creator__.config 
+	);
 	ExceptionCreator.config.blockErrors = false;
 
 	ExceptionCreator.existentInstance = error;
 	 
-	ExceptionCreator.ModificatorType = makeErrorModificatorType( TypeName, function (this: Error) {
-		return exceptionConsctructHandler.call( this, {
-			instance,
-			TypeName,
-			typeStack,
-			args,
-			error
-		} );
-	} );
+	ExceptionCreator.ModificatorType = makeErrorModificatorType(
+		TypeName,
+		function (this: Error) {
+			return exceptionConsctructHandler.call(
+				this,
+				{
+					instance,
+					TypeName,
+					typeStack,
+					args,
+					error
+				} 
+			);
+		} 
+	);
 
 	ExceptionCreator.InstanceModificator = makeInstanceModificator( ExceptionCreator );
 

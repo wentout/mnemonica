@@ -11,17 +11,16 @@ const {
 	MNEMOSYNE,
 } = constants;
 
-const {
-	WRONG_TYPE_DEFINITION,
-} = ErrorsTypes;
+const { WRONG_TYPE_DEFINITION, } = ErrorsTypes;
 
-const {
-	collectConstructors
-} = utils;
+const { collectConstructors } = utils;
 
-import { _getProps, Props } from '../types/Props';
+import {
+	_getProps, Props 
+} from '../types/Props';
+import type { MnemonicaConstructor } from '../../types';
 
-import compileNewModificatorFunctionBody from '../types/compileNewModificatorFunctionBody';
+import compileNewModificatorFunctionBody, { ConstructHandler } from '../types/compileNewModificatorFunctionBody';
 
 // CreationHandler - handles constructor return values
 // Moved to api/types/index.ts as per refactoring plan
@@ -69,9 +68,18 @@ const getTypeChecker = (TypeName: string) => {
 const getTypeSplitPath = (path: string) => {
 	const split = path
 		// beautifull names
-		.replace(/\n|\t| /g, '')
-		.replace(/\[(\w+)\]/g, '.$1')
-		.replace(/^\./, '')
+		.replace(
+			/\n|\t| /g,
+			''
+		)
+		.replace(
+			/\[(\w+)\]/g,
+			'.$1'
+		)
+		.replace(
+			/^\./,
+			''
+		)
 		.split(/\.|\/|:/);
 	return split;
 };
@@ -100,12 +108,15 @@ const getExistentAsyncStack = (existentInstance: asyncStack): unknown => {
 		const pstack = props
 			.__stack__
 			.split('\n')
-			.reduce((arr: string[], line: string) => {
-				if (line.length) {
-					arr.push(line);
-				}
-				return arr;
-			}, []);
+			.reduce(
+				(arr: string[], line: string) => {
+					if (line.length) {
+						arr.push(line);
+					}
+					return arr;
+				},
+				[]
+			);
 
 		proto = proto.parent();
 
@@ -114,7 +125,10 @@ const getExistentAsyncStack = (existentInstance: asyncStack): unknown => {
 		if (proto && protoProps && protoProps.__type__) {
 
 			if (protoProps.__type__.isSubType) {
-				stack.push(...pstack.slice(0, 1));
+				stack.push(...pstack.slice(
+					0,
+					1
+				));
 			} else {
 				stack.push(...pstack);
 			}
@@ -148,6 +162,7 @@ const checkTypeName = (name: string) => {
 };
 
 export type parentSub = {
+	TypeName: string;
 	__type__: {
 		subtypes: Map<string, parentSub>
 	}
@@ -168,7 +183,10 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 			const _subtype = props.__type__.subtypes.get(subType);
 			subtype = _subtype;
 		} else {
-			subtype = findSubTypeFromParent(props.__parent__, subType);
+			subtype = findSubTypeFromParent(
+				props.__parent__,
+				subType
+			);
 		}
 	}
 	 
@@ -183,7 +201,7 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 
 // accordingly to the gist from here:
 // https://gist.github.com/wentout/ea3afe9c822a6b6ef32f9e4f3e98b1ba
-const isClass = (fn: CallableFunction) => {
+const isClass = (fn: ConstructHandler) => {
 	
 	const str = String(fn);
 	return str.indexOf('class ') === 0;
@@ -223,19 +241,19 @@ const isClass = (fn: CallableFunction) => {
 const makeErrorModificatorType = (
 	TypeName: string,
 	ErrorModificator = function () { }
-) => {
+): MnemonicaConstructor => {
 
 	const modificatorBody = compileNewModificatorFunctionBody(TypeName);
 
 	// CreationHandler is now defined locally in api/types/index.ts
-	const modificatorType: any = modificatorBody(
+	const modificatorType = modificatorBody(
 		ErrorModificator,
 		CreationHandler,
 		SymbolConstructorName
 	);
 
 	const result = modificatorType();
-	return result;
+	return result as MnemonicaConstructor;
 
 };
 
@@ -246,13 +264,17 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 
 	if (_thisArg === null) {
 		thisArg = Object.create(null);
-		odp(thisArg, Symbol.toPrimitive, {
-			get () {
-				return () => {
-					return _thisArg;
-				};
+		odp(
+			thisArg,
+			Symbol.toPrimitive,
+			{
+				get () {
+					return () => {
+						return _thisArg;
+					};
+				}
 			}
-		});
+		);
 	}
 
 	if (
@@ -260,13 +282,17 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 		_thisArg instanceof Boolean ||
 		_thisArg instanceof String
 	) {
-		odp(thisArg, Symbol.toPrimitive, {
-			get () {
-				return () => {
-					return (_thisArg as String | Number | Boolean).valueOf();
-				};
+		odp(
+			thisArg,
+			Symbol.toPrimitive,
+			{
+				get () {
+					return () => {
+						return (_thisArg as String | Number | Boolean).valueOf();
+					};
+				}
 			}
-		});
+		);
 	}
 
 	return thisArg;
