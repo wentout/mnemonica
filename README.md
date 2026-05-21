@@ -443,7 +443,7 @@ Additional packages are in active development.
 ![GitHub last commit](https://img.shields.io/github/last-commit/wentout/mnemonica)
 [![NPM](https://nodei.co/npm/mnemonica.png?mini=true)](https://www.npmjs.com/package/mnemonica)
 
-**Status:** stable. The full documented API is committed to.
+**Status:** stable for the documented core API — the surface listed above is committed to. New ecosystem packages are in active development.
 
 ```bash
 npm install mnemonica
