@@ -68,9 +68,9 @@ export const define = function <
 	// Type assertion needed because TypesCollectionProxy is a Proxy
 	return (types as { define: TypeAbsorber })
 		.define(
-TypeName as string,
-constructHandler as IDEF<T>,
-config
+			TypeName as string,
+			constructHandler as IDEF<T>,
+			config
 		) as unknown as R;
 } as TypeAbsorber;
 
@@ -214,8 +214,8 @@ export const decorate = function <
 		if (parentType === undefined) {
 			const decoratorResult = define(
 				name,
-cstr as IDEF<object>,
-opts
+				cstr as IDEF<object>,
+				opts
 			) as unknown as DecoratedClass<U>;
 			return decoratorResult;
 		}
@@ -224,8 +224,8 @@ opts
 		};
 		const defineResult = parent.define(
 			name,
-cstr as IDEF<object>,
-opts
+			cstr as IDEF<object>,
+			opts
 		) as unknown as DecoratedClass<U>;
 		return defineResult;
 	};

@@ -60,6 +60,37 @@ on staged `src/**/*.ts` and `test/**/*.js`.
 - `proto` — staging branch for the next release.
 - Feature branches branch off `proto` and merge back via PR.
 
+## Working principles
+
+Three guidelines that make contribution safer and reviews faster. They apply
+equally to human and AI contributors; AI agents should also read Rule #1 in
+[`AGENTS.md`](./AGENTS.md).
+
+### 1. Ask before you assume
+
+If you find yourself filling gaps with "probably", "likely", or
+"I think it should work" — stop and ask. A wrong assumption costs more than
+the conversation it would have taken to clarify. Do not invent workarounds
+to make an error go away; investigate the root cause.
+
+### 2. Test before you refactor
+
+For any non-trivial change, write the test first (or alongside). Five minutes
+adding a test saves hours of debugging. If a function is hard to test, the
+design is the bug — split it. Both test runners (Mocha + Jest) must stay
+green and at 100% coverage.
+
+### 3. Plan in small steps
+
+Avoid large multi-file changes that can only be verified at the end. Plans
+should be:
+
+- **Achievable** — small enough to verify in one step
+- **Testable** — each step has a clear pass/fail check
+- **Incremental** — replace one piece, verify it works, then proceed
+
+If something is marked as fragile in the docs or by reviewers, believe it.
+
 ## What requires explicit approval
 
 Per [AGENTS.md](AGENTS.md):

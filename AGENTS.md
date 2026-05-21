@@ -1,9 +1,33 @@
 # AGENTS.md
 
-> **First:** Read the root [`/AGENTS.md`](/AGENTS.md) for Rule #1 (PAUSE AND ASK)
-> — the highest-priority rule that overrides everything else.
+This file provides guidance specific to **mnemonica/core** for AI agents
+modifying the library itself. If you are *using* mnemonica in your own
+project, start with [`README.md`](./README.md).
 
-This file provides guidance specific to **mnemonica/core**.
+---
+
+## Rule #1 — Non-negotiable: PAUSE AND ASK
+
+**This is the highest-priority rule. It overrides everything else in this file.**
+
+You MUST pause and ask the user before proceeding if any of these is true:
+
+1. **An editing error occurred** — `Edit` failed, `Write` produced unexpected
+   results, or any tool returned an error.
+2. **You are uncertain** — about what change to make, how a function works,
+   or what the user intended.
+3. **You are filling gaps with assumption** — "probably", "likely",
+   "I think", "it should work" are signals to stop.
+
+When in doubt: STOP, ask a clear specific question, WAIT for the answer.
+Do not invent workarounds (no `sed`, no `python -c`, no console hacks).
+
+The reason this rule exists: wrong assumptions waste both your time and the
+user's. The library encodes non-obvious design intent (data-flow vs control-flow,
+`define()` semantics, the proxy architecture, the return-via-variable rule).
+Confident guesses produce code that compiles but corrupts the design.
+
+---
 
 > **Note:** Framework-agnostic rules are also available in `.ai/`:
 > [`AGENTS.md`](./.ai/AGENTS.md), [`CODE.md`](./.ai/CODE.md),
@@ -11,28 +35,11 @@ This file provides guidance specific to **mnemonica/core**.
 > [`async_init.md`](./.ai/async_init.md).
 > These rules apply to all agent frameworks.
 
-## Project Overview
+## What and why
 
-**mnemonica** is an instance inheritance system for JavaScript/TypeScript that enables prototype chain-based type definitions. It allows creating types using `define()` and building inheritance hierarchies through prototype chains.
+For the library's thesis, the four data mistakes it eliminates, the Trie observation, the pipeline pattern, and the HoTT framing, read [`README.md`](./README.md). This file assumes you have.
 
-### Vision & Philosophy
-
-Mnemonica solves the fundamental problem that JavaScript prototype inheritance is a Trie data structure, but developers don't realize this. Common mistakes include:
-- Using assignment instead of `Object.setPrototypeOf` (breaks `instanceof`)
-- Reusing constructors directly (corrupts existing instances' prototype chains)
-- Not understanding the Factory pattern requirement
-
-**Mnemonica forces explicit declaration of inheritance graphs**, eliminating these bugs by design. The ultimate goal is to **reduce the cost of software development and support** by making certain classes of bugs impossible.
-
-### AI Integration Vision
-
-Mnemonica enables AI agents to:
-1. **Structure thinking** through explicit constructor chains
-2. **Self-extend** by defining new features via `define()` calls
-3. **Analyze behavior** through stored invocation arguments (accessible via `getProps()`)
-4. **Become more capable** by understanding the inheritance graph
-
-The stored arguments in the prototype chain allow AI to introspect and learn from its own execution history.
+The short version for editors: mnemonica is an instance inheritance system; `define()` declares types; subtypes are constructed from parent *instances* via `new instance.SubType(args)`; the prototype chain back to root IS the identity; construction context is stored in a WeakMap and exposed via `getProps()`.
 
 ## Agent Reading Guide
 
@@ -84,38 +91,24 @@ The core API is `define(TypeName, constructHandler, config?)` in `src/index.ts`.
 - `.registerHook()` - register lifecycle hooks
 
 ### The `lookupTyped()` Function
-Type-safe variant of `lookup()` for use with tactica-generated type definitions:
 
-```typescript
-import { lookupTyped } from 'mnemonica';
-
-// Requires TypeRegistry augmentation from tactica
-const UserType = lookupTyped('UserType');
-const user = new UserType({ name: 'John' }); // Full type safety!
-```
-
-The `lookupTyped()` function uses the same implementation as `lookup()` but provides TypeScript type safety through the `TypeRegistry` interface that tactica generates.
-
-**How It Works:**
-
-The `TypeRegistry` interface uses a `[key: string]: never` pattern:
+For user-facing semantics, see [`README.md`](./README.md) and [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` exposes a `[key: string]: never` index so that any lookup against an unaugmented registry is a compile-time error.
 
 ```typescript
 // In mnemonica core (src/index.ts)
 export interface TypeRegistry {
-	[key: string]: never;  // Prevents usage without augmentation
+	[key: string]: never;  // forces augmentation before keys resolve to real types
 }
 
-// The lookupTyped function constrains keys to valid registry entries
 export const lookupTyped = function <const K extends keyof TypeRegistry>(
 	TypeNestedPath: K
 ): TypeRegistry[K] {
-	// Runtime delegates to lookup(), types are compile-time only
+	// Runtime delegates to lookup(); type safety is compile-time only.
 	return types.lookup(TypeNestedPath as string) as TypeRegistry[K];
 };
 ```
 
-**Augmentation Pattern (generated by tactica):**
+Tactica generates the augmentation:
 
 ```typescript
 // In .tactica/registry.ts (generated)
@@ -127,19 +120,11 @@ declare module 'mnemonica' {
 }
 ```
 
-**Key differences from `lookup()`:**
-- Returns properly typed constructor when TypeRegistry is augmented
-- Falls back to `unknown` type when registry is not augmented
-- Same runtime behavior as `lookup()`
-
-**Usage pattern with tactica:**
-1. Run `npx tactica` to generate `.tactica/types.ts`
-2. Import types in your project
-3. Use `lookupTyped()` for type-safe type retrieval
+Runtime behavior is identical to `lookup()`; the only difference is the compile-time constraint on the key.
 
 > **Roadmap.** Nested `lookupTyped()` (a type-safe `.lookupTyped()` method
 > on constructors that preserves the prototype chain) is designed but not
-> yet shipped. See the `## Roadmap` section in [README.md](README.md).
+> yet shipped.
 
 ### Type System Structure
 ```
@@ -163,11 +148,10 @@ The library makes heavy use of JavaScript Proxies:
 - **TypesCollection Proxy** (`src/descriptors/types/index.ts`): Dynamic type lookup
 
 ### Internal Instance Properties
-Instances have non-enumerable internal properties accessed via `getProps()`:
-- `__type__` - Type definition object
-- `__parent__` - Parent instance reference
-- `__args__` - Constructor arguments
-- `__collection__` - Types collection reference
+
+Stored in a `WeakMap` keyed by the instance, not as own properties on the instance itself. Access via `getProps(instance)`. For the full property list (9 entries, with meanings) see the **Internal instance properties** table in [`README.md`](./README.md) — that table is the canonical reference.
+
+`setProps(instance, values)` is the mutating counterpart; rarely needed and considered advanced.
 
 ## Build Requirements
 

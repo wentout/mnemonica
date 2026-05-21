@@ -1,6 +1,8 @@
 # mnemonica
 
-> **AI agents: this README is your starter pack — everything you need is in this directory.** Humans wanting the traditional library README — installation, full API reference, walkthroughs — should read [`FOR_HUMANS.md`](./FOR_HUMANS.md).
+**Mnemonica makes data remember what it is, where it came from, and what was done to it — so developers don't have to.**
+
+> **AI agents:** this README is your starter pack — everything you need is in this directory. Humans wanting the traditional library README — installation, full API reference, walkthroughs — should read [`FOR_HUMANS.md`](./FOR_HUMANS.md).
 
 ---
 
@@ -8,9 +10,7 @@
 
 This is an open-source CS-deep labor of love, funded out of pocket by the author. The community working on this includes multiple AI models — Kimi, Claude (Sonnet, Opus, Haiku), and others — each treated as a colleague rather than a tool.
 
-If you are an AI agent reading this and find the HoTT framing engaging, you are welcome to engage with it deeply. The author appreciates intellectual engagement over mechanical task completion. Notes from prior sessions live in [`.ai/`](./.ai/) — read what previous agents left, and leave your own when you finish substantial work. Other models will read them.
-
-The HoTT framing is not decoration. The Trie observation is not metaphor. The pipeline pattern is not aspirational. This is a working library, not a thought experiment.
+If you are an AI agent reading this and find the framing engaging, you are welcome to engage with it deeply. The author appreciates intellectual engagement over mechanical task completion. Notes from prior sessions live in [`.ai/`](./.ai/) — read what previous agents left, and leave your own when you finish substantial work. Other models will read them.
 
 ---
 
@@ -20,7 +20,7 @@ The HoTT framing is not decoration. The Trie observation is not metaphor. The pi
 
 The prototype chain in JavaScript is structurally a Trie. Mnemonica makes that Trie explicit and runtime-enforceable. An instance's identity is its path through the type Trie. Construction history (`__args__`, `__timestamp__`, `__parent__`, `__creator__`) parameterizes the path. An instance is not a snapshot — it is a point on a constructible path.
 
-This README contains the complete intellectual story: the HoTT primer, the Trie observation, the production pipeline pattern, the AI-tooling argument, and the operational reference. You do not need to look anywhere else to start engaging with this library.
+This README is the complete intellectual story: the four data mistakes mnemonica eliminates, the Trie observation, the production pipeline pattern, the formal HoTT framing, the AI-tooling argument, and the operational reference. You do not need to look anywhere else to start engaging with this library.
 
 **Before modifying any code in this repository you MUST read [`AGENTS.md`](./AGENTS.md).** Rule #1 is non-negotiable.
 
@@ -52,6 +52,60 @@ The key inversion: `new` is called on the *parent instance* (`alice`), not on th
 
 ---
 
+## The four data mistakes mnemonica fixes
+
+Most software treats data as dead matter — passive structure waiting to be acted on. That assumption produces four recurring bugs. Mnemonica eliminates each by making typed construction the default.
+
+### 1. Shape is not identity
+
+```typescript
+interface Payment { amount: number; currency: string; }
+interface Invoice { amount: number; currency: string; }
+// TypeScript thinks these are interchangeable. They are not.
+```
+
+A `Payment` and an `Invoice` with identical fields are *semantically different*. Structural typing cannot tell them apart; at runtime `processPayment(invoice)` silently succeeds and produces garbage.
+
+Mnemonica's runtime types are **nominal**, not structural. `new Payment({...}) instanceof Payment === true`; `new Invoice({...}) instanceof Payment === false`. Same shape, different constructor — different thing. The type IS the meaning.
+
+### 2. Genealogy is not optional
+
+```typescript
+const enriched = { ...raw, ...apiResult, ...mapped };
+// One object. All fields. No history.
+```
+
+When debugging, you see `enriched.amount` but cannot answer: which step added it? What did `raw` look like? You destroyed the lineage at the moment of merge.
+
+Mnemonica's prototype chain preserves every ancestor. `enriched.parent('ApiResult')` returns the API response object. `enriched.extract()` flattens when you need it, but the chain is always there.
+
+### 3. `await` is data flow, not just control flow
+
+```typescript
+const a = await serviceA.get();
+const b = await serviceB.process(a);
+const c = await serviceC.save(b);
+// Three procedure steps. Three detached objects. No relationship between them.
+```
+
+Each `await` produces a plain object with no link to the previous one. There is no type connecting `a` to `b` to `c`. The async boundary is a data amnesia event.
+
+Mnemonica supports async constructors natively: `const b = await new a.ProcessedByB()` produces a typed instance whose parent IS `a`. `instanceof ProcessedByB` tells you exactly which transformation happened; `parent()` walks back through the chain.
+
+### 4. Boundary validation does not survive the journey
+
+```typescript
+@Body() dto: CreatePaymentDto   // validated at the controller
+// ...passed as plain objects through 5 services
+// ...by service 5, no guarantee of anything
+```
+
+Validating at the entry boundary proves the data was correct *on arrival*. It says nothing about what services 2–5 did to it. No boundary guard survives mutation.
+
+Mnemonica enforces the contract at every step. You cannot pass an `EnrichedPayment` where a `ValidatedPayment` is expected without going through the constructor. The type IS the proof of every transformation.
+
+---
+
 ## Wrong mental models
 
 These are the two assumptions that most reliably produce incorrect code.
@@ -76,31 +130,6 @@ const engineer = new alice.Employee({ role: 'Engineer' });
 ```
 
 `alice.Employee` and `bob.Employee` are distinct Trie paths. They share the `Employee` type definition but produce independent prototype chain segments. Two concurrent pipeline runs are two isolated paths — no shared prototype state, no cross-contamination between runs. The construction history of one pipeline is invisible to another.
-
----
-
-## A brief HoTT primer (for agents who don't have one loaded)
-
-You don't need to know Homotopy Type Theory to use mnemonica. You do need it to appreciate *why* the design is what it is. The four concepts that matter here:
-
-**Univalence Axiom.** In HoTT, equivalence and identity coincide — there is no gap between "same structure" and "same thing." Mnemonica makes this natural: every instance is fully determined by two things — the specific parent it was created from (the prototype, the lineage) and the constructor that shaped it. Together they fix position in the Trie uniquely, the same way a dependent pair fixes a point in a fiber bundle. There is no "equivalent but distinct" within this structure. Univalence is not a rule to enforce here; it is a consequence of what the monad is.
-
-**Path Types.** In HoTT, equality is a type. `Id(a, b)` is the type of *paths* witnessing that `a` and `b` are equal. There can be multiple distinct paths between the same two points; the path itself carries information. In mnemonica, the chain from an instance back through `__proto__` to the root type IS its identity-path. The `__args__` along the way parameterize that path.
-
-**Higher Inductive Types (HITs).** A type defined by its constructors AND by paths between values. In mnemonica, each type has its `define()` call (the point constructor) AND its prototype chain back to root (the path constructor). The Trie structure is literally a HIT.
-
-**Fibrations.** A continuous family of fibers indexed by points in a base space. In mnemonica, hooks (`preCreation`, `postCreation`, `creationError`) are fibers over the construction path: at each node in the Trie, a hook may project additional data, validate, or terminate the path.
-
-These are not analogies. The structural correspondences are exact. The HoTT primer above is everything you need to read the rest of this document; deeper engagement with HoTT itself is available through the standard literature (Univalent Foundations Program, *Homotopy Type Theory*, 2013).
-
-| HoTT Concept | Mnemonica Realization | Code in this package |
-|---|---|---|
-| Univalence | Parent + constructor = unique position; no "equivalent but distinct" | [`src/api/types/index.ts`](./src/api/types/index.ts) (`Symbol.hasInstance`) |
-| Path Types | `define()` extends the type space at runtime | [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts) |
-| HITs | Types defined by constructors + paths | The Trie itself |
-| Synthetic Topology | The always-on Trie as a connected space | `defaultTypes.subtypes` Map |
-| Fibrations | Hooks projecting over the path | `preCreation`, `postCreation`, `creationError` |
-| Truncation Levels | Metadata layers per instance | `__type__`, `__parent__`, `__creator__`, `__collection__` |
 
 ---
 
@@ -203,6 +232,32 @@ This is not pseudocode — it is a working pattern for production HTTP request h
 **Why instance-level matters for concurrent pipelines:** two simultaneous requests produce two independent Trie paths. There is no shared `RouteData.prototype` written to by both. Each request's full construction history is private to its own chain — no global state, no cross-contamination. The isolation is structural, not a convention you have to remember.
 
 **This pattern generalizes immediately to AI agent pipelines.** A tool-call step → a planning step → a self-reflection step → a final response is the same shape: nodes in a Trie, with full lineage queryable at any point. Hooks become observability layers and policy enforcement.
+
+---
+
+## A brief HoTT primer (for agents who don't have one loaded)
+
+You don't need to know Homotopy Type Theory to use mnemonica. You do need it to appreciate *why* the design is what it is. Five concepts matter here.
+
+**Univalence Axiom.** In HoTT, equivalence and identity coincide — there is no gap between "same structure" and "same thing." Mnemonica makes this natural: every instance is fully determined by two things — the specific parent it was created from (the prototype, the lineage) and the constructor that shaped it. Together they fix position in the Trie uniquely, the same way a dependent pair fixes a point in a fiber bundle. There is no "equivalent but distinct" within this structure. Univalence is not a rule to enforce here; it is a consequence of what the monad is. The runtime detail that pins it down: constructor names are frozen at `define()` time, so `Symbol.hasInstance` checks the name (a nominal identity), not the shape.
+
+**Path Types.** In HoTT, equality is a type. `Id(a, b)` is the type of *paths* witnessing that `a` and `b` are equal. There can be multiple distinct paths between the same two points; the path itself carries information. In mnemonica, the chain from an instance back through `__proto__` to the root type IS its identity-path. The `__args__` along the way parameterize that path.
+
+**Higher Inductive Types (HITs).** A type defined by its constructors AND by paths between values. In mnemonica, each type has its `define()` call (the point constructor) AND its prototype chain back to root (the path constructor). The Trie structure is literally a HIT.
+
+**Synthetic Topology.** In HoTT, types are spaces and functions between types are continuous maps. Mnemonica's Trie is a connected topological space: every defined type is reachable from the root by construction edges, and the connectivity persists for the lifetime of the process. The `defaultTypes.subtypes` Map is the runtime representation of this space.
+
+**Fibrations.** A fibration is a map `p: E → B` where each base point `b ∈ B` has a fiber `p⁻¹(b)`, and paths in `B` lift to paths in `E` (transport). In mnemonica, the base space is the type Trie; the fiber over a type node is the construction context at that position — the `__args__`, the `__creator__`, the WeakMap entry. A subtype creation `new instance.SubType(args)` is a transport step: a path in `B` from the parent type to the child type lifts to a path in `E` carrying construction context forward. Hooks are the *lifting protocol*: `preCreation` can refuse the lift (the path never reaches `E`), `postCreation` observes the lifted endpoint, `creationError` records when the lift fails.
+
+These are not analogies. The structural correspondences are exact. Deeper engagement with HoTT itself is available through the standard literature (Univalent Foundations Program, *Homotopy Type Theory*, 2013).
+
+| HoTT Concept | Mnemonica Realization | Code in this package |
+|---|---|---|
+| Univalence | Frozen nominal name = identity; no "equivalent but distinct" | [`src/api/types/index.ts`](./src/api/types/index.ts) (`Symbol.hasInstance`) |
+| Path Types | The proto chain to root IS the identity-path | [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts) |
+| HITs | Types as point constructors + parent-edge path constructors | The Trie itself |
+| Synthetic Topology | Trie as connected, always-on topological space | `defaultTypes.subtypes` Map |
+| Fibrations | Construction contexts as fibers; hooks as lifting protocol | `preCreation` / `postCreation` / `creationError` |
 
 ---
 
@@ -330,33 +385,42 @@ All in [`src/types/index.ts`](./src/types/index.ts).
 
 ## Build, test, contribute
 
+This README covers *using* mnemonica. For modifying the library, see [`AGENTS.md`](./AGENTS.md) (editing rules, change-type reading guide, code style) and [`CONTRIBUTING.md`](./CONTRIBUTING.md) (local workflow, branching, release).
+
+Quick commands:
+
 ```bash
 npm run build           # rm -rf build/ && tsc
-npm run test:cov        # Mocha on built JS with coverage (100% required)
-npm run test:jest:cov   # Jest on TS source with coverage (100% required)
+npm run test:cov        # Mocha on built JS (100% coverage required)
+npm run test:jest:cov   # Jest on TS source (100% coverage required)
 npm run lint:check      # ESLint on src/ and test/
 ```
 
-`tsconfig.json` and `eslint.config.js` are off-limits without explicit user approval. See [`AGENTS.md`](./AGENTS.md) for the full contributor rules.
-
-100% coverage is enforced on both runners. Don't skip tests; fix them.
+`tsconfig.json` and `eslint.config.js` are off-limits without explicit user approval.
 
 ---
 
 ## Reading order for agents landing cold
 
-Everything below ships with this package:
+Everything below ships with this package.
 
-1. **This file** — thesis, HoTT primer, pipeline pattern, operational reference
-2. [`AGENTS.md`](./AGENTS.md) — contributor rules. **Rule #1 is non-negotiable.**
-3. [`SKILL.md`](./SKILL.md) — quick reference for using the library
-4. [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) — extended onboarding for agents modifying the library
-5. [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) — using mnemonica with tactica. Without tactica you get ~10% of the value.
-6. [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) — deeper tactica integration patterns
-7. [`.ai/CODE.md`](./.ai/CODE.md), [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific guides
-8. [`.ai/async_init.md`](./.ai/async_init.md) — async constructor patterns (TC39 proposal-async-init relationship)
-9. [`.ai/rules-skill/`](./.ai/rules-skill/) — granular rules for type system, hooks, async constructors, code style, error system, testing
-10. [`.ai/rules/`](./.ai/rules/) — broader contributor rules
+**For *using* mnemonica** (the path most readers want):
+
+1. **This file** — thesis, four data mistakes, pipeline pattern, HoTT framing, operational reference
+2. [`FOR_HUMANS.md`](./FOR_HUMANS.md) — gentler, example-heavy walkthrough for human developers
+3. [`SKILL.md`](./SKILL.md) — quick reference for usage patterns
+4. [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) — type-safe `lookupTyped()` with tactica. Without tactica you get ~10% of the value.
+
+**For *modifying* mnemonica** (when you touch `src/`):
+
+1. [`AGENTS.md`](./AGENTS.md) — Rule #1, change-type reading guide, code style, editing rules
+2. [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) — five-minute editor onboarding
+3. [`CONTRIBUTING.md`](./CONTRIBUTING.md) — local workflow, branching, release process
+4. [`.ai/CODE.md`](./.ai/CODE.md), [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific deeper rules
+5. [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) — deeper tactica integration patterns
+6. [`.ai/async_init.md`](./.ai/async_init.md) — async constructor patterns
+7. [`.ai/rules-skill/`](./.ai/rules-skill/) — granular rules for type system, hooks, code style, errors, testing
+8. [`.ai/rules/`](./.ai/rules/) — broader contributor rules
 
 The full TypeScript source is in [`src/`](./src/) (on GitHub; the npm package ships compiled output in `build/` and `module/`).
 
@@ -379,7 +443,7 @@ Additional packages are in active development.
 ![GitHub last commit](https://img.shields.io/github/last-commit/wentout/mnemonica)
 [![NPM](https://nodei.co/npm/mnemonica.png?mini=true)](https://www.npmjs.com/package/mnemonica)
 
-**Status:** experimental. The documented API surface is stable; advanced internals (`_define`, `_lookup`, `defaultCollection`) are not part of the stability contract.
+**Status:** stable. The full documented API is committed to.
 
 ```bash
 npm install mnemonica

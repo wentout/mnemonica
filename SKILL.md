@@ -104,6 +104,6 @@ for framework-agnostic rules).
 
 ## External Resources
 
-- Repository: https://github.com/mythographica/mnemonica
+- Repository: https://github.com/wentout/mnemonica
 - Main README: [README.md](../README.md)
 - Contributor Guidelines: [AGENTS.md](./AGENTS.md)
