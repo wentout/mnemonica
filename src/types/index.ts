@@ -31,8 +31,8 @@ export type ErrorMessageKey =
 // Error messages object type
 export type ErrorMessages = Record<ErrorMessageKey, string>;
 
-// Hook callback function passed to registerHook and invoked by invokeHook
-export interface HookFunction extends CallableFunction {
+// Hook callback — passed to registerHook and invoked by invokeHook
+export interface hook extends CallableFunction {
 	(opts: hooksOpts): unknown;
 }
 
@@ -41,7 +41,7 @@ export interface MnemonicaErrorConstructor {
 	new(addition?: string, stack?: string | string[]): Error;
 	(name: string): Error;
 	prototype: {
-		constructor: CallableFunction;
+		constructor: MnemonicaErrorConstructor;
 	};
 }
 
@@ -71,25 +71,12 @@ export interface _Internal_TC_<ConstructorInstance extends object> {
 }
 
 /**
- * External Type Constructor — the shape of constructor functions returned by `define()`.
- *
- * In Scala's kind system, a "Type Constructor" is a kind (a type of types):
- * not a value, but a mold describing how concrete types are formed. Here,
- * `TypeConstructor<Instance>` is the mold `define()` stamps at invocation time
- * from (prototype, arguments, config). The resulting constructor is simultaneously:
- *   - a runtime value (callable, `new`-able, with `.prototype`)
- *   - a node in the type Trie (carries `.subtypes`, participates in `instanceof`)
- *   - a behavioral contract (the prototype chain provides `.extract()`, `.fork()`, etc.)
- *
+ * Public alias for _Internal_TC_ — the shape of constructor functions returned by `define()`.
  * Augmented by tactica-generated TypeRegistry to become user-specific types.
+ * Kept as a named alias (rather than inlining _Internal_TC_) so tactica can reference it
+ * cleanly in generated declaration files.
  */
-export interface TypeConstructor<ConstructorInstance extends object> {
-	new(...args: unknown[]): ConstructorInstance;
-	(this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
-	readonly prototype: ConstructorInstance & {
-		readonly constructor: TypeConstructor<ConstructorInstance>
-	};
-}
+export type TypeConstructor<ConstructorInstance extends object> = _Internal_TC_<ConstructorInstance>;
 
 // Hook types
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
@@ -105,11 +92,6 @@ export type hooksOpts<P = object, T = P> = {
 	inheritedInstance?: T;
 	creator?: { throwModificationError(error: Error): void };
 };
-
-// Hook callback type
-export interface hook extends CallableFunction {
-	(opts: hooksOpts): unknown;
-}
 
 // Callback passed into ModificationConstructor to attach internal props to the prototype
 export interface AddPropsCallback extends CallableFunction {
@@ -130,6 +112,17 @@ export interface ModificationConstructor extends CallableFunction {
 export interface ModificationConstructorFactory extends CallableFunction {
 	(): ModificationConstructor;
 }
+
+// Factory that returns a MnemonicaConstructor (stored in TypeDef.constructHandler)
+export interface MnemonicaConstructorFactory extends CallableFunction {
+	(): MnemonicaConstructor;
+}
+
+// Marks the top of a captured stack trace (passed to Error.captureStackTrace as constructorOpt)
+export interface StackBoundary extends CallableFunction {}
+
+// A wrappable utility method — any callable that wrapThis() can proxy
+export interface WrappableMethod extends CallableFunction {}
 
 // Constructor options for define - default (exposeInstanceMethods defaults to true behavior)
 export type constructorOptions = {
@@ -176,9 +169,9 @@ export type TypeDef = {
 	collection: CollectionDef;
 	config: constructorOptions;
 	parentType?: TypeDef;
-	constructHandler: () => MnemonicaConstructor;
+	constructHandler: MnemonicaConstructorFactory;
 	title: string;
-	hooks: Record<string, Set<HookFunction>>;
+	hooks: Record<string, Set<hook>>;
 	invokeHook: (hookType: hooksTypes, opts: hooksOpts) => Set<unknown>;
 	prototype: unknown;
 	stack?: string;
@@ -282,16 +275,6 @@ export interface MnemonicaInstance {
 
 // Instance properties for __self__ reference
 // This merges internal props with the instance methods
-export type InstanceSelfProps = InstanceInternalProps & {
-	__self__: InstanceInternalProps & MnemonicaInstance;
-};
-
-// Combined Props type for internal used inside of ./src
-export type Props = InstanceSelfProps & {
-	[key: string]: unknown;
-};
-
-
 // Internal instance properties (non-enumerable)
 // These are always present on instances but accessed via getProps/setProps
 export type InstanceInternalProps = {
@@ -302,28 +285,27 @@ export type InstanceInternalProps = {
 	__type__: TypeDef;
 	__parent__: object;
 	__stack__?: string;
-	__creator__: TypeDef;
+	__creator__: InstanceCreatorContext;
 	__timestamp__: number;
-	// __self__: InstanceInternalProps & MnemonicaInstance;3333
 };
 
+// Combined Props type for internal use inside ./src
+export type Props = InstanceInternalProps & {
+	__self__: InstanceInternalProps & MnemonicaInstance;
+	[key: string]: unknown;
+};
 
-// Helper type to detect if exposeInstanceMethods is explicitly false
+// Helper type: true when exposeInstanceMethods is explicitly false
 export type IsHidingMethods<Config extends constructorOptions> =
   Config extends { exposeInstanceMethods: false } ? true : false;
 
-// Combined instance type based on config
+// Combined instance type based on config:
+//   hiding → Flatten<N> (user props only)
+//   showing → Flatten<N> & MnemonicaInstance (user props + extract/fork/etc.)
 export type InstanceResult<
   N extends object,
   Config extends constructorOptions,
-  R extends Flatten<N> = Flatten<N>,
-  I extends { [key in keyof R]: R[key] } = { [key in keyof R]: R[key] },
-  M extends I & MnemonicaInstance = I & MnemonicaInstance
-> = IsHidingMethods<Config> extends true
-	// Only user-defined properties (hiding MnemonicaInstance & subtypes)
-  ? R
-	// User props + instance methods + subtypes
-  : M;
+> = IsHidingMethods<Config> extends true ? Flatten<N> : Flatten<N> & MnemonicaInstance;
 
 // Definitor instance - the constructor function returned by define
 // N = instance type (properties available on instances)
@@ -416,9 +398,9 @@ export interface TypesCollection extends Hookable {
 
 // Shared interface for objects that support hooks (TypeDef and CollectionDef)
 export interface Hookable {
-	hooks: Record<string, Set<HookFunction>>;
+	hooks: Record<string, Set<hook>>;
 	invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
-	registerHook(hookType: hooksTypes, cb: HookFunction): void;
+	registerHook(hookType: hooksTypes, cb: hook): void;
 	registerFlowChecker(cb: (opts: object) => unknown): void;
 }
 

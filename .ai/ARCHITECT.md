@@ -68,7 +68,7 @@ See [`AGENTS.md`](./AGENTS.md) for the complete symbol reference table.
 - Strict TypeScript with `strict: true`
 - All functions must have explicit return types
 - Types must be complete and reusable
-- `any` is permitted where necessary (eslint `@typescript-eslint/no-explicit-any` is off)
+- **No `any`** (`@typescript-eslint/no-explicit-any: error`) — define proper types
 - Never use bare `Function`, `CallableFunction`, or `NewableFunction` — define purpose-specific interfaces
 
 ### Proxy Handler Design

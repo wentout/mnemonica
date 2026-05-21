@@ -30,6 +30,7 @@ import {
 	constructorOptions,
 	TypeAbsorber,
 	ModificationConstructorFactory,
+	MnemonicaConstructorFactory,
 } from '../../types';
 
 // Lazy getter: a function that, when called, returns the actual constructor function.
@@ -96,7 +97,7 @@ const TypeDescriptor = function (
 	defineOrigin: TypeAbsorber,
 	types: TypesMap,
 	TypeName: string,
-	constructHandler: CallableFunction,
+	constructHandler: MnemonicaConstructorFactory,
 	proto: { [index: string]: unknown },
 	config: { [index: string]: unknown },
 ) {

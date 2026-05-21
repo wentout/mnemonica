@@ -1,7 +1,7 @@
 'use strict';
 
 import type {
-	hooksOpts, Hookable, HookFunction 
+	hooksOpts, Hookable, hook
 } from '../../types';
 
 import { flowCheckers } from './flowCheckers';
@@ -43,8 +43,8 @@ export const invokeHook = function ( this: Hookable, hookType: string, opts: hoo
 
 		const hookArgs = builder.build();
 
-		self.hooks[ hookType ].forEach( ( hook: HookFunction ) => {
-			const result = hook.call(
+		self.hooks[ hookType ].forEach( ( cb: hook ) => {
+			const result = cb.call(
 				self,
 				hookArgs
 			);

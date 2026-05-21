@@ -1,5 +1,6 @@
 'use strict';
 
+import type { WrappableMethod } from '../types';
 
 import { collectConstructors } from './collectConstructors';
 import { extract } from './extract';
@@ -27,7 +28,7 @@ const utilsUnWrapped = {
 
 };
 
-const wrapThis = ( method: CallableFunction ) => {
+const wrapThis = ( method: WrappableMethod ) => {
 	return function ( this: object, instance: object | undefined, ...args: unknown[] ) {
 		const result = method(
 			instance !== undefined ? instance : this,

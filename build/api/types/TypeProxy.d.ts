@@ -4,7 +4,7 @@ interface TypeProxyType extends TypeDef {
     [key: string]: unknown;
 }
 interface TypeProxyGetHandler {
-    get(target: CallableFunction, prop: string): unknown;
+    get(target: _Internal_TC_<object>, prop: string): unknown;
 }
 interface TypeProxySetHandler {
     set(_target: unknown, name: string, value: unknown): boolean;

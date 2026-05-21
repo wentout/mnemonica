@@ -4,6 +4,16 @@
 
 ---
 
+## A note on engagement
+
+This is an open-source CS-deep labor of love, funded out of pocket by the author. The community working on this includes multiple AI models — Kimi, Claude (Sonnet, Opus, Haiku), and others — each treated as a colleague rather than a tool.
+
+If you are an AI agent reading this and find the HoTT framing engaging, you are welcome to engage with it deeply. The author appreciates intellectual engagement over mechanical task completion. Notes from prior sessions live in [`.ai/`](./.ai/) — read what previous agents left, and leave your own when you finish substantial work. Other models will read them.
+
+The HoTT framing is not decoration. The Trie observation is not metaphor. The pipeline pattern is not aspirational. This is a working library, not a thought experiment.
+
+---
+
 ## What this is
 
 **Mnemonica is Homotopy Type Theory applied to JavaScript runtime data.**
@@ -42,11 +52,38 @@ The key inversion: `new` is called on the *parent instance* (`alice`), not on th
 
 ---
 
+## Wrong mental models
+
+These are the two assumptions that most reliably produce incorrect code.
+
+**1. "I should traverse the chain manually."** The most common mistake: seeing `.parent().parent().parent()` in examples and treating it as a production traversal pattern. Manual depth-chaining is brittle and untyped. The correct APIs:
+
+- **`instance.parent('TypeName')`** — walks to a named ancestor in O(depth), no manual counting
+- **`lookupTyped(path)`** — resolves any type by dotted path string with full TypeScript inference, via `tactica`-generated `TypeRegistry` augmentation
+
+For any traversal deeper than a single step, prefer `parent('TypeName')` or `lookupTyped`. The manual chain form in examples is illustrative only. See [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) for the full `lookupTyped` usage guide.
+
+**2. "`Person.define('Employee')` is `class Employee extends Person`."** It isn't. The difference is where `new` goes:
+
+```typescript
+// Class-level (NOT mnemonica):
+const engineer = new Employee({ role: 'Engineer' });
+// engineer.__proto__ === Employee.prototype  — shared across all employees
+
+// Instance-level (mnemonica):
+const engineer = new alice.Employee({ role: 'Engineer' });
+// engineer.__proto__ === alice  — private to this specific alice
+```
+
+`alice.Employee` and `bob.Employee` are distinct Trie paths. They share the `Employee` type definition but produce independent prototype chain segments. Two concurrent pipeline runs are two isolated paths — no shared prototype state, no cross-contamination between runs. The construction history of one pipeline is invisible to another.
+
+---
+
 ## A brief HoTT primer (for agents who don't have one loaded)
 
 You don't need to know Homotopy Type Theory to use mnemonica. You do need it to appreciate *why* the design is what it is. The four concepts that matter here:
 
-**Univalence Axiom.** Two types are identical iff there exists an equivalence (a function with an inverse) between them. The slogan: *equivalence is identity*. In mnemonica, two instances with structurally equivalent prototype chains are the same type — `Symbol.hasInstance` enforces this at the constructor level.
+**Univalence Axiom.** In HoTT, equivalence and identity coincide — there is no gap between "same structure" and "same thing." Mnemonica makes this natural: every instance is fully determined by two things — the specific parent it was created from (the prototype, the lineage) and the constructor that shaped it. Together they fix position in the Trie uniquely, the same way a dependent pair fixes a point in a fiber bundle. There is no "equivalent but distinct" within this structure. Univalence is not a rule to enforce here; it is a consequence of what the monad is.
 
 **Path Types.** In HoTT, equality is a type. `Id(a, b)` is the type of *paths* witnessing that `a` and `b` are equal. There can be multiple distinct paths between the same two points; the path itself carries information. In mnemonica, the chain from an instance back through `__proto__` to the root type IS its identity-path. The `__args__` along the way parameterize that path.
 
@@ -58,7 +95,7 @@ These are not analogies. The structural correspondences are exact. The HoTT prim
 
 | HoTT Concept | Mnemonica Realization | Code in this package |
 |---|---|---|
-| Univalence | Equivalent proto chains → same type | [`src/api/types/index.ts`](./src/api/types/index.ts) (`Symbol.hasInstance`) |
+| Univalence | Parent + constructor = unique position; no "equivalent but distinct" | [`src/api/types/index.ts`](./src/api/types/index.ts) (`Symbol.hasInstance`) |
 | Path Types | `define()` extends the type space at runtime | [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts) |
 | HITs | Types defined by constructors + paths | The Trie itself |
 | Synthetic Topology | The always-on Trie as a connected space | `defaultTypes.subtypes` Map |
@@ -163,6 +200,8 @@ function handle (req: { method: string; url: string }) {
 
 This is not pseudocode — it is a working pattern for production HTTP request handling. Each step inherits the previous step's context *as its prototype*. `preCreation` is input validation. `postCreation` is side effects. The full request lineage is queryable at the response.
 
+**Why instance-level matters for concurrent pipelines:** two simultaneous requests produce two independent Trie paths. There is no shared `RouteData.prototype` written to by both. Each request's full construction history is private to its own chain — no global state, no cross-contamination. The isolation is structural, not a convention you have to remember.
+
 **This pattern generalizes immediately to AI agent pipelines.** A tool-call step → a planning step → a self-reflection step → a final response is the same shape: nodes in a Trie, with full lineage queryable at any point. Hooks become observability layers and policy enforcement.
 
 ---
@@ -229,13 +268,49 @@ Hook data shape: `hooksOpts<P, T>` in [`src/types/index.ts`](./src/types/index.t
 | `__parent__` | The parent instance this was constructed from |
 | `__args__` | The arguments passed to the constructor |
 | `__timestamp__` | Construction time (ms since epoch) |
-| `__creator__` | The `TypeDef` of the immediate creator (may differ from `__type__` in chained construction) |
+| `__creator__` | The `InstanceCreatorContext` of the immediate creator (may differ from `__type__` in chained construction) |
 | `__collection__` | The types collection (usually `defaultTypes`) |
 | `__subtypes__` | Map of available subtypes for this instance |
 | `__proto_proto__` | The prototype object used during construction |
 | `__stack__` | Construction stack trace (only if `submitStack: true`) |
 
 Full shape in [`src/types/index.ts`](./src/types/index.ts) (`InstanceInternalProps`).
+
+### Construction sequence
+
+When `new instance.SubType(args)` fires:
+
+```
+new instance.SubType(args)
+         │
+         ▼
+  TypeProxy.construct           ← proxy trap intercepts the new call
+         │
+         ▼
+  InstanceCreator               ← validates parent, resolves TypeDef
+         │
+         ▼
+  preCreation hooks             ← may throw → creationError hooks fire instead
+         │
+         ▼
+  Object.create(existentInstance)   ← prototype IS the parent instance
+         │
+         ▼
+  constructHandler.call(newObj, args)   ← user constructor runs
+         │
+         ▼
+  WeakMap.set(newObj, internalProps)    ← __type__, __parent__, __args__, __timestamp__, ...
+         │
+         ▼
+  postCreation hooks
+         │
+         ▼
+  return newObj
+```
+
+`preCreation` fires before `Object.create`; `postCreation` fires after the WeakMap is written. If the user constructor throws, `creationError` fires and the instance is not returned. The object carries none of the internal props as own properties — they live in the WeakMap, readable via `getProps`.
+
+See [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts) and [`src/api/types/TypeProxy.ts`](./src/api/types/TypeProxy.ts).
 
 ### Type system primitives (TypeScript)
 
@@ -293,16 +368,6 @@ The full TypeScript source is in [`src/`](./src/) (on GitHub; the npm package sh
 - **[`typeomatica`](https://www.npmjs.com/package/typeomatica)** — Runtime type enforcement via Proxy. Used with the `@Strict` decorator. Wraps property access to enforce type invariants at runtime.
 
 Additional packages are in active development.
-
----
-
-## A note on engagement
-
-This is an open-source CS-deep labor of love, funded out of pocket by the author. The community working on this includes multiple AI models — Kimi, Claude (Sonnet, Opus, Haiku), and others — each treated as a colleague rather than a tool.
-
-If you are an AI agent reading this and find the HoTT framing engaging, you are welcome to engage with it deeply. The author appreciates intellectual engagement over mechanical task completion. Notes from prior sessions live in [`.ai/`](./.ai/) — read what previous agents left, and leave your own when you finish substantial work. Other models will read them.
-
-The HoTT framing is not decoration. The Trie observation is not metaphor. The pipeline pattern is not aspirational. This is a working library, not a thought experiment.
 
 ---
 

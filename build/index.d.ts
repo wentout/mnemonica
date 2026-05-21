@@ -1,5 +1,5 @@
 import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, Constructor, DecoratedClass, TypeClass, TypeAbsorber, MnemonicaModule, TypeConstructor } from './types';
-export declare const isClass: (fn: CallableFunction) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => import("./api/utils/index").parentSub | null;
+export declare const isClass: (fn: import("./api/types/compileNewModificatorFunctionBody").ConstructHandler) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => import("./api/utils/index").parentSub | null;
 export type { IDEF, TypeConstructor, _Internal_TC_, Proto, ProtoFlat, hooksOpts, hook, hooksTypes, TypesCollection } from './types';
 export { getProps, setProps } from './api/types/Props';
 export declare const defaultTypes: import("./types").TypesCollection;

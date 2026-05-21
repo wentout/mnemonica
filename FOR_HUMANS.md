@@ -1,13 +1,11 @@
 # mnemonica
 
-**Instance Inheritance System for JavaScript / TypeScript.**
+**A JavaScript / TypeScript library for instance inheritance — data that remembers its own story.**
 
-> **Using this library?** You're in the right place. &nbsp;|&nbsp;
-> **Contributing / modifying code?** Start with [`AGENTS.md`](./AGENTS.md), then read [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) for the full agent guide.
-> **Using mnemonica with tactica?** Read [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) — mnemonica without tactica is 10% of the value.
-> [`SKILL.md`](./SKILL.md) is a usage quick reference only (not for contributors).
->
-> **For AI agents:** `AGENTS.md`, `SKILL.md`, and the entire `.ai/` directory ship inside the npm package, so they are available at `node_modules/mnemonica/` after `npm install`. See [For AI Agents](#for-ai-agents) below before editing any code.
+Think `f(x) ⇒ y` where `this` is a persistent data structure carrying the
+transformation history. Stored constructor arguments stay introspectable via
+`getProps()`, so an instance is also a record of how it was built.
+
 
 ```
 define(name, ctor)        →   TypeProxy   →   new instance.SubType()
@@ -27,10 +25,6 @@ define(name, ctor)        →   TypeProxy   →   new instance.SubType()
                                                 postCreation hook
 ```
 
-Think `f(x) ⇒ y` where `this` is a persistent data structure carrying the
-transformation history. Stored constructor arguments stay introspectable via
-`getProps()`, so an instance is also a record of how it was built.
-
 ---
 
 [![Coverage Status](https://coveralls.io/repos/github/wentout/mnemonica/badge.svg?branch=master)](https://coveralls.io/github/wentout/mnemonica?branch=master)
@@ -39,9 +33,96 @@ transformation history. Stored constructor arguments stay introspectable via
 ![GitHub last commit](https://img.shields.io/github/last-commit/wentout/mnemonica)
 [![NPM](https://nodei.co/npm/mnemonica.png?mini=true)](https://www.npmjs.com/package/mnemonica)
 
-> Status: experimental. API is stable for the documented surface; advanced
-> internals (`_define`, `_lookup`, `defaultCollection`) are not part of the
-> stability contract.
+> Status API is stable for the documented surface: advanced topics are also covered
+> If you're looking for the deeper theory (Homotopy Type Theory, runtime Tries, AI-agent pipelines), see [`README.md`](./README.md). This document is the welcoming entry — practical, example-driven, aimed at developers who want to use the library.
+> **Using mnemonica with tactica?** Read [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) — mnemonica without tactica is 10% of the value.
+> [`SKILL.md`](./SKILL.md) is a usage quick reference only (not for contributors).
+
+---
+
+## What this is
+
+The JavaScript prototype chain is structurally a Trie. Every `new` call adds a node; property lookups traverse leaf-to-root. You already know this — you've lived inside it your whole career.
+
+Mnemonica promotes the Trie from implementation detail to first-class data model. `define()` declares a node. `new instance.SubType()` extends a path. Every instance carries `__type__`, `__parent__`, `__args__`, `__timestamp__` — the construction history is introspectable at runtime without any separate instrumentation layer.
+
+The key inversion: subtypes are instantiated *from parent instances*, not from classes. `new alice.Employee()` means "create an Employee whose lineage runs through this specific Alice." The prototype chain becomes a queryable provenance graph.
+
+**Why it matters:** in any system where data transformation order matters — HTTP pipelines, ETL flows, AI agent chains — the construction history *is* the business logic. mnemonica makes that history first-class.
+
+---
+
+Most software treats data as anonymous values that flow through functions. The values get passed around, transformed, returned — and somewhere along the way, you lose track of *where they came from*.
+
+Mnemonica fixes this. When you create something with mnemonica, the resulting instance remembers:
+
+- What type it is
+- What types came before it (its lineage back to the root)
+- The arguments used to construct it
+- When it was made
+
+This isn't just metadata. It's an inheritance system where **inheritance happens at the instance level, not the class level** — every "child" instance is literally born from a specific "parent" instance, and remembers it through the prototype chain.
+
+Concrete benefits:
+
+- **Better debugging.** Any object can answer "what type am I, and how was I made?"
+- **Better type understanding.** Complex data flows stop being mysterious — the lineage is visible at runtime.
+- **Better AI tooling.** AI agents reading your code can see the runtime type system, not just static declarations.
+
+---
+
+## A 30-second example
+
+```javascript
+const { define, getProps } = require('mnemonica');
+
+// Define a base type
+const Person = define('Person', function (data) {
+    this.name = data.name;
+});
+
+// Define a subtype
+const Employee = Person.define('Employee', function (data) {
+    this.role = data.role;
+});
+
+// Create an instance, then create a child instance from THAT specific instance
+const alice    = new Person({ name: 'Alice' });
+const engineer = new alice.Employee({ role: 'Engineer' });
+
+engineer.name;                  // 'Alice'   (inherited from alice)
+engineer.role;                  // 'Engineer'
+engineer instanceof Person;     // true
+engineer.parent();              // returns alice (the specific Person it came from)
+
+const story = getProps(engineer);
+// story.__type__       — the Employee type
+// story.__parent__     — the alice instance
+// story.__args__       — [{ role: 'Engineer' }]
+// story.__timestamp__  — when this instance was created
+```
+
+The key inversion: `new` is called on the **parent instance** (`alice`), not on the `Employee` class. Every `Employee` remembers which specific `Person` it was born from.
+
+---
+
+## Install
+
+```bash
+npm install mnemonica
+```
+
+Requires Node.js `>=18 <26`.
+
+---
+
+## Where to go next
+
+- **Want a guided tour?** Continue reading — [Overview](#overview), [Quick Start](#quick-start), [Core Concepts](#core-concepts).
+- **Looking for a specific function?** Jump to the [API Reference](#api-reference).
+- **Curious about the theory?** Read [`README.md`](./README.md) — the HoTT framing, the Trie observation, the AI-agent angle.
+- **Want examples you can run?** See the [`examples/`](./examples/) directory and [Examples](#examples) below.
+- **Going deeper on philosophy?** Read [`docs/purpose.md`](./docs/purpose.md).
 
 ---
 
@@ -52,6 +133,8 @@ transformation history. Stored constructor arguments stay introspectable via
 - [Quick Start](#quick-start)
 - [For AI Agents](#for-ai-agents)
 - [Core Concepts](#core-concepts)
+- [Trie Observation](#trie-observation)
+- [Pipeline Pattern](#pipeline-pattern)
 - [TypeScript Support](#typescript-support)
 - [API Reference](#api-reference)
   - [Core Functions](#core-functions)
@@ -68,7 +151,6 @@ transformation history. Stored constructor arguments stay introspectable via
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
-
 ---
 
 ## Overview
@@ -287,6 +369,79 @@ const extracted = subInstance.extract();
 const { utils: { extract } } = require('mnemonica');
 const extracted2 = extract(subInstance);
 ```
+
+---
+
+## Trie Observation
+
+A Trie is a tree where each node is reached by a sequence of keys — you look up data by walking a path, not by hashing a key. The JavaScript prototype chain is exactly this structure: each `new` narrows the search space one step further.
+
+```
+               (root)
+              /      \
+          Person    Company
+         /      \
+      Alice      Bob
+     /     \
+ Engineer  Manager
+    │
+ alice-engineer-42
+```
+
+Every node carries its prefix. `alice-engineer-42` inherits from `Engineer`, which inherits from `Alice`, which inherits from `Person`. Lookup is `O(depth)`. The chain *is* the path.
+
+mnemonica exposes this structure explicitly. `define('Employee', ctor)` registers a node in the Trie. `new alice.Employee(data)` walks to `alice` and creates a child at `Employee` — with Alice's data still accessible via prototype lookup. Every created instance stores:
+
+| Property | What it holds |
+|---|---|
+| `__type__` | the node definition (constructor, config, subtypes) |
+| `__parent__` | the specific parent instance, not the class |
+| `__args__` | the arguments this node was constructed with |
+| `__timestamp__` | epoch ms — ordering is preserved |
+
+At any depth you can call `getProps(instance)` and see the full construction record. No logging infrastructure, no tracing sidecars — the record *is the object*.
+
+The Trie grows at runtime. A single type definition produces as many Trie paths as there are parent instances. `new alice.Employee()` and `new bob.Employee()` are different paths through the same node — both introspectable, both independently queryable.
+
+---
+
+## Pipeline Pattern
+
+Because each instance in the chain preserves its construction arguments, a sequence of transformations becomes a replayable, auditable pipeline.
+
+```
+RequestData                 ← entry point
+    └── RouteData           ← matched route appended
+            └── PageData    ← business logic applied
+                    └── ResponseData   ← serialized output
+```
+
+Each step is a subtype instantiated from the previous step's instance:
+
+```javascript
+const RequestData  = define('RequestData',  function (req)    { this.method = req.method; this.url = req.url; });
+const RouteData    = RequestData.define('RouteData',   function (route)  { this.handler = route.handler; });
+const PageData     = RouteData.define('PageData',    function (data)   { this.body = data; });
+const ResponseData = PageData.define('ResponseData', function (status) { this.status = status; });
+
+const req    = new RequestData(incomingRequest);
+const route  = new req.RouteData(matchedRoute);
+const page   = new route.PageData(await route.handler(route));
+const res    = new page.ResponseData(200);
+
+getProps(res).__parent__.__parent__.__parent__;   // the original RequestData instance
+```
+
+At any point in the chain, the full history is available without any additional bookkeeping. Add a `preCreation` hook on `RouteData` to measure routing latency. Add a `postCreation` hook on `ResponseData` to log the full request/response pair including every intermediate state — all from a single callback:
+
+```javascript
+ResponseData.registerHook('postCreation', ({ type, existentInstance }) => {
+    const reqData = getProps(existentInstance).__parent__.__parent__.__parent__;
+    log({ url: reqData.url, status: existentInstance.status });
+});
+```
+
+No middleware stack to thread through. No context object to pass around. The pipeline is the prototype chain.
 
 ---
 
@@ -807,7 +962,7 @@ All instances have non-enumerable internal properties:
 | `.__subtypes__` | `Map<string, object>` | Map of available subtypes |
 | `.__collection__` | `CollectionDef` | Types collection where type was defined |
 | `.__stack__` | `string` | Stack trace (if `submitStack: true` in config) |
-| `.__creator__` | `TypeDef` | Instance creator reference |
+| `.__creator__` | `InstanceCreatorContext` | Instance creator reference |
 | `.__timestamp__` | `number` | Creation timestamp (ms since epoch) |
 | `.__self__` | `object` | Self reference to the instance (useful when `exposeInstanceMethods: false`) |
 

@@ -5,7 +5,7 @@ import type {
 	CreateTypesCollectionFunction,
 	TypesCollection,
 	hooksOpts,
-	HookFunction
+	hook
 } from '../../types';
 
 import { constants } from '../../constants';
@@ -190,7 +190,7 @@ odp(
 		get (this: TypesCollection) {
 		 
 			const self = this;
-			return function ( hookName: string, hookCallback: HookFunction ) {
+			return function ( hookName: string, hookCallback: hook ) {
 			// return proto.registerHook.call( typesCollections.get( self ), hookName, hookCallback );
 				return registerHook.call(
 					self,

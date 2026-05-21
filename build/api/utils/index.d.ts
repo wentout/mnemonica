@@ -1,4 +1,5 @@
 import type { MnemonicaConstructor } from '../../types';
+import { ConstructHandler } from '../types/compileNewModificatorFunctionBody';
 export declare const CreationHandler: (this: object & {
     constructor: NewableFunction;
 }, constructionAnswer: unknown) => unknown;
@@ -17,7 +18,7 @@ export type parentSub = {
     __parent__: parentSub;
 };
 declare const TypesUtils: {
-    isClass: (fn: CallableFunction) => boolean;
+    isClass: (fn: ConstructHandler) => boolean;
     checkProto: (proto: unknown) => void;
     getTypeChecker: (TypeName: string) => unknown;
     getTypeSplitPath: (path: string) => string[];

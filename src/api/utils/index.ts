@@ -20,7 +20,7 @@ import {
 } from '../types/Props';
 import type { MnemonicaConstructor } from '../../types';
 
-import compileNewModificatorFunctionBody from '../types/compileNewModificatorFunctionBody';
+import compileNewModificatorFunctionBody, { ConstructHandler } from '../types/compileNewModificatorFunctionBody';
 
 // CreationHandler - handles constructor return values
 // Moved to api/types/index.ts as per refactoring plan
@@ -201,7 +201,7 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 
 // accordingly to the gist from here:
 // https://gist.github.com/wentout/ea3afe9c822a6b6ef32f9e4f3e98b1ba
-const isClass = (fn: CallableFunction) => {
+const isClass = (fn: ConstructHandler) => {
 	
 	const str = String(fn);
 	return str.indexOf('class ') === 0;

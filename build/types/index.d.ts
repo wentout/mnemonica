@@ -6,14 +6,14 @@ export type IDEF<T, Args extends unknown[] = unknown[]> = {
 };
 export type ErrorMessageKey = 'BASE_ERROR_MESSAGE' | 'HANDLER_MUST_BE_A_FUNCTION' | 'WRONG_TYPE_DEFINITION' | 'WRONG_INSTANCE_INVOCATION' | 'WRONG_MODIFICATION_PATTERN' | 'ALREADY_DECLARED' | 'WRONG_ARGUMENTS_USED' | 'WRONG_HOOK_TYPE' | 'MISSING_HOOK_CALLBACK' | 'MISSING_CALLBACK_ARGUMENT' | 'OPTIONS_ERROR' | 'WRONG_STACK_CLEANER';
 export type ErrorMessages = Record<ErrorMessageKey, string>;
-export interface HookFunction extends CallableFunction {
+export interface hook extends CallableFunction {
     (opts: hooksOpts): unknown;
 }
 export interface MnemonicaErrorConstructor {
     new (addition?: string, stack?: string | string[]): Error;
     (name: string): Error;
     prototype: {
-        constructor: CallableFunction;
+        constructor: MnemonicaErrorConstructor;
     };
 }
 export type ErrorsTypesMap = Record<string, MnemonicaErrorConstructor>;
@@ -29,13 +29,7 @@ export interface _Internal_TC_<ConstructorInstance extends object> {
         readonly constructor: _Internal_TC_<ConstructorInstance>;
     };
 }
-export interface TypeConstructor<ConstructorInstance extends object> {
-    new (...args: unknown[]): ConstructorInstance;
-    (this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
-    readonly prototype: ConstructorInstance & {
-        readonly constructor: TypeConstructor<ConstructorInstance>;
-    };
-}
+export type TypeConstructor<ConstructorInstance extends object> = _Internal_TC_<ConstructorInstance>;
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
 export type hooksOpts<P = object, T = P> = {
     TypeName: string;
@@ -47,9 +41,6 @@ export type hooksOpts<P = object, T = P> = {
         throwModificationError(error: Error): void;
     };
 };
-export interface hook extends CallableFunction {
-    (opts: hooksOpts): unknown;
-}
 export interface AddPropsCallback extends CallableFunction {
     (proto: object): void;
 }
@@ -58,6 +49,13 @@ export interface ModificationConstructor extends CallableFunction {
 }
 export interface ModificationConstructorFactory extends CallableFunction {
     (): ModificationConstructor;
+}
+export interface MnemonicaConstructorFactory extends CallableFunction {
+    (): MnemonicaConstructor;
+}
+export interface StackBoundary extends CallableFunction {
+}
+export interface WrappableMethod extends CallableFunction {
 }
 export type constructorOptions = {
     ModificationConstructor?: ModificationConstructorFactory;
@@ -80,9 +78,9 @@ export type TypeDef = {
     collection: CollectionDef;
     config: constructorOptions;
     parentType?: TypeDef;
-    constructHandler: () => MnemonicaConstructor;
+    constructHandler: MnemonicaConstructorFactory;
     title: string;
-    hooks: Record<string, Set<HookFunction>>;
+    hooks: Record<string, Set<hook>>;
     invokeHook: (hookType: hooksTypes, opts: hooksOpts) => Set<unknown>;
     prototype: unknown;
     stack?: string;
@@ -150,12 +148,6 @@ export interface MnemonicaInstance {
     exception(error: Error, ...args: unknown[]): Error;
     readonly sibling: SiblingAccessor;
 }
-export type InstanceSelfProps = InstanceInternalProps & {
-    __self__: InstanceInternalProps & MnemonicaInstance;
-};
-export type Props = InstanceSelfProps & {
-    [key: string]: unknown;
-};
 export type InstanceInternalProps = {
     __proto_proto__: object;
     __args__: unknown[];
@@ -164,17 +156,17 @@ export type InstanceInternalProps = {
     __type__: TypeDef;
     __parent__: object;
     __stack__?: string;
-    __creator__: TypeDef;
+    __creator__: InstanceCreatorContext;
     __timestamp__: number;
+};
+export type Props = InstanceInternalProps & {
+    __self__: InstanceInternalProps & MnemonicaInstance;
+    [key: string]: unknown;
 };
 export type IsHidingMethods<Config extends constructorOptions> = Config extends {
     exposeInstanceMethods: false;
 } ? true : false;
-export type InstanceResult<N extends object, Config extends constructorOptions, R extends Flatten<N> = Flatten<N>, I extends {
-    [key in keyof R]: R[key];
-} = {
-    [key in keyof R]: R[key];
-}, M extends I & MnemonicaInstance = I & MnemonicaInstance> = IsHidingMethods<Config> extends true ? R : M;
+export type InstanceResult<N extends object, Config extends constructorOptions> = IsHidingMethods<Config> extends true ? Flatten<N> : Flatten<N> & MnemonicaInstance;
 export interface IDefinitorInstance<N extends object, Config extends constructorOptions = constructorOptions, R extends InstanceResult<N, Config> = InstanceResult<N, Config>> {
     TypeName: string;
     prototype: N;
@@ -198,9 +190,9 @@ export interface TypesCollection extends Hookable {
     [key: string]: unknown;
 }
 export interface Hookable {
-    hooks: Record<string, Set<HookFunction>>;
+    hooks: Record<string, Set<hook>>;
     invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
-    registerHook(hookType: hooksTypes, cb: HookFunction): void;
+    registerHook(hookType: hooksTypes, cb: hook): void;
     registerFlowChecker(cb: (opts: object) => unknown): void;
 }
 export type CreateTypesCollectionFunction = (config?: constructorOptions) => TypesCollection;

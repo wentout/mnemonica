@@ -1,5 +1,6 @@
 'use strict';
 
+import type { StackBoundary } from '../../types';
 
 import { constants } from '../../constants';
 
@@ -37,7 +38,7 @@ export const getStack = function (
 	this: StackableInstance,
 	title: string,
 	stackAddition: string[],
-	tillFunction?: CallableFunction
+	tillFunction?: StackBoundary
 ) {
 
 	if ( Error.captureStackTrace ) {

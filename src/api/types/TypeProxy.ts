@@ -26,7 +26,7 @@ interface TypeProxyType extends TypeDef {
 
 // Proxy trap handler signatures
 interface TypeProxyGetHandler {
-	get(target: CallableFunction, prop: string): unknown;
+	get(target: _Internal_TC_<object>, prop: string): unknown;
 }
 
 interface TypeProxySetHandler {
@@ -60,7 +60,7 @@ export const TypeProxy = function (__type__: TypeProxyType, Uranus: unknown) {
 	return typeProxy;
 } as _Internal_TC_<TypeProxyInstance>;
 
-TypeProxy.prototype.get = function (this: TypeProxyInstance, target: CallableFunction, prop: string) {
+TypeProxy.prototype.get = function (this: TypeProxyInstance, target: _Internal_TC_<object>, prop: string) {
 
 	const { __type__: type } = this;
 

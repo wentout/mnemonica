@@ -155,4 +155,4 @@ Design [feature]:
 - Respect the dual test framework
 - Follow strict TypeScript rules
 - Use tabs for indentation
-- `any` is permitted where necessary (see CODE.md for full type rules)
+- **No `any`** (`@typescript-eslint/no-explicit-any: error`) — define proper types
