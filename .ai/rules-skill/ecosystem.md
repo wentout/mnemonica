@@ -136,5 +136,5 @@ interface Runnable { run(): void; }
 
 ## References
 
-- [Wikipedia: PACT (interaction design)](https://en.wikipedia.org/wiki/PACT_(interaction_design))
+- [Wikipedia: PACT (interaction design)](https://en.wikipedia.org/wiki/PACT_\(interaction_design\))
 - `strategy/README.md` — MCP architecture

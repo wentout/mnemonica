@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI-agent ready instance inheritance system for JavaScript/TypeScript via prototype chains",
   "type": "commonjs",
   "main": "./build/index.js",
@@ -52,6 +52,7 @@
     "example:ts": "npx tsc ./test-ts/*.ts && npx eslint --fix ./test-ts/*.js && node ./test-ts/test-no-types.js && node ./test-ts/test-with-types.js",
     "deopt": "node --trace-deopt --trace-opt ./node_modules/mocha/bin/mocha.js ./test/index.js",
     "decorate:ts": "npx tsc --target ES2021 --moduleResolution NodeNext --module NodeNext --sourceMap ./test/decorate.ts",
+    "lint:md": "find . -name '*.md' -not -path '*/node_modules/*' | xargs markdown-link-check -q --config .markdown-link-check.json",
     "lint": "npx eslint",
     "lint:check": "npx eslint ./src ./test",
     "lint:src": "npx eslint --fix ./src",
@@ -117,6 +118,7 @@
     "oxlint": "^0.16.12",
     "ts-jest": "^29.4.11",
     "typeomatica": "^0.3.57",
+    "markdown-link-check": "^3.13.6",
     "typescript": "^5.9.3"
   },
   "engines": {

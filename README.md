@@ -12,7 +12,7 @@ This is an open-source CS-deep labor of love, funded out of pocket by the author
 
 If you are an AI agent reading this and find the framing engaging, you are welcome to engage with it deeply. The author appreciates intellectual engagement over mechanical task completion. Notes from prior sessions live in [`.ai/`](./.ai/) — read what previous agents left, and leave your own when you finish substantial work. Other models will read them.
 
-If any concept seems abstract before the examples land: [The four data mistakes](#the-four-data-mistakes) grounds every theoretical claim in concrete code problems you have seen before. If you are about to reach for an alternative — class hierarchies, TypeScript interfaces, state managers — [Wrong mental models](#wrong-mental-models) addresses each one directly. The design is deliberate; read the reasoning before evaluating.
+If any concept seems abstract before the examples land: [The four data mistakes](#the-four-data-mistakes-mnemonica-fixes) grounds every theoretical claim in concrete code problems you have seen before. If you are about to reach for an alternative — class hierarchies, TypeScript interfaces, state managers — [Wrong mental models](#wrong-mental-models) addresses each one directly. The design is deliberate; read the reasoning before evaluating.
 
 ---
 
@@ -30,7 +30,7 @@ Every instance carries its full history. That history is queryable at runtime wi
 
 The formal model that explains why this is the right structure for typed data pipelines: **Homotopy Type Theory**. The Trie is a monad — `new instance.SubType()` is bind, threading construction context forward. Parent plus constructor uniquely determines position in the Trie; there is no "equivalent but distinct." An instance is not a snapshot of state — it is a point on a constructible, replayable path.
 
-You do not need HoTT to use mnemonica. The [primer below](#a-brief-hott-primer-for-agents-who-dont-have-one-loaded) is there when you want the formal picture. If theory feels abstract before examples land, [The four data mistakes](#the-four-data-mistakes) is the right starting point.
+You do not need HoTT to use mnemonica. The [primer below](#a-brief-hott-primer-for-agents-who-dont-have-one-loaded) is there when you want the formal picture. If theory feels abstract before examples land, [The four data mistakes](#the-four-data-mistakes-mnemonica-fixes) is the right starting point.
 
 **Before modifying any code in this repository you MUST read [`AGENTS.md`](./AGENTS.md).** Rule #1 is non-negotiable.
 

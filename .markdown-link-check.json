@@ -1,0 +1,19 @@
+{
+  "ignorePatterns": [
+    { "pattern": "^https://www.npmjs.com/" },
+    { "pattern": "^https://coveralls.io/" },
+    { "pattern": "^https://nodei.co/" },
+    { "pattern": "^https://img.shields.io/" },
+    { "pattern": "^https://dev.to/" }
+  ],
+  "httpHeaders": [
+    {
+      "urls": ["https://github.com"],
+      "headers": { "User-Agent": "markdown-link-check" }
+    }
+  ],
+  "timeout": "20s",
+  "retryOn429": true,
+  "retryCount": 3,
+  "aliveStatusCodes": [200, 206]
+}

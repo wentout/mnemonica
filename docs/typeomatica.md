@@ -8,7 +8,7 @@ TypeØmatica is a companion library that provides strict runtime type checking f
 
 ## Table of Contents
 
-- [What is TypeØmatica?](#what-is-typeomatica)
+- [What is TypeØmatica?](#what-is-typeømatica)
 - [Installation](#installation)
 - [Core Concepts](#core-concepts)
 - [API Reference](#api-reference)

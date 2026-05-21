@@ -100,13 +100,59 @@ Per [AGENTS.md](AGENTS.md):
 - The build must produce **zero** ESLint warnings on `./src` — fix the
   source, do not relax the rules.
 
+## Keeping docs consistent
+
+When adding or renaming a file, update any `.md` files that link to it.
+When adding a new concept or section, check whether an existing doc already
+covers it — prefer extending one place over splitting the explanation across
+two. Run `npm run lint:md` before committing doc changes; it catches dead
+links and broken anchors across all Markdown files in the repo.
+
 ## Releasing
 
-1. Update release notes.
-2. Bump `version` in `package.json`.
-3. `npm run verify` (build + lint:check).
-4. `npm run test:cov && npm run test:jest:cov` (both 100% coverage).
-5. `npm pack --dry-run` and verify the tarball includes `build/`,
-   `module/`, `README.md`, `LICENSE`, and does **not** include
-   `test/decorate.js` or `test/example.js`.
-6. Tag and publish.
+### 1. Update the changelog
+
+In `CHANGELOG.md`, move everything under `## [Unreleased]` into a
+new versioned section:
+
+```markdown
+## [1.0.1] - 2026-05-22
+
+### Fixed
+- ...
+```
+
+Leave a fresh empty `## [Unreleased]` block at the top for the next cycle.
+
+### 2. Bump the version
+
+```bash
+npm version patch   # 1.0.0 → 1.0.1
+# or: minor (1.0.0 → 1.1.0)  major (1.0.0 → 2.0.0)
+```
+
+`npm version` updates `package.json` and creates a git commit + tag
+(`v1.0.1`) automatically. Do not edit `package.json` by hand for this.
+
+### 3. Verify
+
+```bash
+npm run verify                               # build + lint:check
+npm run test:cov && npm run test:jest:cov    # both suites, 100% coverage
+npm run lint:md                              # no dead links or broken anchors
+```
+
+All three must pass before publishing.
+
+### 4. Inspect the tarball
+
+```bash
+npm pack --dry-run
+```
+
+The tarball must include: `build/`, `module/`, `src/`, `docs/`, `.ai/`,
+`examples/`, `README.md`, `FOR_HUMANS.md`, `AGENTS.md`, `SKILL.md`,
+`CONTRIBUTING.md`, `LICENSE`.
+
+It must **not** include: `test/`, `test-jest/`, `test-ts/`, `test_async/`,
+`reports/`, `.husky/`, `node_modules/`.
