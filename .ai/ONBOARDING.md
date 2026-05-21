@@ -13,22 +13,19 @@ const User = define('User', function (this: UserData, data: UserData) {
 	Object.assign(this, data);
 });
 
-const user = new User({ name: 'John' });
+const user  = new User({ name: 'John' });
 const admin = new user.Admin({ role: 'admin' }); // inherits from user instance
 ```
 
 **Scope:** mnemonica types the data flow, not the control flow. It gives data memory of its own creation (type, parent, arguments, timestamp) but does not dictate how services, algorithms, or control flow work. Keep behavior code intact; mnemonica only replaces plain data objects with typed instances.
 
-```typescript
-const User = define('User', function (this: UserData, data: UserData) {
-	Object.assign(this, data);
-});
+**The greater view.** mnemonica does not add a new abstraction on top of JavaScript — it makes an existing one explicit. The prototype chain is already a Trie; every `new` already extends a node. `new user.Admin()` is not a library call — it is JavaScript's prototype mechanism used deliberately. mnemonica names each node, stores the construction arguments at each step, and makes the chain queryable. The thing you have been building with manually all along, made first-class.
 
-const user = new User({ name: 'John' });
-const admin = new user.Admin({ role: 'admin' }); // inherits from user instance
-```
+**Why not class hierarchies?** Class inheritance shares `Admin.prototype` across all instances. Two concurrent requests both creating `Admin` instances share the same prototype. `new user.Admin()` creates a chain where `user` IS the prototype — each pipeline run is isolated structurally, not by convention.
 
-Key insight: JavaScript prototype inheritance is a Trie. Mnemonica makes it explicit.
+**Why not TypeScript interfaces alone?** TypeScript is structural at compile time: a `Payment` and an `Invoice` with identical fields are interchangeable to the type checker. At runtime, `processPayment(invoice)` silently succeeds and produces wrong results. mnemonica's runtime types are nominal — the type IS its name, established at `define()` time and stable thereafter.
+
+**Why not Object.assign / spread?** `{...raw, ...apiResult}` is one flat object with no lineage. You cannot answer "which step set `amount`?" without reading the source. mnemonica's prototype chain preserves every ancestor; `enriched.parent('ApiResult')` returns the exact API response object.
 
 ---
 

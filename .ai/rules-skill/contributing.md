@@ -34,7 +34,7 @@ Before implementing, analyze the type graph impact:
 Before modifying `src/types/index.ts` or the type system:
 1. Does this change affect `Proto<P,T>` merging?
 2. Does it break `_Internal_TC_` / `TypeConstructor` contracts?
-3. Will tactica-generated `TypeRegistry` need regeneration?
+3. Will the `TypeRegistry` augmentation (hand-written or tactica-generated) need to be updated?
 4. Are subtypes in the Trie affected?
 
 ### Example: Hidden Assumptions
