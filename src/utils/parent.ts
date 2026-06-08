@@ -33,10 +33,11 @@ export const parent = ( instance: object, path?: string ): unknown => {
 
 	// seek throuh parent instances
 	// about the fist constructor with this name
-	return name === path ?
+	const result = name === path ?
 		p : parent(
  p as object,
  path 
 		);
+	return result;
 
 };

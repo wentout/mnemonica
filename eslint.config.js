@@ -3,6 +3,7 @@ const globals = require('globals');
 const mocha = require('eslint-plugin-mocha');
 const noArrowThis = require('eslint-plugin-no-arrow-this');
 const typescriptEslint = require('@typescript-eslint/eslint-plugin');
+const mnemonica = require('./.eslint-plugins');
 
 const commonRules = {
 	'indent': ['error', 'tab'],
@@ -63,6 +64,7 @@ const commonRules = {
 	'@typescript-eslint/ban-ts-comment': 'warn',
 	'new-cap': 'off',
 	'yoda': 'warn',
+	'mnemonica/return-intermediate': 'error',
 };
 
 const commonLanguageOptions = {
@@ -79,6 +81,7 @@ const commonPlugins = {
 	mocha,
 	'no-arrow-this': noArrowThis,
 	'@typescript-eslint': typescriptEslint,
+	'mnemonica': mnemonica,
 };
 
 module.exports = [

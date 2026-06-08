@@ -24,6 +24,7 @@ export const merge = ( a: object, b: object, ...args: unknown[] ): object => {
 		b,
 		...args 
 	);
-	return aa as object;
+	const result = aa as object;
+	return result;
 
 };

@@ -51,18 +51,20 @@ const getClassConstructor = (
 	ConstructHandler: ClassConstructHandler,
 	CreationHandler: CreationHandler,
 ) => {
-	return class extends ConstructHandler {
+	const result = class extends ConstructHandler {
 		// oxlint-disable-next-line constructor-super
 		constructor ( ...args: unknown[] ) {
 			const answer = super( ...args );
 			// debugger;
-			const result = CreationHandler.call(
+			const creationResult = CreationHandler.call(
 				this,
 				answer 
 			);
-			return result as object;
+			const castResult = creationResult as object;
+			return castResult;
 		}
 	};
+	return result;
 };
 
 const getFunctionConstructor = (
@@ -79,7 +81,7 @@ const getFunctionConstructor = (
 		) &&
 		(ConstructHandler.prototype.constructor == ConstructHandler);
 
-	return function ( this: object, ...args: unknown[] ) {
+	const funcResult = function ( this: object, ...args: unknown[] ) {
 		let answer;
 		// if (!new.target) {
 		// 	debugger;
@@ -103,17 +105,18 @@ const getFunctionConstructor = (
 		);
 		return result;
 	};
+	return funcResult;
 };
 
 type ModificationBody = new (...args: unknown[]) => object;
 
 const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass = false ) {
-	return function (
+	const outerResult = function (
 		ConstructHandler: ConstructHandler,
 		CreationHandler: CreationHandler,
 		SymbolConstructorName: symbol
 	): () => ModificationBody {
-		return function (): ModificationBody {
+		const innerResult = function (): ModificationBody {
 			let ModificationBody: ModificationBody;
 			if ( asClass ) {
 				ModificationBody = getClassConstructor(
@@ -151,9 +154,12 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 			// Object.freeze( ModificationBody.prototype.constructor );
 			// Object.freeze( ModificationBody.prototype );
 			// Object.freeze( ModificationBody );
-			return ModificationBody;
+			const result = ModificationBody;
+			return result;
 		};
+		return innerResult;
 	};
+	return outerResult;
 };
 
 export default compileNewModificatorFunctionBody;

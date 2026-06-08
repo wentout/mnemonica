@@ -117,13 +117,15 @@ export const constants = {
 		return MNEMOSYNE;
 	},
 	get 'odp' () {
-		return <T extends object>( o: T, p: PropertyKey, attributes: PropertyDescriptor ): T => {
-			return Object.defineProperty(
+		const result = <T extends object>( o: T, p: PropertyKey, attributes: PropertyDescriptor ): T => {
+			const defineResult = Object.defineProperty(
 				o,
 				p,
 				attributes 
 			) as T;
+			return defineResult;
 		};
+		return result;
 	},
 
 	get 'defaultOptions' () {
@@ -131,7 +133,8 @@ export const constants = {
 	},
 
 	get 'defaultOptionsKeys' () {
-		return Object.keys( defaultOptions );
+		const result = Object.keys( defaultOptions );
+		return result;
 	},
 
 	TYPE_TITLE_PREFIX,

@@ -29,13 +29,14 @@ const utilsUnWrapped = {
 };
 
 const wrapThis = ( method: WrappableMethod ) => {
-	return function ( this: object, instance: object | undefined, ...args: unknown[] ) {
-		const result = method(
+	const result = function ( this: object, instance: object | undefined, ...args: unknown[] ) {
+		const wrapResult = method(
 			instance !== undefined ? instance : this,
 			...args 
 		);
-		return result;
+		return wrapResult;
 	};
+	return result;
 };
 
 export const utils: { [ index: string ]: CallableFunction } = {

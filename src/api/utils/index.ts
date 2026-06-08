@@ -51,7 +51,8 @@ const getTypeChecker = (TypeName: string) => {
 			// if ( instance instanceof Promise ) {
 			 
 			// @ts-expect-error I'm too lazy for that
-			return instance[ SymbolConstructorName ] === TypeName;
+			const checkResult = instance[ SymbolConstructorName ] === TypeName;
+			return checkResult;
 		}
 
 		const constructors: {
@@ -59,7 +60,8 @@ const getTypeChecker = (TypeName: string) => {
 		} = collectConstructors(instance);
 		 
 		// @ts-expect-error I'm too lazy for that
-		return constructors[ TypeName ] || false;
+		const constructorResult = constructors[ TypeName ] || false;
+		return constructorResult;
 
 	};
 	return seeker;
@@ -204,7 +206,8 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 const isClass = (fn: ConstructHandler) => {
 	
 	const str = String(fn);
-	return str.indexOf('class ') === 0;
+	const result = str.indexOf('class ') === 0;
+	return result;
 
 	/*
 
@@ -253,7 +256,8 @@ const makeErrorModificatorType = (
 	);
 
 	const result = modificatorType();
-	return result as MnemonicaConstructor;
+	const constructorResult = result as MnemonicaConstructor;
+	return constructorResult;
 
 };
 
@@ -269,9 +273,10 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 			Symbol.toPrimitive,
 			{
 				get () {
-					return () => {
+					const result = () => {
 						return _thisArg;
 					};
+					return result;
 				}
 			}
 		);
@@ -287,9 +292,11 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 			Symbol.toPrimitive,
 			{
 				get () {
-					return () => {
-						return (_thisArg as String | Number | Boolean).valueOf();
+					const result = () => {
+						const valueResult = (_thisArg as String | Number | Boolean).valueOf();
+						return valueResult;
 					};
+					return result;
 				}
 			}
 		);

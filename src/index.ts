@@ -45,7 +45,8 @@ const { prepareSubtypeForConstruction } = mnemosynes;
 export const { defaultTypes, } = descriptors;
 
 function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolean {
-	return pointer === mnemonica || pointer === exports;
+	const result = pointer === mnemonica || pointer === exports;
+	return result;
 }
 
 
@@ -66,12 +67,13 @@ export const define = function <
 ): R {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
-	return (types as { define: TypeAbsorber })
+	const defineResult = (types as { define: TypeAbsorber })
 		.define(
 			TypeName as string,
 			constructHandler as IDEF<T>,
 			config
 		) as unknown as R;
+	return defineResult;
 } as TypeAbsorber;
 
 export const lookup = function (
@@ -80,7 +82,8 @@ export const lookup = function (
 ): TypeClass | undefined {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
-	return (types as { lookup: (path: string) => TypeClass | undefined }).lookup(TypeNestedPath);
+	const lookupResult = (types as { lookup: (path: string) => TypeClass | undefined }).lookup(TypeNestedPath);
+	return lookupResult;
 };
 
 /**
@@ -128,8 +131,9 @@ export const lookupTyped = function <
 	TypeNestedPath: K
 ): TypeRegistry[K]  {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	return (types as { lookup: (path: string) => unknown })
+	const lookupResult = (types as { lookup: (path: string) => unknown })
 		.lookup(TypeNestedPath as string) as TypeRegistry[K];
+	return lookupResult;
 };
 
 
@@ -147,15 +151,15 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 	const Cstr = prepareSubtypeForConstruction(
 		TypeName,
 		entity
-	) as { new(...ars: unknown[]): unknown };
+	) as unknown as { new(...ars: unknown[]): unknown };
 	// TODO: check lines below and if Constructor is not mnemonized ...
 	if (Cstr === undefined) {
 		const ErrorCtor = WRONG_MODIFICATION_PATTERN as unknown as new (msg: string) => Error;
 		throw new ErrorCtor(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
 	}
-	const result = new Cstr(...args);
+	const runResult = new Cstr(...args);
 	// @ts-expect-error - returning result as merged proto type
-	return result;
+	return runResult;
 };
 
 // TODO: apply instance .to type .with arguments
@@ -166,11 +170,12 @@ export const apply = function <E extends object, T extends object, S extends Pro
 ): {
 		[key in keyof S]: S[key]
 	} {
-	return $run<E, T, S>(
+	const result = $run<E, T, S>(
 		entity,
 		Ctor,
 		args
 	);
+	return result;
 };
 
 // TODO: call type .by instance .with arguments
@@ -181,11 +186,12 @@ export const call = function <E extends object, T extends object, S extends Prot
 ): {
 		[key in keyof S]: S[key]
 	} {
-	return $run<E, T, S>(
+	const result = $run<E, T, S>(
 		entity,
 		Ctor,
 		args
 	);
+	return result;
 };
 
 // TODO: bind type .with instance → (...args)
@@ -195,13 +201,15 @@ export const bind = function <E extends object, T extends object, S extends Prot
 ): (...args: unknown[]) => {
 	[key in keyof S]: S[key]
 } {
-	return (...args: unknown[]) => {
-		return $run<E, T, S>(
+	const result = (...args: unknown[]) => {
+		const runResult = $run<E, T, S>(
 			entity,
 			Ctor,
 			args
 		);
+		return runResult;
 	};
+	return result;
 };
 
 export const decorate = function <

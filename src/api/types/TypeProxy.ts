@@ -85,13 +85,15 @@ TypeProxy.prototype.get = function (this: TypeProxyInstance, target: _Internal_T
 
 	// SomeType.SomeSubType
 	if (type.subtypes.has(prop)) {
-		return type.subtypes.get(prop);
+		const subtypeResult = type.subtypes.get(prop);
+		return subtypeResult;
 	}
 
-	return Reflect.get(
+	const reflectResult = Reflect.get(
 		target,
 		prop
 	);
+	return reflectResult;
 
 };
 
@@ -137,7 +139,8 @@ const subTypeApply = (
 			cstr,
 			cfg
 		);
-		return defineResult as unknown as T;
+		const result = defineResult as unknown as T;
+		return result;
 	};
 	return decorator;
 };

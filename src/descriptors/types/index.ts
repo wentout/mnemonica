@@ -73,9 +73,11 @@ const TypesCollection = function ( _config: Record<string, unknown> ) {
 		Symbol.hasInstance,
 		{
 			get () {
-				return ( instance: { [SymbolConstructorName]?: string } ) => {
-					return instance[ SymbolConstructorName ] === MNEMONICA;
+				const result = ( instance: { [SymbolConstructorName]?: string } ) => {
+					const checkResult = instance[ SymbolConstructorName ] === MNEMONICA;
+					return checkResult;
 				};
+				return result;
 			}
 		} 
 	);
@@ -97,7 +99,8 @@ const TypesCollection = function ( _config: Record<string, unknown> ) {
 		{
 			get () {
 			// returning proxy
-				return typesCollections.get( self );
+				const result = typesCollections.get( self );
+				return result;
 			}
 		} 
 	);
@@ -109,7 +112,8 @@ const TypesCollection = function ( _config: Record<string, unknown> ) {
 		{
 			get () {
 			// returning proxy
-				return typesCollections.get( self );
+				const result = typesCollections.get( self );
+				return result;
 			}
 		} 
 	);
@@ -132,7 +136,8 @@ odp(
 	MNEMONICA,
 	{
 		get () {
-			return typesCollections.get( this );
+			const result = typesCollections.get( this );
+			return result;
 		}
 	} 
 );
@@ -143,22 +148,23 @@ odp(
 	{
 		get (this: { subtypes: Map<string, object> }) {
 			const { subtypes } = this;
-			return function (
+			const result = function (
 				this: CallableFunction,
 				TypeOrTypeName: string | CallableFunction,
 				constructHandlerOrConfig?: CallableFunction | object,
 				config?: object
 			) {
 			// this - define function of mnemonica interface
-				const result = define.call(
+				const defineResult = define.call(
 					this as unknown,
 					subtypes as TypesMap,
 					TypeOrTypeName,
 					constructHandlerOrConfig,
 					config
 				);
-				return result;
+				return defineResult;
 			};
+			return result;
 		},
 		enumerable : true
 	} 
@@ -169,15 +175,17 @@ odp(
 	'lookup',
 	{
 		get (this: { subtypes: Map<string, object> }) {
-			return function (
+			const result = function (
 				this: { subtypes: Map<string, object> },
 				TypeNestedPath: string
 			) {
-				return lookup.call(
+				const lookupResult = lookup.call(
  this.subtypes as unknown as TypesMap,
  TypeNestedPath 
 				);
+				return lookupResult;
 			}.bind( this );
+			return result;
 		},
 		enumerable : true
 	} 
@@ -190,14 +198,16 @@ odp(
 		get (this: TypesCollection) {
 		 
 			const self = this;
-			return function ( hookName: string, hookCallback: hook ) {
+			const result = function ( hookName: string, hookCallback: hook ) {
 			// return proto.registerHook.call( typesCollections.get( self ), hookName, hookCallback );
-				return registerHook.call(
+				const hookResult = registerHook.call(
 					self,
 					hookName,
 					hookCallback 
 				);
+				return hookResult;
 			}.bind( this );
+			return result;
 		},
 		enumerable : true
 	} 
@@ -208,13 +218,15 @@ odp(
 	'invokeHook',
 	{
 		get (this: TypesCollection) {
-			return ( hookName: string, opts: { [index: string]: unknown } ) => {
-				return invokeHook.call(
+			const result = ( hookName: string, opts: { [index: string]: unknown } ) => {
+				const hookResult = invokeHook.call(
 					typesCollections.get( this ),
 					hookName,
 opts as hooksOpts 
 				);
+				return hookResult;
 			};
+			return result;
 		}
 	} 
 );
@@ -224,12 +236,14 @@ odp(
 	'registerFlowChecker',
 	{
 		get (this: TypesCollection) {
-			return ( flowCheckerCallback: () => unknown ) => {
-				return registerFlowChecker.call(
+			const result = ( flowCheckerCallback: () => unknown ) => {
+				const checkerResult = registerFlowChecker.call(
 					typesCollections.get( this ),
 					flowCheckerCallback 
 				);
+				return checkerResult;
 			};
+			return result;
 		}
 	} 
 );
@@ -245,16 +259,18 @@ const typesCollectionProxyHandler = {
 		if ( target.subtypes.has( prop ) ) {
 			// access to suptype
 			// for new call or defining new type
-			return target.subtypes.get( prop );
+			const subtypeResult = target.subtypes.get( prop );
+			return subtypeResult;
 		}
 		if ( prop === 'define' ) {
 			// will hopefully define new type
 			return target.define;
 		}
-		return Reflect.get(
+		const reflectResult = Reflect.get(
 			target,
 			prop 
 		);
+		return reflectResult;
 	},
 	set ( target: TypesCollectionTarget, TypeName: string, Constructor: FunctionConstructor ) {
 		target.define(
@@ -266,14 +282,16 @@ const typesCollectionProxyHandler = {
 	// Object.prototype.hasOwnProperty.call
 	getOwnPropertyDescriptor ( target: TypesCollectionTarget, prop: string ) {
 		if ( target.subtypes.has( prop ) ) {
-			return {
+			const descriptorResult = {
 				configurable : true,
 				enumerable   : true,
 				writable     : false,
 				value        : target.subtypes.get( prop )
 			};
+			return descriptorResult;
 		}
-		return Reflect.getOwnPropertyDescriptor( target, prop );
+		const ownPropResult = Reflect.getOwnPropertyDescriptor( target, prop );
+		return ownPropResult;
 	}
 };
 
@@ -307,13 +325,15 @@ odp(
 
 export const types = {
 	get createTypesCollection (): CreateTypesCollectionFunction {
-		return function ( config: Record<string, unknown> = {} ): TypesCollection {
-			const result = createTypesCollection( config ) as TypesCollection;
-			return result;
+		const result = function ( config: Record<string, unknown> = {} ): TypesCollection {
+			const collectionResult = createTypesCollection( config ) as TypesCollection;
+			return collectionResult;
 		};
+		return result;
 	},
 	get defaultTypes (): TypesCollection {
-		return DEFAULT_TYPES as TypesCollection;
+		const result = DEFAULT_TYPES as TypesCollection;
+		return result;
 	}
 
 };

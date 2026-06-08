@@ -244,11 +244,12 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 			'extract',
 			{
 				get () {
-					return () => {
+					const extractGetter = () => {
 						const _parent = parent(erroredInstance);
 						const extractResult = extract(_parent);
 						return extractResult;
 					};
+					return extractGetter;
 				}
 			} 
 		);
@@ -258,10 +259,11 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 			'parse',
 			{
 				get () {
-					return () => {
+					const parseGetter = () => {
 						const parseResult = parse( erroredInstance );
 						return parseResult;
 					};
+					return parseGetter;
 				}
 			} 
 		);

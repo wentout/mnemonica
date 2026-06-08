@@ -140,9 +140,11 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 		'extract',
 		{
 			get () {
-				return () => {
-					return instance.extract();
+				const result = () => {
+					const extractResult = instance.extract();
+					return extractResult;
 				};
+				return result;
 			}
 		} 
 	);
@@ -152,10 +154,11 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 		'parse',
 		{
 			get () {
-				return () => {
-					const result = parse( instance );
-					return result;
+				const result = () => {
+					const parseResult = parse( instance );
+					return parseResult;
 				};
+				return result;
 			}
 		} 
 	);
@@ -250,7 +253,7 @@ const prepareException = function ( this: object, target: unknown, error: Error,
 	ExceptionCreator.ModificatorType = makeErrorModificatorType(
 		TypeName,
 		function (this: Error) {
-			return exceptionConsctructHandler.call(
+			const handlerResult = exceptionConsctructHandler.call(
 				this,
 				{
 					instance,
@@ -260,12 +263,14 @@ const prepareException = function ( this: object, target: unknown, error: Error,
 					error
 				} 
 			);
+			return handlerResult;
 		} 
 	);
 
 	ExceptionCreator.InstanceModificator = makeInstanceModificator( ExceptionCreator );
 
-	return new ExceptionCreator.InstanceModificator();
+	const result = new ExceptionCreator.InstanceModificator();
+	return result;
 };
 
 export default prepareException;

@@ -1,6 +1,9 @@
 'use strict';
 
-import { _Internal_TC_ } from '../../types';
+import {
+	_Internal_TC_,
+	TypeDef
+} from '../../types';
 
 interface SubtypeEntry {
 	TypeName: string;
@@ -30,11 +33,12 @@ import exceptionConstructor from '../errors/exceptionConstructor';
 import { InstanceCreator } from './InstanceCreator';
 
 import {
-	_getProps, Props 
+	_getProps, Props
 } from './Props';
 
 const getDefaultPrototype = () => {
-	return Object.create(null);
+	const result = Object.create(null);
+	return result;
 };
 
 // const InstanceRoots = new WeakMap;
@@ -42,34 +46,38 @@ const getDefaultPrototype = () => {
 const MnemonicaProtoProps = {
 
 	extract () {
-		return function (this: object) {
-			const result = extract(this);
-			return result;
+		const result = function (this: object) {
+			const extractResult = extract(this);
+			return extractResult;
 		};
+		return result;
 	},
 
 	pick () {
-		return function (this: object, ...args: (string | string[])[]) {
-			const result = pick(
+		const result = function (this: object, ...args: (string | string[])[]) {
+			const pickResult = pick(
 				this,
 				...args
 			);
-			return result;
+			return pickResult;
 		};
+		return result;
 	},
 
 	parent () {
-		return function (this: object, constructorLookupPath: string) {
-			const result = parent(
+		const result = function (this: object, constructorLookupPath: string) {
+			const parentResult = parent(
 				this,
 				constructorLookupPath
 			);
-			return result;
+			return parentResult;
 		};
+		return result;
 	},
 
 	clone (this: { fork: () => object }) {
-		return this.fork();
+		const result = this.fork();
+		return result;
 	},
 
 	fork (this: object) {
@@ -90,8 +98,8 @@ const MnemonicaProtoProps = {
 		} = type;
 
 		// 'function', cause might be called with 'new'
-		 
-		return function (this: object, ...forkArgs: unknown[]) {
+
+		const result = function (this: object, ...forkArgs: unknown[]) {
 
 			let forked;
 			const Constructor = isSubType ?
@@ -102,7 +110,7 @@ const MnemonicaProtoProps = {
 
 
 			if (this === __self__) {
-				 
+
 				// @ts-expect-error  this is definitely a constructor
 				forked = new (Constructor[ TypeName ])(...args);
 			} else {
@@ -117,6 +125,7 @@ const MnemonicaProtoProps = {
 			return forked;
 
 		};
+		return result;
 	},
 
 	[ SymbolConstructorName ] () {
@@ -124,21 +133,23 @@ const MnemonicaProtoProps = {
 	},
 
 	exception () {
-		 
+
 		const self = this;
-		return function (error: Error, ...args: unknown[]) {
+		const result = function (error: Error, ...args: unknown[]) {
 			const target = new.target;
-			return exceptionConstructor.call(
+			const exceptionResult = exceptionConstructor.call(
 				self,
 				target,
 				error,
 				...args
 			);
+			return exceptionResult;
 		};
+		return result;
 	},
 
 	sibling () {
-		 
+
 		const siblings = (SiblingTypeName: string) => {
 
 			const props = _getProps(this) as Props;
@@ -147,19 +158,20 @@ const MnemonicaProtoProps = {
 			return sibling;
 		};
 
-		return new Proxy(
+		const result = new Proxy(
 			siblings,
 			{
 				get (_, prop: string) {
-					const result = siblings(prop);
-					return result;
+					const proxyResult = siblings(prop);
+					return proxyResult;
 				},
 				apply (_, __, args,) {
-					const result = siblings(args[ 0 ]);
-					return result;
+					const proxyResult = siblings(args[ 0 ]);
+					return proxyResult;
 				}
 			}
 		);
+		return result;
 	}
 
 };
@@ -200,52 +212,33 @@ const staticProps = [
 // tslint:disable-next-line: only-arrow-functions
 const makeSubTypeProxy = function (subtype: SubtypeEntry, inheritedInstance: unknown) {
 
-	const subtypeProxy = new Proxy(
-		InstanceCreator,
-		{
-
-			get (Target, _prop) {
-
-				if (_prop === Symbol.hasInstance) {
-					const result = getTypeChecker(subtype.TypeName);
-					return result;
-				}
-
-				return Reflect.get(
-					Target,
-					_prop
-				);
-
-			},
-
-			construct (Target, _args) {
-				return new Target(
-					subtype,
-					inheritedInstance,
-					_args
-				);
-			},
-
-			apply (Target, thisArg, _args) {
-
-				if (thisArg === undefined) {
-					thisArg = inheritedInstance;
-				}
-
-				const existentInstance = reflectPrimitiveWrappers(thisArg);
-
-				const entity = new Target(
-					subtype,
-					existentInstance,
-					_args
-				);
-				return entity;
-			},
-
+	const SubTypeProxy = function (this: unknown, ..._args: unknown[]) {
+		if (new.target) {
+			const instanceResult = new InstanceCreator(
+				subtype as TypeDef,
+				inheritedInstance as object,
+				_args
+			);
+			return instanceResult;
 		}
-	);
+		const thisArg = this === undefined ? inheritedInstance : this;
+		const existentInstance = reflectPrimitiveWrappers(thisArg);
+		const instance = new InstanceCreator(
+			subtype as TypeDef,
+			existentInstance as object,
+			_args
+		);
+		return instance;
+	};
 
-	return subtypeProxy;
+	const typeChecker = getTypeChecker(subtype.TypeName);
+	Object.defineProperty(SubTypeProxy, Symbol.hasInstance, {
+		get () {
+			return typeChecker;
+		} 
+	});
+
+	return SubTypeProxy;
 };
 
 const prepareSubtypeForConstruction = function (subtypeName: string, inheritedInstance: unknown) {
@@ -270,14 +263,15 @@ const prepareSubtypeForConstruction = function (subtypeName: string, inheritedIn
 		strictChain ?
 			undefined :
 			findSubTypeFromParent(
-inheritedInstance as object,
-subtypeName
+				inheritedInstance as object,
+				subtypeName
 			);
 
-	return subtype ? makeSubTypeProxy(
+	const result = subtype ? makeSubTypeProxy(
 		subtype,
 		inheritedInstance
 	) : undefined;
+	return result;
 };
 
 const mnemosyneProxyHandlerGet = (target: object, prop: string, receiver: unknown) => {
@@ -316,11 +310,12 @@ const mnemosyneProxyHandlerGet = (target: object, prop: string, receiver: unknow
 		prop,
 		receiver
 	);
-	return subtype || result;
+	const subTypeResult = subtype || result;
+	return subTypeResult;
 };
 
 export const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMethods: boolean) {
-	 
+
 	const instance = this;
 
 	// because we must instantiate new chain for root
@@ -337,7 +332,7 @@ export const Mnemosyne = function (this: object, mnemonica: object, exposeInstan
 			}
 		);
 	} as _Internal_TC_<typeof MnemonicaProtoProps>;
-	
+
 	// this throws an error
 	Object.setPrototypeOf(
 		Mnemonica.prototype,
@@ -354,9 +349,10 @@ export const Mnemosyne = function (this: object, mnemonica: object, exposeInstan
 				name,
 				{
 					get () {
-					 
+
 						// @ts-expect-error there is a proxy and next line is callable
-						return method.call(this);
+						const methodResult = method.call(this);
+						return methodResult;
 					}
 				}
 			);
@@ -372,7 +368,8 @@ export const Mnemosyne = function (this: object, mnemonica: object, exposeInstan
 							MnemonicaProtoProps,
 							symbol
 						);
-						return symbolMethod.call(this);
+						const symbolResult = symbolMethod.call(this);
+						return symbolResult;
 					}
 				}
 			);
@@ -402,14 +399,14 @@ export const Mnemosyne = function (this: object, mnemonica: object, exposeInstan
 } as _Internal_TC_<object>;
 
 const createMnemosyne = function (Uranus: unknown, exposeInstanceMethods: boolean) {
-// const createMnemosyne = function (Uranus: unknown, typeProxy: unknown) {
-// 	if (typeof Uranus === 'undefined') {
-// 		const { __type__: type, Uranus: _uranus } = typeProxy;
-// 		console.log(type, _uranus);
-// 		// eslint-disable-next-line no-debugger
-// 		debugger;
-// 		throw new Error('createMnemosyne Uranus is not defined for typeProxy.');
-// 	}
+	// const createMnemosyne = function (Uranus: unknown, typeProxy: unknown) {
+	// 	if (typeof Uranus === 'undefined') {
+	// 		const { __type__: type, Uranus: _uranus } = typeProxy;
+	// 		console.log(type, _uranus);
+	// 		// eslint-disable-next-line no-debugger
+	// 		debugger;
+	// 		throw new Error('createMnemosyne Uranus is not defined for typeProxy.');
+	// 	}
 
 	const uranus = reflectPrimitiveWrappers(Uranus);
 	const mnemosyne = new Mnemosyne(
