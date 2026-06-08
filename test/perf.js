@@ -44,7 +44,8 @@ console.log('Diff 2:', diff2);
 const Creator = function (its) {
 	const Maker = function () {};
 	Maker.prototype = its;
-	return new Maker;
+	const result = new Maker;
+	return result;
 };
 
 start = process.hrtime.bigint();

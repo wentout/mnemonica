@@ -121,13 +121,14 @@ const pl2Proto = {
 
 
 const shaperFactory = () => {
-	return class Shaper {
+	const result = class Shaper {
 		constructor () {
 			// const zzz = new.target;
 			// Shaper;
 			this.shape = 123;
 		}
 	};
+	return result;
 };
 
 UserType.define(() => {
@@ -161,7 +162,8 @@ const DefinedByParentConstructorPropsProxy = function (str) {
 DefinedByParentConstructorPropsProxy.prototype = {
 	DefinedByParentConstructorPropsProxy : true,
 	SaySomething () {
-		return `something : ${this.DefinedByParentConstructorPropsProxy}`;
+		const result = `something : ${this.DefinedByParentConstructorPropsProxy}`;
+		return result;
 	}
 };
 
@@ -293,7 +295,8 @@ const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () { }, {
 
 const constructNested = function () {
 	const DoNestedConstruct = this.NestedConstruct;
-	return new DoNestedConstruct();
+	const result = new DoNestedConstruct();
+	return result;
 };
 
 var new_targets = [];
@@ -383,9 +386,10 @@ AsyncType.SubOfAsync.registerHook('postCreation', (hookData) => {
 });
 
 AsyncType.SubOfAsync.NestedAsyncType = async function (data) {
-	return Object.assign(this, {
+	const result = Object.assign(this, {
 		data
 	});
+	return result;
 };
 AsyncType.SubOfAsync.NestedAsyncType.prototype = {
 	description : 'nested async instance'
@@ -531,12 +535,14 @@ describe('Main Test', () => {
 	const ThrowTypeError = EvenMoreTypeDef.define('ThrowTypeError', require('./throw-type-error'));
 
 	const AsyncChain1st = WithAdditionalSignTypeDef.define('AsyncChain1st', async function (opts) {
-		return Object.assign(this, opts);
+		const result = Object.assign(this, opts);
+		return result;
 	}, {
 		submitStack : true
 	});
 	const AsyncChain2nd = AsyncChain1st.define('AsyncChain2nd', async function (opts) {
-		return Object.assign(this, opts);
+		const result = Object.assign(this, opts);
+		return result;
 	}, {
 		submitStack : true
 	});
@@ -546,7 +552,8 @@ describe('Main Test', () => {
 		submitStack : true
 	});
 	Async2Sync2nd.define('AsyncChain3rd', async function (opts) {
-		return Object.assign(this, opts);
+		const result = Object.assign(this, opts);
+		return result;
 	}, {
 		submitStack : true
 	});
@@ -1147,9 +1154,10 @@ describe('Main Test', () => {
 
 					Object.defineProperty(asyncSub, 'exception', {
 						get () {
-							return function () {
+							const result = function () {
 								return null;
 							};
+							return result;
 						}
 					});
 
@@ -1169,9 +1177,10 @@ describe('Main Test', () => {
 					const cae = 'check additional error';
 					Object.defineProperty(nestedAsyncInstance, 'exception', {
 						get () {
-							return function () {
+							const result = function () {
 								throw new Error(cae);
 							};
+							return result;
 						}
 					});
 

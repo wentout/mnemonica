@@ -146,14 +146,16 @@ const tests = (opts) => {
 
 			it('interface keys', () => {
 				const missingKeys = interface_keys.filter(key => {
-					return !mnemonica_keys.includes(key);
+					const result = !mnemonica_keys.includes(key);
+					return result;
 				});
 				expect(missingKeys.length).equal(0);
 			});
 
 			it('mnemonica keys', () => {
 				const missingKeys = mnemonica_keys.filter(key => {
-					return !interface_keys.includes(key);
+					const result = !interface_keys.includes(key);
+					return result;
 				});
 				expect(missingKeys.length).equal(0);
 			});
@@ -210,7 +212,7 @@ const tests = (opts) => {
 			});
 
 			const NamedClassPtr = UserType.define(() => {
-				return class NamedClass {
+				const result = class NamedClass {
 					constructor (snc) {
 						this.type = 'class';
 						this.snc = snc;
@@ -220,10 +222,11 @@ const tests = (opts) => {
 						return this.type;
 					}
 				};
+				return result;
 			});
 
 			UserType.define(function () {
-				return class NamedClass2 {
+				const result = class NamedClass2 {
 					constructor (snc) {
 						this.type = 'class';
 						this.snc = snc;
@@ -233,14 +236,16 @@ const tests = (opts) => {
 						return this.type;
 					}
 				};
+				return result;
 			});
 
 			const SubNamedClassPtr = NamedClassPtr.define(() => {
-				return class SubNamedClass {
+				const result = class SubNamedClass {
 					constructor () {
 						this.type = 'subclass';
 					}
 				};
+				return result;
 			});
 
 			it('named class definition exist', () => {
@@ -758,19 +763,23 @@ const tests = (opts) => {
 
 				[ 'this type has already been declared : WithoutPassword', () => {
 					define('UserTypeConstructor', () => {
-						return function WithoutPassword () { };
+						// eslint-disable-next-line func-name-matching
+						const result = function WithoutPassword () { };
+						return result;
 					});
 				}, errors.ALREADY_DECLARED ],
 
 				[ 'this type has already been declared : UserTypePL1', () => {
 					// in-depth re-declaration
 					define('UserType.UserTypePL1', () => {
-						return function () { };
+						const result = function () { };
+						return result;
 					});
 				}, errors.ALREADY_DECLARED ],
 
 				[ 'typename must be a string', () => {
 					define(() => {
+						// eslint-disable-next-line mnemonica/return-intermediate
 						return function () { };
 					});
 				}, errors.TYPENAME_MUST_BE_A_STRING ],
@@ -812,6 +821,7 @@ const tests = (opts) => {
 
 			try {
 				define(() => {
+					// eslint-disable-next-line mnemonica/return-intermediate
 					return function SetSomeName () { };
 				});
 			} catch (error) {
@@ -820,6 +830,7 @@ const tests = (opts) => {
 
 			try {
 				define(() => {
+					// eslint-disable-next-line mnemonica/return-intermediate
 					return class SetSomeName { };
 				});
 			} catch (error) {
@@ -840,6 +851,7 @@ const tests = (opts) => {
 
 			try {
 				define('SetSomeName', () => {
+					// eslint-disable-next-line mnemonica/return-intermediate
 					return function () { };
 				});
 			} catch (error) {

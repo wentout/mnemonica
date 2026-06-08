@@ -6,7 +6,8 @@ const {
 
 const odp = ( obj, prop, attributes ) => {
 	try {
-		return Object.defineProperty( obj, prop, attributes );
+		const result = Object.defineProperty( obj, prop, attributes );
+		return result;
 	} catch ( error ) {
 		console.error( error );
 	}
@@ -21,7 +22,7 @@ const bindMethod = function ( hookData, instance, methodName, MethodItself ) {
 		get () {
 			 
 			 
-			return function ( ...args ) {
+			const result = function ( ...args ) {
 				// || instance;
 				const applyTo = this !== undefined ? this : from;
 				const exceptionReason = {
@@ -65,6 +66,7 @@ const bindMethod = function ( hookData, instance, methodName, MethodItself ) {
 					throw boundMethodErrorHandler( exceptionReason );
 				}
 			};
+			return result;
 		},
 		enumerable : true
 	} );

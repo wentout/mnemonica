@@ -166,14 +166,17 @@ const tests = ( opts ) => {
 					// return await instance.AsyncChain1st({ async1st: '2_1st' });
 					// })
 					.then( async function ( instance ) {
-						return await instance.AsyncChain2nd( { async2nd : '2_2nd' } );
+						const result = await instance.AsyncChain2nd( { async2nd : '2_2nd' } );
+						return result;
 					} )
 					.then( async function ( instance ) {
 						// sync 2 async
-						return await instance.Async2Sync2nd( { sync : '2_is' } );
+						const result = await instance.Async2Sync2nd( { sync : '2_is' } );
+						return result;
 					} )
 					.then( async function ( instance ) {
-						return await instance.AsyncChain3rd( { async : '2_3rd' } );
+						const result = await instance.AsyncChain3rd( { async : '2_3rd' } );
+						return result;
 					} );
 
 				// debugger;
@@ -263,7 +266,9 @@ const tests = ( opts ) => {
 				stack
 			} = wrongSyncTypeErr;
 			expect( stack.indexOf( stackstart ) ).equal( 1 );
-			expect( stack.indexOf( 'async.chain.js:1' ) > 0 ).is.equal(true);
+			// process._rawDebug('stack');
+			// process._rawDebug(stack);
+			expect( stack.indexOf( 'async.chain.js:2' ) > 0 ).is.equal(true);
 			expect( wrongSyncTypeErr ).instanceOf( Error );
 			expect( wrongSyncTypeErr ).instanceOf( WrongSyncType );
 			expect( wrongSyncTypeErr ).instanceOf( errors.WRONG_MODIFICATION_PATTERN );
@@ -307,7 +312,8 @@ const tests = ( opts ) => {
 		const argsTest = { argsTest : 123 };
 
 		const sleep = ( time ) => {
-			return new Promise( ( resolve ) => setTimeout( resolve, time ) );
+			const result = new Promise( ( resolve ) => setTimeout( resolve, time ) );
+			return result;
 		};
 
 		const SleepType = define( 'SleepType', async function () {
@@ -508,7 +514,8 @@ const tests = ( opts ) => {
 		let asyncChildInstance;
 
 		const sleep = ( time ) => {
-			return new Promise( ( resolve ) => setTimeout( resolve, time ) );
+			const result = new Promise( ( resolve ) => setTimeout( resolve, time ) );
+			return result;
 		};
 
 		const AsyncParentType = define( 'AsyncParentType', async function () {

@@ -1,7 +1,8 @@
 'use strict';
 
 const odp = ( o, p, attributes ) => {
-	return Object.defineProperty( o, p, attributes );
+	const result = Object.defineProperty( o, p, attributes );
+	return result;
 };
 
 module.exports.boundMethodErrorHandler = ( exceptionReason ) => {
