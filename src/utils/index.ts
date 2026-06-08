@@ -6,6 +6,7 @@ import { collectConstructors } from './collectConstructors';
 import { extract } from './extract';
 import { parent } from './parent';
 import { pick } from './pick';
+import { sibling } from './sibling';
 import { toJSON } from './toJSON';
 import { parse } from './parse';
 import { merge } from './merge';
@@ -16,6 +17,7 @@ const utilsUnWrapped = {
 	pick,
 
 	parent,
+	sibling,
 
 	toJSON,
 

@@ -27,6 +27,7 @@ const {
 import { extract } from '../../utils/extract';
 import { parent } from '../../utils/parent';
 import { pick } from '../../utils/pick';
+import { sibling } from '../../utils/sibling';
 
 import exceptionConstructor from '../errors/exceptionConstructor';
 
@@ -149,28 +150,7 @@ const MnemonicaProtoProps = {
 	},
 
 	sibling () {
-
-		const siblings = (SiblingTypeName: string) => {
-
-			const props = _getProps(this) as Props;
-			const { __collection__: collection, } = props;
-			const sibling: unknown = collection[ SiblingTypeName ];
-			return sibling;
-		};
-
-		const result = new Proxy(
-			siblings,
-			{
-				get (_, prop: string) {
-					const proxyResult = siblings(prop);
-					return proxyResult;
-				},
-				apply (_, __, args,) {
-					const proxyResult = siblings(args[ 0 ]);
-					return proxyResult;
-				}
-			}
-		);
+		const result = sibling(this);
 		return result;
 	}
 
@@ -233,9 +213,7 @@ const makeSubTypeProxy = function (subtype: SubtypeEntry, inheritedInstance: unk
 
 	const typeChecker = getTypeChecker(subtype.TypeName);
 	Object.defineProperty(SubTypeProxy, Symbol.hasInstance, {
-		get () {
-			return typeChecker;
-		} 
+		value : typeChecker
 	});
 
 	return SubTypeProxy;
