@@ -1018,6 +1018,8 @@ describe('Main Test', () => {
 			userTCforkDAG,
 		});
 
+		require('./modificator.prototype.swap')();
+
 		if (asyncConstructionTest) {
 			describe('Async Constructors Test', () => {
 				var asyncInstance,
