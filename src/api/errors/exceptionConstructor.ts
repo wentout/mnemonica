@@ -13,8 +13,7 @@ import {
 	cleanupStack, getStack 
 } from '../errors';
 
-import { utils } from '../../utils';
-const { parse } = utils;
+import { parse } from '../../utils/parse';
 
 import TypesUtils from '../utils';
 

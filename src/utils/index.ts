@@ -7,6 +7,7 @@ import { extract } from './extract';
 import { parent } from './parent';
 import { pick } from './pick';
 import { sibling } from './sibling';
+import { exception } from './exception';
 import { toJSON } from './toJSON';
 import { parse } from './parse';
 import { merge } from './merge';
@@ -18,15 +19,14 @@ const utilsUnWrapped = {
 
 	parent,
 	sibling,
+	exception,
 
 	toJSON,
 
 	parse,
 	merge,
 
-	get collectConstructors () {
-		return collectConstructors;
-	},
+	collectConstructors,
 
 };
 
@@ -50,7 +50,7 @@ export const utils: { [ index: string ]: CallableFunction } = {
 				methods[ name ] = wrapThis( fn );
 				return methods;
 			},
-			{} 
+			{}
 		),
 
 };

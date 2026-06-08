@@ -28,8 +28,7 @@ import { extract } from '../../utils/extract';
 import { parent } from '../../utils/parent';
 import { pick } from '../../utils/pick';
 import { sibling } from '../../utils/sibling';
-
-import exceptionConstructor from '../errors/exceptionConstructor';
+import { exception } from '../../utils/exception';
 
 import { InstanceCreator } from './InstanceCreator';
 
@@ -134,18 +133,7 @@ const MnemonicaProtoProps = {
 	},
 
 	exception () {
-
-		const self = this;
-		const result = function (error: Error, ...args: unknown[]) {
-			const target = new.target;
-			const exceptionResult = exceptionConstructor.call(
-				self,
-				target,
-				error,
-				...args
-			);
-			return exceptionResult;
-		};
+		const result = exception(this);
 		return result;
 	},
 

@@ -2,7 +2,7 @@
 
 import { constants } from '../../constants';
 import { ErrorsTypes } from '../../descriptors/errors';
-import { utils } from '../../utils';
+import { collectConstructors } from '../../utils/collectConstructors';
 
 const {
 	odp,
@@ -12,8 +12,6 @@ const {
 } = constants;
 
 const { WRONG_TYPE_DEFINITION, } = ErrorsTypes;
-
-const { collectConstructors } = utils;
 
 import {
 	_getProps, Props 
@@ -55,11 +53,8 @@ const getTypeChecker = (TypeName: string) => {
 			return checkResult;
 		}
 
-		const constructors: {
-			string: new () => unknown
-		} = collectConstructors(instance);
+		const constructors = collectConstructors(instance) as Record<string, new () => unknown>;
 		 
-		// @ts-expect-error I'm too lazy for that
 		const constructorResult = constructors[ TypeName ] || false;
 		return constructorResult;
 
