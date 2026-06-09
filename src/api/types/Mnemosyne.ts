@@ -27,13 +27,14 @@ const {
 import { extract } from '../../utils/extract';
 import { parent } from '../../utils/parent';
 import { pick } from '../../utils/pick';
-import { sibling } from '../../utils/sibling';
-import { exception } from '../../utils/exception';
+// import { sibling } from '../../utils/sibling';
+// import { exception } from '../../utils/exception';
+import exceptionConstructor from '../errors/exceptionConstructor';
 
 import { InstanceCreator } from './InstanceCreator';
 
 import {
-	_getProps, Props
+	_getProps, Props, getProps
 } from './Props';
 
 const getDefaultPrototype = () => {
@@ -133,12 +134,45 @@ const MnemonicaProtoProps = {
 	},
 
 	exception () {
-		const result = exception(this);
+
+		const instance = this;
+		const result = function (this: object, error: Error, ...args: unknown[]) {
+			const target = new.target;
+			const exceptionResult = exceptionConstructor.call(
+				instance,
+				target,
+				error,
+				...args
+			);
+			return exceptionResult;
+		};
 		return result;
+
 	},
 
 	sibling () {
-		const result = sibling(this);
+		const instance = this;
+		const siblings = (SiblingTypeName: string) => {
+			const props = getProps(instance) as Props;
+			const { __collection__: collection, } = props;
+			const answer = collection[ SiblingTypeName ];
+			return answer;
+		};
+
+		const result = new Proxy(
+			siblings,
+			{
+				get (_, prop: string) {
+					const proxyResult = siblings(prop);
+					return proxyResult;
+				},
+				apply (_, __, args,) {
+					const proxyResult = siblings(args[ 0 ]);
+					return proxyResult;
+				}
+			}
+		);
+
 		return result;
 	}
 
