@@ -37,15 +37,15 @@ const tests = ( opts ) => {
 			// assert.equal( 188, typesFlowCheckerInvocations.length );
 			// assert.equal( 90, typesFlowCheckerInvocations.length );
 
-			assert.equal( 201, typesFlowCheckerInvocations.length );
+			assert.equal( 209, typesFlowCheckerInvocations.length );
 
 			// +1
-			assert.equal( 109, typesPreCreationInvocations.length );
+			assert.equal( 113, typesPreCreationInvocations.length );
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
 			// +1
-			assert.equal( 184, typesPostCreationInvocations.length );
+			assert.equal( 192, typesPostCreationInvocations.length );
 		} );
 	} );
 

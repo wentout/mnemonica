@@ -3,6 +3,7 @@
 import { beforeAll, describe, expect, it, test } from '@jest/globals';
 import { asyncChainTests } from './async.chain';
 import { environmentTests } from './environment';
+import './utils';
 import type {
 	HookInvocationEntry,
 	HookInvocationsArray,
