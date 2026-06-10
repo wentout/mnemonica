@@ -48,6 +48,35 @@ for (item of items) {      // Control flow: iteration
 
 **Mnemonica does NOT touch this**: Algorithms remain unchanged. Services stay intact. Control flow is crafted by developers (and AI agents) as needed.
 
+### What Mnemonica Does NOT Do — Concrete Examples
+
+```typescript
+// ❌ Mnemonica does NOT replace if/else
+if (user.role === 'admin') {
+    // This logic is yours. Mnemonica provides the typed data,
+    // not the decision rule.
+}
+
+// ❌ Mnemonica does NOT replace loops
+for (const item of items) {
+    // Iteration control is yours.
+}
+
+// ❌ Mnemonica does NOT replace async/await orchestration
+const a = await serviceA.get();
+const b = await serviceB.process(a);
+// Mnemonica types the data, not the execution order.
+
+// ❌ Mnemonica does NOT replace service boundaries
+// You still write HTTP handlers, database queries, message queues.
+// Mnemonica types the data that flows through them.
+
+// ✅ Mnemonica DOES type the data at each stage
+const RequestData = define('RequestData', function(req) { this.method = req.method; });
+const ResponseData = RequestData.define('ResponseData', function(res) { this.body = res.body; });
+// The types track lineage; the services remain unchanged.
+```
+
 ---
 
 ## Part 2: The Problem - Data Without Memory
@@ -246,7 +275,7 @@ p instanceof Vector; // false - same shape, different nominal type!
 
 Mnemonica cares about **constructor identity**. Same shape, different type = not compatible.
 
-### Protected `constructor.name` - MITM-Resistant
+### Protected `constructor.name` - Defense-in-Depth
 
 Mnemonica types have **read-only, protected constructor names**:
 
@@ -261,10 +290,12 @@ user.constructor.name = 'Admin';  // ✗ Ignored/Fails - protected
 ```
 
 **Why This Matters**:
-- MITM (Man-in-the-Middle) attacks on prototype chains are **impossible**
-- An attacker cannot spoof a type by overwriting constructor names
-- `instanceof` checks are cryptographically reliable
+- Prototype pollution attacks that rely on name spoofing are **blocked at the assignment level**
+- `instanceof` checks **prototype object references**, not constructor names, so name changes do not affect type identity
+- Constructor names are getter-protected and non-enumerable, making casual tampering impossible
 - Type identity is immutable once established
+
+**Threat Model**: This is defense-in-depth, not cryptographic security. A fully compromised execution environment can still use `Object.defineProperty` to redefine the getter. The protection targets casual prototype pollution and accidental corruption, not a determined attacker with full runtime access.
 
 ### Security Through `Object.create(null)`
 
@@ -640,7 +671,7 @@ console.log(props.__parent__);            // undefined (root type)
 - Historical reflection embedded in data structures
 - The DNA of data as it moves through systems
 - A **nominal type system** (constructor identity, not shape)
-- A **secure** system (MITM-resistant, prototype pollution immune)
+- A **secure** system (defense-in-depth against prototype pollution, nominal typing prevents type confusion)
 
 **Mnemonica Is NOT**:
 - A control flow framework

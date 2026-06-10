@@ -28,7 +28,7 @@ Mnemonica promotes the Trie from implementation detail to first-class data model
 
 Every instance carries its full history. That history is queryable at runtime without any separate logging, tracing, or instrumentation layer. The construction record *is the object*.
 
-The formal model that explains why this is the right structure for typed data pipelines: **Homotopy Type Theory**. The Trie is a monad — `new instance.SubType()` is bind, threading construction context forward. Parent plus constructor uniquely determines position in the Trie; there is no "equivalent but distinct." An instance is not a snapshot of state — it is a point on a constructible, replayable path.
+The design is **inspired by** Homotopy Type Theory. The Trie behaves monadically — `new instance.SubType()` threads construction context forward like bind. Parent plus constructor uniquely determines position in the Trie; there is no "equivalent but distinct." An instance is not a snapshot of state — it is a point on a constructible, replayable path. These are productive analogies that illuminate why the structure works, not claims of a formal HoTT embedding.
 
 You do not need HoTT to use mnemonica. The [primer below](#a-brief-hott-primer-for-agents-who-dont-have-one-loaded) is there when you want the formal picture. If theory feels abstract before examples land, [The four data mistakes](#the-four-data-mistakes-mnemonica-fixes) is the right starting point.
 
@@ -164,7 +164,7 @@ In mnemonica, you **cannot**:
 - Reuse a constructor across instances (would create parallel paths)
 - Create subtypes from the wrong parent (`strictChain: true` enforces — default)
 
-These restrictions are not arbitrary. They are runtime enforcement of HoTT's identity-as-path discipline. Subtype creation uses *instance-level* inheritance:
+These restrictions are not arbitrary. They are runtime enforcement of the identity-as-path discipline that HoTT inspired: a path is determined by its endpoints and the specific steps taken, not by arbitrary identifications. Subtype creation uses *instance-level* inheritance:
 
 ```typescript
 const user  = new UserType({ name: 'Alice' });
@@ -175,6 +175,27 @@ const admin = new user.AdminType({ role: 'admin' });
 ```
 
 Each admin remembers which specific user it came from. The chain back to the root is the instance's identity. See [`src/api/types/Mnemosyne.ts`](./src/api/types/Mnemosyne.ts), [`src/api/types/TypeProxy.ts`](./src/api/types/TypeProxy.ts).
+
+---
+
+## Formal definitions
+
+These terms are used throughout the codebase and documentation with precise meanings.
+
+| Term | Definition |
+|---|---|
+| **Trie node** | A type definition created by `define()`. Has a name, a constructor handler, a prototype, and a Map of subtypes. |
+| **Trie edge** | A parent-child relationship between two nodes. Created by `ParentType.define('ChildType', ...)`. |
+| **Trie path** | A sequence of edges from the root to a specific node. `UserType → AdminType → SuperAdminType` is a path. |
+| **Construction context** | The 9-tuple stored per instance: `__type__`, `__parent__`, `__args__`, `__timestamp__`, `__creator__`, `__collection__`, `__subtypes__`, `__proto_proto__`, `__stack__`. Readable via `getProps(instance)`. |
+| **Instance-level inheritance** | The mechanism where `new alice.Employee()` creates a prototype chain whose immediate parent is the **specific instance** `alice`, not a shared `Employee.prototype`. |
+| **Nominal type** | A type whose identity is determined by its constructor function reference, not by its property shape. Two types with identical fields but different constructors are different types. |
+| **Mnemosyne** | The prototype object inserted between `ModificatorType.prototype` and the parent instance. Stores internal construction context and instance methods (`extract`, `pick`, `parent`, etc.). |
+| **TypeProxy** | The constructor-like object returned by `define()`. Wraps the raw constructor with `.define()`, `.lookup()`, `.registerHook()` methods. |
+| **ModificatorType** | The actual constructor function used for `new` calls. Its prototype is linked to Mnemosyne, which is linked to the parent instance. |
+| **WeakMap key** | Internal properties are stored in a `WeakMap` keyed by the **Mnemosyne object**, not the instance itself. This keeps instance enumeration clean and shares metadata across instances of the same type. |
+
+For the full construction pipeline from `define()` through `TypeProxy` → `InstanceCreator` → `Mnemosyne` → instance, see [`docs/theory-of-operations.md`](./docs/theory-of-operations.md).
 
 ---
 
@@ -249,25 +270,47 @@ This is not pseudocode — it is a working pattern for production HTTP request h
 
 You don't need to know Homotopy Type Theory to use mnemonica. You do need it to appreciate *why* the design is what it is. Five concepts matter here.
 
-**Univalence Axiom.** In HoTT, equivalence and identity coincide — there is no gap between "same structure" and "same thing." Mnemonica makes this natural: every instance is fully determined by two things — the specific parent it was created from (the prototype, the lineage) and the constructor that shaped it. Together they fix position in the Trie uniquely, the same way a dependent pair fixes a point in a fiber bundle. There is no "equivalent but distinct" within this structure. Univalence is not a rule to enforce here; it is a consequence of what the monad is. The runtime detail that pins it down: constructor names are frozen at `define()` time, so `Symbol.hasInstance` checks the name (a nominal identity), not the shape.
+**Scope boundary first.** Mnemonica is **inspired by** HoTT, not a formal implementation of it. The structural correspondences are productive analogies that illuminate why the Trie model is the right structure for typed data pipelines. They are not claims of a mathematical embedding. Specifically:
+- **Higher paths** (paths between paths) have no direct analogue in mnemonica
+- **Univalence** is an intuition about nominal typing, not a formal axiom
+- **Higher Inductive Types** are a useful framing, not a literal implementation
 
-**Path Types.** In HoTT, equality is a type. `Id(a, b)` is the type of *paths* witnessing that `a` and `b` are equal. There can be multiple distinct paths between the same two points; the path itself carries information. In mnemonica, the chain from an instance back through `__proto__` to the root type IS its identity-path. The `__args__` along the way parameterize that path.
+Where the correspondence *is* exact — the monad laws, path uniqueness, and the Trie structure — that precision is worth highlighting.
 
-**Higher Inductive Types (HITs).** A type defined by its constructors AND by paths between values. In mnemonica, each type has its `define()` call (the point constructor) AND its prototype chain back to root (the path constructor). The Trie structure is literally a HIT.
+---
 
-**Synthetic Topology.** In HoTT, types are spaces and functions between types are continuous maps. Mnemonica's Trie is a connected topological space: every defined type is reachable from the root by construction edges, and the connectivity persists for the lifetime of the process. The `defaultTypes.subtypes` Map is the runtime representation of this space.
+### The Trie as a monad
 
-**Fibrations.** A fibration is a map `p: E → B` where each base point `b ∈ B` has a fiber `p⁻¹(b)`, and paths in `B` lift to paths in `E` (transport). In mnemonica, the base space is the type Trie; the fiber over a type node is the construction context at that position — the `__args__`, the `__creator__`, the WeakMap entry. A subtype creation `new instance.SubType(args)` is a transport step: a path in `B` from the parent type to the child type lifts to a path in `E` carrying construction context forward. Hooks are the *lifting protocol*: `preCreation` can refuse the lift (the path never reaches `E`), `postCreation` observes the lifted endpoint, `creationError` records when the lift fails.
+The monad claim is the most precisely correct analogy. In mnemonica:
 
-These are not analogies. The structural correspondences are exact. Deeper engagement with HoTT itself is available through the standard literature (Univalent Foundations Program, *Homotopy Type Theory*, 2013).
-
-| HoTT Concept | Mnemonica Realization | Code in this package |
+| Monad Law | mnemonica Equivalent | Holds? |
 |---|---|---|
-| Univalence | Frozen nominal name = identity; no "equivalent but distinct" | [`src/api/types/index.ts`](./src/api/types/index.ts) (`Symbol.hasInstance`) |
-| Path Types | The proto chain to root IS the identity-path | [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts) |
-| HITs | Types as point constructors + parent-edge path constructors | The Trie itself |
-| Synthetic Topology | Trie as connected, always-on topological space | `defaultTypes.subtypes` Map |
-| Fibrations | Construction contexts as fibers; hooks as lifting protocol | `preCreation` / `postCreation` / `creationError` |
+| **Left identity** (`return x >>= f = f x`) | `define(T) >>= construct` produces an instance of `T` | Structurally ✓ |
+| **Right identity** (`m >>= return = m`) | `instance >>= define(SubT)` produces `instance` with `SubT` context | By construction ✓ |
+| **Associativity** (`(m >>= f) >>= g = m >>= (λx. f x >>= g)`) | Chaining `a.SubType().SubSubType()` is prototype-chain associative | Structurally ✓ |
+
+The `bind` operation is `new instance.SubType(args)`: it takes a value in context (`instance`), applies a function that produces a new contextualized value (`SubType` constructor), and returns a value in the combined context (`child` inherits from `instance` and carries `SubType` type). The associativity holds because the prototype chain is inherently associative: `instance -> Mnemosyne -> parent` extends linearly without reordering.
+
+### The five HoTT concepts
+
+**Univalence Axiom.** In HoTT, equivalence and identity coincide — there is no gap between "same structure" and "same thing." Mnemonica's nominal typing makes this intuition natural: two instances with identical property shapes but different constructors are *different types*. The constructor name (frozen at `define()` time) is the identity, not the shape. This is an **analogy** — mnemonica does not implement the univalence axiom formally, but the intuition that "identity is determined by constructor, not structure" is HoTT-inspired.
+
+**Path Types.** In HoTT, equality is a type. `Id(a, b)` is the type of *paths* witnessing that `a` and `b` are equal. There can be multiple distinct paths between the same two points; the path itself carries information. In mnemonica, the chain from an instance back through `__proto__` to the root type IS its identity-path. The `__args__` along the way parameterize that path. This correspondence is **structurally exact**.
+
+**Higher Inductive Types (HITs).** A type defined by its constructors AND by paths between values. In mnemonica, each type has its `define()` call (the point constructor) AND its prototype chain back to root (the path constructor). The Trie structure can be **viewed as** a HIT. This is a productive analogy, not a formal encoding — mnemonica does not implement path constructors as first-class operations.
+
+**Synthetic Topology.** In HoTT, types are spaces and functions between types are continuous maps. Mnemonica's Trie is a connected topological space: every defined type is reachable from the root by construction edges, and the connectivity persists for the lifetime of the process. The `defaultTypes.subtypes` Map is the runtime representation of this space. This is a **useful metaphor** for understanding type reachability.
+
+**Fibrations.** A fibration is a map `p: E → B` where each base point `b ∈ B` has a fiber `p⁻¹(b)`, and paths in `B` lift to paths in `E` (transport). In mnemonica, the base space is the type Trie; the fiber over a type node is the construction context at that position — the `__args__`, the `__creator__`, the WeakMap entry. A subtype creation `new instance.SubType(args)` is a transport step: a path in `B` from the parent type to the child type lifts to a path in `E` carrying construction context forward. Hooks are the *lifting protocol*: `preCreation` can refuse the lift, `postCreation` observes the lifted endpoint, `creationError` records when the lift fails. This is a **productive analogy** for understanding how construction context propagates.
+
+| HoTT Concept | Status | Mnemonica Realization | Code in this package |
+|---|---|---|---|
+| Monad (bind/unit/associativity) | **Exact** | `new instance.SubType()` threads context; prototype chain is associative | [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts) |
+| Path Types | **Exact** | The proto chain to root IS the identity-path | [`src/api/types/createInstanceModificator.ts`](./src/api/types/createInstanceModificator.ts) |
+| Univalence | **Analogy** | Nominal typing: constructor name = identity, not shape | [`src/api/types/index.ts`](./src/api/types/index.ts) (`Symbol.hasInstance`) |
+| HITs | **Analogy** | Types as point constructors + parent-edge path constructors | The Trie itself |
+| Synthetic Topology | **Metaphor** | Trie as connected, always-on topological space | `defaultTypes.subtypes` Map |
+| Fibrations | **Analogy** | Construction contexts as fibers; hooks as lifting protocol | `preCreation` / `postCreation` / `creationError` |
 
 ---
 
@@ -377,6 +420,8 @@ new instance.SubType(args)
 
 See [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts) and [`src/api/types/TypeProxy.ts`](./src/api/types/TypeProxy.ts).
 
+For the full construction pipeline with source file references for every stage, see [`docs/theory-of-operations.md`](./docs/theory-of-operations.md).
+
 ### Type system primitives (TypeScript)
 
 | Type | Role |
@@ -427,11 +472,12 @@ Everything below ships with this package.
 1. [`AGENTS.md`](./AGENTS.md) — Rule #1, change-type reading guide, code style, editing rules
 2. [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) — five-minute editor onboarding
 3. [`CONTRIBUTING.md`](./CONTRIBUTING.md) — local workflow, branching, release process
-4. [`.ai/CODE.md`](./.ai/CODE.md), [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific deeper rules
-5. [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) — deeper tactica integration patterns
-6. [`.ai/async_init.md`](./.ai/async_init.md) — async constructor patterns
-7. [`.ai/rules-skill/`](./.ai/rules-skill/) — granular rules for type system, hooks, code style, errors, testing
-8. [`.ai/rules/`](./.ai/rules/) — broader contributor rules
+4. [`docs/theory-of-operations.md`](./docs/theory-of-operations.md) — full construction pipeline from `define()` through `InstanceCreator` to instance return, with source file references for every stage
+5. [`.ai/CODE.md`](./.ai/CODE.md), [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific deeper rules
+6. [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) — deeper tactica integration patterns
+7. [`.ai/async_init.md`](./.ai/async_init.md) — async constructor patterns
+8. [`.ai/rules-skill/`](./.ai/rules-skill/) — granular rules for type system, hooks, code style, errors, testing
+9. [`.ai/rules/`](./.ai/rules/) — broader contributor rules
 
 The full TypeScript source is in [`src/`](./src/) (on GitHub; the npm package ships compiled output in `build/` and `module/`).
 

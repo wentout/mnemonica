@@ -122,7 +122,7 @@ if (isSubType && strictChain) {
 
 **mnemonica's defense:**
 - **Nominal typing:** A `Payment` and `Invoice` with identical fields are *not* interchangeable. `instanceof` answers "was this created by this specific constructor?" not "does it have these properties?"
-- **Immutable constructor names:** `Object.defineProperty` sets `name` as non-writable. MITM attacks on prototype chains via name spoofing are impossible.
+- **Immutable constructor names:** `Object.defineProperty` sets `name` as a getter without a setter, making casual assignment silently ignored (non-strict) or thrown (strict mode). `instanceof` checks prototype object references, not names, so type identity is unaffected by name spoofing. This is defense-in-depth against prototype pollution, not cryptographic immutability.
 - **Construction provenance:** Every instance carries `__type__`, `__parent__`, `__args__`, `__timestamp__`, `__creator__`. The data *is* its own audit log.
 
 **Honesty check:** This does not prevent a compromised process from lying about `__timestamp__` (it can set any value). But it makes *accidental* data corruption detectable and *intentional* tampering require explicit attack code rather than natural language confusion.
