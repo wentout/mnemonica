@@ -444,53 +444,20 @@ const subInstance = call(someInstance, SomeSubType, 'arg1', 'arg2');
 
 ### Exported Type Definitions
 
-The following types are available for advanced TypeScript usage:
+The most commonly used types for TypeScript projects:
 
 ```typescript
 import {
-  // Core constructor types
-  IDEF,                          // Base constructor function type: { new(): T } | { (this: T, ...args): void }
-  ConstructorFunction,           // Constructor with prototype
-  Constructor,                   // Generic constructor type
-  
-  // Instance types
-  MnemonicaInstance,             // Instance methods interface (extract, pick, parent, fork, etc.)
-  Props,                         // Internal instance properties (__type__, __args__, __parent__, etc.)
-  SiblingAccessor,               // Sibling type accessor type
-  
-  // Type definition types
-  TypeClass,                     // Base type constructor returned by define()
-  IDefinitorInstance,            // Definitor instance with define/lookup methods and subtypes
-  DecoratedClass,                // Type for @decorate decorated classes
-  TypeDef,                       // Type definition object structure
-  
-  // Configuration types
-  constructorOptions,            // Type config options (strictChain, blockErrors, etc.)
-  hooksTypes,                    // 'preCreation' | 'postCreation' | 'creationError'
-  hook,                          // Hook callback type
-  hooksOpts,                     // Hook options passed to callbacks
-  CollectionDef,                 // Types collection definition
-  
-  // Utility function types
-  ApplyFunction,                 // apply(entity, Ctor, args) => S
-  CallFunction,                  // call(entity, Ctor, ...args) => S
-  BindFunction,                  // bind(entity, Ctor) => (...args) => S
-  
-  // createTypesCollection types — use only when you need isolation
-  CreateTypesCollectionFunction, // (config?: constructorOptions) => TypesCollection
-  TypesCollection,               // Interface returned by createTypesCollection
-  
-  // Configuration helper types
-  HideInstanceMethodsOptions,    // constructorOptions & { exposeInstanceMethods: true }
-  IsHidingMethods<Config>,       // Conditional type for exposeInstanceMethods: false detection
-  
-  // Utility types
-  Proto<P, T>,                   // Merges parent P and child T types
-  SN,                            // String-Name map for nested constructors
-  SubtypesMap,                   // Map<string, TypeClass>
-  TypeAbsorber,                  // Main define() function interface with overloads
+  IDEF,                // Base constructor function type
+  MnemonicaInstance,   // Instance methods interface (extract, pick, parent, fork, etc.)
+  constructorOptions,  // Type config options (strictChain, blockErrors, etc.)
+  hooksTypes,          // 'preCreation' | 'postCreation' | 'creationError'
+  hook,                // Hook callback type
+  TypeClass,           // Base type constructor returned by define()
 } from 'mnemonica';
 ```
+
+Additional types available: `Constructor`, `Props`, `SiblingAccessor`, `IDefinitorInstance`, `DecoratedClass`, `TypeDef`, `CollectionDef`, `hooksOpts`, `ApplyFunction`, `CallFunction`, `BindFunction`, `CreateTypesCollectionFunction`, `TypesCollection`, `HideInstanceMethodsOptions`, `IsHidingMethods`, `Proto`, `SubtypesMap`, `TypeAbsorber`. See [`src/types/index.ts`](./src/types/index.ts) for full definitions.
 
 ### Generic Type Patterns
 
@@ -537,6 +504,19 @@ const AsyncTypeNoReturn = define('AsyncType', async function () {
 ---
 
 ## API Reference
+
+**Quick reference:**
+
+| I want to... | Use |
+|---|---|
+| Define a type | `define('Name', ctor)` |
+| Create from instance | `new instance.SubType(args)` |
+| Look up a type | `lookup('Name')` or `lookupTyped('Name')` |
+| Read construction history | `getProps(instance)` |
+| Get parent instance | `instance.parent()` or `instance.parent('TypeName')` |
+| Flatten to plain object | `instance.extract()` |
+| Add lifecycle hooks | `type.registerHook('postCreation', cb)` |
+| Use classes | `@decorate()` decorator |
 
 ### Core Functions
 
@@ -623,24 +603,16 @@ const subInstance = createSub('arg1', 'arg2');
 
 TypeScript decorator for class-based definitions.
 
-**Usage Patterns:**
-
 ```typescript
 import { decorate } from 'mnemonica';
 
-// 1. Basic decoration
+// Basic decoration
 @decorate()
 class MyClass {
   field: number = 123;
 }
 
-// 2. With configuration
-@decorate({ strictChain: false, blockErrors: true })
-class ConfiguredClass {
-  field: number = 123;
-}
-
-// 3. Nested decoration (define as subtype)
+// Nested decoration (define as subtype)
 @decorate()
 class ParentClass {
   parentField: string = 'parent';
@@ -654,30 +626,23 @@ class ChildClass {
 // Create parent instance, then child from it
 const parent = new ParentClass();
 const child = new parent.ChildClass();
+```
 
-// 4. Parent with configuration
+**With configuration:**
+
+```typescript
+@decorate({ strictChain: false, blockErrors: true })
+class ConfiguredClass {
+  field: number = 123;
+}
+
 @decorate(ParentClass, { strictChain: false })
 class ConfiguredChildClass {
   field: number = 123;
 }
-
-// 5. Using decorated class as decorator (advanced)
-// After a class is decorated with @decorate(), it can be used
-// as a decorator for nested types
-@decorate()
-class BaseDecorator {
-  baseField: number = 100;
-}
-
-// Use BaseDecorator as a decorator
-// @ts-ignore - TypeScript limitation with callable class types
-@BaseDecorator()
-class ExtendedClass {
-  extField: number = 200;
-}
 ```
 
-**Note:** When using decorated classes as decorators (pattern 5), TypeScript may require `@ts-ignore` due to type checking limitations with callable class types.
+**Note:** After a class is decorated with `@decorate()`, it can be used as a decorator for nested types (advanced pattern; may require `@ts-ignore` due to TypeScript limitations with callable class types).
 
 #### `registerHook(Constructor, hookType, callback)`
 
@@ -757,12 +722,6 @@ const MyType = myCollection.define('MyType', function () {});
 
 // You MUST use myCollection to look it up — lookup('MyType') won't find it
 const FoundType = myCollection.lookup('MyType');
-```
-
-```js
-const { createTypesCollection } = require('mnemonica');
-const myCollection = createTypesCollection();
-const MyType = myCollection.define('MyType', function () {});
 ```
 
 **`TypesCollection` Interface:**

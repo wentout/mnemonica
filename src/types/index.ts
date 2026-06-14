@@ -514,12 +514,10 @@ export interface MnemonicaModule {
 	// Constants
 	MNEMONICA: string;
 	MNEMOSYNE: string;
-	URANUS: string;
 	SymbolParentType: symbol;
 	SymbolConstructorName: symbol;
 	SymbolDefaultTypesCollection: symbol;
 	SymbolConfig: symbol;
-	SymbolGaia: symbol;
 	TYPE_TITLE_PREFIX: string;
 	ErrorMessages: ErrorMessages;
 
