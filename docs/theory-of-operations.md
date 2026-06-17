@@ -8,7 +8,7 @@ This document traces a single `new instance.SubType(args)` call through every st
 
 ## Stage 0: Type Definition (`define()`)
 
-**File:** [`src/api/types/index.ts`](../../src/api/types/index.ts)
+**File:** [`src/api/types/index.ts`](../src/api/types/index.ts)
 
 Before any instance exists, the type must be declared. `define('TypeName', ctor, config?)` performs:
 
@@ -26,7 +26,7 @@ The result is a `TypeProxy` — a constructor function with additional methods (
 
 ## Stage 1: Subtype Access (`instance.SubType`)
 
-**File:** [`src/api/types/Mnemosyne.ts`](../../src/api/types/Mnemosyne.ts)
+**File:** [`src/api/types/Mnemosyne.ts`](../src/api/types/Mnemosyne.ts)
 
 When code reads `instance.SubType`, the `Mnemosyne` proxy's `get` trap fires:
 
@@ -42,7 +42,7 @@ The subtype proxy is what makes `new instance.SubType()` work. It is not the raw
 
 ## Stage 2: Construction Invocation (`new instance.SubType(args)`)
 
-**File:** [`src/api/types/Mnemosyne.ts`](../../src/api/types/Mnemosyne.ts)
+**File:** [`src/api/types/Mnemosyne.ts`](../src/api/types/Mnemosyne.ts)
 
 The subtype proxy's `construct` trap fires:
 
@@ -53,7 +53,7 @@ The subtype proxy's `construct` trap fires:
 
 ## Stage 3: Instance Creator Setup
 
-**File:** [`src/api/types/InstanceCreator.ts`](../../src/api/types/InstanceCreator.ts)
+**File:** [`src/api/types/InstanceCreator.ts`](../src/api/types/InstanceCreator.ts)
 
 `InstanceCreator` is a class (not a proxy) that manages the 8-stage pipeline:
 
@@ -75,7 +75,7 @@ The subtype proxy's `construct` trap fires:
 
 ## Stage 4: Prototype Chain Assembly
 
-**File:** [`src/api/types/createInstanceModificator.ts`](../../src/api/types/createInstanceModificator.ts)
+**File:** [`src/api/types/createInstanceModificator.ts`](../src/api/types/createInstanceModificator.ts)
 
 This is where the Trie structure is physically built:
 
@@ -104,7 +104,7 @@ existentInstance  (the specific parent)
 
 ## Stage 5: User Constructor Execution
 
-**File:** [`src/api/types/InstanceCreator.ts`](../../src/api/types/InstanceCreator.ts)
+**File:** [`src/api/types/InstanceCreator.ts`](../src/api/types/InstanceCreator.ts)
 
 The `ModificatorType` is instantiated with `new ModificatorType(...args)`:
 
@@ -117,7 +117,7 @@ The `ModificatorType` is instantiated with `new ModificatorType(...args)`:
 
 ## Stage 6: Post-Processing
 
-**File:** [`src/api/types/InstanceCreator.ts`](../../src/api/types/InstanceCreator.ts)
+**File:** [`src/api/types/InstanceCreator.ts`](../src/api/types/InstanceCreator.ts)
 
 After the user constructor:
 
@@ -131,7 +131,7 @@ After the user constructor:
 
 ## Stage 7: Return
 
-**File:** [`src/api/types/InstanceCreator.ts`](../../src/api/types/InstanceCreator.ts)
+**File:** [`src/api/types/InstanceCreator.ts`](../src/api/types/InstanceCreator.ts)
 
 The instance is returned. It carries:
 - All user-assigned properties (own properties)
@@ -142,7 +142,7 @@ The instance is returned. It carries:
 
 ## The WeakMap Architecture
 
-**File:** [`src/api/types/Props.ts`](../../src/api/types/Props.ts)
+**File:** [`src/api/types/Props.ts`](../src/api/types/Props.ts)
 
 Internal properties are stored in a `WeakMap` keyed by the **prototype object** (Mnemosyne), not the instance itself:
 
@@ -161,7 +161,7 @@ Why the prototype?
 
 ## Hook Invocation Details
 
-**File:** [`src/api/hooks/invokeHook.ts`](../../src/api/hooks/invokeHook.ts)
+**File:** [`src/api/hooks/invokeHook.ts`](../src/api/hooks/invokeHook.ts)
 
 Hooks are stored per-type and per-collection:
 
@@ -185,7 +185,7 @@ The `flowCheckers` Map allows hooks to be conditionally enabled/disabled per inv
 
 ## Error Handling
 
-**File:** [`src/api/errors/throwModificationError.ts`](../../src/api/errors/throwModificationError.ts)
+**File:** [`src/api/errors/throwModificationError.ts`](../src/api/errors/throwModificationError.ts)
 
 If any stage throws:
 

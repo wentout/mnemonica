@@ -26,6 +26,12 @@ npm run test:jest:cov
 `src/` → `build/`. To run linters with auto-fix, use `npm run lint:fix`.
 To run linters in read-only mode (CI parity), use `npm run lint:check`.
 
+### Doc-only changes
+
+If your change touches only Markdown files (no `src/`, `test/`, `test-jest/`,
+`test-ts/`, or build config), you can **skip `npm run build` and the test
+suites**. Run `npm run lint:md` to catch dead links and broken anchors instead.
+
 ## Test frameworks
 
 There are two suites and both must stay green:

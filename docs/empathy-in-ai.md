@@ -2,7 +2,7 @@
 
 This document connects mnemonica's data-flow model to a specific AI design problem: **how an agent understands another agent's state**. The connection is not metaphorical decoration. It follows directly from the library's structure.
 
-> If you want the deeper theory first, see the HoTT framing in [`docs/hott-primer.md`](./hott-primer.md) and the original vision in [`../articles/inheritance.md`](../articles/inheritance.md). This document stays at the API level.
+> If you want the deeper theory first, see the HoTT framing in [`docs/hott-primer.md`](./hott-primer.md) and the original vision in [`../../articles/inheritance.md`](../../articles/inheritance.md). This document stays at the API level.
 
 ---
 
@@ -166,5 +166,5 @@ What it provides is a data model where context and lineage are first-class. High
 
 - [`docs/hott-primer.md`](./hott-primer.md) — formal background on paths, identity, and transport
 - [`docs/purpose.md`](./purpose.md) — data flow vs control flow, and what mnemonica does not do
-- [`../articles/inheritance.md`](../articles/inheritance.md) — the original 2019 essay that posed the empathy question
-- [`../hott/theory/MEMORY-AND-ESSENCE.md`](../hott/theory/MEMORY-AND-ESSENCE.md) — the HoTT treatment of identity as path-connectedness
+- [`../../articles/inheritance.md`](../../articles/inheritance.md) — the original 2019 essay that posed the empathy question
+- [`../../hott/theory/MEMORY-AND-ESSENCE.md`](../../hott/theory/MEMORY-AND-ESSENCE.md) — the HoTT treatment of identity as path-connectedness
