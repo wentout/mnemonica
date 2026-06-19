@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Auto-injected instance methods (`extract`, `pick`, `parent`, `clone`, `fork`,
+  `exception`, `sibling`) and the `exposeInstanceMethods` config option.
+  Instances no longer expose these methods by default.
+
+### Changed
+
+- Use the standalone `utils.*` API for instance introspection:
+  `utils.extract(instance)`, `utils.pick(instance, ...)`,
+  `utils.parent(instance, ...)`, `utils.clone(instance)`,
+  `utils.fork(instance)`, `utils.exception(instance, ...)`,
+  `utils.sibling(instance)`.
+- `merge(a, b, ...args)` now uses `fork(a).call(b, ...args)` internally.
+- `InstanceResult<N>` returns the plain merged fields without the
+  `MnemonicaInstance` layer.
+
+### Added
+
+- `test/instance-methods-helper.js` and `test-jest/instance-methods-helper.ts`
+  showing the opt-in pattern for attaching legacy instance methods to a
+  constructor prototype before `define()`.
+
 ## [1.0.1] - 2026-05-22
 
 ### Added
