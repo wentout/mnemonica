@@ -9,6 +9,7 @@ import { pick } from './pick';
 import { sibling } from './sibling';
 import { exception } from './exception';
 import { fork } from './fork';
+import { clone } from './clone';
 import { toJSON } from './toJSON';
 import { parse } from './parse';
 import { merge } from './merge';
@@ -22,6 +23,7 @@ const utilsUnWrapped = {
 	sibling,
 	exception,
 	fork,
+	clone,
 
 	toJSON,
 

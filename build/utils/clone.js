@@ -1,0 +1,11 @@
+'use strict';
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.clone = void 0;
+const fork_1 = require("./fork");
+const clone = (instance) => {
+    const forkFn = (0, fork_1.fork)(instance);
+    const result = forkFn.call(instance);
+    return result;
+};
+exports.clone = clone;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY2xvbmUuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvdXRpbHMvY2xvbmUudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6IkFBQUEsWUFBWSxDQUFDOzs7QUFFYixpQ0FBOEI7QUFFdkIsTUFBTSxLQUFLLEdBQUcsQ0FBQyxRQUFnQixFQUFFLEVBQUU7SUFFekMsTUFBTSxNQUFNLEdBQUcsSUFBQSxXQUFJLEVBQUMsUUFBUSxDQUFDLENBQUM7SUFDOUIsTUFBTSxNQUFNLEdBQUcsTUFBTSxDQUFDLElBQUksQ0FBQyxRQUFRLENBQUMsQ0FBQztJQUNyQyxPQUFPLE1BQU0sQ0FBQztBQUVmLENBQUMsQ0FBQztBQU5XLFFBQUEsS0FBSyxTQU1oQiIsInNvdXJjZXNDb250ZW50IjpbIid1c2Ugc3RyaWN0JztcblxuaW1wb3J0IHsgZm9yayB9IGZyb20gJy4vZm9yayc7XG5cbmV4cG9ydCBjb25zdCBjbG9uZSA9IChpbnN0YW5jZTogb2JqZWN0KSA9PiB7XG5cblx0Y29uc3QgZm9ya0ZuID0gZm9yayhpbnN0YW5jZSk7XG5cdGNvbnN0IHJlc3VsdCA9IGZvcmtGbi5jYWxsKGluc3RhbmNlKTtcblx0cmV0dXJuIHJlc3VsdDtcblxufTtcbiJdfQ==

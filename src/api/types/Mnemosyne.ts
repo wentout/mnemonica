@@ -27,6 +27,7 @@ const {
 import { extract } from '../../utils/extract';
 import { parent } from '../../utils/parent';
 import { pick } from '../../utils/pick';
+import { clone } from '../../utils/clone';
 // import { sibling } from '../../utils/sibling';
 // import { exception } from '../../utils/exception';
 import exceptionConstructor from '../errors/exceptionConstructor';
@@ -76,8 +77,8 @@ const MnemonicaProtoProps = {
 		return result;
 	},
 
-	clone (this: { fork: () => object }) {
-		const result = this.fork();
+	clone () {
+		const result = clone(this);
 		return result;
 	},
 

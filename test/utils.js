@@ -13,6 +13,7 @@ const {
 const { exception } = require('../build/utils/exception');
 const { sibling } = require('../build/utils/sibling');
 const { fork } = require('../build/utils/fork');
+const { clone } = require('../build/utils/clone');
 
 const tests = () => {
 
@@ -218,6 +219,71 @@ const tests = () => {
 
 				assert.instanceOf(forked, ForkTestType);
 				assert.equal(forked.value, 'forked with number wrapper');
+			});
+		});
+
+	});
+
+	describe('utils/clone', () => {
+
+		const CloneTestType = define('CloneTestTypeMocha', function (data) {
+			this.value = data.value;
+		});
+		const ParentType = define('CloneParentTypeMocha', function (data) {
+			this.parentVal = data.parentVal;
+		});
+		const SubType = ParentType.define('CloneSubTypeMocha', function (data) {
+			this.subVal = data.subVal;
+		});
+
+		describe('clone root type instance', () => {
+			it('should create a new instance with original args', () => {
+				const originalData = { value : 'original' };
+				const instance = new CloneTestType(originalData);
+				const cloned = clone(instance);
+
+				assert.instanceOf(cloned, CloneTestType);
+				assert.equal(cloned.value, 'original');
+			});
+
+			it('should not return the same reference', () => {
+				const originalData = { value : 'original' };
+				const instance = new CloneTestType(originalData);
+				const cloned = clone(instance);
+
+				assert.notEqual(cloned, instance);
+			});
+
+			it('should preserve instanceof relationship', () => {
+				const originalData = { value : 'original' };
+				const instance = new CloneTestType(originalData);
+				const cloned = clone(instance);
+
+				assert.instanceOf(cloned, CloneTestType);
+				assert.instanceOf(instance, CloneTestType);
+			});
+
+			it('should deep equal the original', () => {
+				const originalData = { value : 'original' };
+				const instance = new CloneTestType(originalData);
+				const cloned = clone(instance);
+
+				assert.deepEqual(cloned, instance);
+				assert.deepEqual(cloned.extract(), instance.extract());
+			});
+		});
+
+		describe('clone nested subtype instance', () => {
+			it('should clone subtype using existentInstance as Constructor', () => {
+				const parentInstance = new ParentType({ parentVal : 'parent' });
+				const subInstance = new parentInstance.CloneSubTypeMocha({ subVal : 'sub' });
+
+				const cloned = clone(subInstance);
+
+				assert.instanceOf(cloned, SubType);
+				assert.equal(cloned.subVal, 'sub');
+				assert.notEqual(cloned, subInstance);
+				assert.deepEqual(cloned.extract(), subInstance.extract());
 			});
 		});
 

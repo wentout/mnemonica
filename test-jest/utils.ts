@@ -14,6 +14,7 @@ const {
 import { exception } from '../src/utils/exception';
 import { sibling } from '../src/utils/sibling';
 import { fork } from '../src/utils/fork';
+import { clone } from '../src/utils/clone';
 
 describe('utils/exception', () => {
 
@@ -208,6 +209,65 @@ describe('utils/sibling', () => {
 
 			expect(forked).toBeInstanceOf(ForkTestType);
 			expect((forked as { value: string }).value).toEqual('forked with number wrapper');
+		});
+	});
+
+});
+
+describe('utils/clone', () => {
+
+	const originalData = { value: 'original' };
+	const CloneTestType = define('CloneTestType', function (this: { value: string }, data: { value: string }) {
+		this.value = data.value;
+	});
+	const instance = new CloneTestType(originalData);
+
+	describe('clone root type instance', () => {
+		it('should create a new instance with original args', () => {
+			const cloned = clone(instance);
+
+			expect(cloned).toBeInstanceOf(CloneTestType);
+			expect((cloned as { value: string }).value).toEqual('original');
+		});
+
+		it('should not return the same reference', () => {
+			const cloned = clone(instance);
+
+			expect(cloned).not.toBe(instance);
+		});
+
+		it('should preserve instanceof relationship', () => {
+			const cloned = clone(instance);
+
+			expect(cloned).toBeInstanceOf(CloneTestType);
+			expect(instance).toBeInstanceOf(CloneTestType);
+		});
+
+		it('should deep equal the original', () => {
+			const cloned = clone(instance);
+
+			expect(cloned).toEqual(instance);
+			expect((cloned as { extract: () => object }).extract()).toEqual(instance.extract());
+		});
+	});
+
+	describe('clone nested subtype instance', () => {
+		it('should clone subtype using existentInstance as Constructor', () => {
+			const ParentType = define('CloneParentType', function (this: { parentVal: string }, data: { parentVal: string }) {
+				this.parentVal = data.parentVal;
+			});
+			const SubType = ParentType.define('CloneSubType', function (this: { subVal: string }, data: { subVal: string }) {
+				this.subVal = data.subVal;
+			});
+			const parentInstance = new ParentType({ parentVal: 'parent' });
+			const subInstance = new parentInstance.CloneSubType({ subVal: 'sub' });
+
+			const cloned = clone(subInstance);
+
+			expect(cloned).toBeInstanceOf(SubType);
+			expect((cloned as { subVal: string }).subVal).toEqual('sub');
+			expect(cloned).not.toBe(subInstance);
+			expect((cloned as { extract: () => object }).extract()).toEqual(subInstance.extract());
 		});
 	});
 
