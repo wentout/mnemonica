@@ -53,7 +53,7 @@ Conventional commits are preferred:
 ```
 feat: add lookupTyped overload for nested registry
 fix(InstanceCreator): preserve __args__ across async chain
-docs: clarify exposeInstanceMethods default
+docs: clarify instance method opt-in pattern
 chore(ci): bump setup-node to v4
 ```
 

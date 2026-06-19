@@ -24,18 +24,10 @@ const {
 	reflectPrimitiveWrappers
 } = TypesUtils;
 
-import { extract } from '../../utils/extract';
-import { parent } from '../../utils/parent';
-import { pick } from '../../utils/pick';
-import { clone } from '../../utils/clone';
-// import { sibling } from '../../utils/sibling';
-// import { exception } from '../../utils/exception';
-import exceptionConstructor from '../errors/exceptionConstructor';
-
 import { InstanceCreator } from './InstanceCreator';
 
 import {
-	_getProps, Props, getProps
+	_getProps, Props
 } from './Props';
 
 const getDefaultPrototype = () => {
@@ -45,139 +37,18 @@ const getDefaultPrototype = () => {
 
 // const InstanceRoots = new WeakMap;
 
-const MnemonicaProtoProps = {
-
-	extract () {
-		const result = function (this: object) {
-			const extractResult = extract(this);
-			return extractResult;
-		};
-		return result;
-	},
-
-	pick () {
-		const result = function (this: object, ...args: (string | string[])[]) {
-			const pickResult = pick(
-				this,
-				...args
-			);
-			return pickResult;
-		};
-		return result;
-	},
-
-	parent () {
-		const result = function (this: object, constructorLookupPath: string) {
-			const parentResult = parent(
-				this,
-				constructorLookupPath
-			);
-			return parentResult;
-		};
-		return result;
-	},
-
-	clone () {
-		const result = clone(this);
-		return result;
-	},
-
-	fork (this: object) {
-
-		const props = _getProps(this) as Props;
-
-		const {
-			__type__: type,
-			__collection__: collection,
-			__parent__: existentInstance,
-			__args__,
-			__self__,
-		} = props;
-
-		const {
-			isSubType,
-			TypeName
-		} = type;
-
-		// 'function', cause might be called with 'new'
-
-		const result = function (this: object, ...forkArgs: unknown[]) {
-
-			let forked;
-			const Constructor = isSubType ?
-				existentInstance :
-				collection;
-
-			const args = forkArgs.length ? forkArgs : __args__;
-
-
-			if (this === __self__) {
-
-				// @ts-expect-error  this is definitely a constructor
-				forked = new (Constructor[ TypeName ])(...args);
-			} else {
-				// fork.call ? let's do it !
-				forked = new InstanceCreator(
-					type,
-					reflectPrimitiveWrappers(this),
-					args
-				);
-			}
-
-			return forked;
-
-		};
-		return result;
-	},
-
-	[ SymbolConstructorName ] () {
-		return MNEMONICA;
-	},
-
-	exception () {
-
-		const instance = this;
-		const result = function (this: object, error: Error, ...args: unknown[]) {
-			const target = new.target;
-			const exceptionResult = exceptionConstructor.call(
-				instance,
-				target,
-				error,
-				...args
-			);
-			return exceptionResult;
-		};
-		return result;
-
-	},
-
-	sibling () {
-		const instance = this;
-		const siblings = (SiblingTypeName: string) => {
-			const props = getProps(instance) as Props;
-			const { __collection__: collection, } = props;
-			const answer = collection[ SiblingTypeName ];
-			return answer;
-		};
-
-		const result = new Proxy(
-			siblings,
-			{
-				get (_, prop: string) {
-					const proxyResult = siblings(prop);
-					return proxyResult;
-				},
-				apply (_, __, args,) {
-					const proxyResult = siblings(args[ 0 ]);
-					return proxyResult;
-				}
-			}
-		);
-
-		return result;
-	}
-
-};
+// Names that used to be auto-injected instance methods. They must still be
+// treated as static/reserved names so the Mnemosyne proxy does not try to
+// construct a subtype when one of them is accessed.
+const mnemonicaInstanceMethodNames = [
+	'extract',
+	'pick',
+	'parent',
+	'clone',
+	'fork',
+	'exception',
+	'sibling',
+];
 
 const staticProps = [
 
@@ -201,7 +72,7 @@ const staticProps = [
 	'showDiff',
 
 ]
-	.concat(Object.keys(MnemonicaProtoProps))
+	.concat(mnemonicaInstanceMethodNames)
 	.concat(Object.getOwnPropertyNames(Object.prototype))
 	.concat(Object.getOwnPropertyNames(Function.prototype))
 	.reduce(
@@ -315,7 +186,7 @@ const mnemosyneProxyHandlerGet = (target: object, prop: string, receiver: unknow
 	return subTypeResult;
 };
 
-export const Mnemosyne = function (this: object, mnemonica: object, exposeInstanceMethods: boolean) {
+export const Mnemosyne = function (this: object, mnemonica: object) {
 
 	const instance = this;
 
@@ -332,7 +203,7 @@ export const Mnemosyne = function (this: object, mnemonica: object, exposeInstan
 				}
 			}
 		);
-	} as _Internal_TC_<typeof MnemonicaProtoProps>;
+	} as _Internal_TC_<object>;
 
 	// this throws an error
 	Object.setPrototypeOf(
@@ -342,40 +213,15 @@ export const Mnemosyne = function (this: object, mnemonica: object, exposeInstan
 	// while this just returns false, silently ... unfortunately
 	// Reflect.setPrototypeOf(Mnemonica.prototype, mnemonica);
 
-	// Only add MnemonicaProtoProps methods if exposeInstanceMethods is true
-	if (exposeInstanceMethods) {
-		Object.entries(MnemonicaProtoProps).forEach(([ name, method ]: [string, unknown]) => {
-			odp(
-				Mnemonica.prototype,
-				name,
-				{
-					get () {
-
-						// @ts-expect-error there is a proxy and next line is callable
-						const methodResult = method.call(this);
-						return methodResult;
-					}
-				}
-			);
-		});
-
-		Object.getOwnPropertySymbols(MnemonicaProtoProps).forEach((symbol: symbol) => {
-			odp(
-				Mnemonica.prototype,
-				symbol,
-				{
-					get () {
-						const symbolMethod = Reflect.get(
-							MnemonicaProtoProps,
-							symbol
-						);
-						const symbolResult = symbolMethod.call(this);
-						return symbolResult;
-					}
-				}
-			);
-		});
-	}
+	odp(
+		Mnemonica.prototype,
+		SymbolConstructorName,
+		{
+			get () {
+				return MNEMONICA;
+			}
+		}
+	);
 
 	// instance of self Constructor type
 	odp(
@@ -399,7 +245,7 @@ export const Mnemosyne = function (this: object, mnemonica: object, exposeInstan
 
 } as _Internal_TC_<object>;
 
-const createMnemosyne = function (Uranus: unknown, exposeInstanceMethods: boolean) {
+const createMnemosyne = function (Uranus: unknown) {
 	// const createMnemosyne = function (Uranus: unknown, typeProxy: unknown) {
 	// 	if (typeof Uranus === 'undefined') {
 	// 		const { __type__: type, Uranus: _uranus } = typeProxy;
@@ -410,10 +256,7 @@ const createMnemosyne = function (Uranus: unknown, exposeInstanceMethods: boolea
 	// 	}
 
 	const uranus = reflectPrimitiveWrappers(Uranus);
-	const mnemosyne = new Mnemosyne(
-		uranus,
-		exposeInstanceMethods
-	);
+	const mnemosyne = new Mnemosyne(uranus);
 	const mnemosyneProxy = new Proxy(
 		mnemosyne,
 		{

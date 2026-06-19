@@ -3,6 +3,7 @@
 const { assert } = require('chai');
 
 const mnemonica = require('..');
+const { withInstanceMethods } = require('./instance-methods-helper');
 
 const {
 	define,
@@ -19,7 +20,7 @@ const tests = () => {
 
 	describe('utils/exception', () => {
 
-		const SomeType = define('ExceptionTestTypeMocha', function () { });
+		const SomeType = define('ExceptionTestTypeMocha', withInstanceMethods(function () { }));
 		const instance = new SomeType();
 
 		describe('called without new', () => {
@@ -79,8 +80,8 @@ const tests = () => {
 
 	describe('utils/sibling', () => {
 
-		const CollectionA = define('SiblingTestCollectionAMocha', function () { });
-		const CollectionB = define('SiblingTestCollectionBMocha', function () { });
+		const CollectionA = define('SiblingTestCollectionAMocha', withInstanceMethods(function () { }));
+		const CollectionB = define('SiblingTestCollectionBMocha', withInstanceMethods(function () { }));
 		const instanceA = new CollectionA();
 		const instanceB = new CollectionB();
 
@@ -226,12 +227,12 @@ const tests = () => {
 
 	describe('utils/clone', () => {
 
-		const CloneTestType = define('CloneTestTypeMocha', function (data) {
+		const CloneTestType = define('CloneTestTypeMocha', withInstanceMethods(function (data) {
 			this.value = data.value;
-		});
-		const ParentType = define('CloneParentTypeMocha', function (data) {
+		}));
+		const ParentType = define('CloneParentTypeMocha', withInstanceMethods(function (data) {
 			this.parentVal = data.parentVal;
-		});
+		}));
 		const SubType = ParentType.define('CloneSubTypeMocha', function (data) {
 			this.subVal = data.subVal;
 		});

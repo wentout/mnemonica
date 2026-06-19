@@ -836,8 +836,8 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 						}
 					} = proto;
 					expect(name).toEqual(MNEMONICA);
-					// Note: With exposeInstanceMethods: false by default, prototype chain structure differs
-					// SymbolConstructorName is now accessible through __self__ instead of directly on prototype
+					// Instance methods are no longer auto-injected
+					// SymbolConstructorName is accessible through the Mnemonica prototype chain
 					const selfProto = Object.getPrototypeOf(oneElseCollectionInstance);
 					expect(selfProto).toBeDefined();
 					expect(oneElseCollectionInstance).toBeInstanceOf(Object);
@@ -905,7 +905,7 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 					});
 					it('thrown error should be ok with props', () => {
 						expect((error as MnemonicaError).message).toBeDefined();
-						expect((error as MnemonicaError).message).toEqual('wrong arguments : should use proper invocation : A should have A.fork()');
+						expect((error as MnemonicaError).message).toEqual('wrong arguments : should use proper invocation : A should be a mnemonica instance');
 					});
 				}
 			});

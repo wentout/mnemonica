@@ -14,6 +14,7 @@ import {
 } from '../errors';
 
 import { parse } from '../../utils/parse';
+import { extract } from '../../utils/extract';
 
 import TypesUtils from '../utils';
 
@@ -140,7 +141,7 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 		{
 			get () {
 				const result = () => {
-					const extractResult = instance.extract();
+					const extractResult = extract(instance);
 					return extractResult;
 				};
 				return result;

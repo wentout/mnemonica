@@ -20,6 +20,8 @@ const asyncConstructionTest = true;
 
 const mnemonica = require('..');
 
+const { withInstanceMethods } = require('./instance-methods-helper');
+
 const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, myOtherInstance } = require('./decorate');
 
 debugger;
@@ -74,6 +76,7 @@ const UT = function (userData) {
 	return this;
 };
 Object.assign(UT.prototype, UserTypeProto);
+withInstanceMethods(UT);
 
 debugger;
 const UserType = mnemonica.define('UserType', UT, mc);
@@ -222,9 +225,9 @@ const {
 	define: adtcDefine
 } = anotherDefaultTypesCollection;
 
-const SomeADTCType = adtcDefine('SomeADTCType', function () {
+const SomeADTCType = adtcDefine('SomeADTCType', withInstanceMethods(function () {
 	this.test = 123;
-}, { strictChain : false });
+}), { strictChain : false });
 
 const someADTCInstance = new SomeADTCType();
 
@@ -361,8 +364,9 @@ const ATConstructor = async function (data) {
 
 	return this;
 };
+ATConstructor.prototype = AsyncTypeProto;
+withInstanceMethods(ATConstructor);
 const AsyncType = define('AsyncType', ATConstructor);
-AsyncType.prototype = AsyncTypeProto;
 
 AsyncType.registerHook('postCreation', (hookData) => {
 	bindProtoMethods(hookData);
@@ -448,6 +452,7 @@ describe('Main Test', () => {
 	};
 
 	Object.assign(UTConstructor.prototype, UserTypeConstructorProto);
+	withInstanceMethods(UTConstructor);
 
 	const UserTypeConstructor = define('UserTypeConstructor', UTConstructor, {
 		submitStack : true
@@ -559,7 +564,7 @@ describe('Main Test', () => {
 	});
 
 
-	const EmptyType = define('EmptyType');
+	const EmptyType = define('EmptyType', withInstanceMethods(function () {}));
 	EmptyType.define('EmptySubType', function (sign) {
 		this.emptySign = sign || 'DefaultEmptySign';
 	});
@@ -1352,9 +1357,9 @@ describe('Main Test', () => {
 
 		describe('Strict Chain PRIMARY FEATURE Tests', () => {
 
-			const RootForStrictChain = define('RootForStrictChain', function () {
+			const RootForStrictChain = define('RootForStrictChain', withInstanceMethods(function () {
 				this.scRootProp = true;
-			});
+			}));
 			const WillBeRenamedByStrictChain = RootForStrictChain
 				.define('WillBeRenamedByStrictChain', function () { });
 			const AdditionalForStrictChain = RootForStrictChain
@@ -1433,9 +1438,9 @@ describe('Main Test', () => {
 
 		describe('Strict Chain SECONDARY FEATURE Tests', () => {
 
-			const RootForStrictChainS = define('RootForStrictChainS', function () {
+			const RootForStrictChainS = define('RootForStrictChainS', withInstanceMethods(function () {
 				this.scRootProp = true;
-			});
+			}));
 			const WillBeRenamedByStrictChainS = RootForStrictChainS
 				.define('WillBeRenamedByStrictChainS', function () { });
 			const AdditionalForStrictChainS = RootForStrictChainS

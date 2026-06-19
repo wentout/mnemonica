@@ -3,6 +3,7 @@
 import { beforeAll, describe, expect, it, test } from '@jest/globals';
 import { asyncChainTests } from './async.chain';
 import { environmentTests } from './environment';
+import { withInstanceMethods } from './instance-methods-helper';
 import './utils';
 import type {
 	HookInvocationEntry,
@@ -106,8 +107,9 @@ const UT = function (this: TUserData, userData: TUserData) {
 	return this;
 };
 Object.assign(UT.prototype, UserTypeProto);
+withInstanceMethods(UT);
 
-const UserType = mnemonica.define('UserType', UT, { ...mc, exposeInstanceMethods: true });
+const UserType = mnemonica.define('UserType', UT, mc);
 
 const userTypeHooksInvocations: HookInvocationsArray = [];
 
@@ -241,9 +243,9 @@ const {
 	define: adtcDefine
 } = anotherDefaultTypesCollection;
 
-const SomeADTCType = adtcDefine('SomeADTCType', function (this: { test: number }) {
+const SomeADTCType = adtcDefine('SomeADTCType', withInstanceMethods(function (this: { test: number }) {
 	this.test = 123;
-}, { strictChain: false, exposeInstanceMethods: true });
+}), { strictChain: false });
 
 const someADTCInstance = new SomeADTCType();
 
@@ -383,8 +385,9 @@ const ATConstructor = async function (this: AsyncTypeInstance, data: unknown) {
 	});
 	return this;
 };
-const AsyncType = define('AsyncType', ATConstructor, { exposeInstanceMethods: true });
-AsyncType.prototype = AsyncTypeProto;
+ATConstructor.prototype = AsyncTypeProto;
+withInstanceMethods(ATConstructor);
+const AsyncType = define('AsyncType', ATConstructor);
 
 
 // Use proper bindMethod and bindProtoMethods
@@ -471,10 +474,10 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		});
 	};
 	Object.assign(UTC.prototype, UserTypeConstructorProto);
+	withInstanceMethods(UTC);
 
 	const UserTypeConstructor = define('UserTypeConstructor', UTC, {
-		submitStack: true,
-		exposeInstanceMethods: true
+		submitStack: true
 	});
 
 	const WithoutPasswordProto = {
@@ -557,9 +560,9 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	});
 
 	// Coverage test for strictChain validation - types to trigger the branch at InstanceCreator.ts:141
-	const RootForStrictChain = define('RootForStrictChain', function(this: { scRootProp: boolean }) {
+	const RootForStrictChain = define('RootForStrictChain', withInstanceMethods(function(this: { scRootProp: boolean }) {
 		this.scRootProp = true;
-	});
+	}));
 	const WillBeRenamedByStrictChain = RootForStrictChain.define('WillBeRenamedByStrictChain', function(this: { willBeRenamed: boolean }) {
 		this.willBeRenamed = true;
 	});
@@ -582,9 +585,9 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	}, { blockErrors: false });
 
 	// Secondary set for testing Error instance with blockErrors: false
-	const RootForStrictChainS = define('RootForStrictChainS', function(this: { scRootProp: boolean }) {
+	const RootForStrictChainS = define('RootForStrictChainS', withInstanceMethods(function(this: { scRootProp: boolean }) {
 		this.scRootProp = true;
-	});
+	}));
 	const WillBeRenamedByStrictChainS = RootForStrictChainS.define('WillBeRenamedByStrictChainS', function(this: { willBeRenamed: boolean }) {
 		this.willBeRenamed = true;
 	});
@@ -629,7 +632,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	});
 
 
-	const EmptyType = define('EmptyType', function() {}, { exposeInstanceMethods: true });
+	const EmptyType = define('EmptyType', withInstanceMethods(function() {}));
 	EmptyType.define('EmptySubType', function (this: EmptySubTypeInstance, sign: string) {
 		this.emptySign = sign || 'DefaultEmptySign';
 	});
@@ -1455,8 +1458,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					const userPP = ogp(ogp(user));
 					const userForkPP = ogp(ogp(userFork));
 	
-					// Note: With exposeInstanceMethods: false by default, prototype chain behavior differs
-					// The fork still creates a proper independent copy
+					// Instance methods are no longer auto-injected; the fork still creates a proper independent copy
 					expect(userPP).toBeDefined();
 					expect(userForkPP).toBeDefined();
 	
@@ -1638,7 +1640,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 
 		describe('Hooks Tests', () => {
 			it('check invocations count', () => {
-					// Note: with exposeInstanceMethods: false by default, some hooks may fire less often
+					// Instance methods are no longer auto-injected
 					expect(userTypeHooksInvocations.length).toBeGreaterThanOrEqual(8);
 				expect(typesFlowCheckerInvocations.length).toBeGreaterThan(0);
 				expect(typesPreCreationInvocations.length).toBeGreaterThan(0);
@@ -2041,7 +2043,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 
 		describe('exceptionConstructor error handling', () => {
 			it('should handle wrong exception args properly', () => {
-					const TestType = define('TestTypeForException', function () {}, { exposeInstanceMethods: true });
+					const TestType = define('TestTypeForException', withInstanceMethods(function () {}));
 					const instance = new TestType();
 					
 					// Test with non-Error instance
@@ -2388,13 +2390,12 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const { constants } = require('../src/constants');
 				const { SymbolConstructorName, MNEMONICA } = constants;
 
-				// Create a type with exposeInstanceMethods explicitly true
-				// This ensures the symbol properties are added to Mnemonica.prototype
+				// Create a plain type - symbol properties are always added to Mnemonica.prototype
 				const { define } = require('../src/index');
 
 				const SymbolTestType = define('SymbolTestTypeJest2', function (this: { value: number }) {
 					this.value = 42;
-				}, { exposeInstanceMethods: true });
+				});
 
 				const instance = new SymbolTestType();
 
@@ -2412,12 +2413,12 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const { constants } = require('../src/constants');
 				const { SymbolConstructorName, MNEMONICA } = constants;
 
-				// Create type with exposeInstanceMethods: true to ensure symbol getter is added
+				// Create a plain type - symbol getter is always added
 				const { define } = require('../src/index');
 
 				const DirectSymbolType = define('DirectSymbolTypeJest', function (this: { value: number }) {
 					this.value = 999;
-				}, { exposeInstanceMethods: true });
+				});
 
 				const instance = new DirectSymbolType();
 
@@ -2434,10 +2435,10 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const { SymbolConstructorName, MNEMONICA } = constants;
 				const { define } = require('../src/index');
 	
-				// Create type with exposeInstanceMethods: true
+				// Create a plain type
 				const DirectMethodType = define('DirectMethodTypeJest', function (this: { value: number }) {
 					this.value = 123;
-				}, { exposeInstanceMethods: true });
+				});
 	
 				const instance = new DirectMethodType();
 	
@@ -2456,10 +2457,10 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const { SymbolConstructorName, MNEMONICA } = constants;
 				const { define } = require('../src/index');
 	
-				// Create type with exposeInstanceMethods: true
+				// Create a plain type
 				const SymbolMethodType = define('SymbolMethodTypeJest', function (this: { value: number }) {
 					this.value = 456;
-				}, { exposeInstanceMethods: true });
+				});
 	
 				const instance = new SymbolMethodType();
 	
@@ -2494,9 +2495,9 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				// Get the createMnemosyne function
 				const { createMnemosyne } = mnemosyneModule.default;
 
-				// Create a mnemosyne instance with exposeInstanceMethods: true
+				// Create a mnemosyne instance
 				const targetObj = { test: true };
-				const mnemosyneProxy = createMnemosyne(targetObj, true);
+				const mnemosyneProxy = createMnemosyne(targetObj);
 
 				// Access the symbol directly - should work through the prototype chain
 				const result = mnemosyneProxy[SymbolConstructorName];
@@ -2538,9 +2539,9 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const { constants } = require('../src/constants');
 				const { SymbolConstructorName, MNEMONICA } = constants;
 	
-				// Create instance with exposeInstanceMethods
+				// Create a mnemosyne instance
 				const testObj = { test: 'value' };
-				const proxy = createMnemosyne(testObj, true);
+				const proxy = createMnemosyne(testObj);
 	
 				// Get the prototype chain
 				const proto1 = Object.getPrototypeOf(proxy);
@@ -2569,9 +2570,9 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const { constants } = require('../src/constants');
 				const { SymbolConstructorName, MNEMONICA, odp } = constants;
 	
-				// Create a mnemosyne proxy with exposeInstanceMethods: true
+				// Create a mnemosyne proxy
 				const testObj = { test: 'value' };
-				const proxy = createMnemosyne(testObj, true);
+				const proxy = createMnemosyne(testObj);
 	
 				// Get all prototypes in the chain
 				const prototypes = [];
@@ -2600,8 +2601,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const { constants } = require('../src/constants');
 				const { SymbolConstructorName, MNEMONICA } = constants;
 	
-				// Create proxy with exposeInstanceMethods
-				const proxy = createMnemosyne({}, true);
+				// Create a mnemosyne proxy
+				const proxy = createMnemosyne({});
 	
 				// Traverse prototype chain to find Mnemonica.prototype
 				let proto = Object.getPrototypeOf(proxy);
@@ -2627,8 +2628,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const { constants } = require('../src/constants');
 				const { SymbolConstructorName, MNEMONICA } = constants;
 	
-				// Create proxy with exposeInstanceMethods
-				const proxy = createMnemosyne({}, true);
+				// Create a mnemosyne proxy
+				const proxy = createMnemosyne({});
 	
 				// Get the prototype
 				const proto = Object.getPrototypeOf(proxy);
@@ -2640,20 +2641,19 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		});
 	
 		describe('TypeProxy.ts coverage', () => {
-			it('should cover config?.exposeInstanceMethods when config exists but has no exposeInstanceMethods property', () => {
-				// Create a type with config that doesn't have exposeInstanceMethods property
-				// This will make config?.exposeInstanceMethods return undefined
+			it('should handle config object without the legacy instance-methods option', () => {
+				// Create a type with a plain config object
 				const { define } = require('../src/index');
 
 				const ConfigTestType = define('ConfigTestTypeJest', function (this: { value: number }) {
 					this.value = 123;
-				}, { strictChain: true }); // config exists but no exposeInstanceMethods
+				}, { strictChain: true }); // plain config object
 
 				const instance = new ConfigTestType();
 				expect(instance.value).toBe(123);
 			});
 
-			it('should cover config?.exposeInstanceMethods when config is explicitly undefined', () => {
+			it('should handle explicitly undefined config', () => {
 				// This test covers the optional chaining branch
 				// when config is explicitly undefined
 				const { define } = require('../src/index');
@@ -2830,9 +2830,9 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					// We need to trigger the actual code in Mnemosyne.ts
 					const { createMnemosyne } = mnemosyneModule.default;
 	
-					// Create a mnemosyne with exposeInstanceMethods = true
+					// Create a mnemosyne proxy
 					const testTarget = { testValue: 'direct' };
-					const proxy = createMnemosyne(testTarget, true);
+					const proxy = createMnemosyne(testTarget);
 	
 					// Access the symbol through the proxy - this should trigger lines 299-302
 					// which in turn calls line 104
@@ -2851,8 +2851,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					const { SymbolConstructorName, MNEMONICA } = constants;
 					const { createMnemosyne } = freshMnemosyneModule.default;
 	
-					// Create with exposeInstanceMethods true
-					const proxy = createMnemosyne({}, true);
+					// Create a mnemosyne proxy
+					const proxy = createMnemosyne({});
 	
 					// Force multiple accesses to ensure coverage
 					const r1 = proxy[SymbolConstructorName];
@@ -2867,7 +2867,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					const { createMnemosyne } = require('../src/api/types/Mnemosyne').default;
 	
 					// Create the proxy
-					const proxy = createMnemosyne({ value: 'test' }, true);
+					const proxy = createMnemosyne({ value: 'test' });
 	
 					// Traverse the prototype chain to find Mnemonica.prototype
 					let current = proxy;
@@ -2898,9 +2898,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				});
 			});
 
-			it('should cover line 275-277 by creating mnemosyne with exposeInstanceMethods false', () => {
-				// This test covers the branch when exposeInstanceMethods is false
-				// which adds SymbolConstructorName directly to the Mnemonica instance
+			it('should create mnemosyne proxy with a plain object target', () => {
+				// SymbolConstructorName is always added to the Mnemonica instance
 				const mnemosyneModule = require('../src/api/types/Mnemosyne');
 				const { constants } = require('../src/constants');
 				const { SymbolConstructorName, MNEMONICA } = constants;
@@ -2908,9 +2907,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				// Get the createMnemosyne function
 				const { createMnemosyne } = mnemosyneModule.default;
 
-				// Create an instance with exposeInstanceMethods = false
-				// This triggers lines 275-277
-				const proxy = createMnemosyne({ test: true }, false);
+				// Create a mnemosyne proxy with a plain object target
+				const proxy = createMnemosyne({ test: true });
 
 				// Access the symbol - should still work via own property
 				const result = proxy[SymbolConstructorName];
@@ -2927,7 +2925,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const { createMnemosyne } = mnemosyneModule.default;
 
 				// Create an instance to get access to internals
-				const proxy = createMnemosyne({ test: true }, true);
+				const proxy = createMnemosyne({ test: true });
 
 				// Access the symbol directly - it should work through prototype chain
 				const result = proxy[SymbolConstructorName];
@@ -2944,8 +2942,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const { SymbolConstructorName, MNEMONICA } = constants;
 				const { createMnemosyne } = require('../src/api/types/Mnemosyne').default;
 
-				// Create instance with exposeInstanceMethods true
-				const proxy = createMnemosyne({}, true);
+				// Create a mnemosyne proxy
+				const proxy = createMnemosyne({});
 
 				// Get Mnemonica instance (first prototype)
 				const mnemonicaInstance = Object.getPrototypeOf(proxy);

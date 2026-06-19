@@ -87,8 +87,7 @@ export type Parsed<T extends object> = {
 
 ### `SiblingAccessor`
 
-A callable/proxy object returned by `utils.sibling(instance)` and available as
-`instance.sibling`:
+A callable/proxy object returned by `utils.sibling(instance)`:
 
 ```typescript
 export interface SiblingAccessor {
@@ -118,17 +117,16 @@ export interface SiblingAccessor {
 
 ## `utils.merge(A, B, ...args)` in detail
 
-`merge(a, b)` is implemented as `a.fork.call(b, ...args)`. The result is a **new
+`merge(a, b)` is implemented as `fork(a).call(b, ...args)`. The result is a **new
 instance of `a`’s type** whose parent/existent instance is `b`. That means:
 
-- `a` provides the primary fields and the `MnemonicaInstance` methods.
+- `a` provides the primary fields.
 - `b` contributes only the fields `a` does not define.
-- `a`’s original Mnemosyne chain is replaced by `b`’s chain, so the method
-  surface must appear exactly once.
+- The result is a flat field object (`A` wins) with no auto-injected instance
+  methods.
 
-The type `InstanceResult<Merge<B, A>, constructorOptions>` expresses this: a
-flat field object (`A` wins) wrapped by a single `MnemonicaInstance<...>`
-layer.
+The type `InstanceResult<Merge<B, A>>` expresses this: a flat field object
+(`A` wins).
 
 ```typescript
 const UserType = define('User', function (this: { name: string; age: number }) {
@@ -143,11 +141,11 @@ const RoleType = define('Role', function (this: { role: string }) {
 const user = new UserType();
 const role = new RoleType();
 
-// hover: { name: string; age: number; role: string; } & MnemonicaInstance<{ ... }>
+// hover: { name: string; age: number; role: string; }
 const merged = utils.merge(user, role);
-merged.name;    // string
-merged.role;    // string
-merged.extract(); // OK
+merged.name;      // string
+merged.role;      // string
+utils.extract(merged); // OK
 ```
 
 ---

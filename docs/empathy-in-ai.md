@@ -69,8 +69,8 @@ Empathy, stripped to a design requirement, is **understanding another's present 
 | Capability | mnemonica operation | What it gives an AI agent |
 |---|---|---|
 | **Provenance** | `getProps(instance)` | "This response plan came from an `EmotionalState('frustrated')` that came from an `UnderstoodIntent('correction')` that came from `UserInput('I already told you...')`." |
-| **Perspective-taking** | `instance.parent('UserInput')` | "Let me look at the original input again, from the current endpoint." |
-| **Reconstruction** | `instance.extract()` | "Flatten the whole interaction into a single state object for the model prompt." |
+| **Perspective-taking** | `utils.parent(instance, 'UserInput')` | "Let me look at the original input again, from the current endpoint." |
+| **Reconstruction** | `utils.extract(instance)` | "Flatten the whole interaction into a single state object for the model prompt." |
 | **Continuity** | `new current.Next(args)` | "Every transformation preserves the previous state as context; nothing is overwritten." |
 
 The agent does not "feel" frustration. It has structural access to the fact that the current state is path-connected to a correction-intent and a repeated prior claim. That access is sufficient for behavior that humans experience as empathetic.
@@ -133,7 +133,7 @@ const hypothesis = new observed.Hypothesis('previous answer was unclear');
 const action = new hypothesis.Action('rephrase with concrete example');
 ```
 
-The agent can query `action.parent('Observation')` to recover the original evidence that justified its action. This is not logging. The evidence is part of the action's identity. The agent can answer "why did you do that?" by walking its own type chain.
+The agent can query `utils.parent(action, 'Observation')` to recover the original evidence that justified its action. This is not logging. The evidence is part of the action's identity. The agent can answer "why did you do that?" by walking its own type chain.
 
 ---
 

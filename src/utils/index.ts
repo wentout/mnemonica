@@ -39,10 +39,19 @@ const utilsUnWrapped = {
 
 const wrapThis = ( method: WrappableMethod ) => {
 	const result = function ( this: object, instance: object | undefined, ...args: unknown[] ) {
-		const wrapResult = method(
-			instance !== undefined ? instance : this,
-			...args 
-		);
+		const instanceContext = instance !== undefined ? instance : this;
+		let wrapResult: unknown;
+		if ( new.target ) {
+			wrapResult = new (method as unknown as new (...a: unknown[]) => unknown)(
+				instanceContext,
+				...args
+			);
+		} else {
+			wrapResult = method(
+				instanceContext,
+				...args 
+			);
+		}
 		return wrapResult;
 	};
 	return result;

@@ -2,17 +2,18 @@
 
 import { ErrorsTypes } from '../descriptors/errors';
 const { WRONG_ARGUMENTS_USED } = ErrorsTypes;
+import { fork } from './fork';
+import { getProps } from '../api/types/Props';
 import type {
 	Merge,
 	InstanceResult,
-	constructorOptions,
 } from '../types';
 
 export const merge = <A extends object, B extends object>(
 	a: A,
 	b: B,
 	...args: unknown[]
-): InstanceResult<Merge<B, A>, constructorOptions> => {
+): InstanceResult<Merge<B, A>> => {
 
 	// at this situation this check is enough
 	if ( a !== Object( a ) ) {
@@ -24,16 +25,17 @@ export const merge = <A extends object, B extends object>(
 		throw new WRONG_ARGUMENTS_USED( 'B should be an object' );
 	}
 
-	const { fork } = a as { fork?: (this: object, ...forkArgs: unknown[]) => unknown };
-	if ( typeof fork !== 'function' ) {
-		throw new WRONG_ARGUMENTS_USED( 'A should have A.fork()' );
+	const props = getProps(a);
+	if (props === undefined) {
+		throw new WRONG_ARGUMENTS_USED('A should be a mnemonica instance');
 	}
 
-	const aa = fork.call(
+	const forked = fork(a);
+	const aa = forked.call(
 		b,
 		...args 
 	);
-	const result = aa as InstanceResult<Merge<B, A>, constructorOptions>;
+	const result = aa as InstanceResult<Merge<B, A>>;
 	return result;
 
 };

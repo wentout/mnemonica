@@ -1,7 +1,7 @@
 import { _Internal_TC_, TypeDef } from '../../types';
 export declare const Mnemosyne: _Internal_TC_<object>;
 declare const _default: {
-    readonly createMnemosyne: (Uranus: unknown, exposeInstanceMethods: boolean) => object;
+    readonly createMnemosyne: (Uranus: unknown) => object;
     readonly prepareSubtypeForConstruction: (subtypeName: string, inheritedInstance: unknown) => ((this: unknown, ..._args: unknown[]) => {
         getExistentAsyncStack: (existentInstance: import("../utils").asyncStack) => unknown;
         postProcessing: (this: import("../../types").InstanceCreatorContext, continuationOf?: TypeDef) => void;

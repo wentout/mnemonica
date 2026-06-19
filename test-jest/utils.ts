@@ -2,6 +2,7 @@
 
 import { beforeAll, describe, expect, it } from '@jest/globals';
 import type { MnemonicaModule } from '../src/types';
+import { withInstanceMethods } from './instance-methods-helper';
 
 const mnemonica = require('../src/index') as MnemonicaModule;
 
@@ -18,7 +19,7 @@ import { clone } from '../src/utils/clone';
 
 describe('utils/exception', () => {
 
-	const SomeType = define('ExceptionTestType', function () { });
+	const SomeType = define('ExceptionTestType', withInstanceMethods(function () { }));
 	const instance = new SomeType();
 
 	describe('called without new', () => {
@@ -69,8 +70,8 @@ describe('utils/exception', () => {
 
 describe('utils/sibling', () => {
 
-	const CollectionA = define('SiblingTestCollectionA', function () { });
-	const CollectionB = define('SiblingTestCollectionB', function () { });
+	const CollectionA = define('SiblingTestCollectionA', withInstanceMethods(function () { }));
+	const CollectionB = define('SiblingTestCollectionB', withInstanceMethods(function () { }));
 	const instanceA = new CollectionA();
 	const instanceB = new CollectionB();
 
@@ -217,9 +218,9 @@ describe('utils/sibling', () => {
 describe('utils/clone', () => {
 
 	const originalData = { value: 'original' };
-	const CloneTestType = define('CloneTestType', function (this: { value: string }, data: { value: string }) {
+	const CloneTestType = define('CloneTestType', withInstanceMethods(function (this: { value: string }, data: { value: string }) {
 		this.value = data.value;
-	});
+	}));
 	const instance = new CloneTestType(originalData);
 
 	describe('clone root type instance', () => {
@@ -253,9 +254,9 @@ describe('utils/clone', () => {
 
 	describe('clone nested subtype instance', () => {
 		it('should clone subtype using existentInstance as Constructor', () => {
-			const ParentType = define('CloneParentType', function (this: { parentVal: string }, data: { parentVal: string }) {
+			const ParentType = define('CloneParentType', withInstanceMethods(function (this: { parentVal: string }, data: { parentVal: string }) {
 				this.parentVal = data.parentVal;
-			});
+			}));
 			const SubType = ParentType.define('CloneSubType', function (this: { subVal: string }, data: { subVal: string }) {
 				this.subVal = data.subVal;
 			});

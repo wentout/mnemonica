@@ -64,10 +64,6 @@ export type constructorOptions = {
     submitStack?: boolean;
     awaitReturn?: boolean;
     asClass?: boolean;
-    exposeInstanceMethods?: boolean;
-};
-export type HideInstanceMethodsOptions = constructorOptions & {
-    exposeInstanceMethods: true;
 };
 export type SubtypesMap = Map<string, TypeClass>;
 export type TypeDef = {
@@ -174,25 +170,18 @@ export type InstanceInternalProps = {
     __timestamp__: number;
 };
 export type Props = InstanceInternalProps & {
-    __self__: InstanceInternalProps & MnemonicaInstance;
+    __self__: InstanceInternalProps;
     [key: string]: unknown;
 };
-export type IsHidingMethods<Config extends constructorOptions> = Config extends {
-    exposeInstanceMethods: false;
-} ? true : false;
-export type InstanceResult<N extends object, Config extends constructorOptions> = IsHidingMethods<Config> extends true ? {
+export type InstanceResult<N extends object> = {
     [K in keyof N]: N[K];
-} : {
-    [K in keyof N]: N[K];
-} & MnemonicaInstance<{
-    [K in keyof N]: N[K];
-}>;
-export interface IDefinitorInstance<N extends object, Config extends constructorOptions = constructorOptions, R extends InstanceResult<N, Config> = InstanceResult<N, Config>> {
+};
+export interface IDefinitorInstance<N extends object, R extends InstanceResult<N> = InstanceResult<N>> {
     TypeName: string;
     prototype: N;
     new (...args: unknown[]): R;
-    (...args: unknown[]): IDefinitorInstance<R, Config>;
-    define<T extends object, F extends Proto<N, T>>(TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<F, Config>;
+    (...args: unknown[]): IDefinitorInstance<R>;
+    define<T extends object, F extends Proto<N, T>>(TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<F>;
     lookup: TypeLookup;
     registerHook(hookType: hooksTypes, cb: hook): void;
     subtypes: SubtypesMap;
@@ -200,8 +189,7 @@ export interface IDefinitorInstance<N extends object, Config extends constructor
     collection?: CollectionDef;
 }
 export interface TypeAbsorber extends CallableFunction {
-    <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig: IDEF<T> | object | boolean | CallableFunction, configOrUndefined: HideInstanceMethodsOptions): IDefinitorInstance<T, HideInstanceMethodsOptions>;
-    <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<T, constructorOptions>;
+    <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<T>;
 }
 export interface TypesCollection extends Hookable {
     define: TypeAbsorber;
@@ -245,13 +233,13 @@ export type Merge<E extends object, T extends object> = {
     [K in keyof T | keyof E as K extends MnemonicaInstanceMethodKeys ? never : K]: K extends keyof T ? T[K] : E[K & keyof E];
 };
 export interface ApplyFunction extends CallableFunction {
-    <E extends object, T extends object>(entity: E, Constructor: IDEF<T>, args?: unknown[]): InstanceResult<Merge<E, T>, constructorOptions>;
+    <E extends object, T extends object>(entity: E, Constructor: IDEF<T>, args?: unknown[]): InstanceResult<Merge<E, T>>;
 }
 export interface CallFunction extends CallableFunction {
-    <E extends object, T extends object>(entity: E, Constructor: IDEF<T>, ...args: unknown[]): InstanceResult<Merge<E, T>, constructorOptions>;
+    <E extends object, T extends object>(entity: E, Constructor: IDEF<T>, ...args: unknown[]): InstanceResult<Merge<E, T>>;
 }
 export interface BindFunction extends CallableFunction {
-    <E extends object, T extends object>(entity: E, Constructor: IDEF<T>): (...args: unknown[]) => InstanceResult<Merge<E, T>, constructorOptions>;
+    <E extends object, T extends object>(entity: E, Constructor: IDEF<T>): (...args: unknown[]) => InstanceResult<Merge<E, T>>;
 }
 export interface UtilsCollection {
     extract<T extends object>(instance: T): Extracted<T>;
@@ -263,7 +251,7 @@ export interface UtilsCollection {
     fork<T extends object>(instance: T): (this: object, ...forkArgs: unknown[]) => T;
     sibling(instance: object): SiblingAccessor;
     collectConstructors: (instance: object, flat?: boolean) => (CallableFunction | string)[];
-    merge<A extends object, B extends object>(a: A, b: B, ...args: unknown[]): InstanceResult<Merge<B, A>, constructorOptions>;
+    merge<A extends object, B extends object>(a: A, b: B, ...args: unknown[]): InstanceResult<Merge<B, A>>;
     parse<T extends object>(self: T): Parsed<T>;
     parent<T extends object>(instance: T, path?: string): object | undefined;
     toJSON<T extends object>(instance: T): string;

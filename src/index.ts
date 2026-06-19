@@ -169,13 +169,13 @@ export const apply = function <E extends object, T extends object, S extends Pro
 	entity: E,
 	Ctor: IDEF<T>,
 	args: unknown[] = []
-): InstanceResult<Merge<E, T>, constructorOptions> {
+): InstanceResult<Merge<E, T>> {
 	const runResult = $run<E, T, S>(
 		entity,
 		Ctor,
 		args
 	);
-	const result = runResult as unknown as InstanceResult<Merge<E, T>, constructorOptions>;
+	const result = runResult as unknown as InstanceResult<Merge<E, T>>;
 	return result;
 };
 
@@ -184,13 +184,13 @@ export const call = function <E extends object, T extends object, S extends Prot
 	entity: E,
 	Ctor: IDEF<T>,
 	...args: unknown[]
-): InstanceResult<Merge<E, T>, constructorOptions> {
+): InstanceResult<Merge<E, T>> {
 	const runResult = $run<E, T, S>(
 		entity,
 		Ctor,
 		args
 	);
-	const result = runResult as unknown as InstanceResult<Merge<E, T>, constructorOptions>;
+	const result = runResult as unknown as InstanceResult<Merge<E, T>>;
 	return result;
 };
 
@@ -198,14 +198,14 @@ export const call = function <E extends object, T extends object, S extends Prot
 export const bind = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
 	Ctor: IDEF<T>
-): (...args: unknown[]) => InstanceResult<Merge<E, T>, constructorOptions> {
+): (...args: unknown[]) => InstanceResult<Merge<E, T>> {
 	const result = (...args: unknown[]) => {
 		const runResult = $run<E, T, S>(
 			entity,
 			Ctor,
 			args
 		);
-		const typedResult = runResult as unknown as InstanceResult<Merge<E, T>, constructorOptions>;
+		const typedResult = runResult as unknown as InstanceResult<Merge<E, T>>;
 		return typedResult;
 	};
 	return result;

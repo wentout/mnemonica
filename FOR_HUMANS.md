@@ -323,17 +323,14 @@ console.log(subInstance.some);   // 'arguments' (inherited)
 console.log(subInstance.other);  // 'data needed' (own)
 ```
 
-### The `.extract()` Method
+### The `utils.extract()` Utility
 
 Extract all inherited properties into a flat object:
 
 ```js
-const extracted = subInstance.extract();
-// Result: { data, description, other, some }
-
-// Or use the standalone utility
 const { utils: { extract } } = require('mnemonica');
-const extracted2 = extract(subInstance);
+const extracted = extract(subInstance);
+// Result: { data, description, other, some }
 ```
 
 ---
@@ -513,8 +510,8 @@ const AsyncTypeNoReturn = define('AsyncType', async function () {
 | Create from instance | `new instance.SubType(args)` |
 | Look up a type | `lookup('Name')` or `lookupTyped('Name')` |
 | Read construction history | `getProps(instance)` |
-| Get parent instance | `instance.parent()` or `instance.parent('TypeName')` |
-| Flatten to plain object | `instance.extract()` |
+| Get parent instance | `utils.parent(instance)` or `utils.parent(instance, 'TypeName')` |
+| Flatten to plain object | `utils.extract(instance)` |
 | Add lifecycle hooks | `type.registerHook('postCreation', cb)` |
 | Use classes | `@decorate()` decorator |
 
@@ -665,7 +662,7 @@ For advanced TypeScript usage, the following types are exported from `mnemonica`
 | Type | Description | Usage |
 |------|-------------|-------|
 | `IDEF<T>` | Base constructor function type | `define('Name', fn: IDEF<MyType>)` |
-| `MnemonicaInstance` | Instance methods interface | `instance.extract()`, `instance.pick()` |
+| `MnemonicaInstance` | Optional helper interface | Can be used when attaching the legacy instance methods to your own prototype |
 | `TypeClass` | Base type constructor | `const MyType: TypeClass = define(...)` |
 | `DecoratedClass<T>` | Decorated class type | `@decorate() class MyClass {}` |
 | `IDefinitorInstance<N, S>` | Constructor with subtypes | Returned by `define()` with `.define()` method |
@@ -761,8 +758,7 @@ const { createTypesCollection } = require('mnemonica');
 // Create isolated collection with custom config
 const myCollection = createTypesCollection({
   strictChain: false,
-  blockErrors: false,
-  exposeInstanceMethods: false  // Hide instance methods for cleaner API
+  blockErrors: false
 });
 
 // Define types in isolation
@@ -797,91 +793,106 @@ setProps(instance, { __timestamp__: Date.now() });
 
 ### Instance Methods
 
-All mnemonica instances have the following methods:
+Starting from v1.0.6 these convenience methods are **no longer auto-injected** on instances. Use the standalone utilities from `utils`:
 
-> **Note:** You can disable instance methods by setting `exposeInstanceMethods: false` in the type configuration. When disabled, these methods are still accessible via `getProps(instance).__self__` or the standalone `utils` export.
+```js
+const { utils } = require('mnemonica');
 
-#### `.extract()`
+utils.extract(instance);
+utils.pick(instance, 'key');
+utils.parent(instance, 'ParentType');
+utils.fork(instance)(newArgs);
+utils.exception(instance, error);
+utils.sibling(instance);
+utils.clone(instance);
+```
+
+To restore the old instance-method style for a specific root constructor, attach the methods to its prototype **before** passing it to `define()`. See `test/instance-methods-helper.js` for a complete reference pattern.
+
+#### `utils.extract(instance)`
 
 Extracts all enumerable user properties into a single flat object. TypeScript
-returns `Extracted<T>` — `MnemonicaInstance` method names are filtered out and
+returns `Extracted<T>` — legacy instance-method names are filtered out and
 optionality is preserved from the source type.
 
 ```ts
-const extracted = instance.extract();
+const extracted = utils.extract(instance);
 // hover: { name: string; email: string; age: number; }
 ```
 
-#### `.pick(...keys)` / `.pick([keys])`
+#### `utils.pick(instance, ...keys)` / `utils.pick(instance, [keys])`
 
 Picks specific properties from the instance and its inheritance chain. Literal
 keys produce a typed subset; dynamic or unknown keys fall back to
 `Record<string, unknown>`.
 
 ```ts
-const picked = instance.pick('email', 'password');
+const picked = utils.pick(instance, 'email', 'password');
 // hover: { email: string; password: string; }
 
-const pickedArray = instance.pick(['email', 'password']);
+const pickedArray = utils.pick(instance, ['email', 'password']);
 ```
 
-#### `.parent(constructorName?)`
+#### `utils.parent(instance, constructorName?)`
 
 Gets the parent instance. If `constructorName` is provided, walks up the chain.
 The structural return type is `object | undefined`; a specific nominal parent
 type requires a `TypeRegistry` augmentation (see [`docs/typed-lookup.md`](./docs/typed-lookup.md)).
 
 ```ts
-const immediateParent = instance.parent();
-const specificParent = instance.parent('UserType'); // object | undefined
+const immediateParent = utils.parent(instance);
+const specificParent = utils.parent(instance, 'UserType'); // object | undefined
 ```
 
-#### `.clone`
+#### `utils.clone(instance)`
 
-Property that returns a cloned instance (same parent, same args). The return
-type is `this`, so the full `{ fields } & MnemonicaInstance<{ fields }>` shape
-is preserved.
+Returns a cloned instance (same parent, same args). The return type is the
+instance type.
 
 ```ts
-const cloned = instance.clone;
-// Note: For async constructors, use: await instance.clone
+const cloned = utils.clone(instance);
+// Note: For async constructors, use: await utils.clone(instance)
 ```
 
-#### `.fork(...args)`
+#### `utils.fork(instance)`
 
-Creates a forked instance from the same parent with optional new arguments.
-Returns `this` so the full instance type is preserved.
+Returns a fork constructor for the instance. Call it with optional new
+arguments to create a forked instance from the same parent.
 
 ```ts
-const forked = instance.fork();           // same args
-const forkedWithNewArgs = instance.fork('new', 'args');
-// Note: For async constructors, use: await instance.fork(...)
+const forkFn = utils.fork(instance);
+const forked = forkFn();                  // same args
+const forkedWithNewArgs = forkFn('new', 'args');
+// Note: For async constructors, use: await forkFn(...)
 ```
 
-#### `.fork.call(thisArg, ...args)` / `.fork.apply(thisArg, args)`
+#### `utils.fork(instance).call(thisArg, ...args)` / `.apply(thisArg, args)`
 
 Forks with a different `this` context (useful for Directed Acyclic Graphs).
 
 ```ts
-const dagInstance = instanceA.fork.call(instanceB, 'args');
+const forkFn = utils.fork(instanceA);
+const dagInstance = forkFn.call(instanceB, 'args');
 ```
 
-#### `.exception(error, ...args)`
+#### `utils.exception(instance, error, ...args)`
 
-Creates an exception instance from the current instance.
+Creates an exception instance from the given instance.
 
 ```ts
-const error = someInstance.exception(new Error('Something went wrong'));
+const error = utils.exception(someInstance, new Error('Something went wrong'));
 throw error;
 ```
 
-#### `.sibling(typeName)` / `.sibling.TypeName`
+#### `utils.sibling(instance)`
 
-Access sibling types from the same collection. Returns `TypeClass | undefined`.
+Access sibling types from the same collection. Returns a callable/proxy object
+that resolves to `TypeClass | undefined`.
 
 ```ts
-const siblingType = instance.sibling('OtherType');
-const sibling = instance.sibling.OtherType;
+const siblingAccessor = utils.sibling(instance);
+const siblingType = siblingAccessor('OtherType');
+const sibling = siblingAccessor.OtherType;
 ```
 
 ---
@@ -900,7 +911,7 @@ All instances have non-enumerable internal properties:
 | `.__stack__` | `string` | Stack trace (if `submitStack: true` in config) |
 | `.__creator__` | `InstanceCreatorContext` | Instance creator reference |
 | `.__timestamp__` | `number` | Creation timestamp (ms since epoch) |
-| `.__self__` | `object` | Self reference to the instance (useful when `exposeInstanceMethods: false`) |
+| `.__self__` | `object` | Self reference to the instance |
 
 ---
 
@@ -1023,10 +1034,11 @@ errors.WRONG_STACK_CLEANER
 
 #### Exception Instances
 
-When creating exceptions using `instance.exception()`:
+When creating exceptions using `utils.exception()`:
 
 ```js
-const error = instance.exception(new Error('Original error'));
+const { utils } = require('mnemonica');
+const error = utils.exception(instance, new Error('Original error'));
 
 // Properties:
 error.originalError    // The original error
@@ -1073,8 +1085,7 @@ define('SomeType', function () {}, {
   submitStack: false,       // Collect stack trace as __stack__ property
   awaitReturn: true,        // Ensure await new Constructor() returns value
   ModificationConstructor: fn,  // Custom modification constructor
-  asClass: false,           // Force class mode (auto-detected by default)
-  exposeInstanceMethods: true   // Expose instance methods (default: true for backward compatibility)
+  asClass: false            // Force class mode (auto-detected by default)
 });
 ```
 
@@ -1087,39 +1098,27 @@ define('SomeType', function () {}, {
 | `submitStack` | `boolean` | `false` | If `true`, collects stack trace and stores as `__stack__` property on instances. |
 | `awaitReturn` | `boolean` | `true` | For async constructors, ensures `await new Constructor()` returns the instance. |
 | `asClass` | `boolean` | `auto` | Force class mode detection. Usually auto-detected from constructor syntax. |
-| `exposeInstanceMethods` | `boolean` | `true` | Expose instance methods on the instance. Set to `false` to hide from TypeScript types. See details below. |
 | `ModificationConstructor` | `Function` | - | Custom constructor function for internal instance modification. |
 
-### `exposeInstanceMethods` Option
+### Instance Method Opt-In
 
-Controls whether instance methods (`extract()`, `pick()`, `parent()`, `clone`, `fork()`, `exception()`, `sibling()`) are exposed on the instance type.
-
-| Value | Behavior |
-|-------|----------|
-| `true` (default) | All instance methods are available directly on instances |
-| `false` | Methods are hidden from TypeScript types but still accessible via prototype chain |
-
-**Use Case:** Set to `false` when you want a cleaner public API and don't want internal mnemonica methods cluttering autocomplete/IntelliSense.
+Starting from v1.0.6 instance methods are **not** exposed on instances by default. Use the standalone `utils` export or attach the methods to your constructor's prototype before calling `define()`:
 
 ```typescript
-import { define, getProps, utils } from 'mnemonica';
+import { define, utils } from 'mnemonica';
 
-// With exposeInstanceMethods: false
-const CleanType = define('CleanType', function (data) {
+// Preferred: standalone utilities
+const instance = new MyType({ value: 42 });
+utils.extract(instance);
+
+// Legacy opt-in: attach methods to the constructor prototype before define()
+function MyType(data) {
   Object.assign(this, data);
-}, { exposeInstanceMethods: false });
-
-const instance = new CleanType({ value: 42 });
-
-// Methods not available directly on instance (TypeScript error)
-// instance.extract();  // Error!
-
-// But still accessible via getProps
-const props = getProps(instance);
-props.__self__.extract();  // Works!
-
-// Or using utils
-utils.extract(instance);  // Works!
+}
+Object.defineProperty(MyType.prototype, 'extract', {
+  get() { return () => utils.extract(this); }
+});
+const MyTypeWithMethods = define('MyType', MyType);
 ```
 
 ### Override Default Config for Collection
@@ -1243,7 +1242,8 @@ const usingReactAsProto = ReactDOOMed.call(ReactDOM);
 
 ```js
 // Fork from different parent
-const dagInstance = instanceA.fork.call(instanceB, 'args');
+const { utils: { fork } } = require('mnemonica');
+const dagInstance = fork(instanceA).call(instanceB, 'args');
 
 // Or use merge utility
 const { utils: { merge } } = require('mnemonica');

@@ -295,7 +295,7 @@ const enriched  = new validated.Enriched(context);
 const response  = new enriched.Serialized(format);
 ```
 
-In the second form, `response.parent('Parsed')` returns the parsed instance. `getProps(enriched).__args__` returns the rules that validation used. The lineage is the object. You do not log it separately because there is nothing separate to log.
+In the second form, `utils.parent(response, 'Parsed')` returns the parsed instance. `getProps(enriched).__args__` returns the rules that validation used. The lineage is the object. You do not log it separately because there is nothing separate to log.
 
 The benchmark is the honest cost of the first form measured against the second. The 5× property read advantage is what you are paying for. For pipeline workloads — which is the workload mnemonica is designed for — it is a good trade.
 

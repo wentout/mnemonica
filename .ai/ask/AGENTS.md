@@ -37,7 +37,7 @@ Creates type constructors with special inheritance capabilities:
 ### 3. Proxy Architecture
 
 - **TypeProxy** — Wraps type constructors, handles `.call`, `.apply`
-- **Mnemosyne** — Manages instance prototype chain, provides `.fork()`, `.parent()`
+- **Mnemosyne** — Manages instance prototype chain
 - **TypesCollectionProxy** — Manages type registry, handles type lookup
 
 ### 4. Symbol System
@@ -68,15 +68,21 @@ const TypeProxy = new Proxy(Constructor, {
 });
 ```
 
-## Explaining Instance Methods
+## Explaining Instance Introspection
 
-| Method | Purpose | Defined In |
-|--------|---------|------------|
-| `.fork()` | Create shallow copy | Mnemosyne.ts |
-| `.parent()` | Access parent instance | Mnemosyne.ts |
-| `.pick()` | Extract specific properties | Mnemosyne.ts |
-| `.extract()` | Get all inherited properties | extract.ts |
-| `.parse()` | Parse instance structure | parse.ts |
+Starting from v1.0.6 the legacy instance methods are no longer auto-injected.
+Use the standalone `utils` export:
+
+| Utility | Purpose | Defined In |
+|---------|---------|------------|
+| `utils.fork(instance)` | Create a fork constructor | fork.ts |
+| `utils.parent(instance)` | Access parent instance | parent.ts |
+| `utils.pick(instance, ...keys)` | Extract specific properties | pick.ts |
+| `utils.extract(instance)` | Get all inherited properties | extract.ts |
+| `utils.parse(instance)` | Parse instance structure | parse.ts |
+
+To restore the old `instance.fork()` / `instance.extract()` style, attach the
+methods to the constructor's prototype before calling `define()`.
 
 ## Test Framework Differences
 

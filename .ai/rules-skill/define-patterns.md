@@ -3,7 +3,7 @@ name: mnemonica-define-patterns
 description: |
   Patterns for defining types and subtypes with mnemonica's define() function.
   Use when the user asks about define(), creating types, subtype inheritance,
-  strictChain, blockErrors, exposeInstanceMethods, or type configuration options.
+  strictChain, blockErrors, awaitReturn, or type configuration options.
 metadata:
   tags: [mnemonica, define, types, subtypes, inheritance]
 ---
@@ -71,8 +71,14 @@ define('Parent.Child', function (this: Child, data: Data) {
 | `blockErrors` | `true` | Block construction if error exists in prototype chain |
 | `submitStack` | `false` | Collect stack trace as `__stack__` property |
 | `awaitReturn` | `true` | `await new Constructor()` must return a value |
-| `exposeInstanceMethods` | `true` | Expose `extract()`, `fork()`, etc. on instance |
 | `asClass` | auto-detected | Force class mode detection |
+
+## Instance Method Opt-In
+
+Starting from v1.0.6, `extract()`, `pick()`, `parent()`, `fork()`, `exception()`,
+`sibling()`, and `clone()` are **not** auto-injected on instances. Use the standalone
+`utils` export, or attach the methods to the constructor's prototype before calling
+`define()`.
 
 ## Before/After: strictChain
 

@@ -1,17 +1,9 @@
-import { define, apply } from '..';
+import { define, apply, utils } from '..';
 
 const FirstType = define( 'SomeType', function (this: {
 	first: 'FirstType',
 }) {
 	this.first = 'FirstType';
-});
-
-const FirstTypeO = define( 'SomeType', function (this: {
-	first: 'FirstType',
-}) {
-	this.first = 'FirstType';
-}, {
-	exposeInstanceMethods: false
 });
 
 const SecondType = FirstType.define( 'SecondType', function ( this: {
@@ -23,31 +15,26 @@ const SecondType = FirstType.define( 'SecondType', function ( this: {
 });
 
 const first = new FirstType();
-const firstO = new FirstTypeO();
 
 type TSecondInstance = InstanceType<typeof SecondType>;
 
-const second = new first.SecondType() as unknown as TSecondInstance;
+const second = new (first as any).SecondType() as TSecondInstance;
 
 const second2 = apply(first, SecondType);
 
-// Type tests for exposeInstanceMethods
-// first should have MnemonicaInstance methods (extract, pick, etc.) and subtypes
-first.extract();
-first.pick('first');
-first.SecondType;
+// Starting from v1.0.6 instance methods are no longer auto-injected.
+// Use the standalone utils.* API instead.
+utils.extract(first);
+utils.pick(first, 'first');
+(first as any).SecondType;
 
-// firstO should NOT have MnemonicaInstance methods exposed in types
-// @ts-expect-error - extract should not be available when exposeInstanceMethods is false
-firstO.extract();
-// @ts-expect-error - pick should not be available when exposeInstanceMethods is false
-firstO.pick('first');
-// @ts-expect-error - subtypes should not be available when exposeInstanceMethods is false
-firstO.SecondType;
+// @ts-expect-error - extract is not available as an instance method by default
+first.extract();
+// @ts-expect-error - pick is not available as an instance method by default
+first.pick('first');
 
 // Both should have the user-defined property 'first'
 const f1: 'FirstType' = first.first;
-const f2: 'FirstType' = firstO.first;
 
 // { first: undefined, second: "SecondType" }
-console.log(first, firstO, second, second2, f1, f2);
+console.log(first, second, second2, f1);

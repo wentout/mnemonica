@@ -25,7 +25,7 @@ const admin = new user.Admin({ role: 'admin' }); // inherits from user instance
 
 **Why not TypeScript interfaces alone?** TypeScript is structural at compile time: a `Payment` and an `Invoice` with identical fields are interchangeable to the type checker. At runtime, `processPayment(invoice)` silently succeeds and produces wrong results. mnemonica's runtime types are nominal — the type IS its name, established at `define()` time and stable thereafter.
 
-**Why not Object.assign / spread?** `{...raw, ...apiResult}` is one flat object with no lineage. You cannot answer "which step set `amount`?" without reading the source. mnemonica's prototype chain preserves every ancestor; `enriched.parent('ApiResult')` returns the exact API response object.
+**Why not Object.assign / spread?** `{...raw, ...apiResult}` is one flat object with no lineage. You cannot answer "which step set `amount`?" without reading the source. mnemonica's prototype chain preserves every ancestor; `utils.parent(enriched, 'ApiResult')` returns the exact API response object.
 
 ---
 

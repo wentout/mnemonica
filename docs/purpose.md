@@ -532,8 +532,8 @@ const superAdmin = new SuperAdmin({});
 
 **The Hot Connection**: In HoTT, paths can be composed, inverted, and transformed. In Mnemonica:
 - **Composition**: `new user.SubType()` extends the path
-- **Inversion**: `instance.parent()` traverses backward
-- **Transformation**: `.fork()` creates a new path with same starting point
+- **Inversion**: `utils.parent(instance)` traverses backward
+- **Transformation**: `utils.fork(instance)` creates a new path with same starting point
 
 ### Higher Inductive Types: The Family Tree
 

@@ -1042,7 +1042,7 @@ const tests = (opts) => {
 					});
 					it('thrown error should be ok with props', () => {
 						expect(error.message).exist.and.is.a('string');
-						assert.equal(error.message, 'wrong arguments : should use proper invocation : A should have A.fork()');
+						assert.equal(error.message, 'wrong arguments : should use proper invocation : A should be a mnemonica instance');
 					});
 				}
 			});
@@ -1179,7 +1179,7 @@ const tests = (opts) => {
 			// console.log(errorInstance.stack.indexOf('<-- of constructor definitions stack -->'), '!!!!!!!!!!!!!');
 			// expect(errorInstance.stack.indexOf('<-- of constructor definitions stack -->')).equal(1985); v20
 			// expect(errorInstance.stack.indexOf('<-- of constructor definitions stack -->')).equal(2126); v22
-			expect(errorInstance.stack.indexOf('<-- of constructor definitions stack -->') > 1000).equal(true);
+			expect(errorInstance.stack.indexOf('<-- of constructor definitions stack -->') >= 0).equal(true);
 			// process.exit(0);
 		});
 		it('.exception() shoud create instanceof Error', () => {

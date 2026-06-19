@@ -221,4 +221,4 @@ When modifying any of these files, remember:
 - **Prototype links are load-bearing.** Changing `Reflect.setPrototypeOf` calls changes the Trie structure.
 - **WeakMap keys are prototype objects, not instances.** `_getProps` walks the chain; `_addProps` writes to the Mnemosyne.
 - **Hook order matters.** `preCreation` → construction → `postCreation`. Errors in `preCreation` abort before `Object.create`.
-- **The `__self__` reference is used by `.fork()` and `.clone()` to detect self-calls.**
+- **The `__self__` reference is used by `utils.fork()` and `utils.clone()` to detect self-calls.**

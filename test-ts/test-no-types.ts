@@ -43,7 +43,7 @@ const SomeType = define('SomeType', function (this: {
 	this.one = gather;
 	this.check = check;
 	this.q = 123;
-}, { exposeInstanceMethods: false });
+});
 SomeType.registerHook('preCreation', () => { console.log('SomeType'); });
 
 const SomeSubType = SomeType.define('SomeSubType', function (this: {

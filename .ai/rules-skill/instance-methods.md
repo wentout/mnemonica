@@ -2,9 +2,10 @@
 name: mnemonica-instance-methods
 description: |
   Instance methods and properties in mnemonica: extract, pick, parent, fork,
-  clone, getProps, and the internal __self__ reference. Use when the user asks
-  about instance introspection, prototype chain traversal, forking instances,
-  or the internal props system.
+  clone, sibling, exception, getProps, and the internal __self__ reference.
+  Starting from v1.0.6 these convenience methods are no longer auto-injected;
+  use the standalone utils.* API or attach them to a constructor prototype before
+  calling define().
 metadata:
   tags: [mnemonica, instances, methods, introspection, prototype]
 ---
@@ -13,36 +14,47 @@ metadata:
 
 For the type-level details of the corresponding standalone utilities
 (`utils.extract`, `utils.pick`, `utils.parent`, `utils.fork`, `utils.clone`,
-`utils.sibling`), see [`docs/UTILS.md`](../../docs/UTILS.md).
+`utils.sibling`, `utils.exception`), see [`docs/UTILS.md`](../../docs/UTILS.md).
 
-## Available Methods
+## Standalone Utilities (Default)
 
-| Method | Description |
-|--------|-------------|
-| `extract()` | Returns all enumerable user properties as a plain object (`Extracted<T>`) |
-| `pick(...keys)` | Returns selected properties; literal keys are typed (`Pick<T, K>`) |
-| `parent()` | Returns the parent instance in the prototype chain |
-| `parent(path)` | Looks up parent by constructor name (structural `object \| undefined`) |
-| `fork(...args)` | Creates a new instance with same or different args; returns `this` |
-| `clone` | Alias for `fork()` with no arguments; preserves full instance type |
-| `exception(error, ...args)` | Creates an error with context |
-| `sibling(name)` | Finds a sibling type by name (`TypeClass \| undefined`) |
-
-All methods are generic where it matters:
-
-- `instance.extract()` returns `Extracted<T>` — a data-only view with
-  `MnemonicaInstance` method names filtered out.
-- `instance.pick('name', 'age')` returns a typed subset; loose `string[]` keys
-  fall back to `Record<string, unknown>`.
-- `instance.fork()` and `instance.clone` return `this`, so the full
-  `{ fields } & MnemonicaInstance<{ fields }>` type is preserved.
+Starting from v1.0.6 the convenience methods are **not** exposed on instances by
+default. Import them from the `utils` export:
 
 ```typescript
-const user = new UserType();
-const extracted = user.extract(); // Extracted<UserTypeInstance>
-const picked    = user.pick('name', 'age'); // { name: string; age: number; }
-const cloned    = user.clone;               // full UserTypeInstance
-const forked    = user.fork();              // full UserTypeInstance
+import { utils } from 'mnemonica';
+
+utils.extract(instance);
+utils.pick(instance, 'name', 'age');
+utils.parent(instance, 'UserType');
+utils.fork(instance)(newArgs);
+utils.clone(instance);
+utils.sibling(instance);
+utils.exception(instance, new Error('oops'));
+```
+
+All utilities infer their type parameter from the instance argument.
+
+## Legacy Instance-Method Style (Opt-In)
+
+To restore the old `instance.extract()` style for a root constructor, attach the
+methods to its prototype **before** passing it to `define()`. See
+`test/instance-methods-helper.js` for the full reference pattern.
+
+```typescript
+import { define, utils } from 'mnemonica';
+
+function UserType(data) {
+  Object.assign(this, data);
+}
+
+Object.defineProperty(UserType.prototype, 'extract', {
+  get() { return () => utils.extract(this); }
+});
+
+const User = define('User', UserType);
+const user = new User({ name: 'Ada' });
+user.extract(); // works
 ```
 
 ## Internal Props System
