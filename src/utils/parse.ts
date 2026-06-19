@@ -14,8 +14,9 @@ const {
 // } = constants;
 
 import { extract } from './extract';
+import type { Parsed } from '../types';
 
-export const parse = ( self: object ) => {
+export const parse = <T extends object>( self: T ): Parsed<T> => {
 
 	if ( !self || !( self as { constructor?: CallableFunction } ).constructor ) {
 		throw new WRONG_MODIFICATION_PATTERN;
@@ -47,7 +48,7 @@ export const parse = ( self: object ) => {
 
 	const { name } = protoConstructor;
 
-	const props = extract( { ...self } as Record<string, unknown> );
+	const props = extract( { ...self } as T );
 	// props.constructor = undefined;
 	delete ( props as { constructor?: unknown } ).constructor;
 
@@ -57,7 +58,7 @@ export const parse = ( self: object ) => {
 	) as Record<string, unknown> );
 	delete ( joint as { constructor?: unknown } ).constructor;
 
-	const parent = protoProto;
+	const parent = protoProto as object | undefined;
 	// TODO: deep parse
 	// let parent;
 	// if ( protoProto[ SymbolConstructorName ] === MNEMONICA ) {
@@ -66,7 +67,7 @@ export const parse = ( self: object ) => {
 	// 	parent = Reflect.getPrototypeOf( protoProto );
 	// }
 
-	const result = {
+	const result: Parsed<T> = {
 
 		name,
 

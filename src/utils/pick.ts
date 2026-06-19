@@ -3,7 +3,15 @@
 import { ErrorsTypes } from '../descriptors/errors';
 const { WRONG_INSTANCE_INVOCATION } = ErrorsTypes;
 
-export const pick = ( instance: object, ...args: (string | string[])[] ) => {
+export function pick <T extends object, K extends keyof T> (
+	instance: T,
+	...args: (K | K[])[]
+): { [P in K]: T[P] } & {};
+export function pick <T extends object> (
+	instance: T,
+	...args: (string | string[])[]
+): Record<string, unknown>;
+export function pick ( instance: object, ...args: (string | string[])[] ) {
 
 	// at this situation this check is enough
 	if ( instance !== Object( instance ) ) {
@@ -33,4 +41,4 @@ export const pick = ( instance: object, ...args: (string | string[])[] ) => {
 
 	return picked;
 
-};
+}

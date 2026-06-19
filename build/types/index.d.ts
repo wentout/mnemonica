@@ -130,21 +130,35 @@ export type ProtoFlat<P extends object, T extends object, L extends Exclude<keyo
 } & {
     [key in L]: P[key];
 };
+export type MnemonicaInstanceMethodKeys = 'extract' | 'pick' | 'parent' | 'clone' | 'fork' | 'exception' | 'sibling';
 export type Flatten<F> = {
     [key in keyof F]: F[key];
+};
+export type Extracted<T extends object> = {
+    [K in keyof T as K extends string ? (K extends MnemonicaInstanceMethodKeys ? never : K) : never]: T[K];
+} & {};
+export type Parsed<T extends object> = {
+    name: string;
+    props: Extracted<T>;
+    self: T;
+    proto: object;
+    joint: Record<string, unknown>;
+    parent: object | undefined;
 };
 export interface SiblingAccessor {
     (SiblingTypeName: string): TypeClass | undefined;
     [key: string]: TypeClass | undefined;
 }
-export interface MnemonicaInstance {
-    extract(): Record<string, unknown>;
+export interface MnemonicaInstance<T extends object = object> {
+    extract(): Extracted<T>;
+    pick<K extends keyof T>(...keys: (K | K[])[]): {
+        [P in K]: T[P];
+    } & {};
     pick(...keys: string[]): Record<string, unknown>;
-    pick(keys: string[]): Record<string, unknown>;
     parent(): object | undefined;
     parent(constructorLookupPath: string): object | undefined;
-    readonly clone: object;
-    fork(...forkArgs: unknown[]): object;
+    readonly clone: this;
+    fork(...forkArgs: unknown[]): this;
     exception(error: Error, ...args: unknown[]): Error;
     readonly sibling: SiblingAccessor;
 }
@@ -166,7 +180,13 @@ export type Props = InstanceInternalProps & {
 export type IsHidingMethods<Config extends constructorOptions> = Config extends {
     exposeInstanceMethods: false;
 } ? true : false;
-export type InstanceResult<N extends object, Config extends constructorOptions> = IsHidingMethods<Config> extends true ? Flatten<N> : Flatten<N> & MnemonicaInstance;
+export type InstanceResult<N extends object, Config extends constructorOptions> = IsHidingMethods<Config> extends true ? {
+    [K in keyof N]: N[K];
+} : {
+    [K in keyof N]: N[K];
+} & MnemonicaInstance<{
+    [K in keyof N]: N[K];
+}>;
 export interface IDefinitorInstance<N extends object, Config extends constructorOptions = constructorOptions, R extends InstanceResult<N, Config> = InstanceResult<N, Config>> {
     TypeName: string;
     prototype: N;
@@ -221,17 +241,32 @@ export type DecoratedClass<T extends Constructor<object>> = T & (<U extends Cons
     lookup: TypeLookup;
     TypeName: string;
 };
-export type ApplyFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, args?: unknown[]) => S;
-export type CallFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>, ...args: unknown[]) => S;
-export type BindFunction = <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Constructor: IDEF<T>) => (...args: unknown[]) => S;
+export type Merge<E extends object, T extends object> = {
+    [K in keyof T | keyof E as K extends MnemonicaInstanceMethodKeys ? never : K]: K extends keyof T ? T[K] : E[K & keyof E];
+};
+export interface ApplyFunction extends CallableFunction {
+    <E extends object, T extends object>(entity: E, Constructor: IDEF<T>, args?: unknown[]): InstanceResult<Merge<E, T>, constructorOptions>;
+}
+export interface CallFunction extends CallableFunction {
+    <E extends object, T extends object>(entity: E, Constructor: IDEF<T>, ...args: unknown[]): InstanceResult<Merge<E, T>, constructorOptions>;
+}
+export interface BindFunction extends CallableFunction {
+    <E extends object, T extends object>(entity: E, Constructor: IDEF<T>): (...args: unknown[]) => InstanceResult<Merge<E, T>, constructorOptions>;
+}
 export interface UtilsCollection {
-    extract: (instance: object) => Record<string, unknown>;
-    pick: (instance: object, ...args: (string | string[])[]) => Record<string, unknown>;
+    extract<T extends object>(instance: T): Extracted<T>;
+    pick<T extends object, K extends keyof T>(instance: T, ...args: (K | K[])[]): {
+        [P in K]: T[P];
+    } & {};
+    pick<T extends object>(instance: T, ...args: (string | string[])[]): Record<string, unknown>;
+    clone<T extends object>(instance: T): T;
+    fork<T extends object>(instance: T): (this: object, ...forkArgs: unknown[]) => T;
+    sibling(instance: object): SiblingAccessor;
     collectConstructors: (instance: object, flat?: boolean) => (CallableFunction | string)[];
-    merge: (...args: unknown[]) => unknown;
-    parse: (value: unknown) => object | undefined;
-    parent: (instance: object, strict?: boolean) => object | undefined;
-    toJSON: (instance: object) => string;
+    merge<A extends object, B extends object>(a: A, b: B, ...args: unknown[]): InstanceResult<Merge<B, A>, constructorOptions>;
+    parse<T extends object>(self: T): Parsed<T>;
+    parent<T extends object>(instance: T, path?: string): object | undefined;
+    toJSON<T extends object>(instance: T): string;
     [key: string]: CallableFunction;
 }
 export interface MnemonicaModule {
@@ -240,7 +275,7 @@ export interface MnemonicaModule {
     apply: ApplyFunction;
     call: CallFunction;
     bind: BindFunction;
-    decorate: <U extends Constructor<object>>(target?: object, config?: object) => DecoratedClass<U>;
+    decorate: <T extends Constructor<object> | constructorOptions | undefined = undefined>(target?: T, config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
     registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
     defaultTypes: TypesCollection;
     BASE_MNEMONICA_ERROR: MnemonicaErrorConstructor;

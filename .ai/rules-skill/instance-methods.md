@@ -11,24 +11,45 @@ metadata:
 
 # Instance Methods
 
+For the type-level details of the corresponding standalone utilities
+(`utils.extract`, `utils.pick`, `utils.parent`, `utils.fork`, `utils.clone`,
+`utils.sibling`), see [`docs/UTILS.md`](../../docs/UTILS.md).
+
 ## Available Methods
 
 | Method | Description |
 |--------|-------------|
-| `extract()` | Returns all enumerable properties as a plain object |
-| `pick(...keys)` | Returns selected properties |
+| `extract()` | Returns all enumerable user properties as a plain object (`Extracted<T>`) |
+| `pick(...keys)` | Returns selected properties; literal keys are typed (`Pick<T, K>`) |
 | `parent()` | Returns the parent instance in the prototype chain |
-| `parent(path)` | Looks up parent by constructor name |
-| `fork(...args)` | Creates a new instance with same or different args |
-| `clone` | Alias for `fork()` with no arguments |
+| `parent(path)` | Looks up parent by constructor name (structural `object \| undefined`) |
+| `fork(...args)` | Creates a new instance with same or different args; returns `this` |
+| `clone` | Alias for `fork()` with no arguments; preserves full instance type |
 | `exception(error, ...args)` | Creates an error with context |
-| `sibling(name)` | Finds a sibling type by name |
+| `sibling(name)` | Finds a sibling type by name (`TypeClass \| undefined`) |
+
+All methods are generic where it matters:
+
+- `instance.extract()` returns `Extracted<T>` — a data-only view with
+  `MnemonicaInstance` method names filtered out.
+- `instance.pick('name', 'age')` returns a typed subset; loose `string[]` keys
+  fall back to `Record<string, unknown>`.
+- `instance.fork()` and `instance.clone` return `this`, so the full
+  `{ fields } & MnemonicaInstance<{ fields }>` type is preserved.
+
+```typescript
+const user = new UserType();
+const extracted = user.extract(); // Extracted<UserTypeInstance>
+const picked    = user.pick('name', 'age'); // { name: string; age: number; }
+const cloned    = user.clone;               // full UserTypeInstance
+const forked    = user.fork();              // full UserTypeInstance
+```
 
 ## Internal Props System
 
 Instance metadata is stored externally via `WeakMap` against the prototype object,
 not the instance itself. This keeps instance enumeration clean — internal props
-never show up in `for...in`, `Object.keys`, or `JSON.stringify`.
+never show up in `for...in`, `Object.keys()`, or `JSON.stringify()`.
 
 ```typescript
 const props = getProps(instance);

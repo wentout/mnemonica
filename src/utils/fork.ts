@@ -8,7 +8,7 @@ import TypesUtils from '../api/utils/index';
 
 const { reflectPrimitiveWrappers } = TypesUtils;
 
-export const fork = (instance: object) => {
+export const fork = <T extends object>(instance: T): (this: object, ...forkArgs: unknown[]) => T => {
 
 	const props = getProps(instance) as Props;
 
@@ -48,7 +48,8 @@ export const fork = (instance: object) => {
 			);
 		}
 
-		return forked;
+		const forkResult = forked as T;
+		return forkResult;
 
 	};
 	return result;

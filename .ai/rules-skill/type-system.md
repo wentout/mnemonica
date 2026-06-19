@@ -112,3 +112,12 @@ const AdminType = UserType.define('AdminType', function (this: AdminType) {
     this.role = 'admin';
 });
 ```
+
+## Generic Public Utilities
+
+The standalone utilities in `utils` infer their type parameters from the instance
+argument. Callers should never need an explicit `<T>` cast for ordinary operations.
+
+The full reference — helper types (`Extracted`, `Merge`, `InstanceResult`,
+`Parsed`, `SiblingAccessor`), every utility signature, and the type-level
+explanation of `utils.merge` — lives in [`docs/UTILS.md`](../../docs/UTILS.md).

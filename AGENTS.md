@@ -78,6 +78,8 @@ npm run watch          # watch mode
 
 **Must run `npm run test:cov` before completing any task.**
 
+**Documentation changes:** When modifying any `.md` file, `npm run lint:md` is mandatory. It checks for broken links and anchors. Run it and fix any reported issues before finishing.
+
 ## Code Style (Project-Specific)
 
 See [`.ai/rules-skill/code-style.md`](./.ai/rules-skill/code-style.md) for the full style reference. Key rules: tabs only, space before function parens, colons aligned in object literals, `strict: true`, **no `any`** (`no-explicit-any: error`).

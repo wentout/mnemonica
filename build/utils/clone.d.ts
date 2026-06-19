@@ -1,1 +1,1 @@
-export declare const clone: (instance: object) => any;
+export declare const clone: <T extends object>(instance: T) => T;

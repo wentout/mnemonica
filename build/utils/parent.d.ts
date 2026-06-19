@@ -1,1 +1,1 @@
-export declare const parent: (instance: object, path?: string) => unknown;
+export declare const parent: <T extends object>(instance: T, path?: string) => object | undefined;

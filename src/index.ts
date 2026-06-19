@@ -14,7 +14,9 @@ import type {
 	TypeClass,
 	TypeAbsorber,
 	MnemonicaModule,
-	TypeConstructor
+	TypeConstructor,
+	InstanceResult,
+	Merge
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -167,14 +169,13 @@ export const apply = function <E extends object, T extends object, S extends Pro
 	entity: E,
 	Ctor: IDEF<T>,
 	args: unknown[] = []
-): {
-		[key in keyof S]: S[key]
-	} {
-	const result = $run<E, T, S>(
+): InstanceResult<Merge<E, T>, constructorOptions> {
+	const runResult = $run<E, T, S>(
 		entity,
 		Ctor,
 		args
 	);
+	const result = runResult as unknown as InstanceResult<Merge<E, T>, constructorOptions>;
 	return result;
 };
 
@@ -183,14 +184,13 @@ export const call = function <E extends object, T extends object, S extends Prot
 	entity: E,
 	Ctor: IDEF<T>,
 	...args: unknown[]
-): {
-		[key in keyof S]: S[key]
-	} {
-	const result = $run<E, T, S>(
+): InstanceResult<Merge<E, T>, constructorOptions> {
+	const runResult = $run<E, T, S>(
 		entity,
 		Ctor,
 		args
 	);
+	const result = runResult as unknown as InstanceResult<Merge<E, T>, constructorOptions>;
 	return result;
 };
 
@@ -198,16 +198,15 @@ export const call = function <E extends object, T extends object, S extends Prot
 export const bind = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
 	Ctor: IDEF<T>
-): (...args: unknown[]) => {
-	[key in keyof S]: S[key]
-} {
+): (...args: unknown[]) => InstanceResult<Merge<E, T>, constructorOptions> {
 	const result = (...args: unknown[]) => {
 		const runResult = $run<E, T, S>(
 			entity,
 			Ctor,
 			args
 		);
-		return runResult;
+		const typedResult = runResult as unknown as InstanceResult<Merge<E, T>, constructorOptions>;
+		return typedResult;
 	};
 	return result;
 };

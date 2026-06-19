@@ -2,8 +2,17 @@
 
 import { ErrorsTypes } from '../descriptors/errors';
 const { WRONG_ARGUMENTS_USED } = ErrorsTypes;
+import type {
+	Merge,
+	InstanceResult,
+	constructorOptions,
+} from '../types';
 
-export const merge = ( a: object, b: object, ...args: unknown[] ): object => {
+export const merge = <A extends object, B extends object>(
+	a: A,
+	b: B,
+	...args: unknown[]
+): InstanceResult<Merge<B, A>, constructorOptions> => {
 
 	// at this situation this check is enough
 	if ( a !== Object( a ) ) {
@@ -24,7 +33,7 @@ export const merge = ( a: object, b: object, ...args: unknown[] ): object => {
 		b,
 		...args 
 	);
-	const result = aa as object;
+	const result = aa as InstanceResult<Merge<B, A>, constructorOptions>;
 	return result;
 
 };

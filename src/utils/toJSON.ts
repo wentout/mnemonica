@@ -1,7 +1,7 @@
 'use strict';
 
 import { extract } from './extract';
-export const toJSON = ( instance: object ) => {
+export const toJSON = <T extends object>( instance: T ) => {
 
 	const extracted = extract( instance );
 	const result = Object.entries( extracted ).reduce(

@@ -123,7 +123,7 @@ These are the two assumptions that most reliably produce incorrect code.
 **1. "I should traverse the chain manually."** The most common mistake: seeing `.parent().parent().parent()` in examples and treating it as a production traversal pattern. Manual depth-chaining is brittle and untyped. The correct APIs:
 
 - **`instance.parent('TypeName')`** — walks to a named ancestor in O(depth), no manual counting
-- **`lookupTyped(path)`** — resolves any type by dotted path string with full TypeScript inference, against an augmented `TypeRegistry` (hand-written or `tactica`-generated — see [`docs/typed-lookup.md`](./docs/typed-lookup.md))
+- **`lookupTyped(path)`** — resolves any type by path string with full TypeScript inference, against an augmented `TypeRegistry` (hand-written or `tactica`-generated — see [`docs/typed-lookup.md`](./docs/typed-lookup.md)). Paths may use dots, slashes, colons, or bracket notation, and may be single-segment names when the lookup is relative to a collection or type.
 
 For any traversal deeper than a single step, prefer `parent('TypeName')` or `lookupTyped`. The manual chain form in examples is illustrative only. See [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) for the full `lookupTyped` usage guide.
 
@@ -447,7 +447,7 @@ The full TypeScript source is in [`src/`](./src/) (on GitHub; the npm package sh
 
 ## Companion packages on npm
 
-- **[`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica)** — TypeScript Language Service Plugin. Generates the `TypeRegistry` augmentation that makes `lookupTyped()` fully typed. The augmentation can also be written by hand for small projects — runtime behaviour is identical either way. See [`docs/typed-lookup.md`](./docs/typed-lookup.md).
+- **[`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica)** — CLI/codegen utility. Scans your `define()` and `@decorate()` calls and generates the `TypeRegistry` augmentation that makes `lookupTyped()` fully typed. The augmentation can also be written by hand for small projects — runtime behaviour is identical either way. See [`docs/typed-lookup.md`](./docs/typed-lookup.md).
 - **[`typeomatica`](https://www.npmjs.com/package/typeomatica)** — Runtime type enforcement via Proxy. Used with the `@Strict` decorator. Wraps property access to enforce type invariants at runtime.
 
 Additional packages are in active development.

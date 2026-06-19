@@ -1,6 +1,9 @@
 'use strict';
 
-import type { WrappableMethod } from '../types';
+import type {
+	WrappableMethod,
+	UtilsCollection
+} from '../types';
 
 import { collectConstructors } from './collectConstructors';
 import { extract } from './extract';
@@ -45,7 +48,7 @@ const wrapThis = ( method: WrappableMethod ) => {
 	return result;
 };
 
-export const utils: { [ index: string ]: CallableFunction } = {
+export const utils = {
 
 	...Object.entries( utilsUnWrapped )
 		.reduce(
@@ -57,6 +60,6 @@ export const utils: { [ index: string ]: CallableFunction } = {
 			{}
 		),
 
-};
+} as UtilsCollection;
 
 export { defineStackCleaner } from './defineStackCleaner';

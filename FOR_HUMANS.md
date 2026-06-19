@@ -803,36 +803,46 @@ All mnemonica instances have the following methods:
 
 #### `.extract()`
 
-Extracts all inherited properties into a single flat object.
+Extracts all enumerable user properties into a single flat object. TypeScript
+returns `Extracted<T>` — `MnemonicaInstance` method names are filtered out and
+optionality is preserved from the source type.
 
-```js
+```ts
 const extracted = instance.extract();
+// hover: { name: string; email: string; age: number; }
 ```
 
 #### `.pick(...keys)` / `.pick([keys])`
 
-Picks specific properties from the instance and its inheritance chain.
+Picks specific properties from the instance and its inheritance chain. Literal
+keys produce a typed subset; dynamic or unknown keys fall back to
+`Record<string, unknown>`.
 
-```js
+```ts
 const picked = instance.pick('email', 'password');
-// or
-const picked = instance.pick(['email', 'password']);
+// hover: { email: string; password: string; }
+
+const pickedArray = instance.pick(['email', 'password']);
 ```
 
 #### `.parent(constructorName?)`
 
 Gets the parent instance. If `constructorName` is provided, walks up the chain.
+The structural return type is `object | undefined`; a specific nominal parent
+type requires a `TypeRegistry` augmentation (see [`docs/typed-lookup.md`](./docs/typed-lookup.md)).
 
-```js
+```ts
 const immediateParent = instance.parent();
-const specificParent = instance.parent('UserType');
+const specificParent = instance.parent('UserType'); // object | undefined
 ```
 
 #### `.clone`
 
-Property that returns a cloned instance (same parent, same args).
+Property that returns a cloned instance (same parent, same args). The return
+type is `this`, so the full `{ fields } & MnemonicaInstance<{ fields }>` shape
+is preserved.
 
-```js
+```ts
 const cloned = instance.clone;
 // Note: For async constructors, use: await instance.clone
 ```
@@ -840,8 +850,9 @@ const cloned = instance.clone;
 #### `.fork(...args)`
 
 Creates a forked instance from the same parent with optional new arguments.
+Returns `this` so the full instance type is preserved.
 
-```js
+```ts
 const forked = instance.fork();           // same args
 const forkedWithNewArgs = instance.fork('new', 'args');
 // Note: For async constructors, use: await instance.fork(...)
@@ -851,7 +862,7 @@ const forkedWithNewArgs = instance.fork('new', 'args');
 
 Forks with a different `this` context (useful for Directed Acyclic Graphs).
 
-```js
+```ts
 const dagInstance = instanceA.fork.call(instanceB, 'args');
 ```
 
@@ -859,16 +870,16 @@ const dagInstance = instanceA.fork.call(instanceB, 'args');
 
 Creates an exception instance from the current instance.
 
-```js
+```ts
 const error = someInstance.exception(new Error('Something went wrong'));
 throw error;
 ```
 
 #### `.sibling(typeName)` / `.sibling.TypeName`
 
-Access sibling types from the same collection.
+Access sibling types from the same collection. Returns `TypeClass | undefined`.
 
-```js
+```ts
 const siblingType = instance.sibling('OtherType');
 const sibling = instance.sibling.OtherType;
 ```
@@ -897,54 +908,28 @@ All instances have non-enumerable internal properties:
 
 Access via `utils` export:
 
-```js
+```ts
 const { utils } = require('mnemonica');
 ```
 
-#### `utils.extract(instance)`
-Standalone extract function.
+All utilities infer their type parameter from the instance argument; no
+explicit `<T>` cast is required for ordinary use.
 
-#### `utils.pick(instance, ...keys)`
-Standalone pick function.
+| Utility | Inferred return type |
+|---|---|
+| `utils.extract(instance)` | `Extracted<T>` — plain user-field object |
+| `utils.pick(instance, 'a', 'b')` | `{ a: T['a'], b: T['b'] }` |
+| `utils.clone(instance)` | `T` |
+| `utils.fork(instance)` | `(this: object, ...args: unknown[]) => T` |
+| `utils.parent(instance, path?)` | `object \| undefined` |
+| `utils.sibling(instance)` | `SiblingAccessor` |
+| `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>, constructorOptions>` |
+| `utils.parse(instance)` | `Parsed<T>` |
+| `utils.toJSON(instance)` | `string` |
+| `utils.collectConstructors(instance, flat?)` | `(CallableFunction \| string)[]` |
 
-#### `utils.parent(instance, constructorName?)`
-Standalone parent function.
-
-#### `utils.parse(instance)`
-Parses an instance structure, returning:
-- `name`: constructor name
-- `props`: extracted properties
-- `self`: the instance itself
-- `proto`: prototype object
-- `joint`: prototype properties
-- `parent`: parent prototype
-
-```js
-const { utils: { parse } } = require('mnemonica');
-const parsed = parse(instance);
-```
-
-#### `utils.merge(A, B, ...args)`
-Merges two instances using fork semantics.
-
-```js
-const merged = utils.merge(instanceA, instanceB, 'args');
-// Note: For async constructors, use: await utils.merge(...)
-```
-
-#### `utils.toJSON(instance)`
-Serializes an instance to JSON.
-
-```js
-const json = utils.toJSON(instance);
-```
-
-#### `utils.collectConstructors(instance, flat?)`
-Collects all constructors in the instance's prototype chain.
-
-```js
-const constructors = utils.collectConstructors(instance, true);
-```
+For the full type-level explanation, helper types, and examples, see
+[`docs/UTILS.md`](./docs/UTILS.md).
 
 ---
 
