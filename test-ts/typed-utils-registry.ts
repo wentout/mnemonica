@@ -3,7 +3,7 @@
 // TypeScript type tests for nominal utilities driven by TypeRegistry augmentation.
 // These tests are compiled, not executed.
 
-import { lookupTyped, utils } from '..';
+import { lookup, utils } from '..';
 import type { TypeConstructor } from '..';
 
 declare module '..' {
@@ -27,17 +27,23 @@ interface UserTypeInstance extends UserTypeData {
 
 interface AdminTypeInstance extends UserTypeInstance, AdminTypeData {}
 
-const UserType = lookupTyped('UserType');
+const UserType = lookup('UserType');
+
+if (!UserType) {
+	throw new Error('UserType not found');
+}
+
 const user = new UserType({ name: 'Alice' });
 
 const admin = new user.AdminType({ role: 'admin' });
 
-// Positive: parentTyped returns the specific parent instance type.
-const parent = utils.parentTyped(admin, 'UserType');
+// Positive: lookup returns a typed constructor.
+const lookedUp = lookup('UserType.AdminType');
+if (lookedUp) {
+	const lookedUpAdmin = new lookedUp({ role: 'root' });
+	const role: string = lookedUpAdmin.role;
+}
+
+// Positive: parent returns the specific parent instance type.
+const parent = utils.parent(admin, 'UserType');
 const parentName: string | undefined = parent?.name;
-
-// @ts-expect-error — 'UserType' is a root, so it has no parent path.
-utils.parentTyped(user, 'UserType');
-
-// @ts-expect-error — 'NonExistent' is not a valid parent path.
-utils.parentTyped(admin, 'NonExistent');

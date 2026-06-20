@@ -8,7 +8,6 @@ import type {
 import { collectConstructors } from './collectConstructors';
 import { extract } from './extract';
 import { parent } from './parent';
-import { parentTyped } from './parentTyped';
 import { pick } from './pick';
 import { sibling } from './sibling';
 import { exception } from './exception';
@@ -24,7 +23,6 @@ const utilsUnWrapped = {
 	pick,
 
 	parent,
-	parentTyped,
 	sibling,
 	exception,
 	fork,

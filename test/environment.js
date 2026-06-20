@@ -123,7 +123,6 @@ const tests = (opts) => {
 				'utils',
 				'define',
 				'lookup',
-				'lookupTyped',
 				'_define',
 				'_lookup',
 				'mnemonica',

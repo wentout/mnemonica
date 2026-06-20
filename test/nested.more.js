@@ -10,7 +10,6 @@ const {
 	errors,
 	define,
 	lookup,
-	lookupTyped,
 	utils: {
 		extract,
 		collectConstructors,
@@ -228,7 +227,7 @@ const tests = ( opts ) => {
 			assert.equal( evenMore.MoreOverSign, MoreOverProto.MoreOverSign );
 		} );
 
-		describe( 'lookup test', () => {
+		describe( 'lookup typed test', () => {
 
 			describe( 'should throw proper error when looking up without TypeName', () => {
 				try {
@@ -317,22 +316,22 @@ const tests = ( opts ) => {
 
 		} );
 
-		describe( 'lookupTyped test', () => {
+		describe( 'lookup test', () => {
 
 			it( 'should return type when found', () => {
-				const ut = lookupTyped( 'UserType' );
+				const ut = lookup( 'UserType' );
 				assert.equal( ut, UserType );
 			} );
 
 			it( 'should return undefined when not found', () => {
-				const notFound = lookupTyped( 'NonExistentType' );
+				const notFound = lookup( 'NonExistentType' );
 				assert.equal( notFound, undefined );
 			} );
 
 			it( 'should work with nested types', () => {
-				const wp = lookupTyped( 'UserTypeConstructor.WithoutPassword' );
+				const wp = lookup( 'UserTypeConstructor.WithoutPassword' );
 				assert.equal( wp, UserWithoutPassword );
-				const om = lookupTyped( 'UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore' );
+				const om = lookup( 'UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore' );
 				assert.equal( om, OverMore );
 			} );
 
@@ -346,12 +345,12 @@ const tests = ( opts ) => {
 						return undefined;
 					}
 				};
-				const result = lookupTyped.call( customCollection, 'CustomType' );
+				const result = lookup.call( customCollection, 'CustomType' );
 				assert.equal( result.__type__.TypeName, 'CustomType' );
 			} );
 
 			it( 'should work without this context (uses defaultTypes)', () => {
-				const ut = lookupTyped( 'UserType' );
+				const ut = lookup( 'UserType' );
 				assert.equal( ut, UserType );
 			} );
 

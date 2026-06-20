@@ -417,16 +417,16 @@ npx tactica  # Analyze and generate types
 
 **Generated Files**:
 - `types.ts` - Complete TypeScript interfaces
-- `registry.ts` - TypeRegistry augmentation for `lookupTyped()`
+- `registry.ts` - TypeRegistry augmentation for `lookup()`
 - `definitions.json` - Type metadata (properties, location)
 - `usages.json` - Where types are instantiated
 
-**The Magic**: Enables type-safe `lookupTyped()`:
+**The Magic**: Enables type-safe `lookup()`:
 ```typescript
-import { lookupTyped } from 'mnemonica';
+import { lookup } from 'mnemonica';
 import './.tactica/registry';  // Augments TypeRegistry
 
-const UserType = lookupTyped('UserType');  // TypeScript knows the type!
+const UserType = lookup('UserType');  // TypeScript knows the type!
 const user = new UserType({ name: 'Alice' });  // Full intellisense!
 ```
 

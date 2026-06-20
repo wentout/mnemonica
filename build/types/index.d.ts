@@ -1,3 +1,4 @@
+import type { TypeRegistry } from '../index';
 export type PropsType = Record<string, unknown>;
 export type IDEF<T, Args extends unknown[] = unknown[]> = {
     new (): T;
@@ -33,16 +34,18 @@ export type TypeConstructor<ConstructorInstance extends object> = _Internal_TC_<
 export interface TypeConstructorBase {
     new (...args: unknown[]): object;
 }
-export interface TypeRegistry {
-}
 export type InstanceOfTypeRegistry<K extends keyof TypeRegistry> = TypeRegistry[K] extends new (...args: unknown[]) => infer R ? R : never;
 export type LiteralKeysOf<T> = keyof T extends infer K ? K extends string ? string extends K ? never : K : never : never;
 export type ParentPath<K extends string> = K extends `${infer P}.${string}` ? P : never;
+export type AllParentPrefixes<K extends string> = K extends `${infer P}.${string}` ? P | AllParentPrefixes<P> : never;
 export type ChildKeysOf<P extends string> = {
     [K in keyof TypeRegistry]: K extends `${P}.${string}` ? K : never;
 }[keyof TypeRegistry];
 export type PathOfInstance<T extends object> = {
     [K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: unknown[]) => infer R ? T extends R ? K : never : never;
+}[LiteralKeysOf<TypeRegistry>];
+export type ParentPathOfInstance<T extends object> = {
+    [K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: unknown[]) => infer R ? T extends R ? AllParentPrefixes<K> : never : never;
 }[LiteralKeysOf<TypeRegistry>];
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
 export type hooksOpts<P = object, T = P> = {
@@ -166,6 +169,7 @@ export interface MnemonicaInstance<T extends object = object> {
     } & {};
     pick(...keys: string[]): Record<string, unknown>;
     parent(): object | undefined;
+    parent<K extends ParentPathOfInstance<this> & string>(constructorLookupPath: K): InstanceOfTypeRegistry<K> | undefined;
     parent(constructorLookupPath: string): object | undefined;
     readonly clone: this;
     fork(...forkArgs: unknown[]): this;
@@ -267,14 +271,18 @@ export interface UtilsCollection {
     collectConstructors: (instance: object, flat?: boolean) => (CallableFunction | string)[];
     merge<A extends object, B extends object>(a: A, b: B, ...args: unknown[]): InstanceResult<Merge<B, A>>;
     parse<T extends object>(self: T): Parsed<T>;
-    parent<T extends object>(instance: T, path?: string): object | undefined;
-    parentTyped<P extends keyof TypeRegistry>(instance: InstanceOfTypeRegistry<ChildKeysOf<P & string>>, path: P): InstanceOfTypeRegistry<P> | undefined;
+    parent<T extends object>(instance: T): object | undefined;
+    parent<T extends object, K extends ParentPathOfInstance<T> & string>(instance: T, path: K): InstanceOfTypeRegistry<K> | undefined;
+    parent<T extends object>(instance: T, path: string): object | undefined;
     toJSON<T extends object>(instance: T): string;
     [key: string]: CallableFunction;
 }
 export interface MnemonicaModule {
     define: TypeAbsorber;
-    lookup: (TypeNestedPath: string) => TypeClass | undefined;
+    lookup: {
+        (TypeNestedPath: string): TypeClass | undefined;
+        <const K extends keyof TypeRegistry>(TypeNestedPath: K): TypeRegistry[K] | undefined;
+    };
     apply: ApplyFunction;
     call: CallFunction;
     bind: BindFunction;

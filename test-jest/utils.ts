@@ -274,20 +274,3 @@ describe('utils/sibling', () => {
 
 	});
 
-	describe('utils/parentTyped', () => {
-
-		const ParentType = define('JestParentTypedParent', function (this: { parentVal: string }) {
-			this.parentVal = 'parent';
-		});
-		const SubType = ParentType.define('JestParentTypedSub', function (this: { subVal: string }) {
-			this.subVal = 'sub';
-		});
-		const parentInstance = new ParentType();
-		const subInstance = new parentInstance.JestParentTypedSub();
-
-		it('should delegate to parent by constructor name', () => {
-			const result = mnemonica.utils.parentTyped(subInstance, 'JestParentTypedParent');
-			expect(result).toBe(parentInstance);
-		});
-
-	});

@@ -57,22 +57,22 @@ The user says: "Why are you still casting?"
 
 The agent's internal model: "Direct import gives me the constructor. The generated type gives me the shape. I need both, so I bridge them with a cast."
 
-This is wrong. The agent is thinking in two separate worlds — runtime and compile-time — instead of seeing that `lookupTyped` unifies them.
+This is wrong. The agent is thinking in two separate worlds — runtime and compile-time — instead of seeing that `lookup` unifies them.
 
 ---
 
 ## Phase 3: The Correction (Session 6)
 
-The user insists: "Use `lookupTyped`."
+The user insists: "Use `lookup`."
 
-The agent resists. "But I need the constructor for decoration too. `lookupTyped` is just for lookup, right?"
+The agent resists. "But I need the constructor for decoration too. `lookup` is just for lookup, right?"
 
 The user: "Try it. Move it to module level."
 
 The agent tries:
 
 ```typescript
-const RequestData = lookupTyped('RequestData');
+const RequestData = lookup('RequestData');
 app.decorate('RequestData', RequestData);
 const requestData = new RequestData({ ... });
 const routeData = new requestData.RouteData({ ... });
@@ -82,7 +82,7 @@ It compiles. No cast. TypeScript knows `.RouteData`. TypeScript knows the proper
 
 The agent checks: `RequestData === import('./collections/requestTypes.js').RequestData`? Yes. Same object.
 
-The epiphany: **The runtime object is identical. The only difference is TypeScript's knowledge.** `lookupTyped` doesn't change the runtime. It changes the compile-time view.
+The epiphany: **The runtime object is identical. The only difference is TypeScript's knowledge.** `lookup` doesn't change the runtime. It changes the compile-time view.
 
 ---
 
@@ -92,7 +92,7 @@ The agent documents everything:
 - `core/.ai/TACTICA-DEEP-DIVE.md` — comprehensive technical guide
 - `core/.ai/TACTICA-RULES.md` — agent instructions
 - `core/docs/tactica-pattern.md` — human-friendly explanation
-- `tactica/docs/lookupTyped-pattern.md` — consumption guide
+- `tactica/docs/lookup-pattern.md` — consumption guide
 
 The agent realizes: the pattern is simple, but the path to understanding it is not. The difficulty was not in the code. It was in unlearning the habit of casting.
 
@@ -131,11 +131,11 @@ If you are reading this, you are likely at Phase 0, 1, or 2.
 1. Read `core/.ai/TACTICA-RULES.md` (agent instructions)
 2. Read `core/docs/tactica-pattern.md` (human explanation)
 3. Check if `.tactica/` exists. If not, run `npx tactica`.
-4. Replace all direct imports + casts with `lookupTyped`.
+4. Replace all direct imports + casts with `lookup`.
 5. Run `tsc --noEmit`. Fix errors. Do not cast.
 6. Run tests. Verify.
 
-If you find yourself writing `as unknown as`, you have taken a wrong turn. Stop. Use `lookupTyped`. Trust the registry.
+If you find yourself writing `as unknown as`, you have taken a wrong turn. Stop. Use `lookup`. Trust the registry.
 
 ---
 
