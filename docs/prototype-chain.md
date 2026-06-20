@@ -82,6 +82,8 @@ This is the invisible layer that makes mnemonica work. It:
 
 Because the props live in a `WeakMap` attached to the memory layer, they do **not** show up in `Object.keys(instance)` or `JSON.stringify(instance)`.
 
+For async constructors, the memory layer also receives a `__self__` marker after the Promise resolves. This lets mnemonica defer finalization until the async work is done without running validation and hooks twice.
+
 ---
 
 ## Why three layers per type?
@@ -99,6 +101,8 @@ Normal JavaScript collapses these into one shared `prototype`. mnemonica separat
 When you write `admin.SuperAdminType`, JavaScript walks the prototype chain until it reaches the **root Mnemosyne proxy**. That proxy looks up `SuperAdminType` in the type’s `__subtypes__` Map and returns a `SubTypeProxy`. When you call `new` on it, the proxy creates the new chain with `admin` as the parent.
 
 Only the root has a Proxy. All intermediate memory layers are plain objects; the root Proxy handles lookups for the whole branch.
+
+The Proxy is kept for an important reason: **subtypes can be defined after an instance already exists**, and the Proxy makes those new subtypes visible on existing instances by doing a live lookup in the type’s `__subtypes__` Map. If subtype constructors were attached to the memory layer at construction time, old instances would miss any subtypes added later.
 
 ---
 

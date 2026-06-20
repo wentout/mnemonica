@@ -22,6 +22,19 @@ export default function () {
 		const existentInstance = this;
 
 		// inherited
+		// TODO: subtype constructors could be attached directly to this
+		// Mnemosyne object as non-enumerable getters, which would let us
+		// remove the root Mnemosyne Proxy entirely and rely on normal
+		// prototype-chain lookup for `instance.SubType`. Getters give lazy
+		// initialization, prevent accidental re-definition, and let each
+		// access rely on the current runtime state of the type graph
+		// (ModificatorType, ModificatorTypePrototype, and any factories that
+		// may produce new fields or constructors). That would simplify
+		// subtype access but would increase cyclomatic complexity here and
+		// would lose the ability to define new subtypes after the instance
+		// is created. Users who need dynamic post-creation definitions can
+		// use `.fork()` or `.clone()` to get fresh instances that carry the
+		// updated constructors on their chain.
 		const Mnemosyne = {};
 		Reflect.setPrototypeOf(
 			Mnemosyne,

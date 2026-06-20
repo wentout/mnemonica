@@ -65,6 +65,26 @@ This is why the same constructor function can be reused across multiple type def
 
 `getProps(instance)` walks the prototype chain from the instance until it finds the first object with a `WeakMap` entry. That is always the instance’s own memory layer. `parent(instance)` reads `__parent__` from that props object; it is the `existentInstance` passed to `InstanceCreator`.
 
+## `_setSelf` and async construction
+
+`_setSelf(instance)` is called at the end of successful construction. It adds one more getter to the props object:
+
+```js
+__self__: () => instance
+```
+
+Then it stores the props object in the `WeakMap` keyed by the instance itself. This solves the async-constructor problem.
+
+When a constructor returns a Promise, the initial value of `new Constructor()` is that Promise. `makeAwaiter` waits for resolution, then checks:
+
+```js
+if (props.__self__ !== self.inheritedInstance) {
+  self.postProcessing(type);
+}
+```
+
+If `__self__` is missing or does not match the resolved instance, post-processing has not run yet, so it runs validation and hooks. If it matches, post-processing has already happened and is skipped. The constructor can therefore return a Promise, and mnemonica finalizes the instance only after the Promise resolves — without double-initializing or losing the construction context.
+
 ## Subtype lookup
 
 Only the root has a Proxy. When you access `admin.SomeSubType`, the property lookup walks:
@@ -76,6 +96,14 @@ admin → AdminType.prototype → AdminMemory → user → UserType.prototype �
 The Proxy’s `get` trap calls `prepareSubtypeForConstruction(prop, receiver)`. It uses `_getProps` to find the memory layer of `receiver` by walking from `Reflect.getPrototypeOf(receiver)`, reads `__subtypes__`, and returns a `SubTypeProxy` that closes over the subtype `TypeDef` and the parent instance.
 
 This means the root Proxy serves the entire branch below it.
+
+## Why the root Proxy is kept
+
+The root Proxy exists so that **subtypes defined after an instance is created are still visible on that instance**.
+
+If subtype constructors were attached to the memory layer at construction time, an instance would only know about the subtypes that existed when it was built. Any `ParentType.define('NewSubType', ...)` call afterward would not appear on existing instances.
+
+The Proxy avoids that by doing a live lookup in the type’s `__subtypes__` Map on every property access. Instances do not carry a snapshot of the Trie; they delegate to the current type graph. That decouples instance lifetime from type-graph evolution and is the main reason a Proxy is necessary. The other Proxy-based mechanisms in the codebase could be replaced with simpler constructs, but this live lookup is hard to achieve without a Proxy.
 
 ## Classes vs functions
 
