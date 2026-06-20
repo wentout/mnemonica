@@ -257,7 +257,7 @@ interface TypesCollectionTarget {
 const typesCollectionProxyHandler = {
 	get ( target: TypesCollectionTarget, prop: string ) {
 		if ( target.subtypes.has( prop ) ) {
-			// access to suptype
+			// access to subtype
 			// for new call or defining new type
 			const subtypeResult = target.subtypes.get( prop );
 			return subtypeResult;

@@ -53,7 +53,7 @@ Load the docs that match your change type. The wrong context produces broken cod
 | Involves async constructors | + [`.ai/rules-skill/async-constructors.md`](./.ai/rules-skill/async-constructors.md) + [`.ai/async_init.md`](./.ai/async_init.md) |
 | Involves TypeScript types | + [`.ai/rules-skill/type-system.md`](./.ai/rules-skill/type-system.md) |
 | Involves proxy internals | + [`.ai/rules-skill/proxy-architecture.md`](./.ai/rules-skill/proxy-architecture.md) |
-| Uses tactica / `lookupTyped` | + [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) |
+| Uses tactica / `lookup` | + [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) |
 | Docs-only change | README section you're touching only |
 
 **This file + `.ai/ONBOARDING.md` are the always-required baseline for any `src/` edit.**
@@ -92,22 +92,28 @@ The core API is `define(TypeName, constructHandler, config?)` in `src/index.ts`.
 - `.lookup()` - find types by path
 - `.registerHook()` - register lifecycle hooks
 
-### The `lookupTyped()` Function
+### The `lookup()` Function
 
-For user-facing semantics, see [`README.md`](./README.md) and [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` exposes a `[key: string]: never` index so that any lookup against an unaugmented registry is a compile-time error.
+For user-facing semantics, see [`README.md`](./README.md) and [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` starts empty, and `lookup()` uses overloads so augmented keys return the typed constructor while unaugmented keys fall back to `TypeClass | undefined`.
 
 ```typescript
 // In mnemonica core (src/index.ts)
 export interface TypeRegistry {
-	[key: string]: never;  // forces augmentation before keys resolve to real types
+	// Intentionally empty. Augment via declaration merging.
 }
 
-export const lookupTyped = function <const K extends keyof TypeRegistry>(
+export function lookup<const K extends keyof TypeRegistry>(
+	this: unknown,
 	TypeNestedPath: K
-): TypeRegistry[K] {
-	// Runtime delegates to lookup(); type safety is compile-time only.
-	return types.lookup(TypeNestedPath as string) as TypeRegistry[K];
-};
+): TypeRegistry[K] | undefined;
+export function lookup(
+	this: unknown,
+	TypeNestedPath: string
+): TypeClass | undefined {
+	// Runtime delegates to types.lookup(); type safety is compile-time only.
+	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
+	return types.lookup(TypeNestedPath);
+}
 ```
 
 Tactica generates the augmentation:
@@ -116,15 +122,15 @@ Tactica generates the augmentation:
 // In .tactica/registry.ts (generated)
 declare module 'mnemonica' {
 	interface TypeRegistry {
-		'UserType': new (...args: unknown[]) => UserTypeInstance;
-		'Parent.SubType': new (...args: unknown[]) => SubTypeInstance;
+		'UserType': TypeConstructor<UserTypeInstance>;
+		'Parent.SubType': TypeConstructor<SubTypeInstance>;
 	}
 }
 ```
 
-Runtime behavior is identical to `lookup()`; the only difference is the compile-time constraint on the key.
+Runtime behavior is identical whether `TypeRegistry` is augmented or not; the only difference is the compile-time return type.
 
-> **Roadmap.** Nested `lookupTyped()` (a type-safe `.lookupTyped()` method
+> **Roadmap.** Nested `lookup()` (a type-safe `.lookup()` method
 > on constructors that preserves the prototype chain) is designed but not
 > yet shipped.
 

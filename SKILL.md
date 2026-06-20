@@ -3,7 +3,7 @@ name: mnemonica-core
 description: |
   Instance inheritance system for JavaScript/TypeScript using prototype chains.
   Use when the user mentions mnemonica, define(), prototype inheritance,
-  TypeRegistry, lookupTyped, tactica, instance inheritance, or when working
+  TypeRegistry, lookup, tactica, instance inheritance, or when working
   with the mnemonica core library. Covers: define() patterns, type-safe
   lookup with tactica, Proxy-based architecture, hook system, async
   constructors, strict chain validation, and 100% test coverage requirements.
@@ -16,7 +16,7 @@ metadata:
 ## When to use
 
 Activate this skill when:
-- User mentions `mnemonica`, `define()`, `lookupTyped`, `TypeRegistry`
+- User mentions `mnemonica`, `define()`, `lookup`, `TypeRegistry`
 - User asks about prototype chain inheritance in JavaScript/TypeScript
 - User is modifying files in `core/src/` or `core/test/`
 - User asks about tactica-generated types or `.tactica/` directory
@@ -37,7 +37,7 @@ When the task involves adding or modifying a type definition:
 
 2. **Check TypeRegistry augmentation** (if using tactica)
    - Does `.tactica/types.ts` need updating?
-   - Is `lookupTyped('MyType')` properly typed?
+   - Is `lookup('MyType')` properly typed?
    - See [rules-skill/lookup-typed.md](.ai/rules-skill/lookup-typed.md)
 
 3. **Test both success and error paths**
@@ -76,7 +76,7 @@ Read individual rule files for detailed explanations and code examples:
 
 ### Patterns
 - [rules-skill/define-patterns.md](.ai/rules-skill/define-patterns.md) — `define()` usage, subtypes, config options
-- [rules-skill/lookup-typed.md](.ai/rules-skill/lookup-typed.md) — `TypeRegistry`, `lookupTyped`, tactica integration
+- [rules-skill/lookup-typed.md](.ai/rules-skill/lookup-typed.md) — `TypeRegistry`, `lookup`, tactica integration
 - [rules-skill/async-constructors.md](.ai/rules-skill/async-constructors.md) — async constructors, `awaitReturn`, chaining
 
 ### Architecture

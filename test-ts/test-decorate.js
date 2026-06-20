@@ -1,4 +1,3 @@
-"use strict";
 var __esDecorate = (this && this.__esDecorate) || function (ctor, descriptorIn, decorators, contextIn, initializers, extraInitializers) {
     function accept(f) { if (f !== void 0 && typeof f !== "function") throw new TypeError("Function expected"); return f; }
     var kind = contextIn.kind, key = kind === "getter" ? "get" : kind === "setter" ? "set" : "value";
@@ -33,44 +32,39 @@ var __runInitializers = (this && this.__runInitializers) || function (thisArg, i
     }
     return useValue ? value : void 0;
 };
-var __setFunctionName = (this && this.__setFunctionName) || function (f, name, prefix) {
-    if (typeof name === "symbol") name = name.description ? "[".concat(name.description, "]") : "";
-    return Object.defineProperty(f, "name", { configurable: true, value: prefix ? "".concat(prefix, " ", name) : name });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-var __1 = require("..");
+import { define } from '..';
 debugger;
 // eslint-disable-next-line @typescript-eslint/ban-types
 // function defined  <T> (cstr: IDEF<T>, s: ClassDecoratorContext<typeof cstr>) {
 function defined(cstr, s) {
     debugger;
-    var TypeDef = (0, __1.define)(s.name, cstr);
+    const TypeDef = define(s.name, cstr);
     Object.setPrototypeOf(cstr.prototype, new TypeDef);
 }
-var MyClass = function () {
-    var _classDecorators = [defined];
-    var _classDescriptor;
-    var _classExtraInitializers = [];
-    var _classThis;
-    var MyClass = _classThis = /** @class */ (function () {
-        function MyClass_1() {
+let MyClass = (() => {
+    let _classDecorators = [defined];
+    let _classDescriptor;
+    let _classExtraInitializers = [];
+    let _classThis;
+    var MyClass = class {
+        static { _classThis = this; }
+        static {
+            const _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
+            __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
+            MyClass = _classThis = _classDescriptor.value;
+            if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
+            __runInitializers(_classThis, _classExtraInitializers);
+        }
+        z;
+        constructor() {
             debugger;
             this.z = 123;
         }
-        return MyClass_1;
-    }());
-    __setFunctionName(_classThis, "MyClass");
-    (function () {
-        var _metadata = typeof Symbol === "function" && Symbol.metadata ? Object.create(null) : void 0;
-        __esDecorate(null, _classDescriptor = { value: _classThis }, _classDecorators, { kind: "class", name: _classThis.name, metadata: _metadata }, null, _classExtraInitializers);
-        MyClass = _classThis = _classDescriptor.value;
-        if (_metadata) Object.defineProperty(_classThis, Symbol.metadata, { enumerable: true, configurable: true, writable: true, value: _metadata });
-        __runInitializers(_classThis, _classExtraInitializers);
-    })();
+    };
     return MyClass = _classThis;
-}();
-var myInstance = new MyClass;
+})();
+const myInstance = new MyClass;
 console.log(myInstance.z);
-var myInstance1 = new MyClass;
+const myInstance1 = new MyClass;
 console.log(myInstance1.z);
 debugger;

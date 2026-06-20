@@ -4,7 +4,7 @@ const mnemonica = require( '..' );
 
 const {
 	_lookup,
-	lookupTyped
+	lookup
 } = mnemonica;
 
 const gof = Object.getPrototypeOf;
@@ -229,19 +229,19 @@ const tests = ( opts ) => {
 			expect(result).equal(undefined);
 		} );
 
-		it( 'lookupTyped coverage should work with custom this context', () => {
+		it( 'lookup coverage should work with custom this context', () => {
 			// Create a mock types collection with lookup method
 			const mockTypes = {
 				lookup : () => undefined
 			};
-			// Test lookupTyped with custom this context
-			const result = lookupTyped.call(mockTypes, 'NonExistent.Nested.Type');
+			// Test lookup with custom this context
+			const result = lookup.call(mockTypes, 'NonExistent.Nested.Type');
 			expect(result).equal(undefined);
 		} );
 
-		it( 'lookupTyped should work when called with mnemonica as this', () => {
-			// Test lookupTyped when this === mnemonica (checkThis branch)
-			const result = lookupTyped.call(mnemonica, 'NonExistent.Type');
+		it( 'lookup should work when called with mnemonica as this', () => {
+			// Test lookup when this === mnemonica (checkThis branch)
+			const result = lookup.call(mnemonica, 'NonExistent.Type');
 			expect(result).equal(undefined);
 		} );
 

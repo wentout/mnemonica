@@ -13,7 +13,7 @@ it requires to complete VS Code restart
 as this may happen, shit happens
 */
 
-import { define, apply, bind, call, lookupTyped, TypeConstructor } from '..';
+import { define, apply, bind, call, lookup, TypeConstructor } from '..';
 
 import type { ProtoFlat } from '..';
 
@@ -59,7 +59,11 @@ const SomeSubType = SomeType.define('SomeSubType', function (this: {
 	this.q = 123;
 });
 
-const ST = lookupTyped('SomeType');
+const ST = lookup('SomeType');
+
+if (!ST) {
+	throw new Error('SomeType not found');
+}
 
 const first = new ST('SomeArg', 555);
 

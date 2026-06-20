@@ -12,7 +12,7 @@
 3. [How tactica Bridges the Gap](#3-how-tactica-bridges-the-gap)
 4. [Declaration Merging: The TypeScript Mechanism](#4-declaration-merging-the-typescript-mechanism)
 5. [tsconfig.json Setup](#5-tsconfigjson-setup)
-6. [How lookupTyped Works](#6-how-lookuptyped-works)
+6. [How lookup Works](#6-how-lookuptyped-works)
 7. [Why Direct Import Fails](#7-why-direct-import-fails)
 8. [The Epiphany: Zero-Cast Chaining](#8-the-epiphany-zero-cast-chaining)
 9. [Common Mistakes](#9-common-mistakes)
@@ -188,12 +188,12 @@ declare module 'some-lib' {
 
 ### 4.3 How tactica Uses It
 
-mnemonica core defines:
+mnemonica core defines an empty `TypeRegistry`:
 
 ```typescript
-// In mnemonica core (src/types/index.ts)
+// In mnemonica core (src/index.ts)
 export interface TypeRegistry {
-	[key: string]: never;  // Empty by default, prevents accidental usage
+	// Intentionally empty. Augment via declaration merging.
 }
 ```
 
@@ -203,37 +203,33 @@ tactica generates:
 // In .tactica/registry.ts
 declare module 'mnemonica' {
 	interface TypeRegistry {
-		'RequestData': new (...args: unknown[]) => RequestData;
+		'RequestData': TypeConstructor<RequestData>;
 	}
 }
 ```
 
 After this augmentation, `TypeRegistry` contains the `'RequestData'` key. Any code that imports from `'mnemonica'` sees the augmented `TypeRegistry`.
 
-### 4.4 Why `[key: string]: never`?
+### 4.4 Why an Empty `TypeRegistry`?
 
-The `[key: string]: never` pattern in the base `TypeRegistry` is a TypeScript trick:
+The base `TypeRegistry` is intentionally empty:
 
 ```typescript
-interface TypeRegistry {
-	[key: string]: never;
-}
-
-type Test = TypeRegistry['anything']; // Error: Type 'anything' is not assignable to type 'never'
+export interface TypeRegistry {}
 ```
 
-This means **you cannot use `TypeRegistry` without augmentation**. It forces you to run tactica and generate the registry. Without it, any `lookupTyped('Something')` would be a compile error.
+Without augmentation, `lookup('Something')` falls back to the broad `TypeClass | undefined` return type. This keeps the library usable without a registry while still allowing full type inference once you augment it.
 
 Once augmented:
 
 ```typescript
 declare module 'mnemonica' {
 	interface TypeRegistry {
-		'RequestData': new (...args: unknown[]) => RequestData;
+		'RequestData': TypeConstructor<RequestData>;
 	}
 }
 
-type Test = TypeRegistry['RequestData']; // OK — returns the constructor type
+const RequestData = lookup('RequestData'); // typed constructor | undefined
 ```
 
 ---
@@ -272,30 +268,37 @@ For declaration merging to work, the `.tactica/registry.ts` file must be include
 TypeScript only processes files in the `include` array. If `.tactica/` is not included:
 
 ```typescript
-import { lookupTyped } from 'mnemonica';
-const RequestData = lookupTyped('RequestData');
-// Error: 'RequestData' is not assignable to parameter of type 'never'
+import { lookup } from 'mnemonica';
+const RequestData = lookup('RequestData');
+// RequestData is typed as TypeClass | undefined instead of the concrete constructor
 ```
 
-Because without the augmentation, `TypeRegistry` still has `[key: string]: never`.
+Because without the augmentation, `TypeRegistry` is empty and `lookup()` falls back to its unaugmented overload.
 
 ---
 
-## 6. How lookupTyped Works
+## 6. How lookup Works
 
 ### 6.1 Runtime Behavior
 
 ```typescript
 // In mnemonica core (src/index.ts)
-export const lookupTyped = function <const K extends keyof TypeRegistry>(
+export function lookup<const K extends keyof TypeRegistry>(
+	this: unknown,
 	TypeNestedPath: K
-): TypeRegistry[K] {
-	// Runtime delegates to lookup()
-	return types.lookup(TypeNestedPath as string) as TypeRegistry[K];
+): TypeRegistry[K] | undefined;
+export function lookup(
+	this: unknown,
+	TypeNestedPath: string
+): TypeClass | undefined {
+	// Runtime delegates to types.lookup()
+	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
+	return types.lookup(TypeNestedPath);
+}
 };
 ```
 
-At runtime, `lookupTyped('RequestData')`:
+At runtime, `lookup('RequestData')`:
 1. Calls `types.lookup('RequestData')`
 2. Searches the default types collection
 3. Returns the constructor function
@@ -307,7 +310,7 @@ At runtime, `lookupTyped('RequestData')`:
 At compile time, TypeScript sees:
 
 ```typescript
-const RequestData = lookupTyped('RequestData');
+const RequestData = lookup('RequestData');
 ```
 
 TypeScript infers:
@@ -350,7 +353,7 @@ It checks the constructor signature → `new (...args: unknown[]) => RequestData
 
 ## 7. Why Direct Import Fails
 
-Let's trace what happens with direct import vs `lookupTyped`.
+Let's trace what happens with direct import vs `lookup`.
 
 ### 7.1 Direct Import
 
@@ -370,12 +373,12 @@ const routeData = new requestData.RouteData({ ... });
 
 The direct import returns the constructor, but TypeScript's type for that constructor doesn't include `.RouteData`. The `define()` function's return type is not augmented with sub-constructor information.
 
-### 7.2 lookupTyped
+### 7.2 lookup
 
 ```typescript
-import { lookupTyped } from 'mnemonica';
+import { lookup } from 'mnemonica';
 
-const RequestData = lookupTyped('RequestData');
+const RequestData = lookup('RequestData');
 //          ↑
 //          TypeScript sees: TypeRegistry['RequestData']
 //          Which is: new (...args: unknown[]) => RequestData
@@ -431,9 +434,9 @@ Creates:
 
 ```typescript
 // src/server.ts or any file
-import { lookupTyped } from 'mnemonica';
+import { lookup } from 'mnemonica';
 
-const RequestData = lookupTyped('RequestData');
+const RequestData = lookup('RequestData');
 ```
 
 ### Step 4: Chain (Zero Casts)
@@ -463,7 +466,7 @@ const requestData = new RequestData({ ... }) as unknown as RequestDataT;
 
 **Why wrong:** You are fighting the type system instead of using it. Every cast is a bug waiting to happen. If the type changes, the cast still compiles but may break at runtime.
 
-**Fix:** Use `lookupTyped`.
+**Fix:** Use `lookup`.
 
 ### 9.2 "I'll import the generated types too"
 
@@ -476,23 +479,23 @@ const requestData = new RequestData({ ... }) as unknown as RequestDataT;
 
 **Why wrong:** You are importing both the runtime constructor AND the generated type, then bridging them with a cast. This is twice the work and still unsafe.
 
-**Fix:** Use `lookupTyped` — it gives you both the runtime constructor AND the type in one call.
+**Fix:** Use `lookup` — it gives you both the runtime constructor AND the type in one call.
 
-### 9.3 "lookupTyped only works in route handlers"
+### 9.3 "lookup only works in route handlers"
 
 ```typescript
 // ❌ WRONG (unnecessary)
 app.get('/test', async () => {
-	const RequestData = lookupTyped('RequestData');
+	const RequestData = lookup('RequestData');
 	const requestData = new RequestData({ ... });
 });
 ```
 
-**Why wrong:** `lookupTyped` is a runtime lookup, but it's deterministic and cached. Calling it at module level is perfectly fine and more efficient:
+**Why wrong:** `lookup` is a runtime lookup, but it's deterministic and cached. Calling it at module level is perfectly fine and more efficient:
 
 ```typescript
 // ✅ CORRECT
-const RequestData = lookupTyped('RequestData');
+const RequestData = lookup('RequestData');
 
 app.get('/test', async () => {
 	const requestData = new RequestData({ ... });
@@ -504,19 +507,19 @@ app.get('/test', async () => {
 ```typescript
 // ❌ WRONG (mixing patterns)
 import { RequestData } from './collections/requestTypes.js';
-const TypedRequestData = lookupTyped('RequestData');
+const TypedRequestData = lookup('RequestData');
 
 app.decorate('RequestData', RequestData);  // direct import
-const requestData = new TypedRequestData({ ... });  // lookupTyped
+const requestData = new TypedRequestData({ ... });  // lookup
 ```
 
 **Why wrong:** You're maintaining two references to the same object.
 
-**Fix:** Use `lookupTyped` for everything. The returned constructor is the same object:
+**Fix:** Use `lookup` for everything. The returned constructor is the same object:
 
 ```typescript
 // ✅ CORRECT
-const RequestData = lookupTyped('RequestData');
+const RequestData = lookup('RequestData');
 
 app.decorate('RequestData', RequestData);
 const requestData = new RequestData({ ... });
@@ -527,7 +530,7 @@ const requestData = new RequestData({ ... });
 ```typescript
 // You add a new property to the define() call
 // But forget to run tactica
-const RequestData = lookupTyped('RequestData');
+const RequestData = lookup('RequestData');
 const requestData = new RequestData({ newField: 'value' });
 // Error: Object literal may only specify known properties
 ```
@@ -544,10 +547,10 @@ npm run tactica
 
 | I want to... | Do this | Don't do this |
 |---|---|---|
-| Get a typed constructor | `const T = lookupTyped('T')` | `import { T } from './collections/T.js'` |
+| Get a typed constructor | `const T = lookup('T')` | `import { T } from './collections/T.js'` |
 | Create an instance | `new T({ ... })` | `new T({ ... }) as unknown as TT` |
 | Chain to a child type | `new instance.Child({ ... })` | `new (instance as any).Child({ ... })` |
-| Decorate Fastify | `app.decorate('T', T)` with `lookupTyped` | Direct import + separate lookupTyped |
+| Decorate Fastify | `app.decorate('T', T)` with `lookup` | Direct import + separate lookup |
 | Add a new property | Modify `define()` → run `tactica` | Modify `define()` + manual cast |
 | Fix "Property does not exist" | Run `tactica` to regenerate | Add `as any` or `as unknown` |
 
@@ -575,9 +578,9 @@ This pattern works because:
 
 1. **mnemonica creates a Trie at runtime** — sub-constructors exist, instances can spawn children
 2. **tactica teaches TypeScript about the Trie** — via declaration merging of `TypeRegistry`
-3. **lookupTyped retrieves the typed constructor** — compile-time type safety + runtime correctness
-4. **The same object is returned either way** — `import { T }` and `lookupTyped('T')` are identical at runtime
+3. **lookup retrieves the typed constructor** — compile-time type safety + runtime correctness
+4. **The same object is returned either way** — `import { T }` and `lookup('T')` are identical at runtime
 
-**The only difference is TypeScript's knowledge.** Use `lookupTyped` and let TypeScript help you.
+**The only difference is TypeScript's knowledge.** Use `lookup` and let TypeScript help you.
 
-If you find yourself writing `as unknown as` with mnemonica types, **you have taken a wrong turn.** Stop. Use `lookupTyped`. Trust the registry.
+If you find yourself writing `as unknown as` with mnemonica types, **you have taken a wrong turn.** Stop. Use `lookup`. Trust the registry.

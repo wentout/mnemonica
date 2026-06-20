@@ -118,7 +118,6 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				'utils',
 				'define',
 				'lookup',
-				'lookupTyped',
 				'_define',
 				'_lookup',
 				'mnemonica',

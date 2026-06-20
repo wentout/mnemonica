@@ -132,7 +132,7 @@ Based on observed agent behavior:
 | [`rules-skill/philosophy.md`](./rules-skill/philosophy.md) | HoTT concepts applied to mnemonica's self-reflection model |
 | [`rules-skill/ecosystem.md`](./rules-skill/ecosystem.md) | PACT framework: personas, collaboration modes, integration points |
 | [`rules-skill/contributing.md`](./rules-skill/contributing.md) | Behavioral guidelines for AI contributors |
-| [`TACTICA-DEEP-DIVE.md`](./TACTICA-DEEP-DIVE.md) | Comprehensive tactica + lookupTyped technical guide |
+| [`TACTICA-DEEP-DIVE.md`](./TACTICA-DEEP-DIVE.md) | Comprehensive tactica + lookup technical guide |
 | [`../docs/async-constructors.md`](../docs/async-constructors.md) | Async constructors: super() return values, native class mixing, chains |
 
 - Main README: [`../README.md`](../README.md)

@@ -175,6 +175,24 @@ console.log(child instanceof AsyncChild);  // true
 
 ---
 
+## Why Async Constructors Don't Double-Initialize: `_setSelf`
+
+When a constructor returns a Promise, the initial result of `new Constructor()` is that Promise. mnemonica's async pipeline waits for it to resolve, then must run validation and lifecycle hooks. But it must not run them again if the resolved instance is ever re-examined.
+
+`_setSelf(instance)` solves this by adding a `__self__` getter to the instance's internal props that returns the instance itself, and by storing the props under the instance in the internal `WeakMap`. `makeAwaiter` then checks:
+
+```js
+if (props.__self__ !== self.inheritedInstance) {
+  self.postProcessing(type);
+}
+```
+
+If `__self__` is missing or does not match the resolved instance, post-processing has not run yet, so mnemonica runs it. If it matches, post-processing has already happened and is skipped.
+
+This is how mnemonica handles a problem that has been open in TC39 for years: the constructor can return a Promise, and the library finalizes the instance only after the Promise resolves, using `__self__` as a completion marker.
+
+---
+
 ## Async Chains with Single Await
 
 mnemonica's most powerful async feature is chainable awaits:

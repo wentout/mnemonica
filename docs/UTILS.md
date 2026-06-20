@@ -176,7 +176,7 @@ const parent: object | undefined = parsed.parent;
 
 - `utils.parent(instance, 'TypeName')` cannot return a specific nominal parent
   type without a user-augmented `TypeRegistry`. This is the same limitation as
-  `lookupTyped()`: TypeScript cannot retroactively learn the type graph created
+  `lookup()`: TypeScript cannot retroactively learn the type graph created
   by `define()` calls. See [`./typed-lookup.md`](./typed-lookup.md).
 - `utils.parse()` returns `parent` as `object | undefined` because deep recursive
   parsing is not implemented at runtime.

@@ -51,7 +51,7 @@ behavior that the type system tolerates, and vice versa.
 Conventional commits are preferred:
 
 ```
-feat: add lookupTyped overload for nested registry
+feat: add lookup overload for nested registry
 fix(InstanceCreator): preserve __args__ across async chain
 docs: clarify instance method opt-in pattern
 chore(ci): bump setup-node to v4

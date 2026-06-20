@@ -1,6 +1,8 @@
 'use strict';
 /* eslint no-unused-vars: "off" */
 
+import type { TypeRegistry } from '../index';
+
 // Props type for getProps/setProps
 export type PropsType = Record<string, unknown>;
 
@@ -77,6 +79,79 @@ export interface _Internal_TC_<ConstructorInstance extends object> {
  * cleanly in generated declaration files.
  */
 export type TypeConstructor<ConstructorInstance extends object> = _Internal_TC_<ConstructorInstance>;
+
+/**
+ * Minimal constructor shape used for the TypeRegistry index signature.
+ * It accepts any mnemonica-compatible constructor, but deliberately returns
+ * `object` so unaugmented registry lookups are not useful without an explicit
+ * per-key constructor type.
+ */
+export interface TypeConstructorBase {
+	new (...args: unknown[]): object;
+}
+
+/**
+ * Instance type produced by a TypeRegistry constructor.
+ */
+export type InstanceOfTypeRegistry<K extends keyof TypeRegistry> =
+	TypeRegistry[K] extends new (...args: unknown[]) => infer R ? R : never;
+
+
+/**
+ * Extract only the literal string keys of a type, filtering out generic
+ * index signatures. This lets us iterate over augmented TypeRegistry keys
+ * without picking up the `[key: string]` signature.
+ */
+export type LiteralKeysOf<T> = keyof T extends infer K
+	? K extends string
+		? string extends K ? never : K
+		: never
+	: never;
+
+/**
+ * Given a dotted TypeRegistry key, extract the parent path.
+ * `ParentPath<'A.B.C'>` → `'A.B'`.
+ */
+export type ParentPath<K extends string> =
+	K extends `${infer P}.${string}` ? P : never;
+
+/**
+ * Given a dotted TypeRegistry key, return the union of all ancestor prefixes.
+ * `AllParentPrefixes<'A.B.C'>` → `'A' | 'A.B'`.
+ */
+export type AllParentPrefixes<K extends string> =
+	K extends `${infer P}.${string}` ? P | AllParentPrefixes<P> : never;
+
+/**
+ * Given a parent path, return the union of TypeRegistry keys that are direct
+ * or indirect children of that path.
+ */
+export type ChildKeysOf<P extends string> = {
+	[K in keyof TypeRegistry]: K extends `${P}.${string}` ? K : never
+}[keyof TypeRegistry];
+
+/**
+ * Given an instance type, find the TypeRegistry key(s) whose constructor
+ * returns that instance type. This inverts the registry at the type level
+ * so utilities like `parent()` can derive an instance's path from its
+ * type alone.
+ */
+export type PathOfInstance<T extends object> = {
+	[K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: unknown[]) => infer R
+		? T extends R ? K : never
+		: never
+}[LiteralKeysOf<TypeRegistry>];
+
+/**
+ * Given an instance type, return the union of TypeRegistry paths that are
+ * valid parent lookups for that instance. Root types produce `never` because
+ * they have no parent path.
+ */
+export type ParentPathOfInstance<T extends object> = {
+	[K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: unknown[]) => infer R
+		? T extends R ? AllParentPrefixes<K> : never
+		: never
+}[LiteralKeysOf<TypeRegistry>];
 
 // Hook types
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
@@ -288,6 +363,9 @@ export interface MnemonicaInstance<T extends object = object> {
 	pick<K extends keyof T>(...keys: (K | K[])[]): { [P in K]: T[P] } & {};
 	pick(...keys: string[]): Record<string, unknown>;
 	parent(): object | undefined;
+	parent<K extends ParentPathOfInstance<this> & string>(
+		constructorLookupPath: K
+	): InstanceOfTypeRegistry<K> | undefined;
 	parent(constructorLookupPath: string): object | undefined;
 	readonly clone: this;
 	fork(...forkArgs: unknown[]): this;
@@ -507,7 +585,12 @@ export interface UtilsCollection {
 		...args: unknown[]
 	): InstanceResult<Merge<B, A>>;
 	parse<T extends object>(self: T): Parsed<T>;
-	parent<T extends object>(instance: T, path?: string): object | undefined;
+	parent<T extends object>(instance: T): object | undefined;
+	parent<T extends object, K extends ParentPathOfInstance<T> & string>(
+		instance: T,
+		path: K
+	): InstanceOfTypeRegistry<K> | undefined;
+	parent<T extends object>(instance: T, path: string): object | undefined;
 	toJSON<T extends object>(instance: T): string;
 	[key: string]: CallableFunction;
 }
@@ -516,7 +599,10 @@ export interface UtilsCollection {
 export interface MnemonicaModule {
 	// Core functions
 	define: TypeAbsorber;
-	lookup: (TypeNestedPath: string) => TypeClass | undefined;
+	lookup: {
+		(TypeNestedPath: string): TypeClass | undefined;
+		<const K extends keyof TypeRegistry>(TypeNestedPath: K): TypeRegistry[K] | undefined;
+	};
 	apply: ApplyFunction;
 	call: CallFunction;
 	bind: BindFunction;

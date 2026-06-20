@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "AI-agent ready instance inheritance system for JavaScript/TypeScript via prototype chains",
   "type": "commonjs",
   "main": "./build/index.js",
@@ -98,6 +98,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^9.21.0",
+    "@mnemonica/tactica": "^0.1.2",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.19.21",
     "@typescript-eslint/eslint-plugin": "^8.61.1",
