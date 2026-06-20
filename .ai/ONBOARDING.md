@@ -103,7 +103,7 @@ src/
 Key components:
 - **TypeProxy** — wraps type constructors
 - **InstanceCreator** — orchestrates construction lifecycle
-- **Mnemosyne** — handles instance method access via Proxy
+- **Mnemosyne** — root memory proxy; stores construction context and resolves subtype lookups
 
 ---
 
@@ -159,6 +159,7 @@ Read [`../docs/async-constructors.md`](../docs/async-constructors.md) for the `s
 |------|------|
 | Coding standards, type rules | [`CODE.md`](./CODE.md) |
 | Design patterns, constraints | [`ARCHITECT.md`](./ARCHITECT.md) |
+| Prototype chain internals | [`PROTOTYPE-CHAIN.md`](./PROTOTYPE-CHAIN.md) |
 | Debugging commands, issues | [`DEBUG.md`](./DEBUG.md) |
 | Async constructor deep dive | [`../docs/async-constructors.md`](../docs/async-constructors.md) |
 | tactica type-safe lookup | [`TACTICA-RULES.md`](./TACTICA-RULES.md) |

@@ -452,7 +452,8 @@ Everything below ships with this package.
 1. **This file** — thesis, four data mistakes, pipeline pattern, operational reference
 2. [`FOR_HUMANS.md`](./FOR_HUMANS.md) — gentler, example-heavy walkthrough for human developers
 3. [`SKILL.md`](./SKILL.md) — quick reference for usage patterns
-4. [`docs/typed-lookup.md`](./docs/typed-lookup.md) — using `lookupTyped()` with or without tactica (the `TypeRegistry` augmentation pattern)
+4. [`docs/prototype-chain.md`](./docs/prototype-chain.md) — how mnemonica builds the per-instance prototype chain and why the layers exist
+5. [`docs/typed-lookup.md`](./docs/typed-lookup.md) — using `lookupTyped()` with or without tactica (the `TypeRegistry` augmentation pattern)
 5. [`docs/hott-primer.md`](./docs/hott-primer.md) — HoTT concepts mapped to mnemonica (monad, path types, univalence, HITs, fibrations)
 6. [`docs/empathy-in-ai.md`](./docs/empathy-in-ai.md) — why reconstructible data lineage is infrastructure for empathetic AI
 
@@ -462,7 +463,8 @@ Everything below ships with this package.
 2. [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) — five-minute editor onboarding
 3. [`CONTRIBUTING.md`](./CONTRIBUTING.md) — local workflow, branching, release process
 4. [`docs/theory-of-operations.md`](./docs/theory-of-operations.md) — full construction pipeline from `define()` through `InstanceCreator` to instance return, with source file references for every stage
-5. [`.ai/CODE.md`](./.ai/CODE.md), [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific deeper rules
+5. [`.ai/PROTOTYPE-CHAIN.md`](./.ai/PROTOTYPE-CHAIN.md) — the exact shape of the prototype chain, what each layer holds, and how subtype lookup walks it
+6. [`.ai/CODE.md`](./.ai/CODE.md), [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific deeper rules
 6. [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) — deeper tactica integration patterns
 7. [`.ai/async_init.md`](./.ai/async_init.md) — async constructor patterns
 8. [`.ai/rules-skill/`](./.ai/rules-skill/) — granular rules for type system, hooks, code style, errors, testing
