@@ -5,9 +5,6 @@
 		"strict": true,
 		"alwaysStrict": true,
 
-		"esModuleInterop": false,
-		"allowSyntheticDefaultImports": false,
-
 		"declaration": true,
 		"diagnostics": true,
 
@@ -29,6 +26,7 @@
 		"traceResolution": false,
 		"types": [ "node" ],
 
+		"rootDir": "src",
 		"outDir": "build"
 	},
 	"include": [

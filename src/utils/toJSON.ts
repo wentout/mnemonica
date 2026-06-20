@@ -1,10 +1,10 @@
 'use strict';
 
 import { extract } from './extract';
-export const toJSON = ( instance: object ) => {
+export const toJSON = <T extends object>( instance: T ) => {
 
 	const extracted = extract( instance );
-	return Object.entries( extracted ).reduce(
+	const result = Object.entries( extracted ).reduce(
 		( o: string, entry: [ string, unknown ] ) => {
 
 			const [ name, _value ] = entry;
@@ -40,5 +40,6 @@ export const toJSON = ( instance: object ) => {
 			/,$/,
 			'}' 
 		);
+	return result;
 
 };

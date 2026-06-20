@@ -114,7 +114,7 @@ Three things accelerated learning:
 
 After understanding mnemonica, the agent read `hott/AI-REFLECTION-THEORY.md` (internal docs). It noticed structural parallels:
 
-- **Path induction** ↔ prototype chain traversal (`instance.parent()`)
+- **Path induction** ↔ prototype chain traversal (`utils.parent(instance)`)
 - **Univalence** ↔ capability equivalence (two types with same behavior are equivalent)
 - **Runtime augmentation** ↔ path composition (adding a subtype extends the path)
 - **Stored `__args__`** ↔ path recording (every constructor call is a recorded step)

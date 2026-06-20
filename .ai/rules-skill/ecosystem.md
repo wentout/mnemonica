@@ -56,7 +56,7 @@ supports different users.
 
 | Environment | Tools |
 |-------------|-------|
-| **VS Code** | Mnemographica extension, Tactica LSP, Mnemonica Logger |
+| **VS Code** | Mnemographica extension, Tactica CLI, Mnemonica Logger |
 | **Runtime (Node.js)** | CDP Connection (port 9229), Strategy MCP (ports 9230/9231) |
 
 #### Collaboration Modes
@@ -76,7 +76,7 @@ supports different users.
 │         Mnemonica Ecosystem             │
 ├─────────────────────────────────────────┤
 │  mnemographica  │  VS Code Extension    │
-│  tactica        │  Type Generator/LSP   │
+│  tactica        │  Type Generator/CLI   │
 │  strategy       │  MCP Server           │
 │  topologica     │  Module Loader        │
 │  mnemonica      │  Core Runtime         │
@@ -88,7 +88,7 @@ supports different users.
 
 ### Integration Points
 
-1. **Tactica → VS Code**: Language Service Plugin
+1. **Tactica → VS Code**: CLI type generator
 2. **Strategy → CDP**: Runtime evaluation
 3. **Mnemographica → Strategy**: HTTP/WebSocket servers
 4. **All → Topologica**: Module loading
@@ -136,5 +136,5 @@ interface Runnable { run(): void; }
 
 ## References
 
-- [Wikipedia: PACT (interaction design)](https://en.wikipedia.org/wiki/PACT_\(interaction_design\))
+- [Wikipedia: PACT (interaction design)](https://en.wikipedia.org/wiki/PACT_%28interaction_design%29)
 - `strategy/README.md` — MCP architecture

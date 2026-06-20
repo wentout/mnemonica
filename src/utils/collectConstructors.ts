@@ -9,17 +9,19 @@ const {
 } = constants;
 
 const getAdditor = (constructors: string[] | { [index: string]: boolean }) => {
-	return Array.isArray(constructors) ?
+	const result = Array.isArray(constructors) ?
 		(name: string) => {
 			constructors.push(name);
 		} : (name: string) => {
 			constructors[ name ] = true;
 		};
+	return result;
 
 };
 
 const getAccumulator = (asSequence: boolean) => {
-	return asSequence ? [] : {};
+	const result = asSequence ? [] : {};
+	return result;
 };
 
 export const collectConstructors = (self: object, asSequence = false) => {

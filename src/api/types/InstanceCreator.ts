@@ -281,14 +281,11 @@ const makeAwaiter = function ( this: InstanceCreatorContext, type: TypeDef, then
 	type.subtypes.forEach( ( subtype: object, name: string ) => {
 		 
 		(self.inheritedInstance as Record<string, unknown>)[ name ] = ( ...args: unknown[] ) => {
-			self.inheritedInstance = self.makeAwaiter(
- subtype as TypeDef,
- {
- 	name,
- 	subtype,
- 	args,
- } 
-			);
+			self.inheritedInstance = self.makeAwaiter( subtype as TypeDef, {
+				name,
+				subtype,
+				args,
+			} );
 			return self.inheritedInstance;
 		};
 	} );

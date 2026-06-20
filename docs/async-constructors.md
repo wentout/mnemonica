@@ -180,6 +180,8 @@ console.log(child instanceof AsyncChild);  // true
 mnemonica's most powerful async feature is chainable awaits:
 
 ```js
+const { utils } = require('mnemonica');
+
 const result = await new UserTypeConstructor({
 		email: 'async@gmail.com',
 		password: 32123
@@ -191,7 +193,7 @@ const result = await new UserTypeConstructor({
 	.Async2Sync2nd({ sync: 'is' })
 	.AsyncChain3rd({ async: '3rd' });
 
-console.log(result.extract());
+console.log(utils.extract(result));
 // {
 //   email: 'async@gmail.com',
 //   password: undefined,

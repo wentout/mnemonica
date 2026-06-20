@@ -28,9 +28,9 @@ Mnemonica promotes the Trie from implementation detail to first-class data model
 
 Every instance carries its full history. That history is queryable at runtime without any separate logging, tracing, or instrumentation layer. The construction record *is the object*.
 
-The formal model that explains why this is the right structure for typed data pipelines: **Homotopy Type Theory**. The Trie is a monad — `new instance.SubType()` is bind, threading construction context forward. Parent plus constructor uniquely determines position in the Trie; there is no "equivalent but distinct." An instance is not a snapshot of state — it is a point on a constructible, replayable path.
+The design is **inspired by** Homotopy Type Theory. The Trie behaves monadically — `new instance.SubType()` threads construction context forward like bind. Parent plus constructor uniquely determines position in the Trie; there is no "equivalent but distinct." An instance is not a snapshot of state — it is a point on a constructible, replayable path. These are productive analogies that illuminate why the structure works, not claims of a formal HoTT embedding.
 
-You do not need HoTT to use mnemonica. The [primer below](#a-brief-hott-primer-for-agents-who-dont-have-one-loaded) is there when you want the formal picture. If theory feels abstract before examples land, [The four data mistakes](#the-four-data-mistakes-mnemonica-fixes) is the right starting point.
+You do not need HoTT to use mnemonica. The [primer](./docs/hott-primer.md) is there when you want the formal picture. If theory feels abstract before examples land, [The four data mistakes](#the-four-data-mistakes-mnemonica-fixes) is the right starting point.
 
 **Before modifying any code in this repository you MUST read [`AGENTS.md`](./AGENTS.md).** Rule #1 is non-negotiable.
 
@@ -87,7 +87,7 @@ const enriched = { ...raw, ...apiResult, ...mapped };
 
 When debugging, you see `enriched.amount` but cannot answer: which step added it? What did `raw` look like? You destroyed the lineage at the moment of merge.
 
-Mnemonica's prototype chain preserves every ancestor. `enriched.parent('ApiResult')` returns the API response object. `enriched.extract()` flattens when you need it, but the chain is always there.
+Mnemonica's prototype chain preserves every ancestor. `utils.parent(enriched, 'ApiResult')` returns the API response object. `utils.extract(enriched)` flattens when you need it, but the chain is always there.
 
 ### 3. `await` is data flow, not just control flow
 
@@ -120,10 +120,10 @@ Mnemonica enforces the contract at every step. You cannot pass an `EnrichedPayme
 
 These are the two assumptions that most reliably produce incorrect code.
 
-**1. "I should traverse the chain manually."** The most common mistake: seeing `.parent().parent().parent()` in examples and treating it as a production traversal pattern. Manual depth-chaining is brittle and untyped. The correct APIs:
+**1. "I should traverse the chain manually."** The most common mistake: seeing `utils.parent(utils.parent(instance))` in examples and treating it as a production traversal pattern. Manual depth-chaining is brittle and untyped. The correct APIs:
 
-- **`instance.parent('TypeName')`** — walks to a named ancestor in O(depth), no manual counting
-- **`lookupTyped(path)`** — resolves any type by dotted path string with full TypeScript inference, against an augmented `TypeRegistry` (hand-written or `tactica`-generated — see [`docs/typed-lookup.md`](./docs/typed-lookup.md))
+- **`utils.parent(instance, 'TypeName')`** — walks to a named ancestor in O(depth), no manual counting
+- **`lookupTyped(path)`** — resolves any type by path string with full TypeScript inference, against an augmented `TypeRegistry` (hand-written or `tactica`-generated — see [`docs/typed-lookup.md`](./docs/typed-lookup.md)). Paths may use dots, slashes, colons, or bracket notation, and may be single-segment names when the lookup is relative to a collection or type.
 
 For any traversal deeper than a single step, prefer `parent('TypeName')` or `lookupTyped`. The manual chain form in examples is illustrative only. See [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) for the full `lookupTyped` usage guide.
 
@@ -164,7 +164,7 @@ In mnemonica, you **cannot**:
 - Reuse a constructor across instances (would create parallel paths)
 - Create subtypes from the wrong parent (`strictChain: true` enforces — default)
 
-These restrictions are not arbitrary. They are runtime enforcement of HoTT's identity-as-path discipline. Subtype creation uses *instance-level* inheritance:
+These restrictions are not arbitrary. They are runtime enforcement of the identity-as-path discipline that HoTT inspired: a path is determined by its endpoints and the specific steps taken, not by arbitrary identifications. Subtype creation uses *instance-level* inheritance:
 
 ```typescript
 const user  = new UserType({ name: 'Alice' });
@@ -175,6 +175,27 @@ const admin = new user.AdminType({ role: 'admin' });
 ```
 
 Each admin remembers which specific user it came from. The chain back to the root is the instance's identity. See [`src/api/types/Mnemosyne.ts`](./src/api/types/Mnemosyne.ts), [`src/api/types/TypeProxy.ts`](./src/api/types/TypeProxy.ts).
+
+---
+
+## Formal definitions
+
+These terms are used throughout the codebase and documentation with precise meanings.
+
+| Term | Definition |
+|---|---|
+| **Trie node** | A type definition created by `define()`. Has a name, a constructor handler, a prototype, and a Map of subtypes. |
+| **Trie edge** | A parent-child relationship between two nodes. Created by `ParentType.define('ChildType', ...)`. |
+| **Trie path** | A sequence of edges from the root to a specific node. `UserType → AdminType → SuperAdminType` is a path. |
+| **Construction context** | The 9-tuple stored per instance: `__type__`, `__parent__`, `__args__`, `__timestamp__`, `__creator__`, `__collection__`, `__subtypes__`, `__proto_proto__`, `__stack__`. Readable via `getProps(instance)`. |
+| **Instance-level inheritance** | The mechanism where `new alice.Employee()` creates a prototype chain whose immediate parent is the **specific instance** `alice`, not a shared `Employee.prototype`. |
+| **Nominal type** | A type whose identity is determined by its constructor function reference, not by its property shape. Two types with identical fields but different constructors are different types. |
+| **Mnemosyne** | The prototype object inserted between `ModificatorType.prototype` and the parent instance. Stores internal construction context and instance methods (`extract`, `pick`, `parent`, etc.). |
+| **TypeProxy** | The constructor-like object returned by `define()`. Wraps the raw constructor with `.define()`, `.lookup()`, `.registerHook()` methods. |
+| **ModificatorType** | The actual constructor function used for `new` calls. Its prototype is linked to Mnemosyne, which is linked to the parent instance. |
+| **WeakMap key** | Internal properties are stored in a `WeakMap` keyed by the **Mnemosyne object**, not the instance itself. This keeps instance enumeration clean and shares metadata across instances of the same type. |
+
+For the full construction pipeline from `define()` through `TypeProxy` → `InstanceCreator` → `Mnemosyne` → instance, see [`docs/theory-of-operations.md`](./docs/theory-of-operations.md).
 
 ---
 
@@ -247,27 +268,9 @@ This is not pseudocode — it is a working pattern for production HTTP request h
 
 ## A brief HoTT primer (for agents who don't have one loaded)
 
-You don't need to know Homotopy Type Theory to use mnemonica. You do need it to appreciate *why* the design is what it is. Five concepts matter here.
+You don't need to know Homotopy Type Theory to use mnemonica. You do need it to appreciate *why* the design is what it is. Five concepts matter here — the monad laws, path uniqueness, and the Trie structure have precise correspondences; univalence, HITs, synthetic topology, and fibrations are productive analogies.
 
-**Univalence Axiom.** In HoTT, equivalence and identity coincide — there is no gap between "same structure" and "same thing." Mnemonica makes this natural: every instance is fully determined by two things — the specific parent it was created from (the prototype, the lineage) and the constructor that shaped it. Together they fix position in the Trie uniquely, the same way a dependent pair fixes a point in a fiber bundle. There is no "equivalent but distinct" within this structure. Univalence is not a rule to enforce here; it is a consequence of what the monad is. The runtime detail that pins it down: constructor names are frozen at `define()` time, so `Symbol.hasInstance` checks the name (a nominal identity), not the shape.
-
-**Path Types.** In HoTT, equality is a type. `Id(a, b)` is the type of *paths* witnessing that `a` and `b` are equal. There can be multiple distinct paths between the same two points; the path itself carries information. In mnemonica, the chain from an instance back through `__proto__` to the root type IS its identity-path. The `__args__` along the way parameterize that path.
-
-**Higher Inductive Types (HITs).** A type defined by its constructors AND by paths between values. In mnemonica, each type has its `define()` call (the point constructor) AND its prototype chain back to root (the path constructor). The Trie structure is literally a HIT.
-
-**Synthetic Topology.** In HoTT, types are spaces and functions between types are continuous maps. Mnemonica's Trie is a connected topological space: every defined type is reachable from the root by construction edges, and the connectivity persists for the lifetime of the process. The `defaultTypes.subtypes` Map is the runtime representation of this space.
-
-**Fibrations.** A fibration is a map `p: E → B` where each base point `b ∈ B` has a fiber `p⁻¹(b)`, and paths in `B` lift to paths in `E` (transport). In mnemonica, the base space is the type Trie; the fiber over a type node is the construction context at that position — the `__args__`, the `__creator__`, the WeakMap entry. A subtype creation `new instance.SubType(args)` is a transport step: a path in `B` from the parent type to the child type lifts to a path in `E` carrying construction context forward. Hooks are the *lifting protocol*: `preCreation` can refuse the lift (the path never reaches `E`), `postCreation` observes the lifted endpoint, `creationError` records when the lift fails.
-
-These are not analogies. The structural correspondences are exact. Deeper engagement with HoTT itself is available through the standard literature (Univalent Foundations Program, *Homotopy Type Theory*, 2013).
-
-| HoTT Concept | Mnemonica Realization | Code in this package |
-|---|---|---|
-| Univalence | Frozen nominal name = identity; no "equivalent but distinct" | [`src/api/types/index.ts`](./src/api/types/index.ts) (`Symbol.hasInstance`) |
-| Path Types | The proto chain to root IS the identity-path | [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts) |
-| HITs | Types as point constructors + parent-edge path constructors | The Trie itself |
-| Synthetic Topology | Trie as connected, always-on topological space | `defaultTypes.subtypes` Map |
-| Fibrations | Construction contexts as fibers; hooks as lifting protocol | `preCreation` / `postCreation` / `creationError` |
+**The short version:** Mnemonica is **inspired by** HoTT, not a formal implementation of it. The Trie behaves monadically; the prototype chain IS the identity-path; nominal typing captures the univalence intuition. See [`docs/hott-primer.md`](./docs/hott-primer.md) for the full treatment with formal definitions and status table.
 
 ---
 
@@ -278,10 +281,11 @@ Most Node.js AI frameworks — LangChain.js, Vercel AI SDK, Mastra, and their ki
 Mnemonica provides:
 
 - **Structured introspection.** `getProps(instance)` returns the full construction context: type, parent, args, timestamp, creator, collection.
-- **Path queries.** `instance.parent('UserType')` walks the Trie backward to a named ancestor. `instance.extract()` flattens the inherited state.
+- **Path queries.** `utils.parent(instance, 'UserType')` walks the Trie backward to a named ancestor. `utils.extract(instance)` flattens the inherited state.
 - **Type-safe runtime lookup.** `lookupTyped(path)` returns a fully-typed constructor without manual casts, against an augmented `TypeRegistry`. The augmentation can be hand-written for small projects or generated by the companion `@mnemonica/tactica` package — see [`docs/typed-lookup.md`](./docs/typed-lookup.md).
 - **Hook-based observability.** `preCreation`, `postCreation`, `creationError` fire at well-defined moments and can short-circuit construction.
 - **Persistence-friendly.** Instances carry `__args__` — they can be reconstructed from their history.
+- **Empathy-infrastructure.** Every instance is the endpoint of a reconstructible path, so an agent can understand another agent's present state in the context of how it was reached — see [`docs/empathy-in-ai.md`](./docs/empathy-in-ai.md).
 
 This is the primitive that is currently missing in the Node.js ecosystem for building introspectable AI agent pipelines.
 
@@ -305,11 +309,38 @@ This is the primitive that is currently missing in the Node.js ecosystem for bui
 
 ### Instance methods
 
-Available on every instance unless `exposeInstanceMethods: false` is configured:
+Starting from v1.0.6 these convenience methods are **no longer auto-injected** on every instance. Use the standalone utilities from `utils`:
 
-`extract()`, `pick(...keys)`, `parent(name?)`, `fork(...args)`, `exception(err)`, `sibling`, `clone`
+```typescript
+import { utils } from 'mnemonica';
 
-Defined in [`src/utils/index.ts`](./src/utils/index.ts) and surfaced via [`src/api/types/Mnemosyne.ts`](./src/api/types/Mnemosyne.ts).
+utils.extract(instance);
+utils.pick(instance, 'key');
+utils.parent(instance, 'ParentType');
+utils.fork(instance)(newArgs);
+utils.exception(instance, error);
+utils.sibling(instance);
+utils.clone(instance);
+```
+
+If you want the old instance-method style for a root constructor, attach them to the constructor's prototype **before** calling `define()`. The test helper `test/instance-methods-helper.js` shows the exact pattern:
+
+```javascript
+const withInstanceMethods = (Constructor) => {
+  const { utils } = require('mnemonica');
+  const proto = Constructor.prototype;
+  Object.defineProperty(proto, 'extract', { get () { return () => utils.extract(this); } });
+  Object.defineProperty(proto, 'pick',    { get () { return (...keys) => utils.pick(this, ...keys); } });
+  Object.defineProperty(proto, 'parent',  { get () { return (path) => utils.parent(this, path); } });
+  Object.defineProperty(proto, 'clone',   { get () { return utils.clone(this); } });
+  Object.defineProperty(proto, 'fork',    { get () { return utils.fork(this); } });
+  Object.defineProperty(proto, 'exception', { get () { return (...args) => utils.exception(this, ...args); } });
+  Object.defineProperty(proto, 'sibling', { get () { return utils.sibling(this); } });
+  return Constructor;
+};
+```
+
+Defined in [`src/utils/index.ts`](./src/utils/index.ts). The previous auto-injection mechanism lived in [`src/api/types/Mnemosyne.ts`](./src/api/types/Mnemosyne.ts) and was removed in v1.0.6.
 
 ### Hooks
 
@@ -377,6 +408,8 @@ new instance.SubType(args)
 
 See [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts) and [`src/api/types/TypeProxy.ts`](./src/api/types/TypeProxy.ts).
 
+For the full construction pipeline with source file references for every stage, see [`docs/theory-of-operations.md`](./docs/theory-of-operations.md).
+
 ### Type system primitives (TypeScript)
 
 | Type | Role |
@@ -416,22 +449,24 @@ Everything below ships with this package.
 
 **For *using* mnemonica** (the path most readers want):
 
-1. **This file** — thesis, four data mistakes, pipeline pattern, HoTT framing, operational reference
+1. **This file** — thesis, four data mistakes, pipeline pattern, operational reference
 2. [`FOR_HUMANS.md`](./FOR_HUMANS.md) — gentler, example-heavy walkthrough for human developers
 3. [`SKILL.md`](./SKILL.md) — quick reference for usage patterns
 4. [`docs/typed-lookup.md`](./docs/typed-lookup.md) — using `lookupTyped()` with or without tactica (the `TypeRegistry` augmentation pattern)
-5. [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) — anti-patterns to avoid; the rules apply to either path (manual or tactica-generated)
+5. [`docs/hott-primer.md`](./docs/hott-primer.md) — HoTT concepts mapped to mnemonica (monad, path types, univalence, HITs, fibrations)
+6. [`docs/empathy-in-ai.md`](./docs/empathy-in-ai.md) — why reconstructible data lineage is infrastructure for empathetic AI
 
 **For *modifying* mnemonica** (when you touch `src/`):
 
 1. [`AGENTS.md`](./AGENTS.md) — Rule #1, change-type reading guide, code style, editing rules
 2. [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) — five-minute editor onboarding
 3. [`CONTRIBUTING.md`](./CONTRIBUTING.md) — local workflow, branching, release process
-4. [`.ai/CODE.md`](./.ai/CODE.md), [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific deeper rules
-5. [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) — deeper tactica integration patterns
-6. [`.ai/async_init.md`](./.ai/async_init.md) — async constructor patterns
-7. [`.ai/rules-skill/`](./.ai/rules-skill/) — granular rules for type system, hooks, code style, errors, testing
-8. [`.ai/rules/`](./.ai/rules/) — broader contributor rules
+4. [`docs/theory-of-operations.md`](./docs/theory-of-operations.md) — full construction pipeline from `define()` through `InstanceCreator` to instance return, with source file references for every stage
+5. [`.ai/CODE.md`](./.ai/CODE.md), [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific deeper rules
+6. [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) — deeper tactica integration patterns
+7. [`.ai/async_init.md`](./.ai/async_init.md) — async constructor patterns
+8. [`.ai/rules-skill/`](./.ai/rules-skill/) — granular rules for type system, hooks, code style, errors, testing
+9. [`.ai/rules/`](./.ai/rules/) — broader contributor rules
 
 The full TypeScript source is in [`src/`](./src/) (on GitHub; the npm package ships compiled output in `build/` and `module/`).
 
@@ -439,7 +474,7 @@ The full TypeScript source is in [`src/`](./src/) (on GitHub; the npm package sh
 
 ## Companion packages on npm
 
-- **[`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica)** — TypeScript Language Service Plugin. Generates the `TypeRegistry` augmentation that makes `lookupTyped()` fully typed. The augmentation can also be written by hand for small projects — runtime behaviour is identical either way. See [`docs/typed-lookup.md`](./docs/typed-lookup.md).
+- **[`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica)** — CLI/codegen utility. Scans your `define()` and `@decorate()` calls and generates the `TypeRegistry` augmentation that makes `lookupTyped()` fully typed. The augmentation can also be written by hand for small projects — runtime behaviour is identical either way. See [`docs/typed-lookup.md`](./docs/typed-lookup.md).
 - **[`typeomatica`](https://www.npmjs.com/package/typeomatica)** — Runtime type enforcement via Proxy. Used with the `@Strict` decorator. Wraps property access to enforce type invariants at runtime.
 
 Additional packages are in active development.

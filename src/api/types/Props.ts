@@ -113,7 +113,8 @@ export const _addProps = function (this: InstanceCreatorContext): void {
 			'__stack__',
 			{
 				get () {
-					return stack!.join('\n');
+					const result = stack!.join('\n');
+					return result;
 				}
 			}
 		);
@@ -215,7 +216,8 @@ export const getProps = (instance: object): PropsType | undefined => {
 				answer,
 				descriptors
 			);
-			return answer as PropsType;
+			const result = answer as PropsType;
+			return result;
 		} else {
 			return props;
 		}

@@ -57,7 +57,7 @@ Before implementing, I need to clarify:
 1. **Scope**: Should this config be per-type or per-collection?
 2. **Proxy compatibility**: TypeProxy handles `.get`, `.set`, `.construct`.
    Adding config requires checking all three traps.
-3. **Existing options**: `strictChain`, `blockErrors`, `exposeInstanceMethods`
+3. **Existing options**: `strictChain`, `blockErrors`, `awaitReturn`
    already exist. Does this fit the pattern?
 4. **TypeRegistry impact**: Will tactica need to regenerate types?
 

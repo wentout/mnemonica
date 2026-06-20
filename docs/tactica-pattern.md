@@ -88,22 +88,22 @@ Include the file in `tsconfig.json` `include`. You are done.
 
 ### Via tactica
 
-For projects with many types or for hands-off maintenance, install [`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica) and configure it as a TS Language Service Plugin. It scans your `define()` calls and generates the augmentation continuously:
+For projects with many types or for hands-off maintenance, install [`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica) and run it as a CLI/codegen utility. It scans your `define()` calls and generates the augmentation:
+
+```bash
+npm install --save-dev @mnemonica/tactica
+npx tactica --output ./.tactica --include "src/**/*.ts"
+```
+
+Include the generated files in `tsconfig.json`:
 
 ```json
 {
-    "compilerOptions": {
-        "plugins": [{
-            "name"      : "@mnemonica/tactica",
-            "outputDir" : ".tactica",
-            "include"   : ["src/**/*.ts"]
-        }]
-    },
     "include": ["src/**/*.ts", ".tactica/**/*.ts"]
 }
 ```
 
-Tactica writes the same shape of augmentation a careful human would, using `ProtoFlat<Parent, ...>` for nested types and filling in instance-level subtype constructors automatically. The runtime is unaffected.
+Tactica writes the same shape of augmentation a careful human would, using `ProtoFlat<Parent, ...>` for nested types and filling in instance-level subtype constructors automatically. The runtime is unaffected. Re-run the CLI whenever your type graph changes, or wire it into your build script.
 
 See [`./typed-lookup.md`](./typed-lookup.md) for a side-by-side recipe with both paths.
 
@@ -134,7 +134,7 @@ The anti-patterns are the same whether you augment by hand or via tactica:
 What changes is how you keep the `TypeRegistry` augmentation in sync with your code:
 
 - **Hand-written:** edit the `.d.ts` when types change.
-- **Tactica:** the LSP plugin keeps `.tactica/` in sync.
+- **Tactica:** the CLI/codegen utility keeps `.tactica/` in sync.
 
 Pick whichever fits your project. Both are first-class.
 

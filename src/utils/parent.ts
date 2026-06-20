@@ -10,7 +10,7 @@ import {
 // seek for firts parent instance
 // of instance prototype chain
 // with constructors of path
-export const parent = ( instance: object, path?: string ): unknown => {
+export const parent = <T extends object>( instance: T, path?: string ): object | undefined => {
 
 	// at this situation this check is enough
 	if ( instance !== Object( instance ) ) {
@@ -33,10 +33,8 @@ export const parent = ( instance: object, path?: string ): unknown => {
 
 	// seek throuh parent instances
 	// about the fist constructor with this name
-	return name === path ?
-		p : parent(
- p as object,
- path 
-		);
+	const result = name === path ?
+		p : parent( p as object, path );
+	return result;
 
 };

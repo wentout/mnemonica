@@ -69,12 +69,14 @@ module.exports = function () {
 				// 	},
 				// });
 
-				return new Inherico();
+				const inhericoResult = new Inherico();
+				return inhericoResult;
 			};
 
 			// TripleSchemeClosure.prototype = this;
 			TripleSchemeClosure.prototype = existentInstance;
-			return new TripleSchemeClosure();
+			const tripleResult = new TripleSchemeClosure();
+			return tripleResult;
 
 			// };
 			// PreTripleSchemeClosure.prototype = existentInstance;

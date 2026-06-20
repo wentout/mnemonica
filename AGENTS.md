@@ -78,6 +78,8 @@ npm run watch          # watch mode
 
 **Must run `npm run test:cov` before completing any task.**
 
+**Documentation changes:** When modifying any `.md` file, `npm run lint:md` is mandatory. It checks for broken links and anchors. Run it and fix any reported issues before finishing.
+
 ## Code Style (Project-Specific)
 
 See [`.ai/rules-skill/code-style.md`](./.ai/rules-skill/code-style.md) for the full style reference. Key rules: tabs only, space before function parens, colons aligned in object literals, `strict: true`, **no `any`** (`no-explicit-any: error`).
@@ -172,9 +174,11 @@ For test passing confirmations (e.g., `npm run test:cov`), checking the end of t
 
 These configuration files define the project's strict standards. Any changes require user approval first.
 
-## Return Statement Design Rule
+## Return Statement Design Rule (Non-negotiable)
 
-**Always use an intermediate variable before returning.** This is critical for debuggability with `npm run debug` and Chrome Dev Tools.
+**Every return expression must go through an intermediate variable/constant.** No exceptions. This is critical for debuggability with `npm run debug` and Chrome Dev Tools — when execution pauses on `return result`, you can hover your mouse over `result` and inspect the value. With `return SomeFn(arg)`, the value is gone before the debugger can show it.
+
+**This rule is enforced. If you write `return new Foo()` or `return fn()`, the PR will be rejected.**
 
 ### Prohibited patterns:
 ```typescript

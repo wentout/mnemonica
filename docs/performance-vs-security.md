@@ -122,7 +122,7 @@ if (isSubType && strictChain) {
 
 **mnemonica's defense:**
 - **Nominal typing:** A `Payment` and `Invoice` with identical fields are *not* interchangeable. `instanceof` answers "was this created by this specific constructor?" not "does it have these properties?"
-- **Immutable constructor names:** `Object.defineProperty` sets `name` as non-writable. MITM attacks on prototype chains via name spoofing are impossible.
+- **Immutable constructor names:** `Object.defineProperty` sets `name` as a getter without a setter, making casual assignment silently ignored (non-strict) or thrown (strict mode). `instanceof` checks prototype object references, not names, so type identity is unaffected by name spoofing. This is defense-in-depth against prototype pollution, not cryptographic immutability.
 - **Construction provenance:** Every instance carries `__type__`, `__parent__`, `__args__`, `__timestamp__`, `__creator__`. The data *is* its own audit log.
 
 **Honesty check:** This does not prevent a compromised process from lying about `__timestamp__` (it can set any value). But it makes *accidental* data corruption detectable and *intentional* tampering require explicit attack code rather than natural language confusion.
@@ -295,7 +295,7 @@ const enriched  = new validated.Enriched(context);
 const response  = new enriched.Serialized(format);
 ```
 
-In the second form, `response.parent('Parsed')` returns the parsed instance. `getProps(enriched).__args__` returns the rules that validation used. The lineage is the object. You do not log it separately because there is nothing separate to log.
+In the second form, `utils.parent(response, 'Parsed')` returns the parsed instance. `getProps(enriched).__args__` returns the rules that validation used. The lineage is the object. You do not log it separately because there is nothing separate to log.
 
 The benchmark is the honest cost of the first form measured against the second. The 5× property read advantage is what you are paying for. For pipeline workloads — which is the workload mnemonica is designed for — it is a good trade.
 

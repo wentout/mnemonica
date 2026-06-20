@@ -79,12 +79,6 @@ const defaultOptions = {
 		return true;
 	},
 
-	// expose instance methods (extract, pick, parent, clone, fork, exception, sibling)
-	// on the instance itself. When true (default for backward compatibility), methods are available directly
-	get exposeInstanceMethods () {
-		return true;
-	},
-
 } as Record<string, unknown>;
 
 export const constants = {
@@ -117,13 +111,15 @@ export const constants = {
 		return MNEMOSYNE;
 	},
 	get 'odp' () {
-		return <T extends object>( o: T, p: PropertyKey, attributes: PropertyDescriptor ): T => {
-			return Object.defineProperty(
+		const result = <T extends object>( o: T, p: PropertyKey, attributes: PropertyDescriptor ): T => {
+			const defineResult = Object.defineProperty(
 				o,
 				p,
 				attributes 
 			) as T;
+			return defineResult;
 		};
+		return result;
 	},
 
 	get 'defaultOptions' () {
@@ -131,7 +127,8 @@ export const constants = {
 	},
 
 	get 'defaultOptionsKeys' () {
-		return Object.keys( defaultOptions );
+		const result = Object.keys( defaultOptions );
+		return result;
 	},
 
 	TYPE_TITLE_PREFIX,

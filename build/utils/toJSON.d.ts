@@ -1,1 +1,1 @@
-export declare const toJSON: (instance: object) => string;
+export declare const toJSON: <T extends object>(instance: T) => string;

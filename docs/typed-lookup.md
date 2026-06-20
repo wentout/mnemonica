@@ -1,6 +1,6 @@
 # Typed lookup with `lookupTyped()` — with or without tactica
 
-`lookupTyped()` is a runtime lookup with compile-time type safety. The type safety comes from one mechanism: declaration merging on the `TypeRegistry` interface that mnemonica exports.
+`lookupTyped()` is a runtime lookup with compile-time type safety. The type safety comes from one mechanism: declaration merging on the `TypeRegistry` interface that mnemonica exports. The path argument may use dots, slashes, colons, or bracket notation (e.g. `'UserType.AdminType'`, `'UserType/AdminType'`, `'UserType:AdminType'`, or `'UserType[AdminType]'`), and a single-segment name is resolved relative to the collection or type constructor the lookup is called on.
 
 ```typescript
 // src/index.ts (mnemonica core)
@@ -96,22 +96,22 @@ Install:
 npm install --save-dev @mnemonica/tactica
 ```
 
-Configure as a TypeScript Language Service Plugin in `tsconfig.json`:
+Install and run the CLI:
+
+```bash
+npm install --save-dev @mnemonica/tactica
+npx tactica --output ./.tactica --include "src/**/*.ts"
+```
+
+Then include the generated files in `tsconfig.json`:
 
 ```json
 {
-    "compilerOptions": {
-        "plugins": [{
-            "name"      : "@mnemonica/tactica",
-            "outputDir" : ".tactica",
-            "include"   : ["src/**/*.ts"]
-        }]
-    },
     "include": ["src/**/*.ts", ".tactica/**/*.ts"]
 }
 ```
 
-Tactica scans your `define()` and `@decorate()` calls and generates `.tactica/types.ts` + `.tactica/registry.ts`. The generated registry has the same shape as the hand-written one above, but tactica also fills in instance-level subtypes (`alice.Employee`) automatically and uses `ProtoFlat<Parent, ...>` for nested types so they merge correctly.
+Tactica scans your `define()` and `@decorate()` calls and generates `.tactica/types.ts` + `.tactica/registry.ts`. The generated registry has the same shape as the hand-written one above, but tactica also fills in instance-level subtypes (`alice.Employee`) automatically and uses `ProtoFlat<Parent, ...>` for nested types so they merge correctly. You can re-run the CLI manually or from a build script; mnemographica can also run it on your behalf.
 
 You write nothing for the augmentation; tactica regenerates as your types evolve. See [`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica) for the full configuration surface.
 
@@ -124,14 +124,14 @@ You write nothing for the augmentation; tactica regenerates as your types evolve
 - Small projects (a handful of types)
 - Bootstrap / learning — writing the augmentation by hand is the fastest way to understand what `lookupTyped()` actually does
 - Projects that want to keep the `TypeRegistry` surface stable and curated, independent of source-code churn
-- Environments where adding a TypeScript Language Service plugin is inconvenient
+- Environments where running a CLI/codegen utility is inconvenient
 
 **Tactica** is the right choice when:
 
 - You have many types or expect the type graph to grow
 - You don't want to maintain the augmentation by hand as `define()` calls are added or refactored
 - You want full instance-subtype typing (`alice.Employee`) without writing it
-- You're already on a TS-LSP-friendly setup
+- You're already running tactica as part of your build or IDE workflow
 
 The runtime is identical either way. There is no "tactica path" vs "non-tactica path" in mnemonica core itself — there is only the `TypeRegistry` augmentation, and two ways to produce it.
 

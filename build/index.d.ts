@@ -1,4 +1,4 @@
-import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, Constructor, DecoratedClass, TypeClass, TypeAbsorber, MnemonicaModule, TypeConstructor } from './types';
+import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, Constructor, DecoratedClass, TypeClass, TypeAbsorber, MnemonicaModule, TypeConstructor, InstanceResult, Merge } from './types';
 export declare const isClass: (fn: import("./api/types/compileNewModificatorFunctionBody").ConstructHandler) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => import("./api/utils/index").parentSub | null;
 export type { IDEF, TypeConstructor, _Internal_TC_, Proto, ProtoFlat, hooksOpts, hook, hooksTypes, TypesCollection } from './types';
 export { getProps, setProps } from './api/types/Props';
@@ -9,9 +9,9 @@ export interface TypeRegistry {
     [key: string]: TypeConstructor<never>;
 }
 export declare const lookupTyped: <const K extends keyof TypeRegistry>(this: unknown, TypeNestedPath: K) => TypeRegistry[K];
-export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, args?: unknown[]) => { [key in keyof S]: S[key]; };
-export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, ...args: unknown[]) => { [key in keyof S]: S[key]; };
-export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>) => (...args: unknown[]) => { [key in keyof S]: S[key]; };
+export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, args?: unknown[]) => InstanceResult<Merge<E, T>>;
+export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, ...args: unknown[]) => InstanceResult<Merge<E, T>>;
+export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>) => (...args: unknown[]) => InstanceResult<Merge<E, T>>;
 export declare const decorate: <T extends Constructor<object> | constructorOptions | undefined = undefined>(target?: T, config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
 export declare const registerHook: <T extends Constructor<T>>(Ctor: DecoratedClass<T>, hookType: hooksTypes, cb: hook) => void;
 export declare const mnemonica: MnemonicaModule;

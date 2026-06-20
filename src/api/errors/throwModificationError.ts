@@ -21,12 +21,9 @@ import {
 import TypesUtils from '../utils';
 const { makeErrorModificatorType } = TypesUtils;
 
-import { utils } from '../../utils';
-const {
-	parse,
-	parent,
-	extract
-} = utils;
+import { parse } from '../../utils/parse';
+import { parent } from '../../utils/parent';
+import { extract } from '../../utils/extract';
 
 import { makeInstanceModificator } from '../types/InstanceModificator';
 
@@ -244,11 +241,14 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 			'extract',
 			{
 				get () {
-					return () => {
-						const _parent = parent(erroredInstance);
+					const extractGetter = () => {
+						// mnemonica instances always have a parent object,
+						// so the runtime value is guaranteed to be object here
+						const _parent = parent(erroredInstance) as object;
 						const extractResult = extract(_parent);
 						return extractResult;
 					};
+					return extractGetter;
 				}
 			} 
 		);
@@ -258,10 +258,11 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 			'parse',
 			{
 				get () {
-					return () => {
+					const parseGetter = () => {
 						const parseResult = parse( erroredInstance );
 						return parseResult;
 					};
+					return parseGetter;
 				}
 			} 
 		);

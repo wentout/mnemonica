@@ -124,7 +124,7 @@ export interface StackBoundary extends CallableFunction {}
 // A wrappable utility method — any callable that wrapThis() can proxy
 export interface WrappableMethod extends CallableFunction {}
 
-// Constructor options for define - default (exposeInstanceMethods defaults to true behavior)
+// Constructor options for define
 export type constructorOptions = {
 	// explicit declaration we wish use
 	// an old style based constructors
@@ -146,15 +146,6 @@ export type constructorOptions = {
 	awaitReturn?: boolean,
 	// Force class mode (auto-detected by default)
 	asClass?: boolean,
-	// Expose instance methods (extract, pick, parent, clone, fork, exception, sibling)
-	// on the instance type. When false, these methods are still available on the prototype
-	// but hidden from the type definition unless explicitly exposed.
-	exposeInstanceMethods?: boolean,
-};
-
-// Constructor options that explicitly hide instance methods
-export type HideInstanceMethodsOptions = constructorOptions & {
-	exposeInstanceMethods: true;
 };
 
 // Subtypes map - represents the subtypes property
@@ -250,7 +241,37 @@ export type ProtoFlat<
 	[key in L]: P[key];
 };
 
+// Mnemonica instance method keys. These are filtered out of extracted/merged
+// field-only views because they belong to the prototype, not to the user's
+// enumerable data properties.
+export type MnemonicaInstanceMethodKeys =
+	'extract' | 'pick' | 'parent' | 'clone' | 'fork' | 'exception' | 'sibling';
+
 export type Flatten<F> = { [key in keyof F]: F[key] }
+
+// Extracted<T>: the shape returned by utils.extract(instance).
+// It contains the enumerable string-keyed user properties of the instance,
+// omitting MnemonicaInstance methods (extract, pick, parent, clone, fork,
+// exception, sibling). Optionality is preserved from the source type.
+// The `& {}` trick forces TypeScript to expand the alias in hover tooltips
+// so it renders as a plain object literal instead of "Extracted<{...}>".
+export type Extracted<T extends object> = {
+	[K in keyof T as K extends string ? (K extends MnemonicaInstanceMethodKeys ? never : K) : never]: T[K];
+} & {};
+
+// Parsed<T>: the shape returned by utils.parse(instance).
+// It is a one-level snapshot of the instance's prototype chain.
+// `props` contains the instance's enumerable user properties;
+// `joint` contains enumerable properties copied from the immediate prototype;
+// `parent` is the next link up the chain (currently not recursively parsed).
+export type Parsed<T extends object> = {
+	name: string;
+	props: Extracted<T>;
+	self: T;
+	proto: object;
+	joint: Record<string, unknown>;
+	parent: object | undefined;
+};
 
 // Sibling type accessor
 export interface SiblingAccessor {
@@ -258,17 +279,18 @@ export interface SiblingAccessor {
 	[key: string]: TypeClass | undefined;
 }
 
-// Mnemonica instance methods interface
-// These methods are always available on the prototype chain
-// but can be hidden from type definitions via exposeInstanceMethods option
-export interface MnemonicaInstance {
-	extract(): Record<string, unknown>;
+// Mnemonica instance methods interface (opt-in).
+// These methods used to be auto-injected onto every instance. They are now
+// available only when a type explicitly adds them to its prototype.
+// Users can still use this interface to type their own root-level helpers.
+export interface MnemonicaInstance<T extends object = object> {
+	extract(): Extracted<T>;
+	pick<K extends keyof T>(...keys: (K | K[])[]): { [P in K]: T[P] } & {};
 	pick(...keys: string[]): Record<string, unknown>;
-	pick(keys: string[]): Record<string, unknown>;
 	parent(): object | undefined;
 	parent(constructorLookupPath: string): object | undefined;
-	readonly clone: object;
-	fork(...forkArgs: unknown[]): object;
+	readonly clone: this;
+	fork(...forkArgs: unknown[]): this;
 	exception(error: Error, ...args: unknown[]): Error;
 	readonly sibling: SiblingAccessor;
 }
@@ -291,30 +313,24 @@ export type InstanceInternalProps = {
 
 // Combined Props type for internal use inside ./src
 export type Props = InstanceInternalProps & {
-	__self__: InstanceInternalProps & MnemonicaInstance;
+	__self__: InstanceInternalProps;
 	[key: string]: unknown;
 };
 
-// Helper type: true when exposeInstanceMethods is explicitly false
-export type IsHidingMethods<Config extends constructorOptions> =
-  Config extends { exposeInstanceMethods: false } ? true : false;
-
-// Combined instance type based on config:
-//   hiding → Flatten<N> (user props only)
-//   showing → Flatten<N> & MnemonicaInstance (user props + extract/fork/etc.)
+// Combined instance type: plain object with the user's fields only.
+// Instance methods (extract, pick, fork, etc.) are no longer auto-injected.
+// The inline mapped type is used instead of the Flatten alias so that hover
+// tooltips show the actual field object literal first, not "Flatten<{...}>".
 export type InstanceResult<
   N extends object,
-  Config extends constructorOptions,
-> = IsHidingMethods<Config> extends true ? Flatten<N> : Flatten<N> & MnemonicaInstance;
+> = { [K in keyof N]: N[K] };
 
 // Definitor instance - the constructor function returned by define
 // N = instance type (properties available on instances)
 // S = subtypes map
-// Config = constructor options controlling type visibility
 export interface IDefinitorInstance<
 	N extends object,
-	Config extends constructorOptions = constructorOptions,
-	R extends InstanceResult<N, Config> = InstanceResult<N, Config>
+	R extends InstanceResult<N> = InstanceResult<N>
 > {
 
 	TypeName: string;
@@ -330,7 +346,7 @@ export interface IDefinitorInstance<
 	// TODO: need check if line below works
 	// also TS hinting check as well
 	// the line below should make is a @decorate decorator working
-	(...args: unknown[]): IDefinitorInstance<R, Config>;
+	(...args: unknown[]): IDefinitorInstance<R>;
 
 
 	// Define method that combines parent N with new type T using Proto
@@ -344,7 +360,7 @@ export interface IDefinitorInstance<
 		TypeOrTypeName: string | CallableFunction,
 		constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction,
 		configOrUndefined?: constructorOptions | CallableFunction | boolean
-	): IDefinitorInstance<F, Config>;
+	): IDefinitorInstance<F>;
 	
 	lookup: TypeLookup;
 	
@@ -368,23 +384,13 @@ export interface IDefinitorInstance<
 // 1. Modern: define(TypeName, constructHandler, config?)
 // 2. Legacy: define(constructHandler, config?) - TypeName from constructor name
 // 3. Nested: parentType.define(TypeName, constructHandler, config?)
-// Using interface with overloads to properly handle exposeInstanceMethods option
 export interface TypeAbsorber extends CallableFunction {
-	// Overload: with exposeInstanceMethods: false - hide instance methods
-	<T extends object>(
-		this: unknown,
-		TypeOrTypeName: string | CallableFunction,
-		constructHandlerOrConfig: IDEF<T> | object | boolean | CallableFunction,
-		configOrUndefined: HideInstanceMethodsOptions
-	): IDefinitorInstance<T, HideInstanceMethodsOptions>;
-	
-	// Overload: without config or with exposeInstanceMethods not false - show all
 	<T extends object>(
 		this: unknown,
 		TypeOrTypeName: string | CallableFunction,
 		constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction,
 		configOrUndefined?: constructorOptions | CallableFunction | boolean
-	): IDefinitorInstance<T, constructorOptions>;
+	): IDefinitorInstance<T>;
 }
 
 // TypesCollection interface for createTypesCollection
@@ -451,33 +457,58 @@ export type DecoratedClass<T extends Constructor<object>> =
 		TypeName: string;
 	};
 
+// Helper: merge parent entity (E) and child constructor instance (T) into a
+// single flat object type, filtering out MnemonicaInstance method names.
+// Used by apply/call/bind.
+export type Merge<E extends object, T extends object> = {
+	[K in keyof T | keyof E as K extends MnemonicaInstanceMethodKeys ? never : K]:
+		K extends keyof T ? T[K] : E[K & keyof E];
+};
+
 // Apply/Call/Bind function types
-export type ApplyFunction = <E extends object, T extends object, S extends Proto<E, T>>(
-	entity: E,
-	Constructor: IDEF<T>,
-	args?: unknown[]
-) => S;
+// The return type merges the parent entity fields with the child constructor
+// fields (filtering out MnemonicaInstance method names), producing the same
+// `{ fields }` hover style as `new Type()`.
+export interface ApplyFunction extends CallableFunction {
+	<E extends object, T extends object>(
+		entity: E,
+		Constructor: IDEF<T>,
+		args?: unknown[]
+	): InstanceResult<Merge<E, T>>;
+}
 
-export type CallFunction = <E extends object, T extends object, S extends Proto<E, T>>(
-	entity: E,
-	Constructor: IDEF<T>,
-	...args: unknown[]
-) => S;
+export interface CallFunction extends CallableFunction {
+	<E extends object, T extends object>(
+		entity: E,
+		Constructor: IDEF<T>,
+		...args: unknown[]
+	): InstanceResult<Merge<E, T>>;
+}
 
-export type BindFunction = <E extends object, T extends object, S extends Proto<E, T>>(
-	entity: E,
-	Constructor: IDEF<T>
-) => (...args: unknown[]) => S;
+export interface BindFunction extends CallableFunction {
+	<E extends object, T extends object>(
+		entity: E,
+		Constructor: IDEF<T>
+	): (...args: unknown[]) => InstanceResult<Merge<E, T>>;
+}
 
 // Utils object type
 export interface UtilsCollection {
-	extract: (instance: object) => Record<string, unknown>;
-	pick: (instance: object, ...args: (string | string[])[]) => Record<string, unknown>;
+	extract<T extends object>(instance: T): Extracted<T>;
+	pick<T extends object, K extends keyof T>(instance: T, ...args: (K | K[])[]): { [P in K]: T[P] } & {};
+	pick<T extends object>(instance: T, ...args: (string | string[])[]): Record<string, unknown>;
+	clone<T extends object>(instance: T): T;
+	fork<T extends object>(instance: T): (this: object, ...forkArgs: unknown[]) => T;
+	sibling(instance: object): SiblingAccessor;
 	collectConstructors: (instance: object, flat?: boolean) => (CallableFunction | string)[];
-	merge: (...args: unknown[]) => unknown;
-	parse: (value: unknown) => object | undefined;
-	parent: (instance: object, strict?: boolean) => object | undefined;
-	toJSON: (instance: object) => string;
+	merge<A extends object, B extends object>(
+		a: A,
+		b: B,
+		...args: unknown[]
+	): InstanceResult<Merge<B, A>>;
+	parse<T extends object>(self: T): Parsed<T>;
+	parent<T extends object>(instance: T, path?: string): object | undefined;
+	toJSON<T extends object>(instance: T): string;
 	[key: string]: CallableFunction;
 }
 
@@ -489,7 +520,10 @@ export interface MnemonicaModule {
 	apply: ApplyFunction;
 	call: CallFunction;
 	bind: BindFunction;
-	decorate: <U extends Constructor<object>>(target?: object, config?: object) => DecoratedClass<U>;
+	decorate: <T extends Constructor<object> | constructorOptions | undefined = undefined>(
+		target?: T,
+		config?: constructorOptions
+	) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
 	registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
 
 	// Descriptors
@@ -514,12 +548,10 @@ export interface MnemonicaModule {
 	// Constants
 	MNEMONICA: string;
 	MNEMOSYNE: string;
-	URANUS: string;
 	SymbolParentType: symbol;
 	SymbolConstructorName: symbol;
 	SymbolDefaultTypesCollection: symbol;
 	SymbolConfig: symbol;
-	SymbolGaia: symbol;
 	TYPE_TITLE_PREFIX: string;
 	ErrorMessages: ErrorMessages;
 

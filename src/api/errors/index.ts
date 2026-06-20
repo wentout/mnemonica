@@ -31,7 +31,8 @@ export const cleanupStack = ( stack: string[] ) => {
 		},
 		[] 
 	);
-	return cleaned.length ? cleaned : stack;
+	const result = cleaned.length ? cleaned : stack;
+	return result;
 };
 
 export const getStack = function (
@@ -90,7 +91,8 @@ export class BASE_MNEMONICA_ERROR extends Error {
 	}
 
 	static get [ SymbolConstructorName ] () {
-		return new String( `base of : ${MNEMONICA} : errors` );
+		const result = new String( `base of : ${MNEMONICA} : errors` );
+		return result;
 	}
 
 }
@@ -100,7 +102,8 @@ Object.defineProperty(
 	'name',
 	{
 		get () {
-			return new String( 'BASE_MNEMONICA_ERROR' );
+			const result = new String( 'BASE_MNEMONICA_ERROR' );
+			return result;
 		}
 	} 
 );
@@ -130,7 +133,8 @@ export const constructError = ( name: string, message: string ) => {
 		'name',
 		{
 			get () {
-				return new String( name );
+				const result = new String( name );
+				return result;
 			}
 		} 
 	);

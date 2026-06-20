@@ -182,7 +182,8 @@ const TypeDescriptor = function (
 
 	// types.set( TypeName, new TypeProxy( type ) );
 
-	return types.get(TypeName);
+	const result = types.get(TypeName);
+	return result;
 
 } as unknown as _Internal_TC_<TypeDescriptorInstance>;
 
@@ -197,23 +198,25 @@ TypeDescriptor.prototype.define = function (
 	constructHandlerOrConfig?: CallableFunction | object,
 	config?: object
 ) {
-	return define.call(
+	const result = define.call(
 		define,
 		this.subtypes as TypesMap,
 		TypeOrTypeName,
 		constructHandlerOrConfig,
 		config
 	);
+	return result;
 };
 
 TypeDescriptor.prototype.lookup = function (
 	this: TypeDescriptorInstance,
 	TypeNestedPath: string
 ) {
-	return lookup.call(
+	const result = lookup.call(
 this.subtypes as TypesMap,
 TypeNestedPath
 	);
+	return result;
 };
 
 odp(
@@ -297,8 +300,9 @@ const isLazyGetter = function (handler: ConstructHandler | LazyTypeGetter): bool
 		// Probe: try to call as a lazy getter. If it succeeds and returns a named
 		// function, it's a lazy getter. Otherwise (throws or returns non-function),
 		// it's a direct handler. The cast is the probe — runtime decides which it is.
-		const result = (handler as LazyTypeGetter)();
-		return result instanceof Function && result.name.length > 0;
+		const lazyResult = (handler as LazyTypeGetter)();
+		const result = lazyResult instanceof Function && lazyResult.name.length > 0;
+		return result;
 	} catch {
 		return false;
 	}
@@ -346,7 +350,7 @@ const createFromDirectHandler = function (
 		(typeof handler.prototype === 'object')
 	) ? handler.prototype : getDefaultPrototype();
 
-	return new TypeDescriptor(
+	const result = new TypeDescriptor(
 		defineOrigin,
 		target,
 		name,
@@ -354,6 +358,7 @@ const createFromDirectHandler = function (
 		proto,
 		config
 	) as unknown as TypeClass;
+	return result;
 };
 
 const createFromLazyGetter = function (
@@ -406,7 +411,7 @@ const createFromLazyGetter = function (
 
 	config.asClass = asClass;
 
-	return new TypeDescriptor(
+	const result = new TypeDescriptor(
 		defineOrigin,
 		target,
 		TypeName,
@@ -414,6 +419,7 @@ const createFromLazyGetter = function (
 		type.prototype,
 		config
 	) as unknown as TypeClass;
+	return result;
 };
 
 // ============================================================
@@ -545,10 +551,11 @@ export const lookup = function (
 	if (!type) {
 		return undefined;
 	}
-	return lookup.call(
+	const result = lookup.call(
 type.subtypes as unknown as TypesMap,
 NextNestedPath
 	);
+	return result;
 
 };
 
