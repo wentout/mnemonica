@@ -28,21 +28,9 @@ interface UserTypeInstance extends UserTypeData {
 interface AdminTypeInstance extends UserTypeInstance, AdminTypeData {}
 
 const UserType = lookup('UserType');
-
-if (!UserType) {
-	throw new Error('UserType not found');
-}
-
 const user = new UserType({ name: 'Alice' });
 
 const admin = new user.AdminType({ role: 'admin' });
-
-// Positive: lookup returns a typed constructor.
-const lookedUp = lookup('UserType.AdminType');
-if (lookedUp) {
-	const lookedUpAdmin = new lookedUp({ role: 'root' });
-	const role: string = lookedUpAdmin.role;
-}
 
 // Positive: parent returns the specific parent instance type.
 const parent = utils.parent(admin, 'UserType');

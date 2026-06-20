@@ -6,7 +6,7 @@ export interface TypeRegistry {
 export { getProps, setProps } from './api/types/Props';
 export declare const defaultTypes: import("./types").TypesCollection;
 export declare const define: TypeAbsorber;
-export declare function lookup<const K extends keyof TypeRegistry>(this: unknown, TypeNestedPath: K): TypeRegistry[K] | undefined;
+export declare function lookup<const K extends keyof TypeRegistry>(this: unknown, TypeNestedPath: K): TypeRegistry[K];
 export declare function lookup(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, args?: unknown[]) => InstanceResult<Merge<E, T>>;
 export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, ...args: unknown[]) => InstanceResult<Merge<E, T>>;

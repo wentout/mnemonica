@@ -601,7 +601,7 @@ export interface MnemonicaModule {
 	define: TypeAbsorber;
 	lookup: {
 		(TypeNestedPath: string): TypeClass | undefined;
-		<const K extends keyof TypeRegistry>(TypeNestedPath: K): TypeRegistry[K] | undefined;
+		<const K extends keyof TypeRegistry>(TypeNestedPath: K): TypeRegistry[K];
 	};
 	apply: ApplyFunction;
 	call: CallFunction;

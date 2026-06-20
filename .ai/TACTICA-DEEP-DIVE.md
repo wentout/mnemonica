@@ -229,7 +229,7 @@ declare module 'mnemonica' {
 	}
 }
 
-const RequestData = lookup('RequestData'); // typed constructor | undefined
+const RequestData = lookup('RequestData'); // typed constructor
 ```
 
 ---
@@ -286,7 +286,7 @@ Because without the augmentation, `TypeRegistry` is empty and `lookup()` falls b
 export function lookup<const K extends keyof TypeRegistry>(
 	this: unknown,
 	TypeNestedPath: K
-): TypeRegistry[K] | undefined;
+): TypeRegistry[K];
 export function lookup(
 	this: unknown,
 	TypeNestedPath: string
