@@ -161,7 +161,7 @@ const engineer = new alice.Employee({ role: 'Engineer' });
 In mnemonica, you **cannot**:
 
 - Modify a prototype after creation (would corrupt the Trie)
-- Reuse a constructor across instances (would create parallel paths)
+- Reuse a constructor's `.prototype` object across type definitions (would create parallel paths)
 - Create subtypes from the wrong parent (`strictChain: true` enforces — default)
 
 These restrictions are not arbitrary. They are runtime enforcement of the identity-as-path discipline that HoTT inspired: a path is determined by its endpoints and the specific steps taken, not by arbitrary identifications. Subtype creation uses *instance-level* inheritance:
@@ -190,7 +190,7 @@ These terms are used throughout the codebase and documentation with precise mean
 | **Construction context** | The 9-tuple stored per instance: `__type__`, `__parent__`, `__args__`, `__timestamp__`, `__creator__`, `__collection__`, `__subtypes__`, `__proto_proto__`, `__stack__`. Readable via `getProps(instance)`. |
 | **Instance-level inheritance** | The mechanism where `new alice.Employee()` creates a prototype chain whose immediate parent is the **specific instance** `alice`, not a shared `Employee.prototype`. |
 | **Nominal type** | A type whose identity is determined by its constructor function reference, not by its property shape. Two types with identical fields but different constructors are different types. |
-| **Mnemosyne** | The prototype object inserted between `ModificatorType.prototype` and the parent instance. Stores internal construction context and instance methods (`extract`, `pick`, `parent`, etc.). |
+| **Mnemosyne** | The prototype object inserted between `ModificatorType.prototype` and the parent instance. Stores internal construction context. User-facing instance methods (`extract`, `pick`, `parent`, etc.) are available through standalone `utils.*` or by explicit prototype attachment. |
 | **TypeProxy** | The constructor-like object returned by `define()`. Wraps the raw constructor with `.define()`, `.lookup()`, `.registerHook()` methods. |
 | **ModificatorType** | The actual constructor function used for `new` calls. Its prototype is linked to Mnemosyne, which is linked to the parent instance. |
 | **WeakMap key** | Internal properties are stored in a `WeakMap` keyed by the **Mnemosyne object**, not the instance itself. This keeps instance enumeration clean and shares metadata across instances of the same type. |
