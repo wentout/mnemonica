@@ -108,7 +108,7 @@ export const define = function <
 export function lookup<const K extends keyof TypeRegistry>(
 	this: unknown,
 	TypeNestedPath: K
-): TypeRegistry[K] | undefined;
+): TypeRegistry[K];
 export function lookup(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 export function lookup(
 	this: unknown,

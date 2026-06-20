@@ -61,10 +61,6 @@ const SomeSubType = SomeType.define('SomeSubType', function (this: {
 
 const ST = lookup('SomeType');
 
-if (!ST) {
-	throw new Error('SomeType not found');
-}
-
 const first = new ST('SomeArg', 555);
 
 SomeSubType.registerHook('preCreation', () => { console.log('SomeSubType'); });
