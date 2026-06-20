@@ -1668,5 +1668,12 @@ describe('Main Test', () => {
 			});
 		}
 
+		describe('utils/parentTyped', () => {
+			it('should delegate to parent by constructor name', () => {
+				const result = mnemonica.utils.parentTyped(evenMore, 'OverMore');
+				expect(result).to.equal(overMore);
+			});
+		});
+
 	});
 });

@@ -30,6 +30,20 @@ export interface _Internal_TC_<ConstructorInstance extends object> {
     };
 }
 export type TypeConstructor<ConstructorInstance extends object> = _Internal_TC_<ConstructorInstance>;
+export interface TypeConstructorBase {
+    new (...args: unknown[]): object;
+}
+export interface TypeRegistry {
+}
+export type InstanceOfTypeRegistry<K extends keyof TypeRegistry> = TypeRegistry[K] extends new (...args: unknown[]) => infer R ? R : never;
+export type LiteralKeysOf<T> = keyof T extends infer K ? K extends string ? string extends K ? never : K : never : never;
+export type ParentPath<K extends string> = K extends `${infer P}.${string}` ? P : never;
+export type ChildKeysOf<P extends string> = {
+    [K in keyof TypeRegistry]: K extends `${P}.${string}` ? K : never;
+}[keyof TypeRegistry];
+export type PathOfInstance<T extends object> = {
+    [K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: unknown[]) => infer R ? T extends R ? K : never : never;
+}[LiteralKeysOf<TypeRegistry>];
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
 export type hooksOpts<P = object, T = P> = {
     TypeName: string;
@@ -254,6 +268,7 @@ export interface UtilsCollection {
     merge<A extends object, B extends object>(a: A, b: B, ...args: unknown[]): InstanceResult<Merge<B, A>>;
     parse<T extends object>(self: T): Parsed<T>;
     parent<T extends object>(instance: T, path?: string): object | undefined;
+    parentTyped<P extends keyof TypeRegistry>(instance: InstanceOfTypeRegistry<ChildKeysOf<P & string>>, path: P): InstanceOfTypeRegistry<P> | undefined;
     toJSON<T extends object>(instance: T): string;
     [key: string]: CallableFunction;
 }
