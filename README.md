@@ -60,6 +60,8 @@ getProps(engineer);             // { __type__, __parent__, __args__, __timestamp
 
 The key inversion: `new` is called on the *parent instance* (`alice`), not on the class. Every `Employee` remembers which specific `Person` it came from. The prototype chain is a path; the path is the identity.
 
+> **Typed projects:** subtypes must never be `export`ed — they live on the parent constructor and on parent instances. Root constructors may be exported only when tactica has generated standalone instance types that carry the subtype chain, but `lookup('Person')` is the safer default and keeps consumers decoupled from the model file.
+
 ---
 
 ## The four data mistakes mnemonica fixes

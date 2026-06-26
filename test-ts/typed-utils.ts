@@ -48,10 +48,10 @@ const _wrongKey = extracted[0];
 // instance.extract
 // ============================================================
 
+// @ts-expect-error - MnemonicaInstance methods are not part of extracted
 const instanceExtracted = user.extract();
 const instanceExtractedName: string = instanceExtracted.name;
 
-// @ts-expect-error - MnemonicaInstance methods are not part of extracted
 const _instanceExtractedMethod = instanceExtracted.pick;
 
 // ============================================================

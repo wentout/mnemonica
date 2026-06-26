@@ -63,6 +63,24 @@ define('Parent.Child', function (this: Child, data: Data) {
 });
 ```
 
+## Export root constructors only when needed; never export subtypes
+
+Subtypes live on the parent constructor and on parent instances. Exporting a subtype splits the Trie and usually loses the parent part of the chain.
+
+```typescript
+// WRONG
+export const Admin = User.define('Admin', function (this: Admin, data: AdminData) {
+	Object.assign(this, data);
+});
+
+// RIGHT
+User.define('Admin', function (this: Admin, data: AdminData) {
+	Object.assign(this, data);
+});
+```
+
+Root constructors **may** be exported when tactica has generated standalone instance types that include the sub-constructor chain, so consumers can do `new user.Admin(...)`. Even then, `lookup('User')` is the safer default.
+
 ## Config Options
 
 | Option | Default | Description |

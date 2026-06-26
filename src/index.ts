@@ -79,14 +79,14 @@ function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolea
 }
 
 
+
 // Define function using TypeAbsorber interface with proper type casting
-export const define = function <
+export function define <
 	T extends object,
 	P extends object = object,
 	N extends Proto<P, T> = Proto<P, T>,
-
 	// here IDefinitorInstance is a CONSTRUCTOR !!!
-	R extends IDefinitorInstance<N> = IDefinitorInstance<N>
+	R extends IDefinitorInstance<N> = IDefinitorInstance<N>,
 >(
 	this: unknown,
 	TypeName?: string | CallableFunction | NewableFunction,
@@ -103,7 +103,7 @@ export const define = function <
 			config
 		) as unknown as R;
 	return defineResult;
-} as TypeAbsorber;
+}
 
 export function lookup<const K extends keyof TypeRegistry>(
 	this: unknown,
