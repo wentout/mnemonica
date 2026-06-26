@@ -53,7 +53,7 @@ console.log(esome);
 // TypeError: Cannot read properties of undefined (reading 'value')
 @Strict()
 class MyDecoratedClass {
-	// class MyDecoratedClass extends BaseClass {
+// Strict means the same as class MyDecoratedClass extends BaseClass {
 	field: number;
 	constructor () {
 		// // debugger;
@@ -188,8 +188,9 @@ class MidDecoratorBase {
 class MidDecoratorExt {
 	field = 111;
 	ext = 321;
-	constructor () {
-		console.log('im here: ', this.field);
+	constructor (someArg?: string, ...args: unknown[]) {
+		// debugger;
+		console.log('im here: ', this.field, someArg, ...args);
 	}
 }
 
@@ -218,7 +219,12 @@ class MidAddDecoratorAddExtSub {
 export const midDecoratorBase = new MidDecoratorBase;
 
 // debugger;
-export const midDecoratorExt = apply(midDecoratorBase, MidDecoratorExt);
+export const midDecoratorExt = apply(midDecoratorBase, MidDecoratorExt, [ 3, 2, 1 ]);
+
+// debugger;
+// @ts-expect-error sub constructor is undefined
+new midDecoratorBase.MidDecoratorExt(1, 2, 3);
+
 
 // debugger;
 export const midAddDecoratorBaseExt = apply(midDecoratorBase, MidAddDecoratorAddExt);
@@ -244,11 +250,43 @@ export const midAddDecoratorSubExt = apply(midAddDecoratorBaseExt, MidAddDecorat
 
 
 
+// *** testing strict with args ***
+
+debugger;
+@decorate()
+// @Strict()
+// class StrictDecoratedWithBaseClass {
+// extended class MUST have constructor, otherwise it is incompatible with @decorate, IDK
+class StrictDecoratedWithBaseClass extends BaseClass {
+	field: number;
+	// but eslint says useless constructor ... unfortunately
+	constructor () {
+		super ();
+		this.field = 555;
+	}
+};
+
+@decorate(StrictDecoratedWithBaseClass)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+class SDWBCSub {
+	arg  : unknown;
+	args : unknown[];
+	constructor (arg: unknown, ...args: unknown[]) {
+		this.arg = arg;
+		this.args = args;
+		console.log(arg, args);
+		debugger;
+	}
+}
 
 
+const sdwbcs = new StrictDecoratedWithBaseClass();
 
+// debugger;
+// @ts-expect-error constructor declaration is missing here, that is ok
+const sdwbcs_sub = new sdwbcs.SDWBCSub(1, 2, 3);
 
-// TODO: something very strange below, seems this wasn't me who wrote this
+console.log('sdwbcs_sub', sdwbcs_sub.arg, ...sdwbcs_sub.args);
 
 // Coverage test: manually call decorator with explicit undefined to test ?? operator
 const decoratorWithConfig = decorate(MidDecoratorBase, { blockErrors : true });
