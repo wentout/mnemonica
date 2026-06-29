@@ -92,6 +92,87 @@ const engineer = new alice.Employee({ role: 'Engineer' });  // alice.Employee is
 
 ---
 
+## Without augmentation — typed registry builders
+
+If you do not want to hand-write or generate a `TypeRegistry` augmentation, use
+the typed builder API. Both the exported `mnemonica` object and custom
+`TypesCollection` instances carry the registry as a generic type parameter that
+grows with each `.define()` call.
+
+```typescript
+import { mnemonica } from 'mnemonica';
+
+const App = mnemonica
+	.define('Person', function (this: Person, data: { name: string }) {
+		this.name = data.name;
+	})
+	// Subtypes are defined with a name relative to the parent constructor.
+	.define('Employee', function (this: Employee, data: { role: string }) {
+		this.role = data.role;
+	});
+
+const Person = App.lookup('Person'); // fully typed root constructor
+const alice  = new Person({ name: 'Alice' });
+
+// Subtypes are constructed from a parent instance. The builder types this
+// idiom, so `new person.Employee(...)` is fully typed without `TypeRegistry`
+// augmentation.
+const engineer = new alice.Employee({ role: 'Engineer' });
+```
+
+Custom collections work the same way:
+
+```typescript
+import { createTypesCollection } from 'mnemonica';
+
+const AppCollection = createTypesCollection()
+	.define('User', function (this: User, data: { name: string }) {
+		this.name = data.name;
+	})
+	.define('Admin', function (this: Admin, data: { role: string }) {
+		this.role = data.role;
+	});
+
+const User  = AppCollection.lookup('User');
+const user  = new User({ name: 'Ada' });
+const admin = new user.Admin({ role: 'root' });
+```
+
+You can also look up a root constructor and define a subtype on it directly:
+
+```typescript
+const User = AppCollection.lookup('User');
+
+User.define('Guest', function (this: Guest, data: { token: string }) {
+	this.token = data.token;
+});
+```
+
+A constructor's own `lookup()` is relative to its type path, so these two are
+equivalent:
+
+```typescript
+const LineItemA = AppCollection.lookup('Order.LineItem');
+const LineItemB = AppCollection.lookup('Order').lookup('LineItem');
+```
+
+The builder API is type-level only — runtime behavior is identical to the free
+`define()` function. The free `define()`/`lookup()` exports still rely on the
+`TypeRegistry` augmentation for their typed overload.
+
+> **Do not construct subtypes from `lookup()`.** `AppCollection.lookup('Admin')`
+> returns a constructor, but using `new` on it directly will fail at runtime
+> because mnemonica subtypes must be created from a parent instance. Always use
+> `new user.Admin(...)` after obtaining the root instance with
+> `AppCollection.lookup('User')`.
+>
+> Direct `new` on a constructor returned by `.define()` works for **root types**
+> only. For subtypes the parent instance is required. With `strictChain: true`
+> (the default) the parent must be the immediate type; with `strictChain: false`
+> ancestor instances further up the chain are also accepted.
+
+---
+
 ## With tactica — generated augmentation
 
 Install:

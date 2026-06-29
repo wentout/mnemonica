@@ -134,6 +134,58 @@ Runtime behavior is identical whether `TypeRegistry` is augmented or not; the on
 > on constructors that preserves the prototype chain) is designed but not
 > yet shipped.
 
+### Typed registry builders
+
+In addition to the module-level `define()`/`lookup()` and `TypeRegistry`
+augmentation, mnemonica now exposes typed registry holders that accumulate
+types into a generic map at compile time. This lets users get type-safe
+`.define()` chaining and `.lookup()` **without Tactica**.
+
+- `RegistryHolderBase<T, Parent>` provides the accumulating `.define()` method.
+- `RegistryHolder<T, Parent>` extends it with `.lookup()`.
+- `TypesCollection<T, Parent>` is the type returned by `createTypesCollection()`.
+- `MnemonicaModule<Registry>` is the type of the exported `mnemonica` object.
+
+Usage:
+
+```typescript
+import { mnemonica } from 'mnemonica';
+
+const App = mnemonica
+	.define('User', function (this: User, data: { name: string }) {
+		this.name = data.name;
+	})
+	// Names passed to a constructor's `.define()` are relative to that constructor.
+	.define('Admin', function (this: Admin, data: { role: string }) {
+		this.role = data.role;
+	});
+
+const User = App.lookup('User');
+const user = new User({ name: 'Ada' });
+const admin = new user.Admin({ role: 'root' });
+
+// You can also define a subtype on a root constructor obtained from lookup().
+User.define('Guest', function (this: Guest, data: { token: string }) {
+	this.token = data.token;
+});
+
+// A constructor's `lookup()` is relative to its type path.
+const AdminCtor = User.lookup('Admin'); // same as App.lookup('User.Admin')
+```
+
+The free `define()`/`lookup()` exports still rely on `TypeRegistry`
+augmentation. The builder API is the preferred path when Tactica is not used.
+
+> **Do not construct subtypes from `lookup()`.** `App.lookup('Admin')`
+> returns a constructor, but calling `new` on it directly will fail at runtime.
+> Subtypes must be created from a parent instance (`new user.Admin(...)`).
+> `App.lookup('Admin')` is only for introspection or other read-only use.
+>
+> Direct `new` on a constructor returned by `.define()` works for **root types**
+> only. For subtypes the parent instance is required. With `strictChain: true`
+> (the default) the parent must be the immediate type; with `strictChain: false`
+> ancestor instances further up the chain are also accepted.
+
 ### Type System Structure
 ```
 src/

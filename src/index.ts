@@ -29,7 +29,9 @@ export type {
 	InstanceOfTypeRegistry, LiteralKeysOf, ParentPath, PathOfInstance,
 	AllParentPrefixes, ParentPathOfInstance,
 	_Internal_TC_, Proto, ProtoFlat,
-	hooksOpts, hook, hooksTypes, TypesCollection
+	hooksOpts, hook, hooksTypes, TypesCollection,
+	RegistryHolderBase, RegistryHolder, TypeRegistryMap, GlobalRegistry,
+	TypeLookup, MnemonicaModule
 } from './types';
 
 /**

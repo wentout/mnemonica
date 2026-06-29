@@ -253,9 +253,124 @@ export type CollectionDef = Hookable & {
 };
 
 // Type lookup function type: may have augmentation by Tactica re-definition
-export interface TypeLookup extends CallableFunction {
-	(this: Map<string, unknown>, TypeNestedPath: string): TypeClass | undefined;
+// Global registry shape used as the default for TypeLookup. It combines any
+// augmented TypeRegistry entries with a broad string index signature so the
+// generic TypeLookup constraint is satisfied.
+export type GlobalRegistry = TypeRegistry & Record<string, TypeConstructorBase>;
+
+// Extract the instance type returned by a mnemonica-compatible constructor.
+// Falls back to `object` so generic helpers that require an object constraint
+// do not fail when the constructor shape is not yet narrowed.
+export type ExtractConstructorInstance<C> =
+	C extends { new (...args: unknown[]): infer I }
+		? I extends object ? I : object
+		: object;
+
+// Map dotted registry paths that extend `${Path}.${Child}` into child
+// constructor properties on the parent instance. This lets typed lookups
+// return a constructor whose instances carry their subtypes, e.g.
+// `new (App.lookup('User'))(...).Admin`.
+export type SubTypeConstructors<
+	Registry extends object,
+	Path extends string
+> = {
+	[K in keyof Registry as K extends `${Path}.${infer Child}` ? Child : never]:
+		LookupResult<Registry, K & string>;
+};
+
+// Reconstruct a constructor with a new instance type while preserving every
+// non-`prototype`, non-`lookup` property (`define`, hooks, etc.). `lookup` is
+// replaced separately so it can be scoped to the constructor's own type path.
+export type ReplaceConstructorInstance<
+	C,
+	NewInstance extends object
+> = C extends {
+	new (...args: infer A): unknown;
+	(...args: infer A2): unknown;
+	readonly prototype: unknown;
 }
+	? {
+		new (...args: A): NewInstance;
+		(this: NewInstance, ...args: A2): NewInstance;
+		readonly prototype: NewInstance & {
+			readonly constructor: ReplaceConstructorInstance<C, NewInstance>;
+		};
+	} & Omit<C, 'prototype' | 'lookup'>
+	: never;
+
+// Instance type produced by a typed lookup: the constructor's own instance
+// shape plus child-constructor properties for every registered subtype.
+// Kept as a named alias so hover tooltips show the base shape first instead of
+// expanding the whole registry.
+export type WithSubTypes<
+	Instance extends object,
+	Registry extends object,
+	Path extends string
+> = Instance & SubTypeConstructors<Registry, Path>;
+
+// Constructor returned by a typed lookup, with its instance type augmented by
+// the subtypes registered under that path. Kept as a named alias so the
+// recursive reference from `SubTypeConstructors` resolves cleanly.
+export type AugmentedConstructor<
+	Registry extends object,
+	Path extends keyof Registry & string
+> = ReplaceConstructorInstance<
+	Registry[Path],
+	WithSubTypes<ExtractConstructorInstance<Registry[Path]>, Registry, Path>
+>;
+
+// Result of a typed lookup: the augmented constructor plus a `lookup` method
+// scoped to the constructor's own type path for relative subtype lookups.
+export type LookupResult<
+	Registry extends object,
+	Path extends keyof Registry & string
+> = Registry[Path] extends TypeConstructorBase
+	? AugmentedConstructor<Registry, Path> & {
+		lookup: NestedTypeLookup<Registry, Path>;
+	}
+	: never;
+
+export interface TypeLookup<T extends object = GlobalRegistry> extends CallableFunction {
+	<const K extends keyof T & string>(this: unknown, TypeNestedPath: K): LookupResult<T, K>;
+	(this: unknown, TypeNestedPath: string): TypeClass | undefined;
+}
+
+// Relative keys of a registry under a given dotted path. For a root path (`''`)
+// this is all string keys; for a non-empty path it is the tail after `${Path}.`.
+export type RelativeKeys<
+	Registry extends object,
+	Path extends string
+> = Path extends ''
+	? keyof Registry & string
+	: (keyof Registry extends infer K
+		? K extends `${Path}.${infer Child}` ? Child : never
+		: never);
+
+// Full registry key that corresponds to a relative key `K` under `Path`.
+export type FullKey<
+	Registry extends object,
+	Path extends string,
+	K extends string
+> = Path extends '' ? K : Extract<keyof Registry & string, `${Path}.${K}`>;
+
+// Lookup function type for constructors and registry holders that know their
+// own dotted type path. Root holders use `Path = ''` and behave like the global
+// `TypeLookup`; child constructors use their own path for relative lookups.
+export type NestedTypeLookup<
+	Registry extends object,
+	Path extends string = ''
+> = (Path extends ''
+	? {
+		<const K extends keyof Registry & string>(this: unknown, TypeNestedPath: K): LookupResult<Registry, K>;
+	}
+	: {
+		<const K extends RelativeKeys<Registry, Path> & string>(
+			this: unknown,
+			TypeNestedPath: K
+		): LookupResult<Registry, Extract<keyof Registry & string, `${Path}.${K}`>>;
+	}) & {
+		(this: unknown, TypeNestedPath: string): TypeClass | undefined;
+	};
 
 // Specification for chained subtype creation with .then()
 export interface ThenSpec {
@@ -297,7 +412,12 @@ export interface InstanceCreatorContext {
  *
  * Result: child T gets all its own props, plus parent's non-overlapping props.
  */
-export type Proto<P extends object, T extends object> = T & Pick<P, Exclude<keyof P, keyof T>>;
+// When the parent contributes no properties, collapse to the child type so
+// hover tooltips stay readable.
+export type Proto<P extends object, T extends object> =
+	[Exclude<keyof P, keyof T>] extends [never]
+		? T
+		: T & Pick<P, Exclude<keyof P, keyof T>>;
 
 
 // export type ProtoFlat<
@@ -403,13 +523,75 @@ export type InstanceResult<
   N extends object,
 > = { [K in keyof N]: N[K] };
 
+// Lightweight constructor type stored inside a typed registry map.
+// It preserves the dotted `Path` so that `.define()` on a looked-up constructor
+// computes the correct child path, but it omits the full `GlobalRegistry`
+// generic to keep hover tooltips readable.
+export type StoredConstructor<
+	F extends object,
+	Path extends string = ''
+> = _Internal_TC_<F> & RegistryHolderBase<{}, F, Path>;
+
+// Registry holder base - provides the accumulating .define() method.
+// `Parent` tracks the instance type of the last defined constructor, so chained
+// subtypes get the correct merged `Proto<Parent, N>` instance type.
+// `Path` is the dotted type path of the holder (empty for root holders).
+export interface RegistryHolderBase<
+	T extends object = {},
+	Parent extends object = object,
+	Path extends string = ''
+> {
+	// Legacy overload: define(constructHandler, config?)
+	define<SubType extends object>(
+		this: RegistryHolderBase<T, Parent, Path>,
+		TypeOrTypeName: CallableFunction,
+		constructHandlerOrConfig?: IDEF<SubType> | object | boolean | CallableFunction,
+		configOrUndefined?: constructorOptions | CallableFunction | boolean
+	): IDefinitorInstance<SubType>;
+
+	// Modern overload: define(TypeName, constructHandler, config?)
+	define<
+		const Name extends string,
+		N extends object,
+		Args extends unknown[],
+		F extends Proto<Parent, N> = Proto<Parent, N>,
+		ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
+	>(
+		this: RegistryHolderBase<T, Parent, Path>,
+		TypeName: Name,
+		constructHandler?: IDEF<N, Args>,
+		config?: constructorOptions
+	): IDefinitorInstance<
+		F,
+		InstanceResult<F>,
+		T & Record<ChildPath, StoredConstructor<F, ChildPath>>,
+		ChildPath
+	>;
+}
+
+// Full registry holder - adds typed .lookup() for collections that are not
+// also constructors (createTypesCollection, the mnemonica module object).
+export interface RegistryHolder<
+	T extends object = {},
+	Parent extends object = object,
+	Path extends string = ''
+>
+	extends RegistryHolderBase<T, Parent, Path> {
+	lookup: NestedTypeLookup<T, Path>;
+}
+
 // Definitor instance - the constructor function returned by define
 // N = instance type (properties available on instances)
-// S = subtypes map
+// R = wrapped result instance type
+// Registry = typed registry map for lookup()
+// Path = dotted type path of this constructor (empty for root types)
 export interface IDefinitorInstance<
 	N extends object,
-	R extends InstanceResult<N> = InstanceResult<N>
-> {
+	R extends InstanceResult<N> = InstanceResult<N>,
+	Registry extends object = GlobalRegistry,
+	Path extends string = ''
+>
+	extends RegistryHolderBase<Registry, N, Path> {
 
 	TypeName: string;
 	prototype: N;
@@ -426,27 +608,12 @@ export interface IDefinitorInstance<
 	// the line below should make is a @decorate decorator working
 	(...args: unknown[]): IDefinitorInstance<R>;
 
+	lookup: TypeLookup<Registry>;
 
-	// Define method that combines parent N with new type T using Proto
-	define<
-		T extends object,
-
-		// this will be instance type for sub-type !!!
-		// F extends Flatten<Proto<N, T>>
-		F extends Proto<N, T>
-	>(
-		TypeOrTypeName: string | CallableFunction,
-		constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction,
-		configOrUndefined?: constructorOptions | CallableFunction | boolean
-	): IDefinitorInstance<F>;
-	
-	lookup: TypeLookup;
-	
 	registerHook(hookType: hooksTypes, cb: hook): void;
-	
-	
+
 	subtypes: SubtypesMap;
-	
+
 	// Internal properties accessed by tests
 	__type__?: TypeDef;
 	collection?: CollectionDef;
@@ -473,9 +640,12 @@ export interface TypeAbsorber extends CallableFunction {
 
 // TypesCollection interface for createTypesCollection
 // This represents the actual return type of createTypesCollection
-export interface TypesCollection extends Hookable {
-	define: TypeAbsorber;
-	lookup: TypeLookup;
+export interface TypesCollection<
+	T extends object = {},
+	Parent extends object = object,
+	Path extends string = ''
+>
+	extends RegistryHolder<T, Parent, Path>, Hookable {
 	subtypes: SubtypesMap;
 	[key: string]: unknown;
 }
@@ -489,10 +659,17 @@ export interface Hookable {
 }
 
 // createTypesCollection function type
-export type CreateTypesCollectionFunction = (config?: constructorOptions) => TypesCollection;
+export type CreateTypesCollectionFunction =
+	<T extends object = {}, Parent extends object = object>(
+		config?: constructorOptions
+	) => TypesCollection<T, Parent>;
 
 // Type class - base type constructor
 export type TypeClass = IDefinitorInstance<object>;
+
+// Generic registry map used by typed collections and the mnemonica builder.
+// Keys are dotted type paths; values are mnemonica-compatible constructors.
+export type TypeRegistryMap = Record<string, TypeConstructorBase>;
 
 // Mnemonica constructor — the constructor function returned by constructHandler()
 // Has SymbolConstructorName attached and is both newable and callable
@@ -525,14 +702,24 @@ export type TypeDescriptorInstance = {
 // Constructor type for decorate function
 export type Constructor<T = object> = new (...args: unknown[]) => T;
 
-// Decorated class type - includes call signature for decorator pattern
+// Name of a constructor as a string literal type.
+export type ConstructorName<T extends Constructor<object>> =
+	T extends { name: infer N } ? N extends string ? N : string : string;
+
+// Decorated class type - includes call signature for decorator pattern and
+// aligns with `IDefinitorInstance` so decorated classes expose the same
+// constructor/lookup surface as builder-created types. It still relies on the
+// global `TypeRegistry` for typed lookups because decorators cannot carry a
+// local accumulating registry across independent class declarations.
 export type DecoratedClass<T extends Constructor<object>> =
 	T &
+	Omit<
+		IDefinitorInstance<InstanceType<T>, InstanceType<T>, TypeRegistry, ConstructorName<T>>,
+		'define' | 'lookup'
+	> &
 	(<U extends Constructor<object>>(target: U) => DecoratedClass<U>) & {
 		define: TypeAbsorber;
-		registerHook(hookType: hooksTypes, cb: hook): void;
-		lookup: TypeLookup;
-		TypeName: string;
+		lookup: TypeLookup<TypeRegistry>;
 	};
 
 // Helper: merge parent entity (E) and child constructor instance (T) into a
@@ -595,14 +782,12 @@ export interface UtilsCollection {
 	[key: string]: CallableFunction;
 }
 
-// Main mnemonica module interface - represents the exported module object
-export interface MnemonicaModule {
-	// Core functions
-	define: TypeAbsorber;
-	lookup: {
-		(TypeNestedPath: string): TypeClass | undefined;
-		<const K extends keyof TypeRegistry>(TypeNestedPath: K): TypeRegistry[K];
-	};
+// Main mnemonica module interface - represents the exported module object.
+// The optional Registry generic lets the object act as a typed registry holder
+// when chaining .define() calls.
+export interface MnemonicaModule<Registry extends object = {}>
+	extends RegistryHolder<Registry, object> {
+	// Core functions not covered by RegistryHolder
 	apply: ApplyFunction;
 	call: CallFunction;
 	bind: BindFunction;
@@ -613,7 +798,7 @@ export interface MnemonicaModule {
 	registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
 
 	// Descriptors
-	defaultTypes: TypesCollection;
+	defaultTypes: TypesCollection<Registry>;
 
 	// Errors
 	BASE_MNEMONICA_ERROR: MnemonicaErrorConstructor;
