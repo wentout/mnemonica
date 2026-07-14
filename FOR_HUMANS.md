@@ -93,7 +93,7 @@ const engineer = new alice.Employee({ role: 'Engineer' });
 engineer.name;                  // 'Alice'   (inherited from alice)
 engineer.role;                  // 'Engineer'
 engineer instanceof Person;     // true
-engineer.parent();              // returns alice (the specific Person it came from)
+utils.parent(engineer);           // returns alice (the specific Person it came from)
 
 const story = getProps(engineer);
 // story.__type__       — the Employee type

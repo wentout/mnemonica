@@ -54,7 +54,7 @@ const engineer = new alice.Employee({ role: 'Engineer' });
 //                   ^^^^^ instance-level inheritance, not class-level
 
 engineer instanceof Person;     // true — path back to root
-engineer.parent();              // returns alice (literal __proto__)
+utils.parent(engineer);         // returns alice (literal __proto__)
 getProps(engineer);             // { __type__, __parent__, __args__, __timestamp__, ... }
 ```
 
@@ -253,9 +253,9 @@ function handle (req: { method: string; url: string }) {
     const page     = new route.PageData({ template: 'default' });
     const response = new page.ResponseData({ body: render(page) });
     return response;
-    // response.parent() === page
-    // response.parent().parent() === route
-    // response.parent().parent().parent() === request
+    // utils.parent(response, 'PageData')     === page
+    // utils.parent(response, 'RouteData')    === route
+    // utils.parent(response, 'RequestData')  === request
     // The full lineage is queryable at any point.
 }
 ```
