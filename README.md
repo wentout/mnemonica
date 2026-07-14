@@ -28,6 +28,19 @@ Mnemonica promotes the Trie from implementation detail to first-class data model
 
 Every instance carries its full history. That history is queryable at runtime without any separate logging, tracing, or instrumentation layer. The construction record *is the object*.
 
+### One runtime, two type-system paths
+
+Mnemonica has exactly one runtime behavior. Whether you write `define('Person', ...)` or `mnemonica.define('Person', ...)`, the same constructor is registered and the same prototype chain is built.
+
+TypeScript, however, cannot see the type graph created by runtime `define()` calls. To solve this, mnemonica offers two compile-time paths:
+
+1. **Builder mode** — chain `.define()` on the `mnemonica` module object or on `createTypesCollection()`. The returned object carries a **local type registry**, so `.lookup()` is typed without any global augmentation.
+2. **Augmented mode** — use the free `define()` / `lookup()` exports and augment the global `TypeRegistry` by hand or with `@mnemonica/tactica`.
+
+At runtime the two modes are identical. The only difference is where TypeScript looks up the types. The runtime is the source of truth; the type-system path is a projection chosen by the developer.
+
+See [`docs/typed-lookup.md`](./docs/typed-lookup.md) for the full comparison and examples.
+
 The design is **inspired by** Homotopy Type Theory. The Trie behaves monadically — `new instance.SubType()` threads construction context forward like bind. Parent plus constructor uniquely determines position in the Trie; there is no "equivalent but distinct." An instance is not a snapshot of state — it is a point on a constructible, replayable path. These are productive analogies that illuminate why the structure works, not claims of a formal HoTT embedding.
 
 You do not need HoTT to use mnemonica. The [primer](./docs/hott-primer.md) is there when you want the formal picture. If theory feels abstract before examples land, [The four data mistakes](#the-four-data-mistakes-mnemonica-fixes) is the right starting point.
