@@ -4,7 +4,10 @@
     { "pattern": "^https://coveralls.io/" },
     { "pattern": "^https://nodei.co/" },
     { "pattern": "^https://img.shields.io/" },
-    { "pattern": "^https://dev.to/" }
+    { "pattern": "^https://dev.to/" },
+    { "pattern": "^https://semver.org/" },
+    { "pattern": "^https://keepachangelog.com/" },
+    { "pattern": "^https://[^/]*\\.wikipedia\\.org/" }
   ],
   "httpHeaders": [
     {
