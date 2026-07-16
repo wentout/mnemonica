@@ -192,6 +192,96 @@ Once augmented, `lookup('User')` and `lookup('User.Admin')` resolve against `Typ
 
 ---
 
+## Which type system wins when both are present?
+
+Adding Tactica to a project that already uses the builder API does **not** replace the builder's local type system. The two systems are orthogonal and apply to different APIs.
+
+| Call you write | Type system used | Why |
+|---|---|---|
+| `const App = mnemonica.define(...)` | Builder registry | The returned object carries its own type map. |
+| `App.lookup('User')` | Builder registry | `lookup()` is a method on the builder object. |
+| `new user.Admin(...)` | Builder registry | Subtypes are resolved from the instance's inferred chain type. |
+| `define('User', ...)` free import | `TypeRegistry` augmentation | The free export has no local registry, so it relies on the global interface. |
+| `lookup('User')` free import | `TypeRegistry` augmentation | Same as above. |
+
+So if you keep using `mnemonica.define(...)` after installing Tactica, **the builder types stay in control**. Tactica only becomes relevant when you switch to the free `define` / `lookup` imports or use `@decorate()`.
+
+At runtime the results are identical. At compile time, TypeScript picks whichever type system matches the exact identifier you used. If the two systems disagree on the same path, the mismatch will surface only on the API that resolves against `TypeRegistry`.
+
+---
+
+## Why two type systems exist
+
+It feels like there should be one type system. In an ideal world, every `define()` call would add its type to the same registry, and `lookup()` would always be typed. TypeScript does not allow that.
+
+### The hard limitation
+
+TypeScript cannot extend a global interface from inside a function signature. This code is impossible in TypeScript:
+
+```typescript
+function define<N extends string, T>(name: N, handler: (this: T) => void) {
+    // There is no type-level statement that says:
+    // "Add N to the global TypeRegistry interface."
+    // The language simply does not have it.
+}
+```
+
+Interfaces can only be extended by explicit declarations:
+
+```typescript
+declare module 'mnemonica' {
+    interface TypeRegistry {
+        'User': TypeConstructor<UserShape>;
+    }
+}
+```
+
+Function bodies, return types, and generic parameters cannot produce declarations. That is why Tactica generates them: it is a build-time tool that pretends to be a programmer who wrote all the augmentation blocks by hand.
+
+### What the builder mode can and cannot do
+
+The builder mode solves the problem locally by carrying the registry in the returned object:
+
+```typescript
+const App = mnemonica.define('User', ...).define('Admin', ...);
+// App's type is roughly { lookup: { User: ..., Admin: ... } }
+```
+
+This works because the function's return type can be computed from the generic parameters. The registry is local, not global.
+
+But the builder mode cannot handle everything:
+
+- **Free `define()` calls** — a standalone `define('User', ...)` has no object to carry the registry.
+- **`@decorate()` classes** — decorators are independent declarations. They cannot chain on a shared object.
+- **Cross-file type references** — the builder registry is tied to the variable where the chain was built.
+
+### What the augmented mode can and cannot do
+
+The augmented mode uses the global `TypeRegistry` interface. It can handle:
+
+- Free `define()` and `lookup()` anywhere in the project.
+- `@decorate()` classes.
+- Cross-file references because the interface is globally visible.
+
+But it requires external tooling (Tactica) or hand-written augmentation. Without that, the interface is empty and free `lookup()` falls back to `TypeClass | undefined`.
+
+### Why not unify them?
+
+The two systems are a consequence of TypeScript's design, not mnemonica's. You cannot have one system that covers all three cases:
+
+1. Chained builder calls.
+2. Free function calls.
+3. Decorated classes.
+
+To cover all three, mnemonica exposes:
+
+- The builder API for case 1.
+- The augmented API for cases 2 and 3.
+
+The runtime is the same. The difference is only in how TypeScript discovers the types.
+
+---
+
 ## Summary
 
 - **No Tactica?** Use `mnemonica.define(...)` or `createTypesCollection()`, and use `.lookup()` on that object.
