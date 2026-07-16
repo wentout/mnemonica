@@ -12,7 +12,7 @@
 3. [How tactica Bridges the Gap](#3-how-tactica-bridges-the-gap)
 4. [Declaration Merging: The TypeScript Mechanism](#4-declaration-merging-the-typescript-mechanism)
 5. [tsconfig.json Setup](#5-tsconfigjson-setup)
-6. [How lookup Works](#6-how-lookuptyped-works)
+6. [How lookup Works](#6-how-lookup-works)
 7. [Why Direct Import Fails](#7-why-direct-import-fails)
 8. [The Epiphany: Zero-Cast Chaining](#8-the-epiphany-zero-cast-chaining)
 9. [Common Mistakes](#9-common-mistakes)

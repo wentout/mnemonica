@@ -134,6 +134,47 @@ Runtime behavior is identical whether `TypeRegistry` is augmented or not; the on
 > on constructors that preserves the prototype chain) is designed but not
 > yet shipped.
 
+### Typed registry builders
+
+Mnemonica has two type-system paths for the same runtime API:
+
+- **Builder mode** — chain `.define()` on the exported `mnemonica` object or on
+  a `createTypesCollection()` result. No `TypeRegistry` augmentation, no Tactica.
+- **Augmented mode** — use free `define()`/`lookup()` or `@decorate()`, and let
+  Tactica (or a hand-written file) populate the global `TypeRegistry`.
+
+Public types involved:
+
+- `TypesCollection<T, Parent, Path>` — type of `createTypesCollection()`.
+- `MnemonicaModule<Registry>` — type of the exported `mnemonica` object.
+- `IDefinitorInstance<N, R, Registry, Path>` — type of constructors returned by
+  `.define()`.
+
+Quick builder example:
+
+```typescript
+import { mnemonica } from 'mnemonica';
+
+const App = mnemonica
+	.define('User', function (this: User, data: { name: string }) {
+		this.name = data.name;
+	})
+	.define('Admin', function (this: Admin, data: { role: string }) {
+		this.role = data.role;
+	});
+
+const User = App.lookup('User');
+const user = new User({ name: 'Ada' });
+const admin = new user.Admin({ role: 'root' });
+```
+
+The free `define()`/`lookup()` exports still rely on `TypeRegistry`
+augmentation. The builder API is the preferred path when Tactica is not used.
+
+For the full guide — relative `.define()` names, relative `lookup()` on
+constructors, `strictChain` notes, and `@decorate` limitations — see
+[`docs/typed-lookup.md`](./docs/typed-lookup.md).
+
 ### Type System Structure
 ```
 src/

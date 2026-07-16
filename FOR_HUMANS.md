@@ -50,6 +50,15 @@ The key inversion: subtypes are instantiated *from parent instances*, not from c
 
 **Why it matters:** in any system where data transformation order matters — HTTP pipelines, ETL flows, AI agent chains — the construction history *is* the business logic. mnemonica makes that history first-class.
 
+### One runtime, two type-system paths
+
+Mnemonica has one runtime behavior, but TypeScript cannot see the type graph created by runtime `define()` calls. To solve this, there are two compile-time paths:
+
+1. **Builder mode** — chain `.define()` on the `mnemonica` object or on `createTypesCollection()`. The returned object carries a local type registry, so `.lookup()` is typed without any global augmentation.
+2. **Augmented mode** — use the free `define()` / `lookup()` exports and augment the global `TypeRegistry` by hand or with `@mnemonica/tactica`.
+
+At runtime these are identical. The only difference is where TypeScript looks up the types. See [`docs/typed-lookup.md`](./docs/typed-lookup.md) for details.
+
 ---
 
 Most software treats data as anonymous values that flow through functions. The values get passed around, transformed, returned — and somewhere along the way, you lose track of *where they came from*.
@@ -93,7 +102,7 @@ const engineer = new alice.Employee({ role: 'Engineer' });
 engineer.name;                  // 'Alice'   (inherited from alice)
 engineer.role;                  // 'Engineer'
 engineer instanceof Person;     // true
-engineer.parent();              // returns alice (the specific Person it came from)
+utils.parent(engineer);           // returns alice (the specific Person it came from)
 
 const story = getProps(engineer);
 // story.__type__       — the Employee type
@@ -111,7 +120,7 @@ The key inversion: `new` is called on the **parent instance** (`alice`), not on 
 - **Want a guided tour?** Continue reading — [Quick Start](#quick-start), [Core Concepts](#core-concepts).
 - **Looking for a specific function?** Jump to the [API Reference](#api-reference).
 - **Curious about the theory?** Read [`README.md`](./README.md) — the HoTT framing, the Trie observation, the pipeline pattern, the AI-agent angle.
-- **Want examples you can run?** See the [`examples/`](./examples/) directory and [Examples](#examples) below.
+- **Want examples you can run?** See the [Examples](#examples) section below.
 - **Going deeper on philosophy?** Read [`docs/purpose.md`](./docs/purpose.md).
 - **Background reading:** [Inheritance in JavaScript: Factory of Constructors with Prototype Chain](https://github.com/mythographica/stash/blob/master/inheritance.md) · [Architecture of Prototype Inheritance in JavaScript](https://dev.to/wentout/architecture-of-prototype-inheritance-in-javascript-ce6) · [Dead Simple type checker for JavaScript](https://dev.to/wentout/dead-simple-type-checker-for-javascript-4l40)
 
@@ -1165,9 +1174,8 @@ For complete documentation including integration patterns, error handling, and a
 
 ## Examples
 
-Runnable scripts in [`examples/`](examples/) demonstrate edge cases and
-integration patterns. See [examples/README.md](examples/README.md). Quick
-runners are wired up in `package.json`:
+Runnable scripts in the `test/` and `test-ts/` directories demonstrate edge
+cases and integration patterns. Quick runners are wired up in `package.json`:
 
 ```bash
 npm run example:async    # async constructor edge case

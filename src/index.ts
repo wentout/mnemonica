@@ -25,11 +25,25 @@ export const {
 } = TypesUtils;
 
 export type {
-	IDEF, TypeConstructor, TypeConstructorBase,
-	InstanceOfTypeRegistry, LiteralKeysOf, ParentPath, PathOfInstance,
-	AllParentPrefixes, ParentPathOfInstance,
-	_Internal_TC_, Proto, ProtoFlat,
-	hooksOpts, hook, hooksTypes, TypesCollection
+	IDEF,
+	TypeConstructor,
+	TypeConstructorBase,
+	Proto,
+	ProtoFlat,
+	constructorOptions,
+	hooksOpts,
+	hook,
+	hooksTypes,
+	IDefinitorInstance,
+	InstanceResult,
+	Merge,
+	Constructor,
+	DecoratedClass,
+	TypeClass,
+	TypeAbsorber,
+	TypesCollection,
+	TypeLookup,
+	MnemonicaModule,
 } from './types';
 
 /**
