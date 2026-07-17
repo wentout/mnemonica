@@ -30,9 +30,8 @@ Confident guesses produce code that compiles but corrupts the design.
 ---
 
 > **Note:** Framework-agnostic rules are also available in `.ai/`:
-> [`AGENTS.md`](./.ai/AGENTS.md), [`CODE.md`](./.ai/CODE.md),
-> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md),
-> [`async_init.md`](./.ai/async_init.md).
+> [`AGENTS.md`](./.ai/AGENTS.md),
+> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md).
 > These rules apply to all agent frameworks.
 
 ## What and why
@@ -50,10 +49,10 @@ Load the docs that match your change type. The wrong context produces broken cod
 | Any `src/` change | This file + [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) |
 | Involves `define()` / type graph | + [`.ai/rules-skill/define-patterns.md`](./.ai/rules-skill/define-patterns.md) |
 | Involves hooks | + [`.ai/rules-skill/hooks.md`](./.ai/rules-skill/hooks.md) |
-| Involves async constructors | + [`.ai/rules-skill/async-constructors.md`](./.ai/rules-skill/async-constructors.md) + [`.ai/async_init.md`](./.ai/async_init.md) |
+| Involves async constructors | + [`.ai/rules-skill/async-constructors.md`](./.ai/rules-skill/async-constructors.md) |
 | Involves TypeScript types | + [`.ai/rules-skill/type-system.md`](./.ai/rules-skill/type-system.md) |
-| Involves proxy internals | + [`.ai/rules-skill/proxy-architecture.md`](./.ai/rules-skill/proxy-architecture.md) |
-| Uses tactica / `lookup` | + [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) |
+| Involves proxy internals | + [`.ai/PROTOTYPE-CHAIN.md`](./.ai/PROTOTYPE-CHAIN.md) |
+| Uses tactica / `lookup` | + [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) |
 | Docs-only change | README section you're touching only |
 
 **This file + `.ai/ONBOARDING.md` are the always-required baseline for any `src/` edit.**
@@ -94,7 +93,7 @@ The core API is `define(TypeName, constructHandler, config?)` in `src/index.ts`.
 
 ### The `lookup()` Function
 
-For user-facing semantics, see [`README.md`](./README.md) and [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` starts empty, and `lookup()` uses overloads so augmented keys return the typed constructor while unaugmented keys fall back to `TypeClass | undefined`.
+For user-facing semantics, see [`README.md`](./README.md) and [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` starts empty, and `lookup()` uses overloads so augmented keys return the typed constructor while unaugmented keys fall back to `TypeClass | undefined`.
 
 ```typescript
 // In mnemonica core (src/index.ts)

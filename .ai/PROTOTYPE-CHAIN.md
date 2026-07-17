@@ -34,6 +34,27 @@ Every mnemonica type adds three levels to the chain:
 2. **`ModificatorType.prototype`** — the user-prototype layer. Holds methods and getters captured at `define()` time. It gets a fresh `constructor` property pointing to the per-construction `ModificatorType` function.
 3. **Memory layer** — a plain object whose `[[Prototype]]` is the parent instance. It is the `WeakMap` key for internal props and has a `constructor` getter returning `ModificatorType`.
 
+## Construction Pipeline (8 Stages)
+
+```
+define(TypeName, ctor)  →  new TypeDescriptor()  →  new TypeProxy()
+                                              │
+                                              ▼
+                                   new InstanceCreator(type, parent, args)
+                                              │
+                                              ▼
+                                   makeInstanceModificator(self)
+                                              │
+                                              ▼
+                                   ModificationConstructor.call(parent, ModificatorType, proto, _addProps)
+                                              │
+                                              ▼
+                                   user constructor runs (new ModificatorType(...args))
+                                              │
+                                              ▼
+                                   postProcessing() → invokePostHooks()
+```
+
 ## Files and functions involved
 
 - `src/api/types/compileNewModificatorFunctionBody.ts` builds the `ModificatorType`, the actual function or class used for `new`. For function constructors it preserves `new.target`; for class constructors it generates a class that extends the user class so `super(...)` works.

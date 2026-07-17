@@ -140,7 +140,7 @@ These are the two assumptions that most reliably produce incorrect code.
 - **`utils.parent(instance, 'TypeName')`** — walks to a named ancestor in O(depth), no manual counting
 - **`lookup(path)`** — resolves any type by path string with full TypeScript inference, against an augmented `TypeRegistry` (hand-written or `tactica`-generated — see [`docs/typed-lookup.md`](./docs/typed-lookup.md)). Paths may use dots, slashes, colons, or bracket notation, and may be single-segment names when the lookup is relative to a collection or type.
 
-For any traversal deeper than a single step, prefer `parent('TypeName')` or `lookup`. The manual chain form in examples is illustrative only. See [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) for the full `lookup` usage guide.
+For any traversal deeper than a single step, prefer `parent('TypeName')` or `lookup`. The manual chain form in examples is illustrative only. See [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) for the full `lookup` usage guide.
 
 **2. "`Person.define('Employee')` is `class Employee extends Person`."** It isn't. The difference is where `new` goes:
 
@@ -479,11 +479,11 @@ Everything below ships with this package.
 3. [`CONTRIBUTING.md`](./CONTRIBUTING.md) — local workflow, branching, release process
 4. [`docs/theory-of-operations.md`](./docs/theory-of-operations.md) — full construction pipeline from `define()` through `InstanceCreator` to instance return, with source file references for every stage
 5. [`.ai/PROTOTYPE-CHAIN.md`](./.ai/PROTOTYPE-CHAIN.md) — the exact shape of the prototype chain, what each layer holds, and how subtype lookup walks it
-6. [`.ai/CODE.md`](./.ai/CODE.md), [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific deeper rules
-6. [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) — deeper tactica integration patterns
-7. [`.ai/async_init.md`](./.ai/async_init.md) — async constructor patterns
-8. [`.ai/rules-skill/`](./.ai/rules-skill/) — granular rules for type system, hooks, code style, errors, testing
-9. [`.ai/rules/`](./.ai/rules/) — broader contributor rules
+6. [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific deeper rules
+7. [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) — deeper tactica integration patterns
+8. [`.ai/rules-skill/async-constructors.md`](./.ai/rules-skill/async-constructors.md) — async constructor patterns
+9. [`.ai/rules-skill/`](./.ai/rules-skill/) — granular rules for type system, hooks, code style, errors, testing
+10. [`.ai/rules/`](./.ai/rules/) — broader contributor rules
 
 The full TypeScript source is in [`src/`](./src/) (on GitHub; the npm package ships compiled output in `build/` and `module/`).
 

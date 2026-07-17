@@ -251,10 +251,10 @@ import { define, lookup } from 'mnemonica/module';
 | Any `src/` change | [`AGENTS.md`](./AGENTS.md) + [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) |
 | Involves `define()` / type graph | + [`.ai/rules-skill/define-patterns.md`](./.ai/rules-skill/define-patterns.md) |
 | Involves hooks | + [`.ai/rules-skill/hooks.md`](./.ai/rules-skill/hooks.md) |
-| Involves async constructors | + [`.ai/rules-skill/async-constructors.md`](./.ai/rules-skill/async-constructors.md) + [`.ai/async_init.md`](./.ai/async_init.md) |
+| Involves async constructors | + [`.ai/rules-skill/async-constructors.md`](./.ai/rules-skill/async-constructors.md) |
 | Involves TypeScript types | + [`.ai/rules-skill/type-system.md`](./.ai/rules-skill/type-system.md) |
-| Involves proxy internals | + [`.ai/rules-skill/proxy-architecture.md`](./.ai/rules-skill/proxy-architecture.md) |
-| Uses tactica / `lookup` | + [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) |
+| Involves proxy internals | + [`.ai/PROTOTYPE-CHAIN.md`](./.ai/PROTOTYPE-CHAIN.md) |
+| Uses tactica / `lookup` | + [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) |
 | Docs-only change | README section you're touching only |
 | Unfamiliar with the codebase | [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) first — one file, five minutes |
 

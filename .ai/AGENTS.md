@@ -23,14 +23,12 @@ inheritance graphs, making certain classes of bugs impossible by design.
 | File | Purpose |
 |------|---------|
 | [`AGENTS.md`](./AGENTS.md) | This file — main entry point and overview |
-| [`CODE.md`](./CODE.md) | Coding standards: style, TypeScript rules, testing |
 | [`ARCHITECT.md`](./ARCHITECT.md) | Design guidelines: patterns, planning, constraints |
 | [`DEBUG.md`](./DEBUG.md) | Debugging guidelines: commands, common issues, logging |
-| [`async_init.md`](./async_init.md) | Async class constructor support: wrapper pattern, `Symbol.hasInstance`, tests |
 | [`ask/AGENTS.md`](./ask/AGENTS.md) | Ask mode: explaining concepts, analyzing code |
 | [`orchestrator/AGENTS.md`](./orchestrator/AGENTS.md) | Orchestrator mode: multi-step task coordination |
 | [`rules/CODING.md`](./rules/CODING.md) | Extended coding rules: models vs controllers, raw* prefix, full file reading |
-| [`rules/REMINDERS.md`](./rules/REMINDERS.md) | Quick reference: type vs interface, spacing, before-task checklist |
+| [`rules/REMINDERS.md`](./rules/REMINDERS.md) | Quick reference pointers to canonical sources |
 | [`rules/CONTEXT-CONDENSING.md`](./rules/CONTEXT-CONDENSING.md) | Recovery protocol when context condenses |
 | [`task-templates/`](./task-templates/) | Reusable task templates |
 
@@ -44,10 +42,10 @@ Read [`ONBOARDING.md`](./ONBOARDING.md) — a single-file quickstart covering ev
 
 ### Before You Write Any Code
 
-1. Read [`CODE.md`](./CODE.md) — style rules, TypeScript rules, testing requirements.
+1. Read [`ONBOARDING.md`](./ONBOARDING.md) — style rules, TypeScript rules, testing requirements.
 2. Read [`ARCHITECT.md`](./ARCHITECT.md) — design patterns and constraints.
 3. If debugging: read [`DEBUG.md`](./DEBUG.md).
-4. If working with async constructors: read [`../docs/async-constructors.md`](../docs/async-constructors.md) — the `super()` return-value pattern and native async class wrapping.
+4. If working with async constructors: read [`rules-skill/async-constructors.md`](./rules-skill/async-constructors.md) — the `super()` return-value pattern and native async class wrapping.
 
 ### Build & Test Commands
 
@@ -117,7 +115,7 @@ Based on observed agent behavior:
 | Read source code third | Infers architecture from implementation |
 | Skip `AGENTS.md` unless told | Often misses build rules, style constraints |
 
-**If you are an agent reading this:** You likely arrived via `README.md` → `AGENTS.md` → `.ai/AGENTS.md`. Good path. Now read `ONBOARDING.md` for the condensed version, or `CODE.md` + `ARCHITECT.md` for full detail.
+**If you are an agent reading this:** You likely arrived via `README.md` → `AGENTS.md` → `.ai/AGENTS.md`. Good path. Now read `ONBOARDING.md` for the condensed version, or `ARCHITECT.md` + `DEBUG.md` for full detail.
 
 **If you are a human:** These docs are for AI agents. The human-facing docs live in `docs/`.
 

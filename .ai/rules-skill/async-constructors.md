@@ -204,3 +204,69 @@ try {
 | `await new AsyncSubType()` | ❌ | Fails `strictChain` — no parent instance |
 | Native `instanceof` through chain | ⚠️ | Follows mnemonica's graph, not native class hierarchy |
 | `super()` returning Promise | ✅ | Standard JS; mnemonica's wrapper preserves it |
+
+---
+
+## Symbol.hasInstance — Nominal Typing by Name
+
+Mnemonica replaces standard JS `instanceof` with **nominal typing** checked by `getTypeChecker` (`src/api/utils/index.ts:37`):
+
+```ts
+const getTypeChecker = (TypeName: string) => {
+	return (instance: object) => {
+		if (Reflect.getPrototypeOf(instance).constructor.name === 'Promise') {
+			return instance[SymbolConstructorName] === TypeName;
+		}
+		const constructors = collectConstructors(instance);
+		return constructors[TypeName] || false;
+	};
+};
+```
+
+`collectConstructors` (`src/utils/collectConstructors.ts`) walks the prototype chain upward, collecting `constructor.name` values into a lookup object like `{ AsyncInitParent: true, AsyncInitChild: true, Mnemonica: true, Object: true }`. It stops at `Mnemonica`.
+
+Three places define `Symbol.hasInstance`:
+
+1. **`TypeDescriptor.prototype`** (`src/api/types/index.ts:210`) — for `instanceof TypeName` where `TypeName` is what `define()` returned
+2. **`Mnemosyne.prototype`** (`src/api/types/Mnemosyne.ts:381`) — for `instanceof` checks on the instance itself
+3. **`makeSubTypeProxy`** (`src/api/types/Mnemosyne.ts:205`) — for subtype access like `parent.SubType()`
+
+### Impact on Pre-existing Class Hierarchies
+
+When passing a pre-existing class hierarchy (`class Extended extends Base`) to `define()`:
+
+- **Top-level** `define('PreExt', Extended)`: `PreExt.prototype === Extended.prototype`. Both `instanceof PreExt` and `instanceof Extended` work.
+- **Sub-type** `Root.define('Sub', Extended)`: mnemonica's subtype wiring inserts the parent type (`Root`) into the instance chain **before** `Extended.prototype`. Standard JS `instanceof Extended` returns **false**, but mnemonica's `instanceof Sub` and `instanceof Root` still work because `collectConstructors` finds their names.
+
+---
+
+## Test Suite
+
+Tests live in `test_async/index.js` and run via `npm run test:async_init`.
+
+### Acronyms
+
+- **WOReturn** = **W**ith**O**ut **Return** — Promise resolves to `undefined` instead of `this`
+- **NAR** = **N**o **A**wait **R**eturn** — `awaitReturn: false` disables the guard
+
+### Coverage Items
+
+1. **WOReturn guard for classes** — async class constructor returning Promise without `this` throws `WRONG_MODIFICATION_PATTERN`
+2. **NAR bypass** — `awaitReturn: false` allows the same without throwing
+3. **Field inheritance through mnemonica chain** — parent/child fields preserved across async constructors
+4. **Pre-existing class hierarchy at top-level** — `define('Type', ExtendedClass)` preserves fields and `instanceof` against original classes
+5. **Pre-existing class hierarchy as sub-type** — sub instance gets root fields + class hierarchy fields, but standard JS `instanceof` against original classes is broken (mnemonica `instanceof` still works)
+
+### Relevant Source Files
+
+- `src/api/types/compileNewModificatorFunctionBody.ts` — wrapper class creation
+- `src/api/utils/index.ts` — `getTypeChecker`
+- `src/utils/collectConstructors.ts` — prototype chain walker
+- `src/api/types/Mnemosyne.ts` — `Symbol.hasInstance` on instances and sub-type proxy
+- `src/api/types/index.ts` — `Symbol.hasInstance` on `TypeDescriptor.prototype`
+- `src/api/types/InstanceCreator.ts` — async routing via `makeAwaiter`
+
+### Related
+
+- [`test_async/index.js`](../../test_async/index.js) — test suite covering async initialization scenarios
+- [TC39 proposal-async-init issue #3](https://github.com/tc39/proposal-async-init/issues/3) — language-level discussion of the same problem

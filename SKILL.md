@@ -38,7 +38,7 @@ When the task involves adding or modifying a type definition:
 2. **Check TypeRegistry augmentation** (if using tactica)
    - Does `.tactica/types.ts` need updating?
    - Is `lookup('MyType')` properly typed?
-   - See [rules-skill/lookup-typed.md](.ai/rules-skill/lookup-typed.md)
+   - See [TACTICA-DEEP-DIVE.md](.ai/TACTICA-DEEP-DIVE.md)
 
 3. **Test both success and error paths**
    - Mocha test in `test/` for runtime behavior
@@ -76,11 +76,11 @@ Read individual rule files for detailed explanations and code examples:
 
 ### Patterns
 - [rules-skill/define-patterns.md](.ai/rules-skill/define-patterns.md) — `define()` usage, subtypes, config options
-- [rules-skill/lookup-typed.md](.ai/rules-skill/lookup-typed.md) — `TypeRegistry`, `lookup`, tactica integration
+- [TACTICA-DEEP-DIVE.md](.ai/TACTICA-DEEP-DIVE.md) — `TypeRegistry`, `lookup`, tactica integration
 - [rules-skill/async-constructors.md](.ai/rules-skill/async-constructors.md) — async constructors, `awaitReturn`, chaining
 
 ### Architecture
-- [rules-skill/proxy-architecture.md](.ai/rules-skill/proxy-architecture.md) — TypeProxy, InstanceCreator, Mnemosyne pipeline
+- [PROTOTYPE-CHAIN.md](.ai/PROTOTYPE-CHAIN.md) — TypeProxy, InstanceCreator, Mnemosyne pipeline, construction internals
 - [rules-skill/instance-methods.md](.ai/rules-skill/instance-methods.md) — `extract()`, `fork()`, `parent()`, internal props
 - [rules-skill/hooks.md](.ai/rules-skill/hooks.md) — `preCreation`, `postCreation`, `creationError`
 

@@ -82,6 +82,24 @@ return { target, name };
 - **No `any`** (`@typescript-eslint/no-explicit-any: error`) — use purpose-specific interfaces
 - **Never** use bare `Function`, `CallableFunction`, or `NewableFunction` — define purpose-specific interfaces
 
+### Error Handling
+
+```typescript
+import { constructError } from '../api/errors/index.js';
+
+const MyError = constructError('MY_ERROR', 'Error message');
+throw new MyError('additional info', stack);
+```
+
+### Configuration Files
+
+**Disallowed without explicit approval:**
+- Modifying `./tsconfig.json`
+- Modifying `./eslint.config.js`
+
+These configuration files define the project's strict standards. Any changes
+require user approval first.
+
 ---
 
 ## Architecture
@@ -157,12 +175,11 @@ Read [`../docs/async-constructors.md`](../docs/async-constructors.md) for the `s
 
 | Need | Read |
 |------|------|
-| Coding standards, type rules | [`CODE.md`](./CODE.md) |
 | Design patterns, constraints | [`ARCHITECT.md`](./ARCHITECT.md) |
 | Prototype chain internals | [`PROTOTYPE-CHAIN.md`](./PROTOTYPE-CHAIN.md) |
 | Debugging commands, issues | [`DEBUG.md`](./DEBUG.md) |
-| Async constructor deep dive | [`../docs/async-constructors.md`](../docs/async-constructors.md) |
-| tactica type-safe lookup | [`TACTICA-RULES.md`](./TACTICA-RULES.md) |
+| Async constructor deep dive | [`rules-skill/async-constructors.md`](./rules-skill/async-constructors.md) |
+| tactica type-safe lookup | [`TACTICA-DEEP-DIVE.md`](./TACTICA-DEEP-DIVE.md) |
 | Behavioral guidelines | [`rules-skill/contributing.md`](./rules-skill/contributing.md) |
 | Explaining code (ask mode) | [`ask/AGENTS.md`](./ask/AGENTS.md) |
 | Multi-step coordination | [`orchestrator/AGENTS.md`](./orchestrator/AGENTS.md) |
