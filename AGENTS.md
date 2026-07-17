@@ -10,17 +10,26 @@ project, start with [`README.md`](./README.md).
 
 **This is the highest-priority rule. It overrides everything else in this file.**
 
-You MUST pause and ask the user before proceeding if any of these is true:
+STOP and ask the user before proceeding when ANY of these is true:
 
-1. **An editing error occurred** — `Edit` failed, `Write` produced unexpected
-   results, or any tool returned an error.
+1. **An error occurred** — `Edit` failed, `Write` produced unexpected
+   results, or any tool returned an error. A successful retry does NOT
+   cancel this rule: report the error AND how you recovered.
 2. **You are uncertain** — about what change to make, how a function works,
    or what the user intended.
 3. **You are filling gaps with assumption** — "probably", "likely",
    "I think", "it should work" are signals to stop.
+4. **A tool or environment constraint conflicts with the user's stated
+   preference** — surface the conflict verbatim; never silently satisfy
+   the tool at the user's expense.
+5. **You are about to create or duplicate a file the user did not
+   explicitly request** — ask first. Never copy content when `mv`,
+   rename, or a reference suffices.
 
-When in doubt: STOP, ask a clear specific question, WAIT for the answer.
-Do not invent workarounds (no `sed`, no `python -c`, no console hacks).
+When in doubt: STOP, ask one clear specific question, WAIT for the answer.
+Do not invent workarounds (no `sed`, no `python -c`, no console hacks,
+no rewriting files to bypass a tool restriction).
+**Silent recovery is a violation, even when the outcome looks fine.**
 
 The reason this rule exists: wrong assumptions waste both your time and the
 user's. The library encodes non-obvious design intent (data-flow vs control-flow,
@@ -33,6 +42,12 @@ Confident guesses produce code that compiles but corrupts the design.
 > [`AGENTS.md`](./.ai/AGENTS.md),
 > [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md).
 > These rules apply to all agent frameworks.
+
+> **Document locations:** this repository is agent-tools-agnostic. Agent-facing
+> documents live in [`.ai/`](./.ai/); human-facing documents live in
+> [`docs/`](./docs/). Tool-specific directories (`.kilo/`, `.kilocode/`,
+> `.opencode/`, etc.) are for tool configuration only — never put project
+> documents (plans, rules, guides) there.
 
 ## What and why
 
