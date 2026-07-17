@@ -29,6 +29,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `test/instance-methods-helper.js` and `test-jest/instance-methods-helper.ts`
   showing the opt-in pattern for attaching legacy instance methods to a
   constructor prototype before `define()`.
+- `RegistryOf<T>` exported type — extracts the accumulated registry from a
+  builder-chain value (`IDefinitorInstance`, `TypesCollection`, or
+  `MnemonicaModule`), enabling the one-line bridge
+  `interface TypeRegistry extends RegistryOf<typeof App> {}` that makes free
+  `lookup()` typed without Tactica or hand-written augmentation.
+- Two-arg overloads `lookup(source, path)` and `define(source, name, handler)`
+  — the free functions now accept a builder/collection as explicit source and
+  infer the registry from it, so mixing free-function style with a builder
+  registry is typed instead of a silent fallback. Semantics follow the source
+  object: a collection source defines a root type, a constructor source a
+  subtype.
+- `LookupResult` re-exported from the package root (used by the two-arg
+  `lookup` overload's return type).
+
+### Fixed
+
+- Constructor `.lookup()` now resolves absolute registry paths from any
+  constructor, not only relative descendant paths. Resolution is
+  relative-first (the type's own subtypes), then falls back to the
+  collection root: `AdminType.lookup('UserType.AdminType')` and
+  `App.lookup('User')` on a chained builder result now work at runtime,
+  matching the `TypeLookup<Registry>` type contract and the examples in
+  `docs/typed-lookup.md`. Previously these returned `undefined` at runtime
+  while type-checking fine. On a name collision the relative (nearest)
+  subtype wins.
 
 ## [1.0.1] - 2026-05-22
 

@@ -35,10 +35,10 @@ When the task involves adding or modifying a type definition:
    - Constructor contract → `interface MyTypeConstructor { ... }`
    - See [rules-skill/type-system.md](.ai/rules-skill/type-system.md)
 
-2. **Check TypeRegistry augmentation** (if using tactica)
-   - Does `.tactica/types.ts` need updating?
-   - Is `lookup('MyType')` properly typed?
-   - See [TACTICA-DEEP-DIVE.md](.ai/TACTICA-DEEP-DIVE.md)
+2. **Check how `lookup()` is typed** (in order of preference)
+   - Builder mode (`mnemonica.define` / `createTypesCollection`)? Nothing to do — the registry is local.
+   - Free `lookup()` on a builder project? Use the one-line `RegistryOf` bridge — see [docs/typed-lookup.md](./docs/typed-lookup.md).
+   - Using tactica / `@decorate()`? Does `.tactica/types.ts` need updating? Is `lookup('MyType')` properly typed? See [TACTICA-DEEP-DIVE.md](.ai/TACTICA-DEEP-DIVE.md)
 
 3. **Test both success and error paths**
    - Mocha test in `test/` for runtime behavior

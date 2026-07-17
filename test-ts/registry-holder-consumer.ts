@@ -4,6 +4,7 @@
 // builder value across files. This file is compile-only.
 
 import { DefaultApp, UserShape, AdminShape } from './registry-holder';
+import { lookup } from '..';
 
 const UserCtor = DefaultApp.lookup('User');
 const user = new UserCtor({ name: 'Ada' });
@@ -13,6 +14,11 @@ const userName = user.name;
 // typed here as well.
 const admin = new user.Admin({ role: 'root' });
 const adminRole = admin.role;
+
+// Two-arg lookup(source, path) across the module boundary: the free lookup
+// infers the registry from the imported builder value.
+const AdminViaTwoArg = lookup(DefaultApp, 'User.Admin');
+const adminViaTwoArgRole = AdminViaTwoArg.prototype.role;
 
 // Relative lookup on a constructor imported from another file.
 const AdminCtor = UserCtor.lookup('Admin');
@@ -35,6 +41,7 @@ const makeAdmin = (data: { name: string; role: string }): AdminShape => {
 console.log(
 	userName,
 	adminRole,
+	adminViaTwoArgRole,
 	superAdminRole,
 	makeAdmin({ name: 'Bob', role: 'admin' })
 );

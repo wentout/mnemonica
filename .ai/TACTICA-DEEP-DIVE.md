@@ -3,6 +3,13 @@
 > **Project-agnostic reference.** This document applies to every project using mnemonica with tactica.
 > Read it when you are tempted to write `as unknown as` with mnemonica types.
 
+> **Do you need tactica at all?** For builder-mode projects (`mnemonica.define(...)`
+> or `createTypesCollection()`), the one-line `RegistryOf` bridge makes free
+> `lookup()` fully typed with no codegen — see
+> [`docs/typed-lookup.md`](../docs/typed-lookup.md). Tactica remains the answer
+> when you need `@decorate()` typed, or when a large codebase already uses free
+> `define()` calls throughout.
+
 ---
 
 ## Table of Contents

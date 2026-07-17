@@ -15,7 +15,11 @@ import type {
 	TypeAbsorber,
 	MnemonicaModule,
 	InstanceResult,
-	Merge
+	Merge,
+	TypeLookup,
+	LookupResult,
+	RegistryHolderBase,
+	StoredConstructor
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -43,6 +47,8 @@ export type {
 	TypeAbsorber,
 	TypesCollection,
 	TypeLookup,
+	LookupResult,
+	RegistryOf,
 	MnemonicaModule,
 } from './types';
 
@@ -96,6 +102,28 @@ function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolea
 
 // Define function using TypeAbsorber interface with proper type casting
 export function define <
+	Reg extends object,
+	Parent extends object,
+	Path extends string,
+	const Name extends string,
+	N extends object,
+	Args extends unknown[],
+	F extends Proto<Parent, N> = Proto<Parent, N>,
+	ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
+>(
+	// explicit-source form: define(source, name, handler, config?)
+	// mirrors RegistryHolderBase.define; semantics follow the source object
+	source: RegistryHolderBase<Reg, Parent, Path>,
+	TypeName: Name,
+	constructHandler?: IDEF<N, Args>,
+	config?: constructorOptions
+): IDefinitorInstance<
+	F,
+	InstanceResult<F>,
+	Reg & Record<ChildPath, StoredConstructor<F, ChildPath>>,
+	ChildPath
+>;
+export function define <
 	T extends object,
 	P extends object = object,
 	N extends Proto<P, T> = Proto<P, T>,
@@ -107,14 +135,44 @@ export function define <
 	// Allow both strict IDEF and more flexible function signatures
 	constructHandler?: IDEF<T> | CallableFunction | NewableFunction | object | boolean,
 	config?: constructorOptions,
+): R;
+export function define <
+	T extends object,
+	P extends object = object,
+	N extends Proto<P, T> = Proto<P, T>,
+	R extends IDefinitorInstance<N> = IDefinitorInstance<N>,
+>(
+	this: unknown,
+	TypeNameOrSource?: string | CallableFunction | NewableFunction | RegistryHolderBase<object, object, string>,
+	constructHandlerOrName?: IDEF<T> | CallableFunction | NewableFunction | object | boolean | string,
+	configOrHandler?: constructorOptions | IDEF<T> | CallableFunction | NewableFunction | object | boolean,
+	config?: constructorOptions,
 ): R {
+
+	// explicit-source form: define(source, name, handler, config?)
+	// the source may be a TypesCollection (object) or a TypeProxy (function),
+	// so detection is: has a callable .define AND the next arg is a string name
+	const mayBeSource = (
+		(typeof TypeNameOrSource === 'object' && TypeNameOrSource !== null) ||
+		typeof TypeNameOrSource === 'function'
+	) && typeof (TypeNameOrSource as { define?: unknown }).define === 'function';
+	if (mayBeSource && typeof constructHandlerOrName === 'string') {
+		const source = TypeNameOrSource as unknown as { define: TypeAbsorber };
+		const sourceDefineResult = source.define(
+			constructHandlerOrName,
+			configOrHandler as IDEF<T>,
+			config
+		) as unknown as R;
+		return sourceDefineResult;
+	}
+
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
 	const defineResult = (types as { define: TypeAbsorber })
 		.define(
-			TypeName as string,
-			constructHandler as IDEF<T>,
-			config
+			TypeNameOrSource as string,
+			constructHandlerOrName as IDEF<T>,
+			configOrHandler as constructorOptions
 		) as unknown as R;
 	return defineResult;
 }
@@ -123,14 +181,33 @@ export function lookup<const K extends keyof TypeRegistry>(
 	this: unknown,
 	TypeNestedPath: K
 ): TypeRegistry[K];
+export function lookup<Reg extends object, const K extends keyof Reg & string>(
+	// explicit-source form: lookup(source, path)
+	// resolves against the registry carried by a builder/collection value
+	source: { lookup: TypeLookup<Reg> },
+	TypeNestedPath: K
+): LookupResult<Reg, K>;
 export function lookup(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 export function lookup(
-	this: unknown,
+	source: { lookup: (path: string) => TypeClass | undefined },
 	TypeNestedPath: string
-): TypeClass | undefined {
+): TypeClass | undefined;
+export function lookup(
+	this: unknown,
+	arg1: unknown,
+	arg2?: unknown
+): unknown {
+
+	// explicit-source form: lookup(source, path)
+	if (typeof arg1 !== 'string' && typeof arg2 === 'string') {
+		const source = arg1 as { lookup: (path: string) => TypeClass | undefined };
+		const sourceResult = source.lookup(arg2);
+		return sourceResult;
+	}
+
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
-	const lookupResult = (types as { lookup: (path: string) => TypeClass | undefined }).lookup(TypeNestedPath);
+	const lookupResult = (types as { lookup: (path: string) => TypeClass | undefined }).lookup(arg1 as string);
 	return lookupResult;
 }
 

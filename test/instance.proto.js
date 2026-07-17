@@ -217,6 +217,24 @@ const tests = ( opts ) => {
 			assert.notEqual( getProps(overMore).__args__, getProps(evenMore).__args__ );
 			const lookedUp = OverMore.lookup( 'EvenMore' );
 			expect( evenMoreFork ).instanceof( lookedUp );
+
+			// root fallback: absolute registry paths resolve from any constructor
+			const lookedUpAbsolute = OverMore.lookup( 'UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore.EvenMore' );
+			expect( evenMoreFork ).instanceof( lookedUpAbsolute );
+			assert.equal( lookedUpAbsolute, lookedUp );
+
+			const lookedUpRoot = OverMore.lookup( 'UserTypeConstructor' );
+			assert.equal( lookedUpRoot, UserTypeConstructor );
+
+			const lookedUpMissing = OverMore.lookup( 'UserTypeConstructor.NoSuchType' );
+			assert.equal( lookedUpMissing, undefined );
+
+			// explicit-source form: lookup(source, path) resolves the same as the method
+			const lookedUpTwoArg = lookup( OverMore, 'EvenMore' );
+			assert.equal( lookedUpTwoArg, lookedUp );
+			const lookedUpTwoArgMissing = lookup( OverMore, 'NoSuchType' );
+			assert.equal( lookedUpTwoArgMissing, undefined );
+
 			assert.deepEqual( Object.keys( evenMore ), Object.keys( evenMoreFork ) );
 			
 		} );
@@ -227,6 +245,19 @@ const tests = ( opts ) => {
 			// Test lookup with non-existent nested path - should return undefined
 			const result = _lookup.call(mockSubtypes, 'NonExistent.Nested.Type');
 			expect(result).equal(undefined);
+		} );
+
+		it( 'define(source, name, handler) registers like the method form', () => {
+			const coll = mnemonica.createTypesCollection();
+			const Root = mnemonica.define( coll, 'TwoArgRoot', function ( data ) { this.val = data.val; } );
+			const rootInstance = new Root( { val : 42 } );
+			assert.equal( rootInstance.val, 42 );
+			const Sub = mnemonica.define( Root, 'TwoArgSub', function () { this.extra = 'x'; } );
+			const subInstance = new rootInstance.TwoArgSub();
+			assert.equal( subInstance.val, 42 );
+			assert.equal( subInstance.extra, 'x' );
+			assert.instanceOf( subInstance, Root );
+			assert.instanceOf( subInstance, Sub );
 		} );
 
 		it( 'lookup coverage should work with custom this context', () => {

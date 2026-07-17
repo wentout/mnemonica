@@ -150,12 +150,18 @@ Runtime behavior is identical whether `TypeRegistry` is augmented or not; the on
 
 ### Typed registry builders
 
-Mnemonica has two type-system paths for the same runtime API:
+Mnemonica has three compile-time paths for the same runtime API:
 
-- **Builder mode** — chain `.define()` on the exported `mnemonica` object or on
+- **Builder mode** (default) — chain `.define()` on the exported `mnemonica` object or on
   a `createTypesCollection()` result. No `TypeRegistry` augmentation, no Tactica.
+- **Registry bridge** — one hand-written line merges a builder's local registry
+  into the global `TypeRegistry`:
+  `interface TypeRegistry extends RegistryOf<typeof App> {}`
+  (inside `declare module 'mnemonica'`, in a dedicated `registry.ts`).
 - **Augmented mode** — use free `define()`/`lookup()` or `@decorate()`, and let
-  Tactica (or a hand-written file) populate the global `TypeRegistry`.
+  Tactica (or a hand-written file) populate the global `TypeRegistry`. Required
+  for `@decorate()`: TypeScript never applies a class decorator's return type
+  to the class binding, so no local-registry mechanism can type decorators.
 
 Public types involved:
 
@@ -163,6 +169,8 @@ Public types involved:
 - `MnemonicaModule<Registry>` — type of the exported `mnemonica` object.
 - `IDefinitorInstance<N, R, Registry, Path>` — type of constructors returned by
   `.define()`.
+- `RegistryOf<T>` — extracts the accumulated `Registry` from any of the above,
+  for the bridge.
 
 Quick builder example:
 
@@ -182,11 +190,19 @@ const user = new User({ name: 'Ada' });
 const admin = new user.Admin({ role: 'root' });
 ```
 
-The free `define()`/`lookup()` exports still rely on `TypeRegistry`
-augmentation. The builder API is the preferred path when Tactica is not used.
+Constructor `.lookup()` resolves **relative first, then root fallback**: the
+type's own subtypes are searched first, then the same string is resolved as an
+absolute path from the collection root. Exported builder values carry the
+registry across files (registry threading).
 
-For the full guide — relative `.define()` names, relative `lookup()` on
-constructors, `strictChain` notes, and `@decorate` limitations — see
+The free `define()`/`lookup()` exports resolve against the global
+`TypeRegistry` (augmentation or bridge). When you hold a builder value, prefer
+the explicit-source forms — `lookup(source, path)` and
+`define(source, name, handler)` — which infer the registry from the source
+instead of falling back to the global interface.
+
+For the full guide — multi-file threading, the bridge, two-arg overloads,
+`strictChain` notes, and `@decorate` limitations — see
 [`docs/typed-lookup.md`](./docs/typed-lookup.md).
 
 ### Type System Structure

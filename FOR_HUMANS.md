@@ -57,7 +57,7 @@ Mnemonica has one runtime behavior, but TypeScript cannot see the type graph cre
 1. **Builder mode** — chain `.define()` on the `mnemonica` object or on `createTypesCollection()`. The returned object carries a local type registry, so `.lookup()` is typed without any global augmentation.
 2. **Augmented mode** — use the free `define()` / `lookup()` exports and augment the global `TypeRegistry` by hand or with `@mnemonica/tactica`.
 
-At runtime these are identical. The only difference is where TypeScript looks up the types. See [`docs/typed-lookup.md`](./docs/typed-lookup.md) for details.
+There is also a one-line middle path: the `RegistryOf` bridge merges a builder's local registry into the global `TypeRegistry` by hand. At runtime all paths are identical — the only difference is where TypeScript looks up the types. See [`docs/typed-lookup.md`](./docs/typed-lookup.md) for details.
 
 ---
 

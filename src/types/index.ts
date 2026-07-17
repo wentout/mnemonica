@@ -335,6 +335,20 @@ export interface TypeLookup<T extends object = GlobalRegistry> extends CallableF
 	(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 }
 
+// Extracts the accumulated registry map from a builder-chain value
+// (IDefinitorInstance, TypesCollection, or MnemonicaModule). Enables the
+// one-line bridge that merges a builder's local registry into the global
+// TypeRegistry without Tactica:
+//
+//   declare module 'mnemonica' {
+//   	interface TypeRegistry extends RegistryOf<typeof App> {}
+//   }
+export type RegistryOf<T> =
+	T extends IDefinitorInstance<object, InstanceResult<object>, infer Registry, string> ? Registry
+	: T extends TypesCollection<infer Registry, object, string> ? Registry
+	: T extends MnemonicaModule<infer Registry> ? Registry
+	: never;
+
 // Relative keys of a registry under a given dotted path. For a root path (`''`)
 // this is all string keys; for a non-empty path it is the tail after `${Path}.`.
 export type RelativeKeys<
@@ -697,6 +711,7 @@ export type TypeDescriptorInstance = {
 	lookup: TypeDescriptorLookup;
 	subtypes: Map<string, object>;
 	TypeName: string;
+	collection: CollectionDef;
 };
 
 // Constructor type for decorate function

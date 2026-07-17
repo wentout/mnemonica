@@ -132,6 +132,7 @@ export interface TypeLookup<T extends object = GlobalRegistry> extends CallableF
     <const K extends keyof T & string>(this: unknown, TypeNestedPath: K): LookupResult<T, K>;
     (this: unknown, TypeNestedPath: string): TypeClass | undefined;
 }
+export type RegistryOf<T> = T extends IDefinitorInstance<object, InstanceResult<object>, infer Registry, string> ? Registry : T extends TypesCollection<infer Registry, object, string> ? Registry : T extends MnemonicaModule<infer Registry> ? Registry : never;
 export type RelativeKeys<Registry extends object, Path extends string> = Path extends '' ? keyof Registry & string : (keyof Registry extends infer K ? K extends `${Path}.${infer Child}` ? Child : never : never);
 export type FullKey<Registry extends object, Path extends string, K extends string> = Path extends '' ? K : Extract<keyof Registry & string, `${Path}.${K}`>;
 export type NestedTypeLookup<Registry extends object, Path extends string = ''> = (Path extends '' ? {
@@ -280,6 +281,7 @@ export type TypeDescriptorInstance = {
     lookup: TypeDescriptorLookup;
     subtypes: Map<string, object>;
     TypeName: string;
+    collection: CollectionDef;
 };
 export type Constructor<T = object> = new (...args: unknown[]) => T;
 export type ConstructorName<T extends Constructor<object>> = T extends {

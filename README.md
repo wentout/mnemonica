@@ -32,12 +32,13 @@ Every instance carries its full history. That history is queryable at runtime wi
 
 Mnemonica has exactly one runtime behavior. Whether you write `define('Person', ...)` or `mnemonica.define('Person', ...)`, the same constructor is registered and the same prototype chain is built.
 
-TypeScript, however, cannot see the type graph created by runtime `define()` calls. To solve this, mnemonica offers two compile-time paths:
+TypeScript, however, cannot see the type graph created by runtime `define()` calls. To solve this, mnemonica offers three compile-time paths, which compose:
 
-1. **Builder mode** — chain `.define()` on the `mnemonica` module object or on `createTypesCollection()`. The returned object carries a **local type registry**, so `.lookup()` is typed without any global augmentation.
-2. **Augmented mode** — use the free `define()` / `lookup()` exports and augment the global `TypeRegistry` by hand or with `@mnemonica/tactica`.
+1. **Builder mode** (default) — chain `.define()` on the `mnemonica` module object or on `createTypesCollection()`. The returned object carries a **local type registry**, so `.lookup()` is typed without any global augmentation. No tooling required; exported builder values carry the registry across files.
+2. **Registry bridge** — merge the builder's local registry into the global `TypeRegistry` with one hand-written line: `interface TypeRegistry extends RegistryOf<typeof App> {}`. Now the free `lookup()` is typed too, with no codegen and nothing to keep in sync.
+3. **Augmented mode** — use the free `define()` / `lookup()` exports and `@decorate()`, with the global `TypeRegistry` populated by `@mnemonica/tactica` (or written by hand). Required for `@decorate()`, which neither of the other paths can type.
 
-At runtime the two modes are identical. The only difference is where TypeScript looks up the types. The runtime is the source of truth; the type-system path is a projection chosen by the developer.
+At runtime all paths are identical. The only difference is where TypeScript looks up the types. The runtime is the source of truth; the type-system path is a projection chosen by the developer.
 
 See [`docs/typed-lookup.md`](./docs/typed-lookup.md) for the full comparison and examples.
 
