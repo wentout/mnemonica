@@ -16,11 +16,11 @@ Context condenses when:
 1. **STOP** - Do not continue implementing
 2. **Re-read AGENTS.md files:**
    - `AGENTS.md` in workspace root (if exists)
-   - `.ai/rules/CODING.md`
+   - `.ai/rules-coding.md`
 3. **Check specific sections:**
    - "CRITICAL: Type vs Interface vs Instance" (lines 244-279)
    - "Lessons Learned from Recent Refactoring" (lines 99-191)
-4. **Re-read REMINDERS.md** in `.ai/rules/`
+4. **Re-read** `.ai/rules-reminders.md`
 5. **Review recent code** - Look at the last few files you edited to confirm patterns
 6. **Resume** only after context is refreshed
 

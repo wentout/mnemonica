@@ -158,14 +158,13 @@ npx jest test-jest/types.ts --verbose --no-coverage
 
 1. [ ] Check TypeScript compilation: `npm run build`
 2. [ ] Check build output **at the beginning** for errors/warnings (not just tail)
-3. [ ] Run Mocha tests: `npm run test:mocha`
-4. [ ] Run Jest tests: `npm run test:jest`
-5. [ ] Check test coverage: `npm run test:cov`
-6. [ ] Verify indentation (tabs not spaces)
-7. [ ] Check for bare `Function` / `CallableFunction` / `NewableFunction` types
-8. [ ] Verify symbol usage is correct
-9. [ ] Check proxy handler return types
-10. [ ] Verify return statements use intermediate variables
+3. [ ] Run Mocha tests: `npm run test:cov`
+4. [ ] Run Jest tests: `npm run test:jest:cov`
+5. [ ] Verify code style (see [`rules-code-style.md`](./rules-code-style.md))
+6. [ ] Check for bare `Function` / `CallableFunction` / `NewableFunction` types
+7. [ ] Verify symbol usage is correct
+8. [ ] Check proxy handler return types
+9. [ ] Verify return statements use intermediate variables
 
 ---
 

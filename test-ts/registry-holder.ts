@@ -7,6 +7,13 @@ import {
 	mnemonica,
 	createTypesCollection,
 	defaultTypes,
+	define,
+	lookup,
+	apply,
+} from '..';
+
+import type {
+	RegistryOf,
 } from '..';
 
 // --- Shape definitions (exported for cross-file registry usage) ---
@@ -188,10 +195,12 @@ const CityFromState = StateFromCountry.lookup('City');
 const DistrictFromCity = CityFromState.lookup('District');
 const DistrictFromFull = GeoApp.lookup('Country.State.City.District');
 
-const stateFromRelative = new StateFromCountry({ stateCode: 'NY' });
-const cityFromRelative = new CityFromState({ cityName: 'NYC' });
-const districtFromRelative = new DistrictFromCity({ districtName: 'Midtown' });
-const districtFromFull = new DistrictFromFull({ districtName: 'Uptown' });
+// NOTE: subtypes are constructed from a parent INSTANCE, so a looked-up
+// subtype constructor must be applied to its parent, not invoked with `new`.
+const stateFromRelative = apply(country, StateFromCountry, [{ stateCode: 'NY' }]);
+const cityFromRelative = apply(stateFromRelative, CityFromState, [{ cityName: 'NYC' }]);
+const districtFromRelative = apply(cityFromRelative, DistrictFromCity, [{ districtName: 'Midtown' }]);
+const districtFromFull = apply(cityFromRelative, DistrictFromFull, [{ districtName: 'Uptown' }]);
 
 console.log(
 	userName,
@@ -209,4 +218,66 @@ console.log(
 	cityFromRelative.cityName,
 	districtFromRelative.districtName,
 	districtFromFull.districtName
+);
+
+// --- RegistryOf bridge (proof) ---
+// One hand-written interface merges the builder's local registry into a
+// global-style lookup — no Tactica, no drift: rename a type in the chain
+// above and this interface follows automatically.
+
+interface BridgedRegistry extends RegistryOf<typeof DefaultApp> {}
+
+// After `interface TypeRegistry extends RegistryOf<typeof App> {}` inside
+// `declare module 'mnemonica'`, the free `lookup()` itself becomes typed.
+// This local wrapper demonstrates the same mechanics without touching the
+// global interface used by other test files.
+const bridgedLookup = <K extends keyof BridgedRegistry>(path: K): BridgedRegistry[K] => {
+	const bridgedResult = lookup(path) as unknown as BridgedRegistry[K];
+	return bridgedResult;
+};
+
+const BridgedUser = bridgedLookup('User');
+const bridgedUser = new BridgedUser({ name: 'Bridge' });
+const bridgedUserName: string = bridgedUser.name;
+
+const BridgedSuperAdmin = bridgedLookup('User.Admin.SuperAdmin');
+const bridgedSuperLevel: number = BridgedSuperAdmin.prototype.level;
+
+// @ts-expect-error — unknown paths are rejected by the bridged registry
+bridgedLookup('User.Nope');
+
+// --- Two-arg lookup(source, path) (proof) ---
+// The free lookup resolves against the registry carried by the source value,
+// so mixing free functions with a builder registry is typed, not a silent
+// fallback to `TypeClass | undefined`.
+
+const AdminViaTwoArg = lookup(DefaultApp, 'User.Admin');
+const adminViaTwoArgRole: string = AdminViaTwoArg.prototype.role;
+
+// @ts-expect-error — the resolved constructor is precise, not TypeClass | undefined
+const adminViaTwoArgNope: unknown = AdminViaTwoArg.prototype.nonexistentProp;
+
+// --- Two-arg define(source, name, handler) (proof) ---
+// Semantics follow the source object: a collection source defines a root
+// type, a constructor source defines a subtype — exactly like the method.
+
+const Fresh = createTypesCollection();
+const Widget = define(Fresh, 'Widget', function (this: { w: number }, data: { w: number }) {
+	this.w = data.w;
+});
+const widget = new Widget({ w: 1 });
+const widgetW: number = widget.w;
+
+const WidgetPart = define(Widget, 'Part', function (this: { w: number; p: string }, data: { p: string }) {
+	this.p = data.p;
+});
+const WidgetPartViaLookup = lookup(WidgetPart, 'Widget.Part');
+const widgetPartP: string = WidgetPartViaLookup.prototype.p;
+
+console.log(
+	bridgedUserName,
+	bridgedSuperLevel,
+	adminViaTwoArgRole,
+	widgetW,
+	widgetPartP
 );

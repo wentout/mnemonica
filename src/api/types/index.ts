@@ -212,11 +212,21 @@ TypeDescriptor.prototype.lookup = function (
 	this: TypeDescriptorInstance,
 	TypeNestedPath: string
 ) {
-	const result = lookup.call(
-this.subtypes as TypesMap,
-TypeNestedPath
+	// relative first: resolve among this type's own subtypes,
+	// e.g. AdminType.lookup('SubType') or 'SubType.DeepSubType'
+	const relativeResult = lookup.call(
+		this.subtypes as TypesMap,
+		TypeNestedPath
 	);
-	return result;
+	if (relativeResult) {
+		return relativeResult;
+	}
+	// root fallback: resolve absolute registry paths from the
+	// collection, e.g. AdminType.lookup('UserType.AdminType'),
+	// which is what the TypeLookup<Registry> type contract promises
+	const collection = this.collection as CollectionDef;
+	const rootResult = collection.lookup(TypeNestedPath);
+	return rootResult;
 };
 
 odp(

@@ -3,6 +3,13 @@
 > **Project-agnostic reference.** This document applies to every project using mnemonica with tactica.
 > Read it when you are tempted to write `as unknown as` with mnemonica types.
 
+> **Do you need tactica at all?** For builder-mode projects (`mnemonica.define(...)`
+> or `createTypesCollection()`), the one-line `RegistryOf` bridge makes free
+> `lookup()` fully typed with no codegen — see
+> [`docs/typed-lookup.md`](../docs/typed-lookup.md). Tactica remains the answer
+> when you need `@decorate()` typed, or when a large codebase already uses free
+> `define()` calls throughout.
+
 ---
 
 ## Table of Contents
@@ -210,7 +217,18 @@ declare module 'mnemonica' {
 
 After this augmentation, `TypeRegistry` contains the `'RequestData'` key. Any code that imports from `'mnemonica'` sees the augmented `TypeRegistry`.
 
-### 4.4 Why an Empty `TypeRegistry`?
+### 4.4 Unaugmented vs Augmented TypeRegistry
+
+| Feature | Unaugmented `TypeRegistry` | Augmented `TypeRegistry` |
+|---------|---------------------------|--------------------------|
+| Constructor retrieval | `lookup('Name')` returns `TypeClass \| undefined` | `lookup('Name')` returns typed constructor |
+| Type safety | Runtime only | Compile-time + runtime |
+| Registry default | Empty interface | Per-key constructor signatures |
+| Instance properties | `any` / `unknown` | Fully typed |
+
+Two ways to augment: hand-written `.d.ts` (small projects, learning) or `@mnemonica/tactica` (auto-generated, recommended for non-trivial projects).
+
+### 4.5 Why an Empty `TypeRegistry`?
 
 The base `TypeRegistry` is intentionally empty:
 
@@ -456,6 +474,31 @@ const pageData = new routeData.PageData({ header: {...}, content: '' });
 ---
 
 ## 9. Common Mistakes
+
+Quick reference before the details:
+
+| Situation | Wrong | Right |
+|---|---|---|
+| Get a constructor | `import { T } from './collections/T.js'` | `const T = lookup('T')` |
+| Create instance | `new T({ ... }) as unknown as TT` | `new T({ ... })` |
+| Chain to child | `new (instance as any).Child({ ... })` | `new instance.Child({ ... })` |
+| Type not found | Add `as any` | Augment `TypeRegistry` (manually or run `tactica`) |
+
+### 9.0 When to Insist on What
+
+When asked to work with a mnemonica project:
+
+1. **Check whether `TypeRegistry` is augmented somewhere.** Look for:
+   - A `.tactica/` directory with `registry.ts` (tactica-generated), OR
+   - A `.d.ts` or `.ts` file containing `declare module 'mnemonica' { interface TypeRegistry { ... } }` (hand-written)
+
+   If neither exists, ask the user before writing code: do they want tactica set up, or to hand-augment?
+
+2. **If `.tactica/` exists, check `tsconfig.json` includes it.** If missing, add `.tactica/**/*.ts` to `include`.
+
+3. **Check that `lookup` is being used.** Direct imports from collection files + casts are the smell that augmentation is missing or unused.
+
+4. **Never accept `as unknown as` as a solution.** It is a symptom of the augmentation being missing, not a fix.
 
 ### 9.1 "I'll just cast it"
 

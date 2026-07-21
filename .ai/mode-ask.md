@@ -42,7 +42,7 @@ Creates type constructors with special inheritance capabilities:
 
 ### 4. Symbol System
 
-See [`../AGENTS.md`](../AGENTS.md) for the complete symbol reference table.
+See [`AGENTS.md`](./AGENTS.md) for the complete symbol reference table.
 
 ## Code Analysis Guidelines
 

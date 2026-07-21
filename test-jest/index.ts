@@ -1323,6 +1323,41 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					expect(wp?.__type__).toEqual(UserWithoutPassword.__type__);
 				});
 
+				it('should resolve absolute registry paths from any constructor (root fallback)', () => {
+					const emFull = mnemonica.lookup('UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore.EvenMore');
+					const emFromDeep = MoreOverTypeDef.lookup('UserTypeConstructor.WithoutPassword.WithAdditionalSign.MoreOver.OverMore.EvenMore');
+					expect(emFromDeep?.__type__).toEqual(emFull?.__type__);
+					const rootFromDeep = MoreOverTypeDef.lookup('UserTypeConstructor');
+					expect(rootFromDeep).toBeDefined();
+					const missingFromDeep = MoreOverTypeDef.lookup('UserTypeConstructor.NoSuchType');
+					expect(missingFromDeep).toBeUndefined();
+				});
+
+				it('should resolve two-arg lookup(source, path) same as the method form', () => {
+					const emMethod = MoreOverTypeDef.lookup('OverMore.EvenMore');
+					const emTwoArg = lookup(MoreOverTypeDef, 'OverMore.EvenMore');
+					expect(emTwoArg).toBe(emMethod);
+					const missing = lookup(MoreOverTypeDef, 'NoSuchType');
+					expect(missing).toBeUndefined();
+				});
+
+				it('should register types via two-arg define(source, name, handler)', () => {
+					const coll = createTypesCollection();
+					const Root = define(coll, 'JestTwoArgRoot', function (this: { val: number }, data: { val: number }) {
+						this.val = data.val;
+					});
+					const rootInstance = new Root({ val: 7 });
+					expect(rootInstance.val).toBe(7);
+					const Sub = define(Root, 'JestTwoArgSub', function (this: { val: number; extra: string }) {
+						this.extra = 'x';
+					});
+					const subInstance = apply(rootInstance, Sub, []);
+					expect(subInstance.val).toBe(7);
+					expect(subInstance.extra).toBe('x');
+					const SubCtor = lookup(Sub, 'JestTwoArgRoot.JestTwoArgSub');
+					expect(SubCtor).toBeDefined();
+				});
+
 				it('should work with custom this context', () => {
 					const customCollection = {
 						lookup: (path: string) => {

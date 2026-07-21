@@ -121,4 +121,4 @@ argument. Callers should never need an explicit `<T>` cast for ordinary operatio
 
 The full reference — helper types (`Extracted`, `Merge`, `InstanceResult`,
 `Parsed`, `SiblingAccessor`), every utility signature, and the type-level
-explanation of `utils.merge` — lives in [`docs/UTILS.md`](../../docs/UTILS.md).
+explanation of `utils.merge` — lives in [`docs/UTILS.md`](../docs/UTILS.md).

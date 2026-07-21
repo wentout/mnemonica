@@ -23,12 +23,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `merge(a, b, ...args)` now uses `fork(a).call(b, ...args)` internally.
 - `InstanceResult<N>` returns the plain merged fields without the
   `MnemonicaInstance` layer.
+- Documentation purged of the legacy `__proto__` accessor in favor of
+  `Object.getPrototypeOf()` explanations; the two security-related mentions
+  remain, explicitly framed as "the legacy `__proto__` accessor".
+- `@decorate()` documentation consolidated into `docs/decorate.md`; it is no
+  longer presented as a default style in `FOR_HUMANS.md` (it requires Tactica
+  or hand-written augmentation).
+- `.ai/` flattened to a single level (`rules-*.md`, `mode-*.md`);
+  `.ai/task-templates/` merged into `.ai/rules-contributing.md`.
+- Documentation split by audience: `docs/` is for *using* the library,
+  `.ai/` is for *contributing to the core*. Accordingly,
+  `docs/theory-of-operations.md` and `docs/performance-vs-security.md` moved to
+  `.ai/`, and `.ai/TACTICA-DEEP-DIVE.md` moved to
+  `docs/tactica-deep-dive.md`.
 
 ### Added
 
 - `test/instance-methods-helper.js` and `test-jest/instance-methods-helper.ts`
   showing the opt-in pattern for attaching legacy instance methods to a
   constructor prototype before `define()`.
+- `RegistryOf<T>` exported type — extracts the accumulated registry from a
+  builder-chain value (`IDefinitorInstance`, `TypesCollection`, or
+  `MnemonicaModule`), enabling the one-line bridge
+  `interface TypeRegistry extends RegistryOf<typeof App> {}` that makes free
+  `lookup()` typed without Tactica or hand-written augmentation.
+- Two-arg overloads `lookup(source, path)` and `define(source, name, handler)`
+  — the free functions now accept a builder/collection as explicit source and
+  infer the registry from it, so mixing free-function style with a builder
+  registry is typed instead of a silent fallback. Semantics follow the source
+  object: a collection source defines a root type, a constructor source a
+  subtype.
+- `LookupResult` re-exported from the package root (used by the two-arg
+  `lookup` overload's return type).
+
+### Fixed
+
+- Constructor `.lookup()` now resolves absolute registry paths from any
+  constructor, not only relative descendant paths. Resolution is
+  relative-first (the type's own subtypes), then falls back to the
+  collection root: `AdminType.lookup('UserType.AdminType')` and
+  `App.lookup('User')` on a chained builder result now work at runtime,
+  matching the `TypeLookup<Registry>` type contract and the examples in
+  `docs/typed-lookup.md`. Previously these returned `undefined` at runtime
+  while type-checking fine. On a name collision the relative (nearest)
+  subtype wins.
 
 ## [1.0.1] - 2026-05-22
 

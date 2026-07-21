@@ -14,7 +14,7 @@ metadata:
 
 For the type-level details of the corresponding standalone utilities
 (`utils.extract`, `utils.pick`, `utils.parent`, `utils.fork`, `utils.clone`,
-`utils.sibling`, `utils.exception`), see [`docs/UTILS.md`](../../docs/UTILS.md).
+`utils.sibling`, `utils.exception`), see [`docs/UTILS.md`](../docs/UTILS.md).
 
 ## Standalone Utilities (Default)
 

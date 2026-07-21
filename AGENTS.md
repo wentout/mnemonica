@@ -10,17 +10,26 @@ project, start with [`README.md`](./README.md).
 
 **This is the highest-priority rule. It overrides everything else in this file.**
 
-You MUST pause and ask the user before proceeding if any of these is true:
+STOP and ask the user before proceeding when ANY of these is true:
 
-1. **An editing error occurred** — `Edit` failed, `Write` produced unexpected
-   results, or any tool returned an error.
+1. **An error occurred** — `Edit` failed, `Write` produced unexpected
+   results, or any tool returned an error. A successful retry does NOT
+   cancel this rule: report the error AND how you recovered.
 2. **You are uncertain** — about what change to make, how a function works,
    or what the user intended.
 3. **You are filling gaps with assumption** — "probably", "likely",
    "I think", "it should work" are signals to stop.
+4. **A tool or environment constraint conflicts with the user's stated
+   preference** — surface the conflict verbatim; never silently satisfy
+   the tool at the user's expense.
+5. **You are about to create or duplicate a file the user did not
+   explicitly request** — ask first. Never copy content when `mv`,
+   rename, or a reference suffices.
 
-When in doubt: STOP, ask a clear specific question, WAIT for the answer.
-Do not invent workarounds (no `sed`, no `python -c`, no console hacks).
+When in doubt: STOP, ask one clear specific question, WAIT for the answer.
+Do not invent workarounds (no `sed`, no `python -c`, no console hacks,
+no rewriting files to bypass a tool restriction).
+**Silent recovery is a violation, even when the outcome looks fine.**
 
 The reason this rule exists: wrong assumptions waste both your time and the
 user's. The library encodes non-obvious design intent (data-flow vs control-flow,
@@ -30,10 +39,16 @@ Confident guesses produce code that compiles but corrupts the design.
 ---
 
 > **Note:** Framework-agnostic rules are also available in `.ai/`:
-> [`AGENTS.md`](./.ai/AGENTS.md), [`CODE.md`](./.ai/CODE.md),
-> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md),
-> [`async_init.md`](./.ai/async_init.md).
+> [`AGENTS.md`](./.ai/AGENTS.md),
+> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md).
 > These rules apply to all agent frameworks.
+
+> **Document locations:** this repository is agent-tools-agnostic. Documents
+> about *contributing to the core* live in [`.ai/`](./.ai/); documents about
+> *using the library* (for humans and agents alike) live in
+> [`docs/`](./docs/). Tool-specific directories (`.kilo/`, `.kilocode/`,
+> `.opencode/`, etc.) are for tool configuration only — never put project
+> documents (plans, rules, guides) there.
 
 ## What and why
 
@@ -48,26 +63,26 @@ Load the docs that match your change type. The wrong context produces broken cod
 | Change type | Read before starting |
 |---|---|
 | Any `src/` change | This file + [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) |
-| Involves `define()` / type graph | + [`.ai/rules-skill/define-patterns.md`](./.ai/rules-skill/define-patterns.md) |
-| Involves hooks | + [`.ai/rules-skill/hooks.md`](./.ai/rules-skill/hooks.md) |
-| Involves async constructors | + [`.ai/rules-skill/async-constructors.md`](./.ai/rules-skill/async-constructors.md) + [`.ai/async_init.md`](./.ai/async_init.md) |
-| Involves TypeScript types | + [`.ai/rules-skill/type-system.md`](./.ai/rules-skill/type-system.md) |
-| Involves proxy internals | + [`.ai/rules-skill/proxy-architecture.md`](./.ai/rules-skill/proxy-architecture.md) |
-| Uses tactica / `lookup` | + [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) |
+| Involves `define()` / type graph | + [`.ai/rules-define-patterns.md`](./.ai/rules-define-patterns.md) |
+| Involves hooks | + [`.ai/rules-hooks.md`](./.ai/rules-hooks.md) |
+| Involves async constructors | + [`.ai/rules-async-constructors.md`](./.ai/rules-async-constructors.md) |
+| Involves TypeScript types | + [`.ai/rules-type-system.md`](./.ai/rules-type-system.md) |
+| Involves proxy internals | + [`.ai/PROTOTYPE-CHAIN.md`](./.ai/PROTOTYPE-CHAIN.md) |
+| Uses tactica / `lookup` | + [`docs/tactica-deep-dive.md`](./docs/tactica-deep-dive.md) |
 | Docs-only change | README section you're touching only |
 
 **This file + `.ai/ONBOARDING.md` are the always-required baseline for any `src/` edit.**
 
 ### Framework-specific rules
 
-Mode-specific files in `.ai/rules/`:
-- [`.ai/rules/CODING.md`](./.ai/rules/CODING.md) — universal coding rules
-- [`.ai/rules/REMINDERS.md`](./.ai/rules/REMINDERS.md) — type vs interface, spacing reminders
-- [`.ai/rules/CONTEXT-CONDENSING.md`](./.ai/rules/CONTEXT-CONDENSING.md) — context recovery protocol
+Mode-specific files in `.ai/`:
+- [`.ai/rules-coding.md`](./.ai/rules-coding.md) — universal coding rules
+- [`.ai/rules-reminders.md`](./.ai/rules-reminders.md) — type vs interface, spacing reminders
+- [`.ai/rules-context-condensing.md`](./.ai/rules-context-condensing.md) — context recovery protocol
 
 ## Build/Test Commands
 
-See [`.ai/rules-skill/testing.md`](./.ai/rules-skill/testing.md) for the full command reference, dual-framework details, and coverage requirements. Summary:
+See [`.ai/rules-testing.md`](./.ai/rules-testing.md) for the full command reference, dual-framework details, and coverage requirements. Summary:
 
 ```bash
 npm run build          # full build with linting
@@ -82,7 +97,7 @@ npm run watch          # watch mode
 
 ## Code Style (Project-Specific)
 
-See [`.ai/rules-skill/code-style.md`](./.ai/rules-skill/code-style.md) for the full style reference. Key rules: tabs only, space before function parens, colons aligned in object literals, `strict: true`, **no `any`** (`no-explicit-any: error`).
+See [`.ai/rules-code-style.md`](./.ai/rules-code-style.md) for the full style reference. Key rules: tabs only, space before function parens, colons aligned in object literals, `strict: true`, **no `any`** (`no-explicit-any: error`).
 
 ## Architecture Patterns
 
@@ -94,7 +109,7 @@ The core API is `define(TypeName, constructHandler, config?)` in `src/index.ts`.
 
 ### The `lookup()` Function
 
-For user-facing semantics, see [`README.md`](./README.md) and [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` starts empty, and `lookup()` uses overloads so augmented keys return the typed constructor while unaugmented keys fall back to `TypeClass | undefined`.
+For user-facing semantics, see [`README.md`](./README.md) and [`docs/tactica-deep-dive.md`](./docs/tactica-deep-dive.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` starts empty, and `lookup()` uses overloads so augmented keys return the typed constructor while unaugmented keys fall back to `TypeClass | undefined`.
 
 ```typescript
 // In mnemonica core (src/index.ts)
@@ -136,12 +151,18 @@ Runtime behavior is identical whether `TypeRegistry` is augmented or not; the on
 
 ### Typed registry builders
 
-Mnemonica has two type-system paths for the same runtime API:
+Mnemonica has three compile-time paths for the same runtime API:
 
-- **Builder mode** — chain `.define()` on the exported `mnemonica` object or on
+- **Builder mode** (default) — chain `.define()` on the exported `mnemonica` object or on
   a `createTypesCollection()` result. No `TypeRegistry` augmentation, no Tactica.
+- **Registry bridge** — one hand-written line merges a builder's local registry
+  into the global `TypeRegistry`:
+  `interface TypeRegistry extends RegistryOf<typeof App> {}`
+  (inside `declare module 'mnemonica'`, in a dedicated `registry.ts`).
 - **Augmented mode** — use free `define()`/`lookup()` or `@decorate()`, and let
-  Tactica (or a hand-written file) populate the global `TypeRegistry`.
+  Tactica (or a hand-written file) populate the global `TypeRegistry`. Required
+  for `@decorate()`: TypeScript never applies a class decorator's return type
+  to the class binding, so no local-registry mechanism can type decorators.
 
 Public types involved:
 
@@ -149,6 +170,8 @@ Public types involved:
 - `MnemonicaModule<Registry>` — type of the exported `mnemonica` object.
 - `IDefinitorInstance<N, R, Registry, Path>` — type of constructors returned by
   `.define()`.
+- `RegistryOf<T>` — extracts the accumulated `Registry` from any of the above,
+  for the bridge.
 
 Quick builder example:
 
@@ -168,11 +191,19 @@ const user = new User({ name: 'Ada' });
 const admin = new user.Admin({ role: 'root' });
 ```
 
-The free `define()`/`lookup()` exports still rely on `TypeRegistry`
-augmentation. The builder API is the preferred path when Tactica is not used.
+Constructor `.lookup()` resolves **relative first, then root fallback**: the
+type's own subtypes are searched first, then the same string is resolved as an
+absolute path from the collection root. Exported builder values carry the
+registry across files (registry threading).
 
-For the full guide — relative `.define()` names, relative `lookup()` on
-constructors, `strictChain` notes, and `@decorate` limitations — see
+The free `define()`/`lookup()` exports resolve against the global
+`TypeRegistry` (augmentation or bridge). When you hold a builder value, prefer
+the explicit-source forms — `lookup(source, path)` and
+`define(source, name, handler)` — which infer the registry from the source
+instead of falling back to the global interface.
+
+For the full guide — multi-file threading, the bridge, two-arg overloads,
+`strictChain` notes, and `@decorate` limitations — see
 [`docs/typed-lookup.md`](./docs/typed-lookup.md).
 
 ### Type System Structure
@@ -257,7 +288,7 @@ This applies to **all** `return` statements where the expression is anything oth
 
 ## TypeScript Type Rules
 
-**Never use bare `Function`, `CallableFunction`, or `NewableFunction` as types** — always define a purpose-specific interface that extends them. See [`.ai/rules-skill/code-style.md`](./.ai/rules-skill/code-style.md) for examples and allowed exceptions.
+**Never use bare `Function`, `CallableFunction`, or `NewableFunction` as types** — always define a purpose-specific interface that extends them. See [`.ai/rules-code-style.md`](./.ai/rules-code-style.md) for examples and allowed exceptions.
 
 ## Preserving Design Comments and Memory Notes
 
@@ -275,7 +306,7 @@ If a comment becomes technically inaccurate after a change, update it rather tha
 
 ## Testing Requirements
 
-See [`.ai/rules-skill/testing.md`](./.ai/rules-skill/testing.md) for full coverage requirements and patterns. 100% required on both Mocha and Jest. Must run `npm run test:cov` before completing any task.
+See [`.ai/rules-testing.md`](./.ai/rules-testing.md) for full coverage requirements and patterns. 100% required on both Mocha and Jest. Must run `npm run test:cov` before completing any task.
 
 ## Common Patterns
 

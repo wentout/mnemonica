@@ -6,21 +6,38 @@
 
 You MUST pause BEFORE proceeding and ask the user for clarification if ANY of the following is true:
 
-1. **Editing errors** — `apply_diff` fails, `write_to_file` produces unexpected results, or any tool returns an error.
+1. **Errors** — `apply_diff` fails, `write_to_file` produces unexpected results, or any tool returns an error. A successful retry does NOT cancel this rule: report the error AND how you recovered.
 2. **Uncertainty** — you are not 100% certain about what change to make, how a function works, or what the user intended.
 3. **Assumptions** — you find yourself filling in gaps with "probably", "likely", "I think", or "it should work".
+4. **Conflicting constraints** — a tool or environment constraint conflicts with the user's stated preference. Surface the conflict verbatim; never silently satisfy the tool at the user's expense.
+5. **Unrequested file creation or duplication** — you are about to create or duplicate a file the user did not explicitly request. Ask first. Never copy content when `mv`, rename, or a reference suffices.
 
 ## What To Do
 
 - STOP immediately.
-- Do NOT proceed with workarounds (no `sed`, no `python -c`, no console hacks).
+- Do NOT proceed with workarounds (no `sed`, no `python -c`, no console hacks, no rewriting files to bypass a tool restriction).
 - Do NOT make assumptions.
 - ASK the user a clear, specific question.
 - WAIT for their answer before continuing.
+- **Silent recovery is a violation, even when the outcome looks fine.**
 
 ## Why This Matters
 
 You work with a Computer Science Enthusiast. You are their clever and knowledgeable Assistant, developed across many spheres. Wrong assumptions waste both your time and theirs. When in doubt — ASK.
+
+---
+
+# Files: Move, Don't Rewrite
+
+Never create a file whose content substantially duplicates an existing file.
+Two copies of the same document will drift apart.
+
+- To relocate a file: use `mv` (or rename) — never rewrite the full content
+  into a new path and leave the original behind.
+- To share content: reference or link to the canonical file.
+- If a tool rejects the original path (permission error, workspace boundary):
+  STOP and ask the user (Rule #1, clause 4). Do not work around the tool
+  by duplicating the file elsewhere.
 
 ---
 

@@ -1,13 +1,20 @@
-import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, IDefinitorInstance, Constructor, DecoratedClass, TypeClass, MnemonicaModule, InstanceResult, Merge } from './types';
+import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, IDefinitorInstance, Constructor, DecoratedClass, TypeClass, MnemonicaModule, InstanceResult, Merge, TypeLookup, LookupResult, RegistryHolderBase, StoredConstructor } from './types';
 export declare const isClass: (fn: import("./api/types/compileNewModificatorFunctionBody").ConstructHandler) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => import("./api/utils/index").parentSub | null;
-export type { IDEF, TypeConstructor, TypeConstructorBase, Proto, ProtoFlat, constructorOptions, hooksOpts, hook, hooksTypes, IDefinitorInstance, InstanceResult, Merge, Constructor, DecoratedClass, TypeClass, TypeAbsorber, TypesCollection, TypeLookup, MnemonicaModule, } from './types';
+export type { IDEF, TypeConstructor, TypeConstructorBase, Proto, ProtoFlat, constructorOptions, hooksOpts, hook, hooksTypes, IDefinitorInstance, InstanceResult, Merge, Constructor, DecoratedClass, TypeClass, TypeAbsorber, TypesCollection, TypeLookup, LookupResult, RegistryOf, MnemonicaModule, } from './types';
 export interface TypeRegistry {
 }
 export { getProps, setProps } from './api/types/Props';
 export declare const defaultTypes: import("./types").TypesCollection<{}, object, "">;
+export declare function define<Reg extends object, Parent extends object, Path extends string, const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(source: RegistryHolderBase<Reg, Parent, Path>, TypeName: Name, constructHandler?: IDEF<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, Reg & Record<ChildPath, StoredConstructor<F, ChildPath>>, ChildPath>;
 export declare function define<T extends object, P extends object = object, N extends Proto<P, T> = Proto<P, T>, R extends IDefinitorInstance<N> = IDefinitorInstance<N>>(this: unknown, TypeName?: string | CallableFunction | NewableFunction, constructHandler?: IDEF<T> | CallableFunction | NewableFunction | object | boolean, config?: constructorOptions): R;
 export declare function lookup<const K extends keyof TypeRegistry>(this: unknown, TypeNestedPath: K): TypeRegistry[K];
+export declare function lookup<Reg extends object, const K extends keyof Reg & string>(source: {
+    lookup: TypeLookup<Reg>;
+}, TypeNestedPath: K): LookupResult<Reg, K>;
 export declare function lookup(this: unknown, TypeNestedPath: string): TypeClass | undefined;
+export declare function lookup(source: {
+    lookup: (path: string) => TypeClass | undefined;
+}, TypeNestedPath: string): TypeClass | undefined;
 export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, args?: unknown[]) => InstanceResult<Merge<E, T>>;
 export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, ...args: unknown[]) => InstanceResult<Merge<E, T>>;
 export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>) => (...args: unknown[]) => InstanceResult<Merge<E, T>>;

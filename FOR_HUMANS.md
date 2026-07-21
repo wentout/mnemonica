@@ -57,7 +57,7 @@ Mnemonica has one runtime behavior, but TypeScript cannot see the type graph cre
 1. **Builder mode** — chain `.define()` on the `mnemonica` object or on `createTypesCollection()`. The returned object carries a local type registry, so `.lookup()` is typed without any global augmentation.
 2. **Augmented mode** — use the free `define()` / `lookup()` exports and augment the global `TypeRegistry` by hand or with `@mnemonica/tactica`.
 
-At runtime these are identical. The only difference is where TypeScript looks up the types. See [`docs/typed-lookup.md`](./docs/typed-lookup.md) for details.
+There is also a one-line middle path: the `RegistryOf` bridge merges a builder's local registry into the global `TypeRegistry` by hand. At runtime all paths are identical — the only difference is where TypeScript looks up the types. See [`docs/typed-lookup.md`](./docs/typed-lookup.md) for details.
 
 ---
 
@@ -204,35 +204,12 @@ console.log(admin.role); // 'admin' (own property)
 
 ### Class-Based (TypeScript)
 
-Both styles are **equally supported**. The `@decorate()` decorator registers a class as a mnemonica type and works identically to `define()` at runtime:
-
-```typescript
-import { decorate, apply } from 'mnemonica';
-
-// Define a type using a class
-@decorate()
-class UserType {
-  name: string;
-  email: string;
-  constructor (data: { name: string; email: string }) {
-    Object.assign(this, data);
-  }
-}
-
-// Create an instance
-const user = new UserType({ name: 'John', email: 'john@example.com' });
-
-// Define a subtype
-@decorate(UserType)
-class AdminType {
-  role: string = 'admin';
-}
-
-// Create a nested instance (inherits from user)
-const admin = new user.AdminType();
-console.log(admin.name); // 'John' (inherited)
-console.log(admin.role); // 'admin' (own property)
-```
+A class-based style also exists via the `@decorate()` decorator, and it works
+identically to `define()` at runtime. It is **not the default path**: it
+requires [`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica)
+(or hand-written augmentation) to be typed, because TypeScript never applies a
+class decorator's return type to the class binding. See
+[`docs/decorate.md`](./docs/decorate.md) for the full guide and examples.
 
 ### ESM
 
@@ -249,12 +226,12 @@ import { define, lookup } from 'mnemonica/module';
 | Change type | Read before starting |
 |---|---|
 | Any `src/` change | [`AGENTS.md`](./AGENTS.md) + [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) |
-| Involves `define()` / type graph | + [`.ai/rules-skill/define-patterns.md`](./.ai/rules-skill/define-patterns.md) |
-| Involves hooks | + [`.ai/rules-skill/hooks.md`](./.ai/rules-skill/hooks.md) |
-| Involves async constructors | + [`.ai/rules-skill/async-constructors.md`](./.ai/rules-skill/async-constructors.md) + [`.ai/async_init.md`](./.ai/async_init.md) |
-| Involves TypeScript types | + [`.ai/rules-skill/type-system.md`](./.ai/rules-skill/type-system.md) |
-| Involves proxy internals | + [`.ai/rules-skill/proxy-architecture.md`](./.ai/rules-skill/proxy-architecture.md) |
-| Uses tactica / `lookup` | + [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) |
+| Involves `define()` / type graph | + [`.ai/rules-define-patterns.md`](./.ai/rules-define-patterns.md) |
+| Involves hooks | + [`.ai/rules-hooks.md`](./.ai/rules-hooks.md) |
+| Involves async constructors | + [`.ai/rules-async-constructors.md`](./.ai/rules-async-constructors.md) |
+| Involves TypeScript types | + [`.ai/rules-type-system.md`](./.ai/rules-type-system.md) |
+| Involves proxy internals | + [`.ai/PROTOTYPE-CHAIN.md`](./.ai/PROTOTYPE-CHAIN.md) |
+| Uses tactica / `lookup` | + [`docs/tactica-deep-dive.md`](./docs/tactica-deep-dive.md) |
 | Docs-only change | README section you're touching only |
 | Unfamiliar with the codebase | [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) first — one file, five minutes |
 
@@ -522,7 +499,7 @@ const AsyncTypeNoReturn = define('AsyncType', async function () {
 | Get parent instance | `utils.parent(instance)` or `utils.parent(instance, 'TypeName')` |
 | Flatten to plain object | `utils.extract(instance)` |
 | Add lifecycle hooks | `type.registerHook('postCreation', cb)` |
-| Use classes | `@decorate()` decorator |
+| Use classes (requires Tactica) | see [`docs/decorate.md`](./docs/decorate.md) |
 
 ### Core Functions
 
@@ -607,48 +584,19 @@ const subInstance = createSub('arg1', 'arg2');
 
 #### `decorate(target?, config?)`
 
-TypeScript decorator for class-based definitions.
+TypeScript decorator for class-based definitions; runtime-equivalent to
+`define()`. Requires Tactica (or hand-written `TypeRegistry` augmentation) to
+be typed — see [`docs/decorate.md`](./docs/decorate.md) for the full guide,
+including nested decoration, configuration, and the TypeØmatica integration.
 
 ```typescript
 import { decorate } from 'mnemonica';
 
-// Basic decoration
 @decorate()
 class MyClass {
   field: number = 123;
 }
-
-// Nested decoration (define as subtype)
-@decorate()
-class ParentClass {
-  parentField: string = 'parent';
-}
-
-@decorate(ParentClass)
-class ChildClass {
-  childField: string = 'child';
-}
-
-// Create parent instance, then child from it
-const parent = new ParentClass();
-const child = new parent.ChildClass();
 ```
-
-**With configuration:**
-
-```typescript
-@decorate({ strictChain: false, blockErrors: true })
-class ConfiguredClass {
-  field: number = 123;
-}
-
-@decorate(ParentClass, { strictChain: false })
-class ConfiguredChildClass {
-  field: number = 123;
-}
-```
-
-**Note:** After a class is decorated with `@decorate()`, it can be used as a decorator for nested types (advanced pattern; may require `@ts-ignore` due to TypeScript limitations with callable class types).
 
 #### `registerHook(Constructor, hookType, callback)`
 
@@ -673,7 +621,7 @@ For advanced TypeScript usage, the following types are exported from `mnemonica`
 | `IDEF<T>` | Base constructor function type | `define('Name', fn: IDEF<MyType>)` |
 | `MnemonicaInstance` | Optional helper interface | Can be used when attaching the legacy instance methods to your own prototype |
 | `TypeClass` | Base type constructor | `const MyType: TypeClass = define(...)` |
-| `DecoratedClass<T>` | Decorated class type | `@decorate() class MyClass {}` |
+| `DecoratedClass<T>` | Decorated class type | `@decorate() class MyClass {}` (see [`docs/decorate.md`](./docs/decorate.md)) |
 | `IDefinitorInstance<N, S>` | Constructor with subtypes | Returned by `define()` with `.define()` method |
 | `ConstructorFunction<T>` | Constructor with prototype | Generic constructor function signature |
 | `constructorOptions` | Configuration options | `{ strictChain: true, blockErrors: true }` |
@@ -1142,7 +1090,7 @@ defaultTypes[SymbolConfig].blockErrors = false;
 
 ## Usage with TypeØmatica
 
-TypeØmatica is a companion library that provides strict runtime type checking using JavaScript Proxies. It enforces types at runtime exactly as TypeScript expects at compile time.
+TypeØmatica is a companion library that provides strict runtime type checking using JavaScript Proxies. It enforces types at runtime exactly as TypeScript expects at compile time. The `@decorate()` usage below requires Tactica — see [`docs/decorate.md`](./docs/decorate.md).
 
 ```typescript
 import { BaseClass } from 'typeomatica';

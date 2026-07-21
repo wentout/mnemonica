@@ -18,7 +18,7 @@ If any concept seems abstract before the examples land: [The four data mistakes]
 
 ## What this is
 
-The JavaScript prototype chain is a Trie. Every `new` call you write extends a node — the new instance inherits from the parent via `__proto__`. Property lookups traverse leaf-to-root. You have been working inside this structure your entire career. It is not an analogy; it is the actual runtime mechanism.
+The JavaScript prototype chain is a Trie. Every `new` call you write extends a node — the new instance inherits from the parent through the prototype link that `Object.getPrototypeOf(instance)` returns. Property lookups traverse leaf-to-root. You have been working inside this structure your entire career. It is not an analogy; it is the actual runtime mechanism.
 
 Mnemonica promotes the Trie from implementation detail to first-class data model. The complete interface for most use cases:
 
@@ -32,12 +32,13 @@ Every instance carries its full history. That history is queryable at runtime wi
 
 Mnemonica has exactly one runtime behavior. Whether you write `define('Person', ...)` or `mnemonica.define('Person', ...)`, the same constructor is registered and the same prototype chain is built.
 
-TypeScript, however, cannot see the type graph created by runtime `define()` calls. To solve this, mnemonica offers two compile-time paths:
+TypeScript, however, cannot see the type graph created by runtime `define()` calls. To solve this, mnemonica offers three compile-time paths, which compose:
 
-1. **Builder mode** — chain `.define()` on the `mnemonica` module object or on `createTypesCollection()`. The returned object carries a **local type registry**, so `.lookup()` is typed without any global augmentation.
-2. **Augmented mode** — use the free `define()` / `lookup()` exports and augment the global `TypeRegistry` by hand or with `@mnemonica/tactica`.
+1. **Builder mode** (default) — chain `.define()` on the `mnemonica` module object or on `createTypesCollection()`. The returned object carries a **local type registry**, so `.lookup()` is typed without any global augmentation. No tooling required; exported builder values carry the registry across files.
+2. **Registry bridge** — merge the builder's local registry into the global `TypeRegistry` with one hand-written line: `interface TypeRegistry extends RegistryOf<typeof App> {}`. Now the free `lookup()` is typed too, with no codegen and nothing to keep in sync.
+3. **Augmented mode** — use the free `define()` / `lookup()` exports and `@decorate()`, with the global `TypeRegistry` populated by `@mnemonica/tactica` (or written by hand). Required for `@decorate()`, which neither of the other paths can type.
 
-At runtime the two modes are identical. The only difference is where TypeScript looks up the types. The runtime is the source of truth; the type-system path is a projection chosen by the developer.
+At runtime all paths are identical. The only difference is where TypeScript looks up the types. The runtime is the source of truth; the type-system path is a projection chosen by the developer.
 
 See [`docs/typed-lookup.md`](./docs/typed-lookup.md) for the full comparison and examples.
 
@@ -67,7 +68,7 @@ const engineer = new alice.Employee({ role: 'Engineer' });
 //                   ^^^^^ instance-level inheritance, not class-level
 
 engineer instanceof Person;     // true — path back to root
-utils.parent(engineer);         // returns alice (literal __proto__)
+utils.parent(engineer);         // returns alice — Object.getPrototypeOf(engineer) === alice
 getProps(engineer);             // { __type__, __parent__, __args__, __timestamp__, ... }
 ```
 
@@ -140,18 +141,18 @@ These are the two assumptions that most reliably produce incorrect code.
 - **`utils.parent(instance, 'TypeName')`** — walks to a named ancestor in O(depth), no manual counting
 - **`lookup(path)`** — resolves any type by path string with full TypeScript inference, against an augmented `TypeRegistry` (hand-written or `tactica`-generated — see [`docs/typed-lookup.md`](./docs/typed-lookup.md)). Paths may use dots, slashes, colons, or bracket notation, and may be single-segment names when the lookup is relative to a collection or type.
 
-For any traversal deeper than a single step, prefer `parent('TypeName')` or `lookup`. The manual chain form in examples is illustrative only. See [`.ai/TACTICA-RULES.md`](./.ai/TACTICA-RULES.md) for the full `lookup` usage guide.
+For any traversal deeper than a single step, prefer `parent('TypeName')` or `lookup`. The manual chain form in examples is illustrative only. See [`docs/tactica-deep-dive.md`](./docs/tactica-deep-dive.md) for the full `lookup` usage guide.
 
 **2. "`Person.define('Employee')` is `class Employee extends Person`."** It isn't. The difference is where `new` goes:
 
 ```typescript
 // Class-level (NOT mnemonica):
 const engineer = new Employee({ role: 'Engineer' });
-// engineer.__proto__ === Employee.prototype  — shared across all employees
+// Object.getPrototypeOf(engineer) === Employee.prototype  — shared across all employees
 
 // Instance-level (mnemonica):
 const engineer = new alice.Employee({ role: 'Engineer' });
-// engineer.__proto__ === alice  — private to this specific alice
+// Object.getPrototypeOf(engineer) === alice  — private to this specific alice
 ```
 
 `alice.Employee` and `bob.Employee` are distinct Trie paths. They share the `Employee` type definition but produce independent prototype chain segments. Two concurrent pipeline runs are two isolated paths — no shared prototype state, no cross-contamination between runs. The construction history of one pipeline is invisible to another.
@@ -184,7 +185,7 @@ These restrictions are not arbitrary. They are runtime enforcement of the identi
 ```typescript
 const user  = new UserType({ name: 'Alice' });
 const admin = new user.AdminType({ role: 'admin' });
-// admin.__proto__ === user
+// Object.getPrototypeOf(admin) === user
 // admin instanceof UserType  → true (path back to root)
 // admin instanceof AdminType → true
 ```
@@ -210,7 +211,7 @@ These terms are used throughout the codebase and documentation with precise mean
 | **ModificatorType** | The actual constructor function used for `new` calls. Its prototype is linked to Mnemosyne, which is linked to the parent instance. |
 | **WeakMap key** | Internal properties are stored in a `WeakMap` keyed by the **Mnemosyne object**, not the instance itself. This keeps instance enumeration clean and shares metadata across instances of the same type. |
 
-For the full construction pipeline from `define()` through `TypeProxy` → `InstanceCreator` → `Mnemosyne` → instance, see [`docs/theory-of-operations.md`](./docs/theory-of-operations.md).
+For the full construction pipeline from `define()` through `TypeProxy` → `InstanceCreator` → `Mnemosyne` → instance, see [`.ai/theory-of-operations.md`](./.ai/theory-of-operations.md).
 
 ---
 
@@ -423,7 +424,7 @@ new instance.SubType(args)
 
 See [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts) and [`src/api/types/TypeProxy.ts`](./src/api/types/TypeProxy.ts).
 
-For the full construction pipeline with source file references for every stage, see [`docs/theory-of-operations.md`](./docs/theory-of-operations.md).
+For the full construction pipeline with source file references for every stage, see [`.ai/theory-of-operations.md`](./.ai/theory-of-operations.md).
 
 ### Type system primitives (TypeScript)
 
@@ -468,22 +469,23 @@ Everything below ships with this package.
 2. [`FOR_HUMANS.md`](./FOR_HUMANS.md) — gentler, example-heavy walkthrough for human developers
 3. [`SKILL.md`](./SKILL.md) — quick reference for usage patterns
 4. [`docs/prototype-chain.md`](./docs/prototype-chain.md) — how mnemonica builds the per-instance prototype chain and why the layers exist
-5. [`docs/typed-lookup.md`](./docs/typed-lookup.md) — using `lookup()` with or without tactica (the `TypeRegistry` augmentation pattern)
-5. [`docs/hott-primer.md`](./docs/hott-primer.md) — HoTT concepts mapped to mnemonica (monad, path types, univalence, HITs, fibrations)
-6. [`docs/empathy-in-ai.md`](./docs/empathy-in-ai.md) — why reconstructible data lineage is infrastructure for empathetic AI
+5. [`docs/typed-lookup.md`](./docs/typed-lookup.md) — typed `lookup()`/`define()`: builder mode, the `RegistryOf` bridge, tactica
+6. [`docs/decorate.md`](./docs/decorate.md) — `@decorate()` class-based definitions (requires tactica)
+7. [`docs/tactica-deep-dive.md`](./docs/tactica-deep-dive.md) — the `TypeRegistry` augmentation pattern in depth
+8. [`docs/hott-primer.md`](./docs/hott-primer.md) — HoTT concepts mapped to mnemonica (monad, path types, univalence, HITs, fibrations)
+9. [`docs/empathy-in-ai.md`](./docs/empathy-in-ai.md) — why reconstructible data lineage is infrastructure for empathetic AI
 
 **For *modifying* mnemonica** (when you touch `src/`):
 
 1. [`AGENTS.md`](./AGENTS.md) — Rule #1, change-type reading guide, code style, editing rules
 2. [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) — five-minute editor onboarding
 3. [`CONTRIBUTING.md`](./CONTRIBUTING.md) — local workflow, branching, release process
-4. [`docs/theory-of-operations.md`](./docs/theory-of-operations.md) — full construction pipeline from `define()` through `InstanceCreator` to instance return, with source file references for every stage
+4. [`.ai/theory-of-operations.md`](./.ai/theory-of-operations.md) — full construction pipeline from `define()` through `InstanceCreator` to instance return, with source file references for every stage
 5. [`.ai/PROTOTYPE-CHAIN.md`](./.ai/PROTOTYPE-CHAIN.md) — the exact shape of the prototype chain, what each layer holds, and how subtype lookup walks it
-6. [`.ai/CODE.md`](./.ai/CODE.md), [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific deeper rules
-6. [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) — deeper tactica integration patterns
-7. [`.ai/async_init.md`](./.ai/async_init.md) — async constructor patterns
-8. [`.ai/rules-skill/`](./.ai/rules-skill/) — granular rules for type system, hooks, code style, errors, testing
-9. [`.ai/rules/`](./.ai/rules/) — broader contributor rules
+6. [`.ai/ARCHITECT.md`](./.ai/ARCHITECT.md), [`.ai/DEBUG.md`](./.ai/DEBUG.md) — role-specific deeper rules
+7. [`.ai/performance-vs-security.md`](./.ai/performance-vs-security.md) — performance/security trade-off analysis
+8. [`.ai/rules-async-constructors.md`](./.ai/rules-async-constructors.md) — async constructor patterns
+9. [`.ai/`](./.ai/) — the remaining `rules-*.md` (type system, hooks, code style, errors, testing) and mode guides
 
 The full TypeScript source is in [`src/`](./src/) (on GitHub; the npm package ships compiled output in `build/` and `module/`).
 
