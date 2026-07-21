@@ -43,8 +43,9 @@ Confident guesses produce code that compiles but corrupts the design.
 > [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md).
 > These rules apply to all agent frameworks.
 
-> **Document locations:** this repository is agent-tools-agnostic. Agent-facing
-> documents live in [`.ai/`](./.ai/); human-facing documents live in
+> **Document locations:** this repository is agent-tools-agnostic. Documents
+> about *contributing to the core* live in [`.ai/`](./.ai/); documents about
+> *using the library* (for humans and agents alike) live in
 > [`docs/`](./docs/). Tool-specific directories (`.kilo/`, `.kilocode/`,
 > `.opencode/`, etc.) are for tool configuration only — never put project
 > documents (plans, rules, guides) there.
@@ -62,26 +63,26 @@ Load the docs that match your change type. The wrong context produces broken cod
 | Change type | Read before starting |
 |---|---|
 | Any `src/` change | This file + [`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) |
-| Involves `define()` / type graph | + [`.ai/rules-skill/define-patterns.md`](./.ai/rules-skill/define-patterns.md) |
-| Involves hooks | + [`.ai/rules-skill/hooks.md`](./.ai/rules-skill/hooks.md) |
-| Involves async constructors | + [`.ai/rules-skill/async-constructors.md`](./.ai/rules-skill/async-constructors.md) |
-| Involves TypeScript types | + [`.ai/rules-skill/type-system.md`](./.ai/rules-skill/type-system.md) |
+| Involves `define()` / type graph | + [`.ai/rules-define-patterns.md`](./.ai/rules-define-patterns.md) |
+| Involves hooks | + [`.ai/rules-hooks.md`](./.ai/rules-hooks.md) |
+| Involves async constructors | + [`.ai/rules-async-constructors.md`](./.ai/rules-async-constructors.md) |
+| Involves TypeScript types | + [`.ai/rules-type-system.md`](./.ai/rules-type-system.md) |
 | Involves proxy internals | + [`.ai/PROTOTYPE-CHAIN.md`](./.ai/PROTOTYPE-CHAIN.md) |
-| Uses tactica / `lookup` | + [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md) |
+| Uses tactica / `lookup` | + [`docs/tactica-deep-dive.md`](./docs/tactica-deep-dive.md) |
 | Docs-only change | README section you're touching only |
 
 **This file + `.ai/ONBOARDING.md` are the always-required baseline for any `src/` edit.**
 
 ### Framework-specific rules
 
-Mode-specific files in `.ai/rules/`:
-- [`.ai/rules/CODING.md`](./.ai/rules/CODING.md) — universal coding rules
-- [`.ai/rules/REMINDERS.md`](./.ai/rules/REMINDERS.md) — type vs interface, spacing reminders
-- [`.ai/rules/CONTEXT-CONDENSING.md`](./.ai/rules/CONTEXT-CONDENSING.md) — context recovery protocol
+Mode-specific files in `.ai/`:
+- [`.ai/rules-coding.md`](./.ai/rules-coding.md) — universal coding rules
+- [`.ai/rules-reminders.md`](./.ai/rules-reminders.md) — type vs interface, spacing reminders
+- [`.ai/rules-context-condensing.md`](./.ai/rules-context-condensing.md) — context recovery protocol
 
 ## Build/Test Commands
 
-See [`.ai/rules-skill/testing.md`](./.ai/rules-skill/testing.md) for the full command reference, dual-framework details, and coverage requirements. Summary:
+See [`.ai/rules-testing.md`](./.ai/rules-testing.md) for the full command reference, dual-framework details, and coverage requirements. Summary:
 
 ```bash
 npm run build          # full build with linting
@@ -96,7 +97,7 @@ npm run watch          # watch mode
 
 ## Code Style (Project-Specific)
 
-See [`.ai/rules-skill/code-style.md`](./.ai/rules-skill/code-style.md) for the full style reference. Key rules: tabs only, space before function parens, colons aligned in object literals, `strict: true`, **no `any`** (`no-explicit-any: error`).
+See [`.ai/rules-code-style.md`](./.ai/rules-code-style.md) for the full style reference. Key rules: tabs only, space before function parens, colons aligned in object literals, `strict: true`, **no `any`** (`no-explicit-any: error`).
 
 ## Architecture Patterns
 
@@ -108,7 +109,7 @@ The core API is `define(TypeName, constructHandler, config?)` in `src/index.ts`.
 
 ### The `lookup()` Function
 
-For user-facing semantics, see [`README.md`](./README.md) and [`.ai/TACTICA-DEEP-DIVE.md`](./.ai/TACTICA-DEEP-DIVE.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` starts empty, and `lookup()` uses overloads so augmented keys return the typed constructor while unaugmented keys fall back to `TypeClass | undefined`.
+For user-facing semantics, see [`README.md`](./README.md) and [`docs/tactica-deep-dive.md`](./docs/tactica-deep-dive.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` starts empty, and `lookup()` uses overloads so augmented keys return the typed constructor while unaugmented keys fall back to `TypeClass | undefined`.
 
 ```typescript
 // In mnemonica core (src/index.ts)
@@ -287,7 +288,7 @@ This applies to **all** `return` statements where the expression is anything oth
 
 ## TypeScript Type Rules
 
-**Never use bare `Function`, `CallableFunction`, or `NewableFunction` as types** — always define a purpose-specific interface that extends them. See [`.ai/rules-skill/code-style.md`](./.ai/rules-skill/code-style.md) for examples and allowed exceptions.
+**Never use bare `Function`, `CallableFunction`, or `NewableFunction` as types** — always define a purpose-specific interface that extends them. See [`.ai/rules-code-style.md`](./.ai/rules-code-style.md) for examples and allowed exceptions.
 
 ## Preserving Design Comments and Memory Notes
 
@@ -305,7 +306,7 @@ If a comment becomes technically inaccurate after a change, update it rather tha
 
 ## Testing Requirements
 
-See [`.ai/rules-skill/testing.md`](./.ai/rules-skill/testing.md) for full coverage requirements and patterns. 100% required on both Mocha and Jest. Must run `npm run test:cov` before completing any task.
+See [`.ai/rules-testing.md`](./.ai/rules-testing.md) for full coverage requirements and patterns. 100% required on both Mocha and Jest. Must run `npm run test:cov` before completing any task.
 
 ## Common Patterns
 

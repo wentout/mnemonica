@@ -255,6 +255,10 @@ const admin = new Admin({ role: 'root' });
 
 ### With `@decorate()`
 
+> The canonical decorator guide is [`docs/decorate.md`](./decorate.md) —
+> setup, examples, and the TypeØmatica integration live there. The short
+> version:
+
 ```typescript
 import { decorate } from 'mnemonica';
 

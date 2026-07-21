@@ -190,3 +190,38 @@ These guidelines are working if you see:
 - **Clarifying questions come before implementation** — Not after mistakes
 - **Clean, minimal PRs** — No drive-by refactoring or "improvements"
 - **100% coverage maintained** — Tests verify every change
+
+---
+
+## New Feature Checklist
+
+Folded in from the former `.ai/task-templates/new-feature.md`.
+
+### Pre-Flight
+
+- [ ] Read `AGENTS.md` (root) sections on type vs interface vs instance and build/test commands
+- [ ] Check existing code patterns in the target directory
+- [ ] Run `npm run build` to ensure a clean baseline
+
+### Implementation
+
+1. **Design**
+   - [ ] Define types (use `type` for instances, `interface` for constructors/contracts)
+   - [ ] Check `.ai/rules-reminders.md`
+2. **Coding**
+   - [ ] Indentation: TABS ONLY (width 4)
+   - [ ] Function spacing: `function myFunc () { }`
+   - [ ] Key spacing: `{ key : value }` (colons aligned)
+3. **Testing**
+   - [ ] Run `npm run test:cov` (validates build + 100% coverage)
+   - [ ] Verify no ESLint warnings
+   - [ ] Re-read the full content of each edited file as if it were a code review
+4. **Completion**
+   - [ ] Update the TODO list
+   - [ ] Run the final build
+
+### Context Condensing
+
+**CRITICAL:** If you notice yourself forgetting established patterns:
+
+→ **READ** `.ai/rules-context-condensing.md` immediately

@@ -24,7 +24,7 @@ Activate this skill when:
 
 ## Functional vs Class-Based — Both Are Equally Supported
 
-`define()` and `@decorate()` are runtime equivalents. When working in a codebase, **match the style already in use**. See [rules-skill/define-patterns.md](.ai/rules-skill/define-patterns.md) for a side-by-side comparison.
+`define()` and `@decorate()` are runtime equivalents. When working in a codebase, **match the style already in use**. See [rules-define-patterns.md](.ai/rules-define-patterns.md) for a side-by-side comparison.
 
 ## High-priority checklist: Adding a new type
 
@@ -33,18 +33,18 @@ When the task involves adding or modifying a type definition:
 1. **Use `type` for data, `interface` for behavior contracts**
    - Instance data → `type MyTypeData = { ... }`
    - Constructor contract → `interface MyTypeConstructor { ... }`
-   - See [rules-skill/type-system.md](.ai/rules-skill/type-system.md)
+   - See [rules-type-system.md](.ai/rules-type-system.md)
 
 2. **Check how `lookup()` is typed** (in order of preference)
    - Builder mode (`mnemonica.define` / `createTypesCollection`)? Nothing to do — the registry is local.
    - Free `lookup()` on a builder project? Use the one-line `RegistryOf` bridge — see [docs/typed-lookup.md](./docs/typed-lookup.md).
-   - Using tactica / `@decorate()`? Does `.tactica/types.ts` need updating? Is `lookup('MyType')` properly typed? See [TACTICA-DEEP-DIVE.md](.ai/TACTICA-DEEP-DIVE.md)
+   - Using tactica / `@decorate()`? Does `.tactica/types.ts` need updating? Is `lookup('MyType')` properly typed? See [tactica-deep-dive.md](./docs/tactica-deep-dive.md)
 
 3. **Test both success and error paths**
    - Mocha test in `test/` for runtime behavior
    - Jest test in `test-jest/` for type coverage
    - Error path: test `ALREADY_DECLARED`, `WRONG_MODIFICATION_PATTERN`
-   - See [rules-skill/testing.md](.ai/rules-skill/testing.md)
+   - See [rules-testing.md](.ai/rules-testing.md)
 
 4. **Run coverage before completing**
    - `npm run test:cov` (Mocha + build)
@@ -72,29 +72,29 @@ npm run watch          # Watch mode
 Read individual rule files for detailed explanations and code examples:
 
 ### Type System
-- [rules-skill/type-system.md](.ai/rules-skill/type-system.md) — `Proto<P,T>`, `TypeConstructor`, type vs interface
+- [rules-type-system.md](.ai/rules-type-system.md) — `Proto<P,T>`, `TypeConstructor`, type vs interface
 
 ### Patterns
-- [rules-skill/define-patterns.md](.ai/rules-skill/define-patterns.md) — `define()` usage, subtypes, config options
-- [TACTICA-DEEP-DIVE.md](.ai/TACTICA-DEEP-DIVE.md) — `TypeRegistry`, `lookup`, tactica integration
-- [rules-skill/async-constructors.md](.ai/rules-skill/async-constructors.md) — async constructors, `awaitReturn`, chaining
+- [rules-define-patterns.md](.ai/rules-define-patterns.md) — `define()` usage, subtypes, config options
+- [tactica-deep-dive.md](./docs/tactica-deep-dive.md) — `TypeRegistry`, `lookup`, tactica integration
+- [rules-async-constructors.md](.ai/rules-async-constructors.md) — async constructors, `awaitReturn`, chaining
 
 ### Architecture
 - [PROTOTYPE-CHAIN.md](.ai/PROTOTYPE-CHAIN.md) — TypeProxy, InstanceCreator, Mnemosyne pipeline, construction internals
-- [rules-skill/instance-methods.md](.ai/rules-skill/instance-methods.md) — `extract()`, `fork()`, `parent()`, internal props
-- [rules-skill/hooks.md](.ai/rules-skill/hooks.md) — `preCreation`, `postCreation`, `creationError`
+- [rules-instance-methods.md](.ai/rules-instance-methods.md) — `extract()`, `fork()`, `parent()`, internal props
+- [rules-hooks.md](.ai/rules-hooks.md) — `preCreation`, `postCreation`, `creationError`
 
 ### Philosophy & Design
-- [rules-skill/philosophy.md](.ai/rules-skill/philosophy.md) — HoTT concepts (Univalence, Path Types, Higher Inductive Types) applied to mnemonica's self-reflection model
-- [rules-skill/ecosystem.md](.ai/rules-skill/ecosystem.md) — PACT framework: personas, collaboration modes, integration points
+- [rules-philosophy.md](.ai/rules-philosophy.md) — HoTT concepts (Univalence, Path Types, Higher Inductive Types) applied to mnemonica's self-reflection model
+- [rules-ecosystem.md](.ai/rules-ecosystem.md) — PACT framework: personas, collaboration modes, integration points
 
 ### Quality
-- [rules-skill/testing.md](.ai/rules-skill/testing.md) — 100% coverage, Mocha + Jest, error path patterns
-- [rules-skill/code-style.md](.ai/rules-skill/code-style.md) — tabs, spacing, type vs interface
-- [rules-skill/error-system.md](.ai/rules-skill/error-system.md) — `BASE_MNEMONICA_ERROR`, `constructError`, stack cleaning
+- [rules-testing.md](.ai/rules-testing.md) — 100% coverage, Mocha + Jest, error path patterns
+- [rules-code-style.md](.ai/rules-code-style.md) — tabs, spacing, type vs interface
+- [rules-error-system.md](.ai/rules-error-system.md) — `BASE_MNEMONICA_ERROR`, `constructError`, stack cleaning
 
 ### Contributing
-- [rules-skill/contributing.md](.ai/rules-skill/contributing.md) — behavioral guidelines: think before coding, simplicity, surgical changes, goal-driven execution
+- [rules-contributing.md](.ai/rules-contributing.md) — behavioral guidelines: think before coding, simplicity, surgical changes, goal-driven execution
 
 ## Contributing
 

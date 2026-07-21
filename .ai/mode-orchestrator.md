@@ -12,7 +12,7 @@ projects that require work across different domains and specialties.
 
 ## Project Structure
 
-See [`../ONBOARDING.md`](../ONBOARDING.md#architecture) for the source directory tree.
+See [`ONBOARDING.md`](./ONBOARDING.md#architecture) for the source directory tree.
 
 ## Workflow Coordination
 
@@ -73,7 +73,7 @@ Before completing any orchestrated task:
 2. [ ] `npm run test:cov` — 100% coverage maintained
 3. [ ] `npm run test:jest:cov` — Jest tests pass
 4. [ ] No `any` or `unknown` types introduced
-5. [ ] Follow code style rules (see [`rules-skill/code-style.md`](../rules-skill/code-style.md))
+5. [ ] Follow code style rules (see [`rules-code-style.md`](./rules-code-style.md))
 
 ## Multi-Step Task Example
 

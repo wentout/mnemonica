@@ -160,7 +160,7 @@ npx jest test-jest/types.ts --verbose --no-coverage
 2. [ ] Check build output **at the beginning** for errors/warnings (not just tail)
 3. [ ] Run Mocha tests: `npm run test:cov`
 4. [ ] Run Jest tests: `npm run test:jest:cov`
-5. [ ] Verify code style (see [`rules-skill/code-style.md`](./rules-skill/code-style.md))
+5. [ ] Verify code style (see [`rules-code-style.md`](./rules-code-style.md))
 6. [ ] Check for bare `Function` / `CallableFunction` / `NewableFunction` types
 7. [ ] Verify symbol usage is correct
 8. [ ] Check proxy handler return types

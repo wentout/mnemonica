@@ -153,7 +153,7 @@ const props = getProps(instance);
 
 **The vulnerability:** Attacker pollutes `Object.prototype` or `Function.prototype`, affecting all objects in the process.
 
-**mnemonica's defense:** Instances are created via `Object.create(null)` roots or mnemonica's own proto chains, not `Object.prototype`. `Object.prototype.isPrototypeOf(instance)` returns `false`. `__proto__` injection does not affect mnemonica instances.
+**mnemonica's defense:** Instances are created via `Object.create(null)` roots or mnemonica's own proto chains, not `Object.prototype`. `Object.prototype.isPrototypeOf(instance)` returns `false`. Injection via the legacy `__proto__` accessor does not affect mnemonica instances.
 
 **Honesty check:** The library *manipulates* prototypes heavily internally. It replaces `ConstructHandler.prototype` temporarily during construction (`compileNewModificatorFunctionBody.ts:96`). This is controlled, not user-accessible, but it means mnemonica's internal attack surface is non-zero.
 

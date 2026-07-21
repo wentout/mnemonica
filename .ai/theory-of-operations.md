@@ -90,13 +90,13 @@ This is where the Trie structure is physically built:
 The resulting chain:
 ```
 newObj
-  ↓ __proto__
+  ↓ Object.getPrototypeOf(newObj)
 ModificatorType.prototype
-  ↓ __proto__
+  ↓ Object.getPrototypeOf(ModificatorType.prototype)
 Mnemosyne  (has __type__, __parent__, etc.)
-  ↓ __proto__
+  ↓ Object.getPrototypeOf(Mnemosyne)
 existentInstance  (the specific parent)
-  ↓ __proto__
+  ↓ Object.getPrototypeOf(existentInstance)
 ... (rest of chain to root)
 ```
 

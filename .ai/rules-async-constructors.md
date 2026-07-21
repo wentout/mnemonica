@@ -268,5 +268,5 @@ Tests live in `test_async/index.js` and run via `npm run test:async_init`.
 
 ### Related
 
-- [`test_async/index.js`](../../test_async/index.js) — test suite covering async initialization scenarios
+- [`test_async/index.js`](../test_async/index.js) — test suite covering async initialization scenarios
 - [TC39 proposal-async-init issue #3](https://github.com/tc39/proposal-async-init/issues/3) — language-level discussion of the same problem

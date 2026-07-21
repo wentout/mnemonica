@@ -178,11 +178,11 @@ Read [`../docs/async-constructors.md`](../docs/async-constructors.md) for the `s
 | Design patterns, constraints | [`ARCHITECT.md`](./ARCHITECT.md) |
 | Prototype chain internals | [`PROTOTYPE-CHAIN.md`](./PROTOTYPE-CHAIN.md) |
 | Debugging commands, issues | [`DEBUG.md`](./DEBUG.md) |
-| Async constructor deep dive | [`rules-skill/async-constructors.md`](./rules-skill/async-constructors.md) |
-| tactica type-safe lookup | [`TACTICA-DEEP-DIVE.md`](./TACTICA-DEEP-DIVE.md) |
-| Behavioral guidelines | [`rules-skill/contributing.md`](./rules-skill/contributing.md) |
-| Explaining code (ask mode) | [`ask/AGENTS.md`](./ask/AGENTS.md) |
-| Multi-step coordination | [`orchestrator/AGENTS.md`](./orchestrator/AGENTS.md) |
+| Async constructor deep dive | [`rules-async-constructors.md`](./rules-async-constructors.md) |
+| tactica type-safe lookup | [`tactica-deep-dive.md`](../docs/tactica-deep-dive.md) |
+| Behavioral guidelines | [`rules-contributing.md`](./rules-contributing.md) |
+| Explaining code (ask mode) | [`mode-ask.md`](./mode-ask.md) |
+| Multi-step coordination | [`mode-orchestrator.md`](./mode-orchestrator.md) |
 
 ---
 

@@ -319,7 +319,7 @@ const instance = Object.create(proto);  // Pure prototype, no Object inheritance
 
 **Security Benefits**:
 1. **No prototype pollution attacks** - `Object.prototype` mutations don't affect Mnemonica instances
-2. **No `__proto__` injection** - Instances don't inherit from Object
+2. **No injection via the legacy `__proto__` accessor** - Instances don't inherit from Object
 3. **Isolated namespace** - Properties like `constructor`, `toString`, `valueOf` don't exist unless explicitly defined
 4. **Clean property enumeration** - `for...in` loops don't see inherited Object properties
 
@@ -552,8 +552,8 @@ const Child = Parent.define('Child', function() {});
 
 const child = new Child({});
 // child is a point
-// child.__proto__ → Child.prototype is a path
-// Child.prototype.__proto__ → Parent.prototype is another path
+// Object.getPrototypeOf(child) → Child.prototype is a path
+// Object.getPrototypeOf(Child.prototype) → Parent.prototype is another path
 // And so on...
 ```
 

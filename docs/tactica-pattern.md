@@ -143,4 +143,4 @@ Pick whichever fits your project. Both are first-class.
 ## Learn more
 
 - [`./typed-lookup.md`](./typed-lookup.md) — `lookup` with or without tactica (canonical side-by-side reference)
-- [`../.ai/TACTICA-DEEP-DIVE.md`](../.ai/TACTICA-DEEP-DIVE.md) — comprehensive technical guide, declaration-merging deep dive, anti-patterns and "when to insist on what"
+- [`./tactica-deep-dive.md`](./tactica-deep-dive.md) — comprehensive technical guide, declaration-merging deep dive, anti-patterns and "when to insist on what"

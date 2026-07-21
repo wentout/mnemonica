@@ -23,6 +23,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `merge(a, b, ...args)` now uses `fork(a).call(b, ...args)` internally.
 - `InstanceResult<N>` returns the plain merged fields without the
   `MnemonicaInstance` layer.
+- Documentation purged of the legacy `__proto__` accessor in favor of
+  `Object.getPrototypeOf()` explanations; the two security-related mentions
+  remain, explicitly framed as "the legacy `__proto__` accessor".
+- `@decorate()` documentation consolidated into `docs/decorate.md`; it is no
+  longer presented as a default style in `FOR_HUMANS.md` (it requires Tactica
+  or hand-written augmentation).
+- `.ai/` flattened to a single level (`rules-*.md`, `mode-*.md`);
+  `.ai/task-templates/` merged into `.ai/rules-contributing.md`.
+- Documentation split by audience: `docs/` is for *using* the library,
+  `.ai/` is for *contributing to the core*. Accordingly,
+  `docs/theory-of-operations.md` and `docs/performance-vs-security.md` moved to
+  `.ai/`, and `.ai/TACTICA-DEEP-DIVE.md` moved to
+  `docs/tactica-deep-dive.md`.
 
 ### Added
 
