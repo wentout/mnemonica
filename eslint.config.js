@@ -122,6 +122,7 @@ module.exports = [
 		ignores: [
 			'test/example.js',
 			'test/decorate.js',
+			'test/decorate-builder.js',
 			'test-ts/**',
 			'test-jest/**',
 			'build/**',

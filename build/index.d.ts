@@ -1,12 +1,16 @@
 import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, IDefinitorInstance, Constructor, DecoratedClass, TypeClass, MnemonicaModule, InstanceResult, Merge, TypeLookup, LookupResult, RegistryHolderBase, StoredConstructor } from './types';
 export declare const isClass: (fn: import("./api/types/compileNewModificatorFunctionBody").ConstructHandler) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => import("./api/utils/index").parentSub | null;
-export type { IDEF, TypeConstructor, TypeConstructorBase, Proto, ProtoFlat, constructorOptions, hooksOpts, hook, hooksTypes, IDefinitorInstance, InstanceResult, Merge, Constructor, DecoratedClass, TypeClass, TypeAbsorber, TypesCollection, TypeLookup, LookupResult, RegistryOf, MnemonicaModule, } from './types';
+export type { IDEF, LazyDef, TypeConstructor, TypeConstructorBase, Proto, ProtoFlat, constructorOptions, hooksOpts, hook, hooksTypes, IDefinitorInstance, InstanceResult, Merge, Constructor, DecoratedClass, TypeClass, TypeAbsorber, TypesCollection, TypeLookup, LookupResult, RegistryOf, MnemonicaModule, } from './types';
 export interface TypeRegistry {
 }
 export { getProps, setProps } from './api/types/Props';
 export declare const defaultTypes: import("./types").TypesCollection<{}, object, "">;
 export declare function define<Reg extends object, Parent extends object, Path extends string, const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(source: RegistryHolderBase<Reg, Parent, Path>, TypeName: Name, constructHandler?: IDEF<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, Reg & Record<ChildPath, StoredConstructor<F, ChildPath>>, ChildPath>;
 export declare function define<T extends object, P extends object = object, N extends Proto<P, T> = Proto<P, T>, R extends IDefinitorInstance<N> = IDefinitorInstance<N>>(this: unknown, TypeName?: string | CallableFunction | NewableFunction, constructHandler?: IDEF<T> | CallableFunction | NewableFunction | object | boolean, config?: constructorOptions): R;
+export declare function lazy<T extends object>(source: RegistryHolderBase<object, object, string>, TypeName: string, getter: () => IDEF<T>, config?: constructorOptions): IDefinitorInstance<T>;
+export declare function lazy<T extends object>(source: RegistryHolderBase<object, object, string>, getter: () => IDEF<T>, config?: constructorOptions): IDefinitorInstance<T>;
+export declare function lazy<T extends object>(this: unknown, TypeName: string, getter: () => IDEF<T>, config?: constructorOptions): IDefinitorInstance<T>;
+export declare function lazy<T extends object>(this: unknown, getter: () => IDEF<T>, config?: constructorOptions): IDefinitorInstance<T>;
 export declare function lookup<const K extends keyof TypeRegistry>(this: unknown, TypeNestedPath: K): TypeRegistry[K];
 export declare function lookup<Reg extends object, const K extends keyof Reg & string>(source: {
     lookup: TypeLookup<Reg>;
@@ -21,7 +25,7 @@ export declare const bind: <E extends object, T extends object, S extends Proto<
 export declare const decorate: <T extends Constructor<object> | constructorOptions | undefined = undefined>(target?: T, config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
 export declare const registerHook: <T extends Constructor<T>>(Ctor: DecoratedClass<T>, hookType: hooksTypes, cb: hook) => void;
 export declare const mnemonica: MnemonicaModule;
-export declare const _define: (this: unknown, subtypes: import("./api/types").TypesMap, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object) => TypeClass, _lookup: (this: import("./api/types").TypesMap, TypeNestedPath: string) => TypeClass | undefined;
+export declare const _define: (this: unknown, subtypes: import("./api/types").TypesMap, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object) => TypeClass, _lazy: (this: unknown, subtypes: import("./api/types").TypesMap, arg1: string | import("./api/types").LazyTypeGetter | undefined, arg2?: import("./api/types").LazyTypeGetter | object, arg3?: object) => TypeClass, _lookup: (this: import("./api/types").TypesMap, TypeNestedPath: string) => TypeClass | undefined;
 export declare const SymbolParentType: symbol, SymbolConstructorName: symbol, SymbolDefaultTypesCollection: symbol, SymbolConfig: symbol, MNEMONICA: string, MNEMOSYNE: string, TYPE_TITLE_PREFIX: string, ErrorMessages: import("./types").ErrorMessages;
 export declare const createTypesCollection: CreateTypesCollectionFunction;
 export declare const defaultCollection: Map<string, object>;

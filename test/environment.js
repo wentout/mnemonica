@@ -8,6 +8,7 @@ const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
 
 const {
 	define,
+	lazy,
 	defaultTypes: types,
 	defaultCollection,
 	SymbolDefaultTypesCollection,
@@ -125,6 +126,8 @@ const tests = (opts) => {
 				'lookup',
 				'_define',
 				'_lookup',
+				'lazy',
+				'_lazy',
 				'mnemonica',
 				'apply',
 				'call',
@@ -210,7 +213,7 @@ const tests = (opts) => {
 				expect(__subtypes__.has('NamedFunction')).is.equal(true);
 			});
 
-			const NamedClassPtr = UserType.define(() => {
+			const NamedClassPtr = UserType.lazy(() => {
 				const result = class NamedClass {
 					constructor (snc) {
 						this.type = 'class';
@@ -224,7 +227,7 @@ const tests = (opts) => {
 				return result;
 			});
 
-			UserType.define(function () {
+			UserType.lazy(function () {
 				const result = class NamedClass2 {
 					constructor (snc) {
 						this.type = 'class';
@@ -238,7 +241,7 @@ const tests = (opts) => {
 				return result;
 			});
 
-			const SubNamedClassPtr = NamedClassPtr.define(() => {
+			const SubNamedClassPtr = NamedClassPtr.lazy(() => {
 				const result = class SubNamedClass {
 					constructor () {
 						this.type = 'subclass';
@@ -752,7 +755,7 @@ const tests = (opts) => {
 				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
 
 				[ 'handler must be a function', () => {
-					define(() => {
+					lazy(() => {
 						const result = {
 							name : null
 						};
@@ -761,7 +764,7 @@ const tests = (opts) => {
 				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
 
 				[ 'this type has already been declared : WithoutPassword', () => {
-					define('UserTypeConstructor', () => {
+					types.UserTypeConstructor.lazy(() => {
 						// eslint-disable-next-line func-name-matching
 						const result = function WithoutPassword () { };
 						return result;
@@ -770,14 +773,14 @@ const tests = (opts) => {
 
 				[ 'this type has already been declared : UserTypePL1', () => {
 					// in-depth re-declaration
-					define('UserType.UserTypePL1', () => {
+					types.UserType.UserTypePL1.lazy(() => {
 						const result = function () { };
 						return result;
 					});
 				}, errors.ALREADY_DECLARED ],
 
 				[ 'typename must be a string', () => {
-					define(() => {
+					lazy(() => {
 						// eslint-disable-next-line mnemonica/return-intermediate
 						return function () { };
 					});
@@ -819,7 +822,7 @@ const tests = (opts) => {
 			}
 
 			try {
-				define(() => {
+				lazy(() => {
 					// eslint-disable-next-line mnemonica/return-intermediate
 					return function SetSomeName () { };
 				});
@@ -828,7 +831,7 @@ const tests = (opts) => {
 			}
 
 			try {
-				define(() => {
+				lazy(() => {
 					// eslint-disable-next-line mnemonica/return-intermediate
 					return class SetSomeName { };
 				});

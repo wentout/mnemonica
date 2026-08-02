@@ -37,15 +37,15 @@ const tests = ( opts ) => {
 			// assert.equal( 188, typesFlowCheckerInvocations.length );
 			// assert.equal( 90, typesFlowCheckerInvocations.length );
 
-			assert.equal( 209, typesFlowCheckerInvocations.length );
+			assert.equal( 215, typesFlowCheckerInvocations.length );
 
-			// +1
-			assert.equal( 113, typesPreCreationInvocations.length );
+			// +3 (increased due to explicit .lazy() API adding extra creations)
+			assert.equal( 116, typesPreCreationInvocations.length );
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
-			// +1
-			assert.equal( 192, typesPostCreationInvocations.length );
+			// +6 (increased due to explicit .lazy() API adding extra creations)
+			assert.equal( 198, typesPostCreationInvocations.length );
 		} );
 	} );
 

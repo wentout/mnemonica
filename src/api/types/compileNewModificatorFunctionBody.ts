@@ -92,12 +92,20 @@ const getFunctionConstructor = (
 				...args 
 			);
 		} else {
-			const _proto = ConstructHandler.prototype;
+			// historical prototype swap kept for reference:
+			// const _proto = ConstructHandler.prototype;
 			// !!! it MUST be strict replacement !!!
 			// !!! this is the only way to keep Prototype Chain correct !!!
-			ConstructHandler.prototype = this.constructor.prototype;
-			answer = new (ConstructHandler as unknown as new (...args: unknown[]) => object)( ...args );
-			ConstructHandler.prototype = _proto;
+			// ConstructHandler.prototype = this.constructor.prototype;
+			// answer = new (ConstructHandler as unknown as new (...args: unknown[]) => object)( ...args );
+			// ConstructHandler.prototype = _proto;
+
+			const constructResult = Reflect.construct(
+				ConstructHandler,
+				args,
+				this.constructor
+			);
+			answer = constructResult;
 		}
 		const result = CreationHandler.call(
 			this,

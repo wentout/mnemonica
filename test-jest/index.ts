@@ -59,6 +59,7 @@ import { createTypesCollection } from '../src/index';
 
 const {
 	define,
+	lazy,
 	defaultTypes: types,
 	MNEMONICA,
 	URANUS,
@@ -136,7 +137,7 @@ const pl1Proto = {
 	UserTypePL1Extra: 'UserTypePL_1_Extra',
 };
 
-UserType.define(() => {
+UserType.lazy(() => {
 	const UserTypePL1 = function (this: { user_pl_1_sign: string }) {
 		this.user_pl_1_sign = 'pl_1';
 	};
@@ -161,7 +162,7 @@ const shaperFactory = () => {
 	};
 };
 
-UserType.define(() => {
+UserType.lazy(() => {
 	const Shaper = shaperFactory();
 	class UserTypePL2 extends Shaper {
 		user_pl_2_sign: string;
@@ -483,7 +484,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		WithoutPasswordSign: 'WithoutPasswordSign'
 	};
 
-	const UserWithoutPassword = types.UserTypeConstructor.define(() => {
+	const UserWithoutPassword = types.UserTypeConstructor.lazy(() => {
 		const WithoutPassword = function (this: UserWithoutPasswordInstance) {
 			this.password = undefined;
 		};
@@ -496,7 +497,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	const WithAdditionalSignProto = {
 		WithAdditionalSignSign: 'WithAdditionalSignSign'
 	};
-	const WithAdditionalSignTypeDef = UserWithoutPassword.define(() => {
+	const WithAdditionalSignTypeDef = UserWithoutPassword.lazy(() => {
 		const WithAdditionalSign = function (this: WithAdditionalSignInstance, sign: string) {
 			this.sign = sign;
 		};
@@ -509,7 +510,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	const MoreOverProto = {
 		MoreOverSign: 'MoreOverSign'
 	};
-	const MoreOverTypeDef = WithAdditionalSignTypeDef.define(() => {
+	const MoreOverTypeDef = WithAdditionalSignTypeDef.lazy(() => {
 		class MoreOver {
 			str: string;
 			constructor(str: string) {
@@ -543,9 +544,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		EvenMoreSign: 'EvenMoreSign'
 	};
 
-	const EvenMoreTypeDef = WithAdditionalSignTypeDef.define(`
-		MoreOver . OverMore
-	`, function () {
+	const EvenMoreTypeDef = OverMore.lazy(() => {
 
 		// it would be MoreOver . OverMore . EvenMore
 		const EvenMore = function (this: EvenMoreInstance, str: string) {
@@ -2073,6 +2072,19 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const result = new instance.DecoratedType();
 				expect(result.decorated).toBe(true);
 			});
+
+			it('should work with decorator pattern using type.decorate', () => {
+				const DecoratorBase = define('DecoratorBaseCoverageDecorate', function () {});
+				const instance = new DecoratorBase();
+				const { decorate } = DecoratorBase;
+				
+				// Test decorator pattern via type.decorate (destructured from builder node)
+				decorate()(class DecoratedType {
+					decorated = true;
+				});
+				const result = new (instance as { DecoratedType: new () => { decorated: boolean } }).DecoratedType();
+				expect(result.decorated).toBe(true);
+			});
 		});
 
 		describe('exceptionConstructor error handling', () => {
@@ -2818,24 +2830,24 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(nestedType).toBeDefined();
 			});
 
-			it('should cover defineUsingType HANDLER_MUST_BE_A_FUNCTION', () => {
-				const { define } = require('../src/index');
+			it('should cover lazy HANDLER_MUST_BE_A_FUNCTION', () => {
+				const { lazy } = require('../src/index');
 
-				// Try to define a type with a non-function handler using the type factory pattern
+				// Try to define a type with a non-function handler using lazy getter
 				expect(() => {
-					define(() => {
+					lazy(() => {
 						// Return a non-function (string instead of function)
 						return 'not a function' as unknown as CallableFunction;
 					});
 				}).toThrow();
 			});
 
-			it('should cover defineUsingType TYPENAME_MUST_BE_A_STRING', () => {
-				const { define } = require('../src/index');
+			it('should cover lazy TYPENAME_MUST_BE_A_STRING', () => {
+				const { lazy } = require('../src/index');
 				
 				// Define a type with a function that has no name property
 				expect(() => {
-					define(() => {
+					lazy(() => {
 						// Return an anonymous function without a name
 						const fn = function () {};
 						// Ensure it has no name
@@ -3073,31 +3085,118 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			});
 			});
 	
-			describe('Line 377 coverage - factory returns non-Function', () => {
-				it('should throw ALREADY_DECLARED when factory returns object instead of function', () => {
-					// Define a type first
-					define('TypeForLine377', function () { });
-					
-					// Try to redefine with factory that returns a non-Function (object)
-					// This triggers line 375-377: if (!(type instanceof Function)) throw new ALREADY_DECLARED
+			describe('lazy coverage - factory returns non-Function', () => {
+				it('should throw HANDLER_MUST_BE_A_FUNCTION when lazy factory returns object', () => {
+					const { lazy } = require('../src/index');
 					expect(() => {
-						define('TypeForLine377', () => {
+						lazy(() => {
 							// Return an object instead of a function
 							const fnResult = { notAFunction: true } as unknown as CallableFunction;
 							return fnResult;
 						});
-					}).toThrow(ErrorsTypes.ALREADY_DECLARED);
+					}).toThrow(ErrorsTypes.HANDLER_MUST_BE_A_FUNCTION);
 				});
 			});
 
-			describe('isLazyGetter catch coverage', () => {
-				it('should throw ALREADY_DECLARED when factory throws', () => {
-					define('TypeForLazyCatch', function () { });
+			describe('lazy coverage - factory throws', () => {
+				it('should propagate the factory error', () => {
+					const { lazy } = require('../src/index');
 					expect(() => {
-						define('TypeForLazyCatch', () => {
+						lazy(() => {
 							throw new Error('factory throws');
 						});
-					}).toThrow(ErrorsTypes.ALREADY_DECLARED);
+					}).toThrow('factory throws');
+				});
+			});
+
+			describe('lazy coverage - named lazy on type proxy', () => {
+				it('should create a named lazy subtype', () => {
+					const NamedLazyJestType = UserType.lazy('NamedLazyJestType', () => {
+						return class NamedLazyJestType {};
+					});
+					expect(NamedLazyJestType.TypeName).toBe('NamedLazyJestType');
+				});
+			});
+
+			describe('lazy coverage - named free lazy', () => {
+				it('should create a named lazy top-level type', () => {
+					const FreeNamedLazyJestType = lazy('FreeNamedLazyJestType', () => {
+						return class FreeNamedLazyJestType {};
+					});
+					expect(FreeNamedLazyJestType.TypeName).toBe('FreeNamedLazyJestType');
+				});
+			});
+
+			describe('lazy coverage - explicit-source lazy', () => {
+				it('should support lazy(source, getter) form', () => {
+					const ExplicitSourceJestType = lazy(types, () => {
+						return class ExplicitSourceJestType {};
+					});
+					expect(ExplicitSourceJestType.TypeName).toBe('ExplicitSourceJestType');
+				});
+				it('should support lazy(source, name, getter) form', () => {
+					const ExplicitSourceNamedJestType = lazy(types, 'ExplicitSourceNamedJestType', () => {
+						return class SomeOtherClassName {};
+					});
+					expect(ExplicitSourceNamedJestType.TypeName).toBe('ExplicitSourceNamedJestType');
+				});
+			});
+
+			describe('lazy coverage - non-function getter', () => {
+				it('should throw HANDLER_MUST_BE_A_FUNCTION for missing getter', () => {
+					expect(() => {
+						lazy('NoGetterLazyType');
+					}).toThrow(errors.HANDLER_MUST_BE_A_FUNCTION);
+				});
+			});
+
+			describe('define coverage - anonymous function as first arg', () => {
+				it('should throw TYPENAME_MUST_BE_A_STRING for anonymous arrow', () => {
+					expect(() => {
+						define(() => {});
+					}).toThrow(errors.TYPENAME_MUST_BE_A_STRING);
+				});
+			});
+
+			describe('TypeDescriptor constructor ALREADY_DECLARED coverage', () => {
+				it('should throw ALREADY_DECLARED from TypeDescriptor constructor', () => {
+					expect(() => {
+						define('UserTypeConstructor', function () {});
+					}).toThrow(errors.ALREADY_DECLARED);
+				});
+			});
+
+			describe('free lazy this = mnemonica branch coverage', () => {
+				it('should cover checkThis true branch in free lazy', () => {
+					const MnemonicaThisJestType = mnemonica.lazy(() => {
+						return class MnemonicaThisJestType {};
+					});
+					expect(MnemonicaThisJestType.TypeName).toBe('MnemonicaThisJestType');
+				});
+			});
+
+			describe('lazy coverage - getter returns function without prototype', () => {
+				it('should cover getDefaultPrototype branch in createFromLazyGetter', () => {
+					const NoProtoLazyType = lazy('NoProtoLazyType', () => {
+						const ArrowCtor = () => {};
+						return ArrowCtor;
+					});
+					expect(NoProtoLazyType.TypeName).toBe('NoProtoLazyType');
+				});
+			});
+
+			describe('lazy coverage - config object branch', () => {
+				it('should cover config-as-object branch in lazy', () => {
+					const LazyWithConfigJestType = UserType.lazy(() => {
+						return class LazyWithConfigJestType {};
+					}, { strictChain: false });
+					expect(LazyWithConfigJestType.TypeName).toBe('LazyWithConfigJestType');
+				});
+				it('should cover config-as-function branch in lazy', () => {
+					const LazyWithFunctionConfigJestType = UserType.lazy(() => {
+						return class LazyWithFunctionConfigJestType {};
+					}, () => {});
+					expect(LazyWithFunctionConfigJestType.TypeName).toBe('LazyWithFunctionConfigJestType');
 				});
 			});
 

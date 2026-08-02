@@ -314,6 +314,7 @@ This is the primitive that is currently missing in the Node.js ecosystem for bui
 | Function | Purpose | Source |
 |---|---|---|
 | `define(name, ctor, config?)` | Create a type at module scope or as a subtype | [`src/index.ts`](./src/index.ts) |
+| `lazy(name?, getter, config?)` | Create a type from a zero-arg getter that returns the constructor | [`src/index.ts`](./src/index.ts) |
 | `lookup(path)` | Type-safe runtime lookup — requires `TypeRegistry` augmentation (by hand or via [`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica); see [`docs/typed-lookup.md`](./docs/typed-lookup.md)) | [`src/index.ts`](./src/index.ts) |
 | `lookup(path)` | Untyped runtime lookup | [`src/index.ts`](./src/index.ts) |
 | `apply(parent, Ctor, args)` / `call(...)` / `bind(...)` | Apply a constructor to a parent instance | [`src/index.ts`](./src/index.ts) |
@@ -322,6 +323,39 @@ This is the primitive that is currently missing in the Node.js ecosystem for bui
 | `setProps(instance, values)` | Mutates internal props (advanced; rarely needed) | [`src/api/types/Props.ts`](./src/api/types/Props.ts) |
 | `registerHook(Ctor, type, cb)` | Register hook on a specific constructor | [`src/index.ts`](./src/index.ts) |
 | `defaultTypes` | The default collection — has its own `.registerHook()` for collection-wide hooks | [`src/index.ts`](./src/index.ts) |
+
+### Lazy type definitions
+
+In addition to `define()`, mnemonica provides `.lazy()` for cases where the
+constructor must be resolved through a getter — for example, to break a
+circular dependency or to defer constructor selection until definition time.
+
+```typescript
+const User = define('User', function (data: { name: string }) {
+    this.name = data.name;
+});
+
+// unnamed: type name is taken from the returned constructor's .name
+const Admin = User.lazy(() => class Admin {
+    role: string;
+    constructor(role: string) {
+        this.role = role;
+    }
+});
+
+// named: explicit type name
+const Guest = User.lazy('Guest', () => function (this: Guest, token: string) {
+    this.token = token;
+});
+
+const admin = new user.Admin('root');
+```
+
+`.lazy()` is chainable on constructors and collections, available as a free
+`lazy(...)` export, and supports an explicit-source form
+`lazy(source, name?, getter, config?)`. The resulting type participates in the
+same registry, `.lookup()`, and subtype chaining as a type created with
+`.define()`.
 
 ### Instance methods
 

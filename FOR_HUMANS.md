@@ -493,6 +493,7 @@ const AsyncTypeNoReturn = define('AsyncType', async function () {
 | I want to... | Use |
 |---|---|
 | Define a type | `define('Name', ctor)` |
+| Define a type lazily | `lazy('Name', () => ctor)` or `Type.lazy(() => ctor)` |
 | Create from instance | `new instance.SubType(args)` |
 | Look up a type | `lookup('Name')` or `lookup('Name')` |
 | Read construction history | `getProps(instance)` |
@@ -519,6 +520,36 @@ const MyType = define('MyType', function (data) {
 **Parameters:**
 - `typeName` (string): Name of the type (optional if using factory function)
 - `constructHandler` (Function): Constructor function
+- `config` (object, optional): Configuration options
+
+#### `lazy(typeName?, getter, config?)`
+
+Defines a type whose constructor is resolved through a zero-arg getter. Useful
+for breaking circular dependencies or deferring constructor selection until
+definition time. The resulting type behaves like a type created with `define()`.
+
+```js
+const { lazy } = require('mnemonica');
+
+// unnamed: type name is taken from the returned constructor's .name
+const LazyType = lazy(() => function LazyType(data) {
+  Object.assign(this, data);
+});
+
+// named: explicit type name
+const NamedType = lazy('NamedType', () => function (data) {
+  Object.assign(this, data);
+});
+
+// chainable on constructors and collections
+const SubType = MyType.lazy('SubType', () => function (data) {
+  this.extra = data;
+});
+```
+
+**Parameters:**
+- `typeName` (string, optional): Name of the type. If omitted, the name is taken from the getter's returned constructor.
+- `getter` (Function): Zero-arg function returning the constructor.
 - `config` (object, optional): Configuration options
 
 #### `lookup(typeNestedPath)`
@@ -619,6 +650,7 @@ For advanced TypeScript usage, the following types are exported from `mnemonica`
 | Type | Description | Usage |
 |------|-------------|-------|
 | `IDEF<T>` | Base constructor function type | `define('Name', fn: IDEF<MyType>)` |
+| `LazyDef<T>` | Zero-arg getter returning a constructor | `lazy('Name', fn: LazyDef<MyType>)` |
 | `MnemonicaInstance` | Optional helper interface | Can be used when attaching the legacy instance methods to your own prototype |
 | `TypeClass` | Base type constructor | `const MyType: TypeClass = define(...)` |
 | `DecoratedClass<T>` | Decorated class type | `@decorate() class MyClass {}` (see [`docs/decorate.md`](./docs/decorate.md)) |

@@ -40,13 +40,18 @@ When the task involves adding or modifying a type definition:
    - Free `lookup()` on a builder project? Use the one-line `RegistryOf` bridge — see [docs/typed-lookup.md](./docs/typed-lookup.md).
    - Using tactica / `@decorate()`? Does `.tactica/types.ts` need updating? Is `lookup('MyType')` properly typed? See [tactica-deep-dive.md](./docs/tactica-deep-dive.md)
 
-3. **Test both success and error paths**
+3. **If the constructor needs a getter**, use `.lazy()`
+   - `.define()` no longer accepts an anonymous first-argument function.
+   - Use `Type.lazy('Name', () => Constructor)` or the free `lazy(...)` export.
+   - See [rules-define-patterns.md](.ai/rules-define-patterns.md)
+
+4. **Test both success and error paths**
    - Mocha test in `test/` for runtime behavior
    - Jest test in `test-jest/` for type coverage
    - Error path: test `ALREADY_DECLARED`, `WRONG_MODIFICATION_PATTERN`
    - See [rules-testing.md](.ai/rules-testing.md)
 
-4. **Run coverage before completing**
+5. **Run coverage before completing**
    - `npm run test:cov` (Mocha + build)
    - `npm run test:jest:cov` (Jest on TypeScript source)
 

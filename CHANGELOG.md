@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Migrated lazy type definitions from implicit `.define(() => Constructor)`
+  probing to the explicit `.lazy(name?, getter, config?)` API. `.define()`
+  no longer accepts an anonymous function as its first argument; use `.lazy()`
+  when the constructor must be resolved through a getter.
 - Use the standalone `utils.*` API for instance introspection:
   `utils.extract(instance)`, `utils.pick(instance, ...)`,
   `utils.parent(instance, ...)`, `utils.clone(instance)`,
@@ -39,6 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Explicit `.lazy()` API: chainable on constructors and collections
+  (`Type.lazy(() => Constructor)`, `collection.lazy('Name', () => Constructor)`),
+  available as a free export (`lazy(...)`), and with an explicit-source form
+  (`lazy(source, name?, getter, config?)`). The exported `LazyDef` type
+  describes the zero-arg getter returned constructors must satisfy.
 - `test/instance-methods-helper.js` and `test-jest/instance-methods-helper.ts`
   showing the opt-in pattern for attaching legacy instance methods to a
   constructor prototype before `define()`.

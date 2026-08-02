@@ -106,7 +106,7 @@ require user approval first.
 
 ```
 src/
-├── index.ts           # Main exports: define, lookup, apply, call, bind
+├── index.ts           # Main exports: define, lazy, lookup, apply, call, bind
 ├── types/index.ts     # TypeScript type definitions
 ├── constants/         # Symbols and default options
 ├── descriptors/       # Type collection and error definitions

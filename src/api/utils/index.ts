@@ -14,7 +14,7 @@ const {
 const { WRONG_TYPE_DEFINITION, } = ErrorsTypes;
 
 import {
-	_getProps, Props 
+	_getProps, Props
 } from '../types/Props';
 import type { MnemonicaConstructor } from '../../types';
 
@@ -39,22 +39,22 @@ const getTypeChecker = (TypeName: string) => {
 			return false;
 		}
 
-		 
+
 		if (!instance!.constructor) {
 			return false;
 		}
-		 
+
 		// @ts-expect-error I'm too lazy for that
 		if (Reflect.getPrototypeOf(instance).constructor.name === 'Promise') {
 			// if ( instance instanceof Promise ) {
-			 
+
 			// @ts-expect-error I'm too lazy for that
 			const checkResult = instance[ SymbolConstructorName ] === TypeName;
 			return checkResult;
 		}
 
 		const constructors = collectConstructors(instance) as Record<string, new () => unknown>;
-		 
+
 		const constructorResult = constructors[ TypeName ] || false;
 		return constructorResult;
 
@@ -176,7 +176,7 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 	const props = _getProps(instance) as Props;
 
 	if (props) {
-		if(props.__type__.subtypes.has(subType)) {
+		if (props.__type__.subtypes.has(subType)) {
 			const _subtype = props.__type__.subtypes.get(subType);
 			subtype = _subtype;
 		} else {
@@ -186,7 +186,7 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 			);
 		}
 	}
-	 
+
 	// @ts-expect-error I'm too lazy for that
 	return subtype;
 };
@@ -199,12 +199,12 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 // accordingly to the gist from here:
 // https://gist.github.com/wentout/ea3afe9c822a6b6ef32f9e4f3e98b1ba
 const isClass = (fn: ConstructHandler) => {
-	
+
+	/*
 	const str = String(fn);
 	const result = str.indexOf('class ') === 0;
 	return result;
 
-	/*
 
 	// not necessary to check fn for typeof
 	// because of other checks made before
@@ -234,6 +234,10 @@ const isClass = (fn: ConstructHandler) => {
 	return Reflect.getOwnPropertyDescriptor(fn, 'prototype')!.writable === false;
 
 	*/
+
+	const protoDesc = Reflect.getOwnPropertyDescriptor(fn, 'prototype');
+	const result = protoDesc !== undefined && protoDesc.writable === false;
+	return result;
 };
 
 const makeErrorModificatorType = (

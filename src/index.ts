@@ -13,6 +13,7 @@ import type {
 	DecoratedClass,
 	TypeClass,
 	TypeAbsorber,
+	LazyAbsorber,
 	MnemonicaModule,
 	InstanceResult,
 	Merge,
@@ -30,6 +31,7 @@ export const {
 
 export type {
 	IDEF,
+	LazyDef,
 	TypeConstructor,
 	TypeConstructorBase,
 	Proto,
@@ -175,6 +177,68 @@ export function define <
 			configOrHandler as constructorOptions
 		) as unknown as R;
 	return defineResult;
+}
+
+export function lazy<T extends object>(
+	// explicit-source named form: lazy(source, TypeName, getter, config?)
+	source: RegistryHolderBase<object, object, string>,
+	TypeName: string,
+	getter: () => IDEF<T>,
+	config?: constructorOptions
+): IDefinitorInstance<T>;
+export function lazy<T extends object>(
+	// explicit-source unnamed form: lazy(source, getter, config?)
+	source: RegistryHolderBase<object, object, string>,
+	getter: () => IDEF<T>,
+	config?: constructorOptions
+): IDefinitorInstance<T>;
+export function lazy<T extends object>(
+	// named form: lazy(TypeName, getter, config?)
+	this: unknown,
+	TypeName: string,
+	getter: () => IDEF<T>,
+	config?: constructorOptions
+): IDefinitorInstance<T>;
+export function lazy<T extends object>(
+	// unnamed form: lazy(getter, config?)
+	this: unknown,
+	getter: () => IDEF<T>,
+	config?: constructorOptions
+): IDefinitorInstance<T>;
+export function lazy(
+	this: unknown,
+	arg1: unknown,
+	arg2?: unknown,
+	arg3?: unknown,
+	arg4?: unknown
+): unknown {
+
+	// explicit-source form: lazy(source, name?, getter, config?)
+	// the source may be a TypesCollection (object) or a TypeProxy (function),
+	// so detection is: has a callable .lazy
+	const mayBeSource = (
+		(typeof arg1 === 'object' && arg1 !== null) ||
+		typeof arg1 === 'function'
+	) && typeof (arg1 as { lazy?: unknown }).lazy === 'function';
+	if (mayBeSource) {
+		const source = arg1 as unknown as { lazy: LazyAbsorber };
+		const sourceLazyResult = source.lazy(
+			arg2 as string | (() => IDEF<object>),
+			arg3 as (() => IDEF<object>) | constructorOptions,
+			arg4 as constructorOptions
+		) as unknown;
+		return sourceLazyResult;
+	}
+
+	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
+	// Type assertion needed because TypesCollectionProxy is a Proxy
+	const lazyResult = (types as { lazy: LazyAbsorber })
+		.lazy(
+			arg1 as string | (() => IDEF<object>),
+			arg2 as (() => IDEF<object>) | constructorOptions,
+			arg3 as constructorOptions
+		) as unknown;
+	return lazyResult;
 }
 
 export function lookup<const K extends keyof TypeRegistry>(
@@ -336,6 +400,7 @@ export const registerHook = function <T extends Constructor<T>>(
 export const mnemonica = Object.entries({
 
 	define,
+	lazy,
 	lookup,
 	apply,
 	call,
@@ -370,6 +435,7 @@ import * as api from './api';
 
 export const {
 	define: _define,
+	lazy: _lazy,
 	lookup: _lookup
 } = api.types;
 

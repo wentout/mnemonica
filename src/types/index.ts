@@ -13,6 +13,10 @@ export type PropsType = Record<string, unknown>;
 // supply Args to get typed constructor params: IDEF<MyType, [string, number]>
 export type IDEF<T, Args extends unknown[] = unknown[]> = { new(): T } | { (this: T, ...args: Args): void };
 
+// Lazy getter type - a zero-arg factory that returns a constructor.
+// Used by the explicit .lazy() API.
+export type LazyDef<T, Args extends unknown[] = unknown[]> = () => IDEF<T, Args>;
+
 // Error message types - all error messages are strings
 export type ErrorMessageKey =
 	| 'BASE_ERROR_MESSAGE'
@@ -581,6 +585,31 @@ export interface RegistryHolderBase<
 		T & Record<ChildPath, StoredConstructor<F, ChildPath>>,
 		ChildPath
 	>;
+
+	// Explicit lazy getter: .lazy(() => Constructor, config?)
+	lazy<SubType extends object>(
+		this: RegistryHolderBase<T, Parent, Path>,
+		getter: LazyDef<SubType>,
+		config?: constructorOptions
+	): IDefinitorInstance<SubType>;
+
+	// Named lazy getter: .lazy(TypeName, () => Constructor, config?)
+	lazy<
+		const Name extends string,
+		N extends object,
+		F extends Proto<Parent, N> = Proto<Parent, N>,
+		ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
+	>(
+		this: RegistryHolderBase<T, Parent, Path>,
+		TypeName: Name,
+		getter: LazyDef<N>,
+		config?: constructorOptions
+	): IDefinitorInstance<
+		F,
+		InstanceResult<F>,
+		T & Record<ChildPath, StoredConstructor<F, ChildPath>>,
+		ChildPath
+	>;
 }
 
 // Full registry holder - adds typed .lookup() for collections that are not
@@ -624,6 +653,8 @@ export interface IDefinitorInstance<
 
 	lookup: TypeLookup<Registry>;
 
+	decorate: (config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, Registry>;
+
 	registerHook(hookType: hooksTypes, cb: hook): void;
 
 	subtypes: SubtypesMap;
@@ -652,6 +683,47 @@ export interface TypeAbsorber extends CallableFunction {
 	): IDefinitorInstance<T>;
 }
 
+// Lazy absorber function type - used for explicit lazy getter definitions
+export interface LazyAbsorber extends CallableFunction {
+	<T extends object>(
+		this: unknown,
+		getter: LazyDef<T>,
+		config?: constructorOptions
+	): IDefinitorInstance<T>;
+	<T extends object>(
+		this: unknown,
+		TypeName: string,
+		getter: LazyDef<T>,
+		config?: constructorOptions
+	): IDefinitorInstance<T>;
+	<T extends object>(
+		this: unknown,
+		arg1: string | LazyDef<T>,
+		arg2: LazyDef<T> | constructorOptions,
+		arg3?: constructorOptions
+	): IDefinitorInstance<T>;
+	<T extends object>(
+		this: unknown,
+		source: RegistryHolderBase<object, object, string>,
+		getter: LazyDef<T>,
+		config?: constructorOptions
+	): IDefinitorInstance<T>;
+	<T extends object>(
+		this: unknown,
+		source: RegistryHolderBase<object, object, string>,
+		TypeName: string,
+		getter: LazyDef<T>,
+		config?: constructorOptions
+	): IDefinitorInstance<T>;
+	<T extends object>(
+		this: unknown,
+		source: RegistryHolderBase<object, object, string>,
+		arg1: string | LazyDef<T>,
+		arg2: LazyDef<T> | constructorOptions,
+		arg3?: constructorOptions
+	): IDefinitorInstance<T>;
+}
+
 // TypesCollection interface for createTypesCollection
 // This represents the actual return type of createTypesCollection
 export interface TypesCollection<
@@ -661,6 +733,16 @@ export interface TypesCollection<
 >
 	extends RegistryHolder<T, Parent, Path>, Hookable {
 	subtypes: SubtypesMap;
+
+	// Decorator factory: .decorate() or .decorate(config)
+	// Returns a class decorator that registers the class in this collection's registry.
+	decorate(
+		config?: constructorOptions
+	): <U extends Constructor<object>>(cstr: U) => DecoratedClass<
+		U,
+		T & Record<ConstructorName<U>, StoredConstructor<InstanceType<U>, ConstructorName<U>>>
+	>;
+
 	[key: string]: unknown;
 }
 
@@ -702,12 +784,21 @@ export interface TypeDescriptorDefine extends CallableFunction {
 	): TypeClass;
 }
 
+export interface TypeDescriptorLazy extends CallableFunction {
+	(
+		getter: CallableFunction,
+		config?: object
+	): TypeClass;
+}
+
 export interface TypeDescriptorLookup extends CallableFunction {
 	(TypeNestedPath: string): TypeClass | undefined;
 }
 
 export type TypeDescriptorInstance = {
 	define: TypeDescriptorDefine;
+	lazy: TypeDescriptorLazy;
+	decorate: (config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
 	lookup: TypeDescriptorLookup;
 	subtypes: Map<string, object>;
 	TypeName: string;
@@ -723,18 +814,22 @@ export type ConstructorName<T extends Constructor<object>> =
 
 // Decorated class type - includes call signature for decorator pattern and
 // aligns with `IDefinitorInstance` so decorated classes expose the same
-// constructor/lookup surface as builder-created types. It still relies on the
-// global `TypeRegistry` for typed lookups because decorators cannot carry a
-// local accumulating registry across independent class declarations.
-export type DecoratedClass<T extends Constructor<object>> =
+// constructor/lookup surface as builder-created types.
+// `Registry` defaults to the global `TypeRegistry`; for custom collections it
+// is the collection's local registry so `lookup()` and nested `.decorate()`
+// stay inside that collection.
+export type DecoratedClass<
+	T extends Constructor<object>,
+	Registry extends object = TypeRegistry
+> =
 	T &
 	Omit<
-		IDefinitorInstance<InstanceType<T>, InstanceType<T>, TypeRegistry, ConstructorName<T>>,
+		IDefinitorInstance<InstanceType<T>, InstanceType<T>, Registry, ConstructorName<T>>,
 		'define' | 'lookup'
 	> &
-	(<U extends Constructor<object>>(target: U) => DecoratedClass<U>) & {
+	(<U extends Constructor<object>>(target: U) => DecoratedClass<U, Registry>) & {
 		define: TypeAbsorber;
-		lookup: TypeLookup<TypeRegistry>;
+		lookup: TypeLookup<Registry>;
 	};
 
 // Helper: merge parent entity (E) and child constructor instance (T) into a
@@ -809,7 +904,7 @@ export interface MnemonicaModule<Registry extends object = {}>
 	decorate: <T extends Constructor<object> | constructorOptions | undefined = undefined>(
 		target?: T,
 		config?: constructorOptions
-	) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
+	) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, Registry>;
 	registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
 
 	// Descriptors

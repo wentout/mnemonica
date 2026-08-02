@@ -15,6 +15,7 @@ import {
 } from './hooks';
 import {
 	define,
+	lazy,
 	lookup,
 } from './types';
 
@@ -28,5 +29,6 @@ export const hooks = {
 
 export const types = {
 	define,
+	lazy,
 	lookup,
 };
