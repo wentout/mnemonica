@@ -5,6 +5,7 @@ import { asyncChainTests } from './async.chain';
 import { environmentTests } from './environment';
 import { withInstanceMethods } from './instance-methods-helper';
 import './utils';
+import './collection-decorate';
 import type {
 	HookInvocationEntry,
 	HookInvocationsArray,
@@ -24,7 +25,6 @@ import type {
 	SubOfNestedAsyncPostHookData,
 	BoundMethodAsConstructor,
 	ChainedMethodResult,
-	AsyncInstanceWithSymbols,
 	TypeWithApplyDecorator
 } from './types';
 import type { hooksOpts } from '../src/types';
@@ -62,8 +62,6 @@ const {
 	lazy,
 	defaultTypes: types,
 	MNEMONICA,
-	URANUS,
-	SymbolGaia,
 	lookup,
 	getProps,
 	apply,
@@ -1426,6 +1424,156 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				}
 			});
 
+			describe('.parent("A.B") dotted path checks', () => {
+
+				const DotA = define('DotA', function (this: { mark: string }) {
+					this.mark = 'DotA';
+				});
+				const DotB = DotA.define('DotB', function (this: { mark: string }) {
+					this.mark = 'DotB';
+				});
+				DotB.define('DotC', function (this: { mark: string }) {
+					this.mark = 'DotC';
+				});
+
+				const dotA = new DotA();
+				const dotB = new dotA.DotB();
+				const dotC = new dotB.DotC();
+
+				it('should return the endpoint instance of a contiguous path', () => {
+					expect(parent(dotC, 'DotA.DotB')).toBe(dotB);
+					expect(parent(dotC, 'DotB')).toBe(dotB);
+				});
+
+				it('should return undefined for non-contiguous path', () => {
+					expect(parent(dotC, 'DotA.DotC')).toBeUndefined();
+				});
+
+				it('should return undefined when window walks past the root', () => {
+					expect(parent(dotC, `DotA.${MNEMONICA}`)).toBeUndefined();
+				});
+
+				it('should never return the instance itself, even via full path', () => {
+					expect(parent(dotC, 'DotA.DotB.DotC')).toBeUndefined();
+				});
+
+				it('should return undefined when a leading segment mismatches', () => {
+					// dotA matches the last segment, but its parent is the chain
+					// root, not a "DotB" instance
+					expect(parent(dotC, 'DotB.DotA')).toBeUndefined();
+				});
+
+				it('should return undefined for props-less instances', () => {
+					expect(parent({}, 'DotA')).toBeUndefined();
+				});
+
+				describe('repeated names in one lineage', () => {
+
+					const ReUser = define('ReUser', function (this: { level: string }) {
+						this.level = 'ReUser';
+					});
+					const ReData1Type = ReUser.define('ReData', function (this: { level: string }) {
+						this.level = 'ReData1';
+					});
+					const ReData2Type = ReData1Type.define('ReData', function (this: { level: string }) {
+						this.level = 'ReData2';
+					});
+					ReData2Type.define('ReData', function (this: { level: string }) {
+						this.level = 'ReData3';
+					});
+
+					const reUser = new ReUser();
+					const reData1 = new reUser.ReData();
+					const reData2 = new reData1.ReData();
+					const reData3 = new reData2.ReData();
+
+					it('leaf name returns the nearest ancestor', () => {
+						expect(parent(reData3, 'ReData')).toBe(reData2);
+					});
+
+					it('dotted path disambiguates repeated names', () => {
+						expect(parent(reData3, 'ReData.ReData')).toBe(reData2);
+						expect(parent(reData3, 'ReUser.ReData')).toBe(reData1);
+						expect(parent(reData3, 'ReUser.ReData.ReData')).toBe(reData2);
+					});
+
+				});
+
+				describe('strictChain off ancestor re-construction', () => {
+
+					const AncUser = define('AncUser', function (this: { level: string }) {
+						this.level = 'AncUser';
+					});
+					// strictChain guards two gates, both must be off for re-construction:
+					// 1. Mnemosyne's prepareSubtypeForConstruction checks the config of the
+					//    entity's type (AncSub) before resolving a subtype from ancestors
+					// 2. InstanceCreator's postProcessing checks the config of the target
+					//    type (AncData) before accepting a parent of a "wrong" type
+					const AncDataType = AncUser.define('AncData', function (this: { level: string }) {
+						this.level = 'AncData';
+					}, {
+						strictChain: false
+					});
+					AncDataType.define('AncSub', function (this: { level: string }) {
+						this.level = 'AncSub';
+					}, {
+						strictChain: false
+					});
+
+					const ancUser = new AncUser();
+					const ancData = new ancUser.AncData();
+					const ancSub = new ancData.AncSub();
+					const reConstructed = apply(ancSub, AncDataType);
+					// lineage: ancUser → ancData → ancSub → reConstructed(AncData) → deepSub(AncSub)
+					const deepSub = new (reConstructed as typeof ancData).AncSub();
+
+					it('re-constructs a predecessor type on a deeper ancestor', () => {
+						expect(getProps(reConstructed).__parent__).toBe(ancSub);
+					});
+
+					it('leaf name still seeks the nearest matching ancestor', () => {
+						expect(parent(reConstructed, 'AncData')).toBe(ancData);
+						expect(parent(deepSub, 'AncData')).toBe(reConstructed);
+					});
+
+					it('dotted path resumes scanning after a window mismatch', () => {
+						// the nearest "AncData" is reConstructed, but its parent is
+						// ancSub, not an "AncUser" — the older ancData ← ancUser pair must win
+						expect(parent(deepSub, 'AncUser.AncData')).toBe(ancData);
+					});
+
+					it('dotted path matches repeated names contiguously', () => {
+						expect(parent(deepSub, 'AncData.AncSub')).toBe(ancSub);
+						expect(parent(deepSub, 'AncSub.AncData')).toBe(reConstructed);
+						expect(parent(deepSub, 'AncData.AncSub.AncData')).toBe(reConstructed);
+					});
+
+				});
+
+			});
+
+			describe('subtype lookup caching', () => {
+
+				const CacheRoot = define('CacheRoot', function (this: { v: number }) {
+					this.v = 0;
+				});
+				CacheRoot.define('CacheSub', function (this: { s: number }) {
+					this.s = 1;
+				});
+				const cacheInst = new CacheRoot();
+
+				it('repeated subtype access returns the same constructor', () => {
+					expect(cacheInst.CacheSub).toBe(cacheInst.CacheSub);
+				});
+
+				it('cached constructor still builds proper instances', () => {
+					const cacheSub = new cacheInst.CacheSub();
+					expect(cacheSub.s).toEqual(1);
+					expect(getProps(cacheSub).__parent__).toBe(cacheInst);
+				});
+
+			});
+
 			describe('merge tests', () => {
 				it('should merge instances properly', () => {
 					expect(merged).toBeDefined();
@@ -1927,16 +2075,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(asyncInstanceFork).toBeInstanceOf(AsyncType);
 
 				expect(typeof asyncInstanceDirect.on === 'function').toEqual(true);
-				// Skip Gaia checks if not available in this environment
-				if (asyncInstanceDirect[SymbolGaia]) {
-					expect(ogp(ogp(asyncInstanceDirect[SymbolGaia])) === process).toEqual(true);
-					expect((((asyncInstanceDirect as unknown) as AsyncInstanceWithSymbols)[SymbolGaia] as Record<string, unknown>)[MNEMONICA] === URANUS).toEqual(true);
-				}
 				expect(typeof asyncInstanceDirectApply.on === 'function').toEqual(true);
-				if (asyncInstanceDirectApply[SymbolGaia]) {
-					expect(ogp(ogp(asyncInstanceDirectApply[SymbolGaia])) === process).toEqual(true);
-					expect((((asyncInstanceDirectApply as unknown) as AsyncInstanceWithSymbols)[SymbolGaia] as Record<string, unknown>)[MNEMONICA] === URANUS).toEqual(true);
-				}
 
 				expect(nestedAsyncInstance).toBeInstanceOf(AsyncType);
 				expect(nestedAsyncInstance).toBeInstanceOf(NestedAsyncType);
@@ -2202,7 +2341,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				// Test the decorator pattern through apply method
 				const BaseType = define('BaseTypeForApply', function () {});
 				
-				// Use apply with undefined Uranus to get decorator
+				// Use apply with undefined thisArg to get decorator
 				const DecoratorType = ((BaseType as unknown) as TypeWithApplyDecorator).apply(undefined, [undefined], [{ strictChain: false }]);
 				expect(typeof DecoratorType).toBe('function');
 			});
@@ -2377,7 +2516,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const instance = new BaseType();
 				
 				// Call the decorator pattern through .apply() usage
-				// When Uranus is undefined, apply returns a decorator function
+				// When thisArg is undefined, apply returns a decorator function
 				BaseType.define('DecoratorSubType', function (this: { value: string }) {
 					this.value = 'decorated';
 				});

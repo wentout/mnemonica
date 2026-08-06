@@ -19,7 +19,7 @@ const {
 
 import TypesUtils from '../utils';
 const {
-	getTypeChecker,
+	getCachedTypeChecker,
 	findSubTypeFromParent,
 	reflectPrimitiveWrappers
 } = TypesUtils;
@@ -105,13 +105,18 @@ const makeSubTypeProxy = function (subtype: SubtypeEntry, inheritedInstance: unk
 		return instance;
 	};
 
-	const typeChecker = getTypeChecker(subtype.TypeName);
+	const typeChecker = getCachedTypeChecker(subtype.TypeName);
 	Object.defineProperty(SubTypeProxy, Symbol.hasInstance, {
 		value : typeChecker
 	});
 
 	return SubTypeProxy;
 };
+
+// per-instance cache of subtype constructors: resolving instance.SubType
+// used to allocate a fresh closure (and a type checker) on EVERY property
+// access — the most expensive read path in the library by far
+const SubTypeProxyCache = new WeakMap<object, Map<string, object>>();
 
 const prepareSubtypeForConstruction = function (subtypeName: string, inheritedInstance: unknown) {
 	// prototype of proxy
@@ -139,10 +144,24 @@ const prepareSubtypeForConstruction = function (subtypeName: string, inheritedIn
 				subtypeName
 			);
 
-	const result = subtype ? makeSubTypeProxy(
-		subtype,
-		inheritedInstance
-	) : undefined;
+	if (!subtype) {
+		return undefined;
+	}
+
+	let instanceCache = SubTypeProxyCache.get(inheritedInstance as object);
+	if (!instanceCache) {
+		instanceCache = new Map<string, object>();
+		SubTypeProxyCache.set(inheritedInstance as object, instanceCache);
+	}
+
+	let result = instanceCache.get(subtypeName);
+	if (!result) {
+		result = makeSubTypeProxy(
+			subtype,
+			inheritedInstance
+		) as object;
+		instanceCache.set(subtypeName, result);
+	}
 	return result;
 };
 
@@ -229,7 +248,7 @@ export const Mnemosyne = function (this: object, mnemonica: object) {
 		Symbol.hasInstance,
 		{
 			get () {
-				const result = getTypeChecker(this.constructor.name);
+				const result = getCachedTypeChecker(this.constructor.name);
 				return result;
 			}
 		}
@@ -245,18 +264,18 @@ export const Mnemosyne = function (this: object, mnemonica: object) {
 
 } as _Internal_TC_<object>;
 
-const createMnemosyne = function (Uranus: unknown) {
-	// const createMnemosyne = function (Uranus: unknown, typeProxy: unknown) {
-	// 	if (typeof Uranus === 'undefined') {
-	// 		const { __type__: type, Uranus: _uranus } = typeProxy;
-	// 		console.log(type, _uranus);
+const createMnemosyne = function (ancestor: unknown) {
+	// const createMnemosyne = function (ancestor: unknown, typeProxy: unknown) {
+	// 	if (typeof ancestor === 'undefined') {
+	// 		const { __type__: type, ancestor: _ancestor } = typeProxy;
+	// 		console.log(type, _ancestor);
 	// 		// eslint-disable-next-line no-debugger
 	// 		debugger;
-	// 		throw new Error('createMnemosyne Uranus is not defined for typeProxy.');
+	// 		throw new Error('createMnemosyne ancestor is not defined for typeProxy.');
 	// 	}
 
-	const uranus = reflectPrimitiveWrappers(Uranus);
-	const mnemosyne = new Mnemosyne(uranus);
+	const wrappedAncestor = reflectPrimitiveWrappers(ancestor);
+	const mnemosyne = new Mnemosyne(wrappedAncestor);
 	const mnemosyneProxy = new Proxy(
 		mnemosyne,
 		{

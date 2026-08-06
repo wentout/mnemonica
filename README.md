@@ -203,13 +203,13 @@ These terms are used throughout the codebase and documentation with precise mean
 | **Trie node** | A type definition created by `define()`. Has a name, a constructor handler, a prototype, and a Map of subtypes. |
 | **Trie edge** | A parent-child relationship between two nodes. Created by `ParentType.define('ChildType', ...)`. |
 | **Trie path** | A sequence of edges from the root to a specific node. `UserType → AdminType → SuperAdminType` is a path. |
-| **Construction context** | The 9-tuple stored per instance: `__type__`, `__parent__`, `__args__`, `__timestamp__`, `__creator__`, `__collection__`, `__subtypes__`, `__proto_proto__`, `__stack__`. Readable via `getProps(instance)`. |
+| **Construction context** | The construction record stored per instance (10 props): `__type__`, `__parent__`, `__args__`, `__timestamp__`, `__creator__`, `__collection__`, `__subtypes__`, `__proto_proto__`, `__stack__`, `__self__`. Readable via `getProps(instance)`. |
 | **Instance-level inheritance** | The mechanism where `new alice.Employee()` creates a prototype chain whose immediate parent is the **specific instance** `alice`, not a shared `Employee.prototype`. |
 | **Nominal type** | A type whose identity is determined by its constructor function reference, not by its property shape. Two types with identical fields but different constructors are different types. |
 | **Mnemosyne** | The prototype object inserted between `ModificatorType.prototype` and the parent instance. Stores internal construction context. User-facing instance methods (`extract`, `pick`, `parent`, etc.) are available through standalone `utils.*` or by explicit prototype attachment. |
 | **TypeProxy** | The constructor-like object returned by `define()`. Wraps the raw constructor with `.define()`, `.lookup()`, `.registerHook()` methods. |
 | **ModificatorType** | The actual constructor function used for `new` calls. Its prototype is linked to Mnemosyne, which is linked to the parent instance. |
-| **WeakMap key** | Internal properties are stored in a `WeakMap` keyed by the **Mnemosyne object**, not the instance itself. This keeps instance enumeration clean and shares metadata across instances of the same type. |
+| **WeakMap key** | Internal properties are stored in a `WeakMap` keyed by the **Mnemosyne object**, not the instance itself. This keeps instance enumeration clean; a fresh Mnemosyne object is created per construction, so metadata is strictly per-instance. |
 
 For the full construction pipeline from `define()` through `TypeProxy` → `InstanceCreator` → `Mnemosyne` → instance, see [`.ai/theory-of-operations.md`](./.ai/theory-of-operations.md).
 
@@ -419,6 +419,7 @@ Hook data shape: `hooksOpts<P, T>` in [`src/types/index.ts`](./src/types/index.t
 | `__subtypes__` | Map of available subtypes for this instance |
 | `__proto_proto__` | The prototype object used during construction |
 | `__stack__` | Construction stack trace (only if `submitStack: true`) |
+| `__self__` | The instance this record belongs to — installed separately after construction, because the instance does not exist yet when the other props are written. When repeated `getPrototypeOf` hops have lost track of where you are in the chain, `__self__` tells you. Also used as the async completion marker (`makeAwaiter`) and the fork self-call detector |
 
 Full shape in [`src/types/index.ts`](./src/types/index.ts) (`InstanceInternalProps`).
 
@@ -436,16 +437,16 @@ new instance.SubType(args)
   InstanceCreator               ← validates parent, resolves TypeDef
          │
          ▼
-  preCreation hooks             ← may throw → creationError hooks fire instead
+  preCreation hooks             ← may throw → construction aborts, the error propagates (no creationError hooks)
          │
          ▼
-  Object.create(existentInstance)   ← prototype IS the parent instance
+  Mnemosyne memory layer created, proto-linked to the parent instance
+         │
+         ▼
+  WeakMap.set(memoryLayer, internalProps)    ← __type__, __parent__, __args__, __timestamp__, ...
          │
          ▼
   constructHandler.call(newObj, args)   ← user constructor runs
-         │
-         ▼
-  WeakMap.set(newObj, internalProps)    ← __type__, __parent__, __args__, __timestamp__, ...
          │
          ▼
   postCreation hooks
@@ -454,7 +455,7 @@ new instance.SubType(args)
   return newObj
 ```
 
-`preCreation` fires before `Object.create`; `postCreation` fires after the WeakMap is written. If the user constructor throws, `creationError` fires and the instance is not returned. The object carries none of the internal props as own properties — they live in the WeakMap, readable via `getProps`.
+`preCreation` fires before the memory layer is created; `postCreation` fires after the user constructor runs. If the user constructor throws, `creationError` fires and the instance is not returned. The object carries none of the internal props as own properties — they live in the WeakMap, readable via `getProps`.
 
 See [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts) and [`src/api/types/TypeProxy.ts`](./src/api/types/TypeProxy.ts).
 

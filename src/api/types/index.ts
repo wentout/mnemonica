@@ -76,7 +76,7 @@ import compileNewModificatorFunctionBody, { ConstructHandler } from './compileNe
 
 import TypesUtils, { CreationHandler } from '../utils';
 const {
-	getTypeChecker,
+	getCachedTypeChecker,
 	getTypeSplitPath,
 	checkTypeName,
 	isClass,
@@ -185,13 +185,13 @@ const TypeDescriptor = function (
 		}
 	);
 
-	// const Uranus = isSubType ? Object.create(null) : proto;
-	const Uranus = isSubType ? undefined : proto;
+	// const ancestor = isSubType ? Object.create(null) : proto;
+	const ancestor = isSubType ? undefined : proto;
 	types.set(
 		TypeName,
 		new TypeProxy(
 			type,
-			Uranus
+			ancestor
 		)
 	);
 
@@ -285,7 +285,7 @@ odp(
 	TypeDescriptor.prototype,
 	Symbol.hasInstance, {
 		get (this: TypeDescriptorInstance) {
-			const result = getTypeChecker(this.TypeName);
+			const result = getCachedTypeChecker(this.TypeName);
 			return result;
 		}
 	}

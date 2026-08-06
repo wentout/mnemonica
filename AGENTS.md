@@ -229,7 +229,7 @@ The library makes heavy use of JavaScript Proxies:
 
 ### Internal Instance Properties
 
-Stored in a `WeakMap` keyed by the instance, not as own properties on the instance itself. Access via `getProps(instance)`. For the full property list (9 entries, with meanings) see the **Internal instance properties** table in [`README.md`](./README.md) — that table is the canonical reference.
+Stored in a `WeakMap` keyed by the instance's **Mnemosyne memory layer** — the prototype object created per construction in `createInstanceModificator` — not as own properties on the instance itself. `_getProps` reaches it by walking the prototype chain from the instance. Access via `getProps(instance)`. For the full property list (9 entries, with meanings) see the **Internal instance properties** table in [`README.md`](./README.md) — that table is the canonical reference.
 
 `setProps(instance, values)` is the mutating counterpart; rarely needed and considered advanced.
 
@@ -307,6 +307,19 @@ If a comment becomes technically inaccurate after a change, update it rather tha
 ## Testing Requirements
 
 See [`.ai/rules-testing.md`](./.ai/rules-testing.md) for full coverage requirements and patterns. 100% required on both Mocha and Jest. Must run `npm run test:cov` before completing any task.
+
+## Before Saying a Task Is Done
+
+When a task uses a TODO list, the list is part of the deliverable:
+
+1. **Before reporting completion, update the TODO list** so every item is
+   marked done (struck through). A stale `in_progress` item reads as
+   unfinished work even when the work itself is complete.
+2. **Only mark items done that are verified** — tests green, coverage at
+   100% on both suites, `lint:md` clean where docs changed. Never mark an
+   item done just to tidy the list.
+3. **When the task concludes, wipe the TODO list.** A concluded task leaves
+   no list behind; the next task starts fresh.
 
 ## Common Patterns
 

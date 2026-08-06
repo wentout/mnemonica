@@ -132,7 +132,6 @@ const tests = ( opts ) => {
 					'Mnemonica',
 					'Mnemosyne',
 					// 'Object: null prototype',
-					// 'GaiaConstructor', // ancient memories
 					// 'Object'
 				] );
 			} );
@@ -148,9 +147,6 @@ const tests = ( opts ) => {
 				.map( ( name, idx ) => {
 					assert.include( constructorsSequence, name );
 					var iof = false;
-					// if ( name === 'Gaia' ) {
-					// 	debugger;
-					// }
 
 					if ( name === 'Object' ) {
 						iof = evenMore instanceof Object;
@@ -393,6 +389,132 @@ const tests = ( opts ) => {
 						.and.equal( `base of : ${MNEMONICA} : errors` );
 				} );
 			}
+		} );
+
+		describe( '.parent("A.B") dotted path checks', () => {
+
+			const DotA = define( 'DotA', function () { this.mark = 'DotA'; } );
+			const DotB = DotA.define( 'DotB', function () { this.mark = 'DotB'; } );
+			DotB.define( 'DotC', function () { this.mark = 'DotC'; } );
+
+			const dotA = new DotA();
+			const dotB = new dotA.DotB();
+			const dotC = new dotB.DotC();
+
+			it( 'should return the endpoint instance of a contiguous path', () => {
+				assert.equal( parent( dotC, 'DotA.DotB' ), dotB );
+				assert.equal( parent( dotC, 'DotB' ), dotB );
+			} );
+
+			it( 'should return undefined for non-contiguous path', () => {
+				assert.equal( parent( dotC, 'DotA.DotC' ), undefined );
+			} );
+
+			it( 'should return undefined when window walks past the root', () => {
+				assert.equal( parent( dotC, `DotA.${MNEMONICA}` ), undefined );
+			} );
+
+			it( 'should never return the instance itself, even via full path', () => {
+				assert.equal( parent( dotC, 'DotA.DotB.DotC' ), undefined );
+			} );
+
+			it( 'should return undefined when a leading segment mismatches', () => {
+				// dotA matches the last segment, but its parent is the chain
+				// root, not a "DotB" instance
+				assert.equal( parent( dotC, 'DotB.DotA' ), undefined );
+			} );
+
+			it( 'should return undefined for props-less instances', () => {
+				assert.equal( parent( {}, 'DotA' ), undefined );
+			} );
+
+			describe( 'repeated names in one lineage', () => {
+
+				const ReUser = define( 'ReUser', function () { this.level = 'ReUser'; } );
+				const ReData1Type = ReUser.define( 'ReData', function () { this.level = 'ReData1'; } );
+				const ReData2Type = ReData1Type.define( 'ReData', function () { this.level = 'ReData2'; } );
+				ReData2Type.define( 'ReData', function () { this.level = 'ReData3'; } );
+
+				const reUser = new ReUser();
+				const reData1 = new reUser.ReData();
+				const reData2 = new reData1.ReData();
+				const reData3 = new reData2.ReData();
+
+				it( 'leaf name returns the nearest ancestor', () => {
+					assert.equal( parent( reData3, 'ReData' ), reData2 );
+				} );
+
+				it( 'dotted path disambiguates repeated names', () => {
+					assert.equal( parent( reData3, 'ReData.ReData' ), reData2 );
+					assert.equal( parent( reData3, 'ReUser.ReData' ), reData1 );
+					assert.equal( parent( reData3, 'ReUser.ReData.ReData' ), reData2 );
+				} );
+
+			} );
+
+			describe( 'strictChain off ancestor re-construction', () => {
+
+				const AncUser = define( 'AncUser', function () { this.level = 'AncUser'; } );
+				// strictChain guards two gates, both must be off for re-construction:
+				// 1. Mnemosyne's prepareSubtypeForConstruction checks the config of the
+				//    entity's type (AncSub) before resolving a subtype from ancestors
+				// 2. InstanceCreator's postProcessing checks the config of the target
+				//    type (AncData) before accepting a parent of a "wrong" type
+				const AncDataType = AncUser.define( 'AncData', function () { this.level = 'AncData'; }, {
+					strictChain : false
+				} );
+				AncDataType.define( 'AncSub', function () { this.level = 'AncSub'; }, {
+					strictChain : false
+				} );
+
+				const ancUser = new AncUser();
+				const ancData = new ancUser.AncData();
+				const ancSub = new ancData.AncSub();
+				const reConstructed = mnemonica.apply( ancSub, AncDataType );
+				// lineage: ancUser → ancData → ancSub → reConstructed(AncData) → deepSub(AncSub)
+				const deepSub = new reConstructed.AncSub();
+
+				it( 're-constructs a predecessor type on a deeper ancestor', () => {
+					assert.equal( mnemonica.getProps( reConstructed ).__parent__, ancSub );
+				} );
+
+				it( 'leaf name still seeks the nearest matching ancestor', () => {
+					assert.equal( parent( reConstructed, 'AncData' ), ancData );
+					assert.equal( parent( deepSub, 'AncData' ), reConstructed );
+				} );
+
+				it( 'dotted path resumes scanning after a window mismatch', () => {
+					// the nearest "AncData" is reConstructed, but its parent is
+					// ancSub, not an "AncUser" — the older ancData ← ancUser pair must win
+					assert.equal( parent( deepSub, 'AncUser.AncData' ), ancData );
+				} );
+
+				it( 'dotted path matches repeated names contiguously', () => {
+					assert.equal( parent( deepSub, 'AncData.AncSub' ), ancSub );
+					assert.equal( parent( deepSub, 'AncSub.AncData' ), reConstructed );
+					assert.equal( parent( deepSub, 'AncData.AncSub.AncData' ), reConstructed );
+				} );
+
+			} );
+
+		} );
+
+		describe( 'subtype lookup caching', () => {
+
+			const CacheRoot = define( 'CacheRoot', function () { this.v = 0; } );
+			CacheRoot.define( 'CacheSub', function () { this.s = 1; } );
+			const cacheInst = new CacheRoot();
+
+			it( 'repeated subtype access returns the same constructor', () => {
+				assert.equal( cacheInst.CacheSub, cacheInst.CacheSub );
+			} );
+
+			it( 'cached constructor still builds proper instances', () => {
+				const cacheSub = new cacheInst.CacheSub();
+				assert.equal( cacheSub.s, 1 );
+				assert.equal( mnemonica.getProps( cacheSub ).__parent__, cacheInst );
+			} );
+
 		} );
 	} );
 

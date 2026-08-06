@@ -36,10 +36,8 @@ const {
 	defaultTypes,
 	createTypesCollection,
 	MNEMONICA,
-	// URANUS,
 	SymbolParentType,
 	SymbolConstructorName,
-	// SymbolGaia,
 	utils: {
 		extract,
 		pick,
@@ -1330,11 +1328,7 @@ describe('Main Test', () => {
 					expect(asyncInstanceFork).instanceof(AsyncType);
 
 					expect(typeof asyncInstanceDirect.on === 'function').is.equal(true);
-					// expect(ogp(ogp(ogp(asyncInstanceDirect[ SymbolGaia ]))) === process).is.equal(true);
-					// expect(asyncInstanceDirect[ SymbolGaia ][ MNEMONICA ] === URANUS).is.equal(true);
 					expect(typeof asyncInstanceDirectApply.on === 'function').is.equal(true);
-					// expect(ogp(ogp(ogp(asyncInstanceDirectApply[ SymbolGaia ]))) === process).is.equal(true);
-					// expect(asyncInstanceDirectApply[ SymbolGaia ][ MNEMONICA ] === URANUS).is.equal(true);
 
 					expect(nestedAsyncInstance).instanceof(AsyncType);
 					expect(nestedAsyncInstance).instanceof(NestedAsyncType);
@@ -1356,7 +1350,6 @@ describe('Main Test', () => {
 				});
 
 				it('parse shouls work with async .call\'ed instances', () => {
-					// const etalon = [ 'name', 'props', 'self', 'proto', 'joint', 'parent', 'gaia' ];
 					const etalon = [ 'name', 'props', 'self', 'proto', 'joint', 'parent', ];
 					const keys = Object.keys(parse(asyncInstance));
 					assert.deepEqual(keys, etalon);

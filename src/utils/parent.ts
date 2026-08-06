@@ -40,12 +40,56 @@ export function parent <T extends object> (instance: T, path?: string): object |
 		return p;
 	}
 
-	const { constructor: { name } } = p;
+	const segments = path.split('.');
+	const last = segments.length - 1;
 
 	// seek throuh parent instances
 	// about the fist constructor with this name
-	const result = name === path ?
-		p : parent( p as object, path );
-	return result;
+	// dotted paths must match contiguously upwards:
+	// each leading segment must be the direct parent
+	// of the instance matched by the next one,
+	// and the instance itself is never a candidate
+	let current = p as object;
+	for ( ;; ) {
+
+		const { constructor: { name } } = current as { constructor: { name: string } };
+
+		if ( name === segments[ last ] ) {
+
+			if ( last === 0 ) {
+				return current;
+			}
+
+			let ancestor = current;
+			let matched = true;
+			for ( let i = last - 1; i >= 0; i-- ) {
+				const ancestorProps = _getProps( ancestor ) as Props | undefined;
+				if ( !ancestorProps ) {
+					matched = false;
+					break;
+				}
+				ancestor = ancestorProps.__parent__ as object;
+				const { constructor: { name: ancestorName } } = ancestor as { constructor: { name: string } };
+				if ( ancestorName !== segments[ i ] ) {
+					matched = false;
+					break;
+				}
+			}
+
+			if ( matched ) {
+				return current;
+			}
+
+		}
+
+		// every props-bearing instance chains up to an object,
+		// the props-less root instance terminates the scan
+		const currentProps = _getProps( current ) as Props | undefined;
+		if ( !currentProps ) {
+			return;
+		}
+		current = currentProps.__parent__ as object;
+
+	}
 
 }

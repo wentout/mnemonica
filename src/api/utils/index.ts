@@ -62,6 +62,19 @@ const getTypeChecker = (TypeName: string) => {
 	return seeker;
 };
 
+const typeCheckerCache = new Map<string, unknown>();
+
+// getTypeChecker builds a fresh closure per call, and instanceof
+// checks run per access — so the closures are cached per TypeName
+const getCachedTypeChecker = (TypeName: string) => {
+	let checker = typeCheckerCache.get(TypeName);
+	if (!checker) {
+		checker = getTypeChecker(TypeName);
+		typeCheckerCache.set(TypeName, checker);
+	}
+	return checker;
+};
+
 const getTypeSplitPath = (path: string) => {
 	const split = path
 		// beautifull names
@@ -308,6 +321,7 @@ const TypesUtils = {
 	isClass,
 	checkProto,
 	getTypeChecker,
+	getCachedTypeChecker,
 	getTypeSplitPath,
 	getExistentAsyncStack,
 	checkTypeName,

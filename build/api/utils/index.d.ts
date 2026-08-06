@@ -21,6 +21,7 @@ declare const TypesUtils: {
     isClass: (fn: ConstructHandler) => boolean;
     checkProto: (proto: unknown) => void;
     getTypeChecker: (TypeName: string) => unknown;
+    getCachedTypeChecker: (TypeName: string) => unknown;
     getTypeSplitPath: (path: string) => string[];
     getExistentAsyncStack: (existentInstance: asyncStack) => unknown;
     checkTypeName: (name: string) => void;

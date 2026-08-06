@@ -82,6 +82,10 @@ This is the invisible layer that makes mnemonica work. It:
 
 Because the props live in a `WeakMap` attached to the memory layer, they do **not** show up in `Object.keys(instance)` or `JSON.stringify(instance)`.
 
+The memory layer also keeps the metadata lookup deterministic: the `WeakMap` is keyed by an internal object identity, not by any name or property that user code could replace or pollute. This is not a security boundary — JavaScript offers none within a realm — but accidental interference cannot redirect the lookup.
+
+**Note:** `getProps(instance)` returns the *live* internal props object, not a copy — mutating it mutates the instance’s construction record. (Once `setProps` has been used on the instance, `getProps` returns a merged copy instead, and mutations on it do not persist.)
+
 For async constructors, the memory layer also receives a `__self__` marker after the Promise resolves. This lets mnemonica defer finalization until the async work is done without running validation and hooks twice.
 
 ---

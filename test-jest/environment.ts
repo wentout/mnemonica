@@ -611,6 +611,37 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			});
 		});
 
+		describe('multiple stack cleaners filtering', () => {
+
+			const { cleanupStack } = require('../src/api/errors');
+
+			it('should remove lines matched by any cleaner, keeping the rest once', () => {
+				// synthetic patterns: never match real stack lines,
+				// so these registrations cannot disturb other tests
+				defineStackCleaner(/__cleaner_alpha__/);
+				defineStackCleaner(/__cleaner_beta__/);
+				const stack = [
+					'__cleaner_alpha__ line',
+					'__cleaner_beta__ line',
+					'__cleaner_alpha__ and __cleaner_beta__ line',
+					'ordinary frame line'
+				];
+				const cleaned = cleanupStack(stack);
+				expect(cleaned).toEqual(['ordinary frame line']);
+			});
+
+			it('should return the original stack when every line is cleaned', () => {
+				// relies on the cleaners registered by the previous test
+				const stack = [
+					'__cleaner_alpha__ only',
+					'__cleaner_beta__ only'
+				];
+				const cleaned = cleanupStack(stack);
+				expect(cleaned).toEqual(stack);
+			});
+
+		});
+
 		describe('should not hack DFD', () => {
 			const BadTypeReThis = define('BadTypeReThis', function (this: { constructor?: unknown }) {
 				// removing constructor
@@ -808,7 +839,7 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			it('Instance Of Another and AnotherCollectionType', () => {
 				expect(anotherCollectionInstance).toBeInstanceOf(AnotherCollectionType);
 			});
-			it('anotherCollectionInstance.TestForAddition pass gaia proxy', () => {
+			it('anotherCollectionInstance.TestForAddition passes through proxy', () => {
 				expect(anotherCollectionInstance.TestForAddition).toEqual('passed');
 			});
 			it('starter Instance can extend', () => {

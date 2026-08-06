@@ -14,7 +14,7 @@ interface TypeProxyConstructHandler {
 }
 export interface TypeProxyInstance extends TypeProxyGetHandler, TypeProxySetHandler, TypeProxyConstructHandler {
     __type__: TypeProxyType;
-    Uranus: unknown;
+    ancestor: unknown;
     apply: typeof subTypeApply;
     new (...args: unknown[]): object;
 }

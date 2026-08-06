@@ -22,11 +22,17 @@ export interface StackableInstance {
 export const cleanupStack = ( stack: string[] ) => {
 	const cleaned: string[] = stack.reduce(
 		( arr: string[], line: string ) => {
-			stackCleaners.forEach( cleanerRegExp => {
-				if ( !cleanerRegExp.test( line ) ) {
-					arr.push( line );
-				}
+			// a line survives only when NO registered cleaner matches it;
+			// the previous logic pushed the line once per non-matching
+			// cleaner, duplicating lines and leaking matched ones
+			// as soon as two cleaners were registered
+			const keep = stackCleaners.every( cleanerRegExp => {
+				const noMatch = !cleanerRegExp.test( line );
+				return noMatch;
 			} );
+			if ( keep ) {
+				arr.push( line );
+			}
 			return arr;
 		},
 		[] 

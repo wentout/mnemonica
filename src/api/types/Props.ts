@@ -185,6 +185,10 @@ export const _getProps = (instance: object, base?: object): PropsType | undefine
 export const _setSelf = (instance: object): void => {
 	// const props = __props__.get(instance);
 	const props = _getProps(instance);
+	// __self__ is installed here, not in _addProps, because it is the
+	// only prop whose value is the instance itself — which does not
+	// exist yet when _addProps runs. It serves as the async completion
+	// marker (makeAwaiter) and the self-call detector (fork).
 	Object.defineProperty(
 		props,
 		'__self__',
@@ -193,10 +197,6 @@ export const _setSelf = (instance: object): void => {
 				return instance;
 			}
 		}
-	);
-	__props__.set(
-		instance,
-		props
 	);
 };
 

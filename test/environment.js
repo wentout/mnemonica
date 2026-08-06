@@ -14,11 +14,9 @@ const {
 	SymbolDefaultTypesCollection,
 	SymbolParentType,
 	SymbolConstructorName,
-	// SymbolGaia,
 	SymbolConfig,
 	MNEMONICA,
 	MNEMOSYNE,
-	// GAIA,
 	createTypesCollection,
 	utils: {
 		toJSON,
@@ -338,9 +336,6 @@ const tests = (opts) => {
 
 		describe('core env tests', () => {
 
-			// it('Symbol Gaia', () => {
-			// 	expect(userTC[ SymbolGaia ][ MNEMONICA ] === GAIA).is.equal(true);
-			// });
 			it('.SubTypes definition is correct Regular', () => {
 				expect(hop(userTC, 'WithoutPassword')).is.equal(false);
 			});
@@ -604,6 +599,37 @@ const tests = (opts) => {
 				expect(errored2.stack
 					.indexOf('environment.js') > 0).is.equal(true);
 			});
+		});
+
+		describe('multiple stack cleaners filtering', () => {
+
+			const { cleanupStack } = require('../build/api/errors');
+
+			it('should remove lines matched by any cleaner, keeping the rest once', () => {
+				// synthetic patterns: never match real stack lines,
+				// so these registrations cannot disturb other tests
+				defineStackCleaner(/__cleaner_alpha__/);
+				defineStackCleaner(/__cleaner_beta__/);
+				const stack = [
+					'__cleaner_alpha__ line',
+					'__cleaner_beta__ line',
+					'__cleaner_alpha__ and __cleaner_beta__ line',
+					'ordinary frame line'
+				];
+				const cleaned = cleanupStack(stack);
+				assert.deepEqual(cleaned, [ 'ordinary frame line' ]);
+			});
+
+			it('should return the original stack when every line is cleaned', () => {
+				// relies on the cleaners registered by the previous test
+				const stack = [
+					'__cleaner_alpha__ only',
+					'__cleaner_beta__ only'
+				];
+				const cleaned = cleanupStack(stack);
+				assert.deepEqual(cleaned, stack);
+			});
+
 		});
 
 		describe('should not hack DFD', () => {
@@ -941,7 +967,7 @@ const tests = (opts) => {
 			it('Instance Of Another and AnotherCollectionType', () => {
 				expect(anotherCollectionInstance).instanceOf(AnotherCollectionType);
 			});
-			it('anotherCollectionInstance.TestForAddition pass gaia proxy', () => {
+			it('anotherCollectionInstance.TestForAddition passes through proxy', () => {
 				expect(anotherCollectionInstance.TestForAddition).equal('passed');
 			});
 			it('starter Instance can extend', () => {

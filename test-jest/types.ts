@@ -196,11 +196,6 @@ export interface BoundMethodAsConstructor {
 	new (...args: unknown[]): { [key: string]: unknown };
 }
 
-// Type for dynamic property access on async instances
-export interface AsyncInstanceWithSymbols extends MnemonicaInstance {
-	[key: symbol]: unknown;
-}
-
 // Type for the exception method on instances - returns a constructor
 export interface InstanceWithException {
 	exception: new (error: Error, ...args: unknown[]) => MnemonicaError;

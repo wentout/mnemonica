@@ -156,9 +156,11 @@ odp(
 				constructHandlerOrConfig?: CallableFunction | object,
 				config?: object
 			) {
-				// this - define function of mnemonica interface
+				// pass `result` itself as the stack-capture boundary (StackBoundary):
+				// it is a real callable on the stack, so captureStackTrace
+				// truncates at the user's call site instead of keeping internal frames
 				const defineResult = define.call(
-					this as unknown,
+					result,
 					subtypes as TypesMap,
 					TypeOrTypeName,
 					constructHandlerOrConfig,
@@ -196,9 +198,11 @@ odp(
 					config = arg2 as object;
 				}
 				let lazyResult: TypeClass;
+				// same as in `define` above: pass `result` itself as the
+				// stack-capture boundary, not the collection object
 				if (name) {
 					lazyResult = lazy.call(
-						this as unknown,
+						result,
 						subtypes as TypesMap,
 						name,
 						getter as LazyTypeGetter,
@@ -206,7 +210,7 @@ odp(
 					);
 				} else {
 					lazyResult = lazy.call(
-						this as unknown,
+						result,
 						subtypes as TypesMap,
 						getter as LazyTypeGetter,
 						config

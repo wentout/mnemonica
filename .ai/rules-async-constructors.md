@@ -266,7 +266,87 @@ Tests live in `test_async/index.js` and run via `npm run test:async_init`.
 - `src/api/types/index.ts` — `Symbol.hasInstance` on `TypeDescriptor.prototype`
 - `src/api/types/InstanceCreator.ts` — async routing via `makeAwaiter`
 
+### Historical examples (from the unshipped `test_async` suite)
+
+`test_async/index.js` is a historical record and is **not part of the
+published package**. The scenarios it covered are preserved here.
+
+Async class constructors that resolve `this` keep fields and chain identity:
+
+```js
+const AsyncInitParent = define('AsyncInitParent', class {
+	parentField = 'parent-field';
+	constructor () {
+		return new Promise((resolve) => {
+			setTimeout(() => resolve(this), 10);
+		});
+	}
+});
+
+const AsyncInitChild = AsyncInitParent.define('AsyncInitChild', class {
+	childField = 'child-field';
+	constructor () {
+		return new Promise((resolve) => {
+			setTimeout(() => resolve(this), 10);
+		});
+	}
+});
+
+const parent = await new AsyncInitParent();
+const child = await parent.AsyncInitChild();
+child.parentField; // 'parent-field' — inherited through the async chain
+child.childField;  // 'child-field'
+```
+
+An async constructor that resolves `undefined` throws by default;
+`awaitReturn: false` disables the guard:
+
+```js
+const AsyncInitWOReturn = define('AsyncInitWOReturn', class {
+	constructor () {
+		return new Promise((resolve) => {
+			setTimeout(() => resolve(), 10); // resolves undefined → throws
+		});
+	}
+});
+
+define('AsyncInitWOReturnNAR', class {
+	constructor () {
+		return new Promise((resolve) => {
+			setTimeout(() => resolve(), 10);
+		});
+	}
+}, { awaitReturn: false }); // resolves undefined → no throw
+```
+
+A pre-existing class hierarchy can serve as the construct handler, at the
+top level or as a subtype:
+
+```js
+class AsyncInitBaseClass {
+	baseField = 'base-field';
+}
+
+class AsyncInitExtendedClass extends AsyncInitBaseClass {
+	extField = 'ext-field';
+	constructor () {
+		super();
+		return new Promise((resolve) => {
+			setTimeout(() => resolve(this), 10);
+		});
+	}
+}
+
+// top level: instanceof works against BOTH the mnemonica type
+// and the original classes
+const AsyncInitPreExtended = define('AsyncInitPreExtended', AsyncInitExtendedClass);
+
+// as a subtype of a root type (AsyncInitRooted, defined as above):
+// fields are inherited and mnemonica instanceof works, but plain JS
+// instanceof against the original classes is broken
+const AsyncInitRootedSub = AsyncInitRooted.define('AsyncInitRootedSub', AsyncInitExtendedClass);
+```
+
 ### Related
 
-- [`test_async/index.js`](../test_async/index.js) — test suite covering async initialization scenarios
 - [TC39 proposal-async-init issue #3](https://github.com/tc39/proposal-async-init/issues/3) — language-level discussion of the same problem

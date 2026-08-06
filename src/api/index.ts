@@ -1,13 +1,5 @@
 'use strict';
 
-// TODO :
-
-// events
-// handlers
-// helpers
-// loaders
-// transforms
-
 import {
 	invokeHook,
 	registerHook,
