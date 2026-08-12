@@ -37,15 +37,22 @@ const tests = ( opts ) => {
 			// assert.equal( 188, typesFlowCheckerInvocations.length );
 			// assert.equal( 90, typesFlowCheckerInvocations.length );
 
-			assert.equal( 209, typesFlowCheckerInvocations.length );
+			// +24 (increased due to dotted parent() tests adding types and instances)
+			// assert.equal( 215, typesFlowCheckerInvocations.length );
+			// +2 (subtype lookup caching test types)
+			assert.equal( 241, typesFlowCheckerInvocations.length );
 
-			// +1
-			assert.equal( 113, typesPreCreationInvocations.length );
+			// +3 (increased due to explicit .lazy() API adding extra creations)
+			// +12 (increased due to dotted parent() tests adding instances)
+			// +1 (subtype lookup caching test instances)
+			assert.equal( 129, typesPreCreationInvocations.length );
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
-			// +1
-			assert.equal( 192, typesPostCreationInvocations.length );
+			// +6 (increased due to explicit .lazy() API adding extra creations)
+			// +24 (increased due to dotted parent() tests adding instances)
+			// +2 (subtype lookup caching test instances)
+			assert.equal( 224, typesPostCreationInvocations.length );
 		} );
 	} );
 

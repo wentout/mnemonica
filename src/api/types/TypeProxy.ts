@@ -40,17 +40,18 @@ interface TypeProxyConstructHandler {
 // Type for TypeProxy instance — data + traps
 export interface TypeProxyInstance extends TypeProxyGetHandler, TypeProxySetHandler, TypeProxyConstructHandler {
 	__type__: TypeProxyType;
-	Uranus: unknown;
+	// the ancestor new instances descend from (root proto or apply-trap entity)
+	ancestor: unknown;
 	apply: typeof subTypeApply;
 	new (...args: unknown[]): object;
 }
 
-export const TypeProxy = function (__type__: TypeProxyType, Uranus: unknown) {
+export const TypeProxy = function (__type__: TypeProxyType, ancestor: unknown) {
 	Object.assign(
 		this,
 		{
 			__type__,
-			Uranus
+			ancestor
 		}
 	);
 	const typeProxy = new Proxy(
@@ -150,12 +151,12 @@ const primaryTypeApply = function (
 	this: TypeProxyInstance,
 	// proxy target
 	__: unknown,
-	Uranus: unknown,
+	thisArg: unknown,
 	args: [constructorOptions, ...unknown[]],
 ) {
 	const type = this.__type__;
 	// case of decorator like usage
-	if (Uranus === undefined) {
+	if (thisArg === undefined) {
 		const decorator = subTypeApply(
 			type,
 			args[ 0 ]
@@ -167,7 +168,7 @@ const primaryTypeApply = function (
 	// our PrimaryType whick is === instance of current TypeProxy
 	const InstanceCreatorProxy = new TypeProxy(
 		type,
-		Uranus
+		thisArg
 	);
 	const instance = new InstanceCreatorProxy(...args);
 	return instance;
@@ -191,15 +192,15 @@ TypeProxy.prototype.construct = function (this: TypeProxyInstance, _target: unkn
 
 	const {
 		__type__: type,
-		Uranus
+		ancestor
 	} = this;
 
 	// so this is a direct Sub-Type invocation
 	// having no existentInstance created earlier
 	// then we should rely on that somehow
-	const uranus = type.isSubType ? getDefaultPrototype() : Uranus;
+	const parentProto = type.isSubType ? getDefaultPrototype() : ancestor;
 
-	const mnemosyneProxy = createMnemosyne(uranus);
+	const mnemosyneProxy = createMnemosyne(parentProto);
 	const instance = new InstanceCreator(
 		type,
 		mnemosyneProxy,

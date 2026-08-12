@@ -63,6 +63,45 @@ define('Parent.Child', function (this: Child, data: Data) {
 });
 ```
 
+## Lazy definitions
+
+Use `.lazy()` when the constructor must be resolved through a getter — for
+example, to break a circular dependency or to defer constructor selection until
+definition time. `.define()` no longer accepts an anonymous function as its
+first argument; that form has moved to `.lazy()`.
+
+### Unnamed (name from returned constructor)
+```typescript
+const LazyType = define('RootType', function () {})
+	.lazy(() => function LazySubType(this: LazySubType, data: LazyData) {
+		Object.assign(this, data);
+	});
+```
+
+### Named (explicit type name)
+```typescript
+const NamedLazy = RootType.lazy('NamedLazy', () => function (data: NamedData) {
+	Object.assign(this, data);
+});
+```
+
+### Free-function form
+```typescript
+import { lazy } from 'mnemonica';
+
+const LazyRoot = lazy('LazyRoot', () => class LazyRoot {
+	field: string;
+	constructor(field: string) {
+		this.field = field;
+	}
+});
+```
+
+The getter is called once at definition time. The returned constructor is
+registered exactly like a constructor passed directly to `define()`, and the
+resulting type supports `.define()`, `.lazy()`, `.lookup()`, and subtype
+chaining.
+
 ## Export root constructors only when needed; never export subtypes
 
 Subtypes live on the parent constructor and on parent instances. Exporting a subtype splits the Trie and usually loses the parent part of the chain.

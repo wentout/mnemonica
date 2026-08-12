@@ -21,7 +21,7 @@ superadmin
                                                   └── root Mnemosyne Proxy
                                                         └── Mnemonica instance
                                                               └── Mnemonica.prototype
-                                                                    └── uranus
+                                                                    └── ancestor
 ```
 
 `SuperAdminMemory`, `AdminMemory`, and `UserMemory` are the **memory layers**. Only `UserMemory`’s parent is the real `Mnemosyne` constructor result wrapped in a Proxy. The deeper memory layers are plain objects that play the same role.
@@ -86,6 +86,16 @@ This is why the same constructor function can be reused across multiple type def
 
 `getProps(instance)` walks the prototype chain from the instance until it finds the first object with a `WeakMap` entry. That is always the instance’s own memory layer. `parent(instance)` reads `__parent__` from that props object; it is the `existentInstance` passed to `InstanceCreator`.
 
+## Why the memory layer is the `WeakMap` key
+
+**Why not key props on `ModificatorType.prototype`?** It would save one hop in the walk, but that object is user-facing: it receives the captured user-prototype descriptors during construction and is reachable via `instance.constructor.prototype`. The memory layer is created fresh per construction, is never handed out as a value, and its only own property (`constructor`) is a non-configurable getter. Keying the props by an object identity that userland cannot forge or pollute keeps the metadata lookup deterministic no matter what user code does to instances or prototypes.
+
+**This is not a security boundary.** JavaScript within a realm offers none: a determined user with `Reflect` can reach the memory layer (`Reflect.getPrototypeOf(instance.constructor.prototype)`) and even change its prototype. The design goal is determinism under *accidental* interference — the `WeakMap` entry is keyed by identity rather than by any name or property another library could collide with, and the `constructor` getter cannot be redefined. (This was historically nicknamed "MITM resistance": forgery and pollution of the metadata lookup are structurally deflected; deliberate reflection is not. Security tooling would rightly not count this as a defense.)
+
+**Do not re-add keying by instance or creator.** Props were historically keyed by the `InstanceCreator` context, then by the instance itself. Both writes were proven unread (sentinel experiment: both suites green with garbage stored in the entry) and removed. The memory layer is the only props key; `setProps` additions are keyed by the props object itself.
+
+**The `_getProps` guard.** The chain walk stops with `undefined` as soon as the next level’s `constructor` differs from the original object’s; the memory layer’s own getter keeps constructors aligned across its level, so the walk survives it. Consequence: `getProps(Object.create(instance))` resolves to the parent instance’s props — derived objects share the nearest ancestor’s memory layer.
+
 ## `_setSelf` and async construction
 
 `_setSelf(instance)` is called at the end of successful construction. It adds one more getter to the props object:
@@ -94,7 +104,7 @@ This is why the same constructor function can be reused across multiple type def
 __self__: () => instance
 ```
 
-Then it stores the props object in the `WeakMap` keyed by the instance itself. This solves the async-constructor problem.
+This is what solves the async-constructor problem: the props object is already reachable from the instance through the prototype-chain walk, so the `__self__` getter can serve as a completion marker.
 
 When a constructor returns a Promise, the initial value of `new Constructor()` is that Promise. `makeAwaiter` waits for resolution, then checks:
 

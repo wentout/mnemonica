@@ -16,7 +16,7 @@
  * Run: node test/benchmark.js
  */
 
-const { define } = require('..');
+const { define, utils } = require('..');
 
 // --- harness ---
 
@@ -223,9 +223,9 @@ bench('plain: instanceof constructor', (N) => {
 
 console.log('\n=== parent() / prototype access ===\n');
 
-bench('mnemonica: instance.parent()', (N) => {
+bench('mnemonica: utils.parent(instance)', (N) => {
 	const arr = [];
-	for (let i = 0; i < N; i++) arr.push(shallowInst.parent());
+	for (let i = 0; i < N; i++) arr.push(utils.parent(shallowInst));
 	return arr;
 }, { N : 200000 });
 

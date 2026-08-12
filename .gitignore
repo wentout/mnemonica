@@ -10,6 +10,8 @@ coveragejest
 test/example.js
 test/decorate.js
 test/decorate.js.map
+test/decorate-builder.js
+test/decorate-builder.js.map
 .npmrc
 .vscode
 .continue

@@ -17,6 +17,7 @@ const hop = (o: unknown, p: string) => Object.prototype.hasOwnProperty.call(o, p
 
 const {
 	define,
+	lazy,
 	defaultTypes: types,
 	defaultCollection,
 	SymbolDefaultTypesCollection,
@@ -124,6 +125,8 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				'apply',
 				'call',
 				'bind',
+				'lazy',
+				'_lazy',
 				'decorate',
 				'registerHook',
 				'getProps',
@@ -205,7 +208,7 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				expect(__subtypes__.has('NamedFunction')).toEqual(true);
 			});
 
-			const NamedClassPtr = UserType.define(() => {
+			const NamedClassPtr = UserType.lazy(() => {
 				return class NamedClass {
 					type: string;
 					snc: number;
@@ -220,7 +223,7 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				};
 			});
 
-			UserType.define(function () {
+			UserType.lazy(function () {
 				return class NamedClass2 {
 					type: string;
 					snc: number;
@@ -235,7 +238,7 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				};
 			});
 
-			const SubNamedClassPtr = NamedClassPtr.define(() => {
+			const SubNamedClassPtr = NamedClassPtr.lazy(() => {
 				return class SubNamedClass {
 					type: string;
 					constructor() {
@@ -608,6 +611,37 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			});
 		});
 
+		describe('multiple stack cleaners filtering', () => {
+
+			const { cleanupStack } = require('../src/api/errors');
+
+			it('should remove lines matched by any cleaner, keeping the rest once', () => {
+				// synthetic patterns: never match real stack lines,
+				// so these registrations cannot disturb other tests
+				defineStackCleaner(/__cleaner_alpha__/);
+				defineStackCleaner(/__cleaner_beta__/);
+				const stack = [
+					'__cleaner_alpha__ line',
+					'__cleaner_beta__ line',
+					'__cleaner_alpha__ and __cleaner_beta__ line',
+					'ordinary frame line'
+				];
+				const cleaned = cleanupStack(stack);
+				expect(cleaned).toEqual(['ordinary frame line']);
+			});
+
+			it('should return the original stack when every line is cleaned', () => {
+				// relies on the cleaners registered by the previous test
+				const stack = [
+					'__cleaner_alpha__ only',
+					'__cleaner_beta__ only'
+				];
+				const cleaned = cleanupStack(stack);
+				expect(cleaned).toEqual(stack);
+			});
+
+		});
+
 		describe('should not hack DFD', () => {
 			const BadTypeReThis = define('BadTypeReThis', function (this: { constructor?: unknown }) {
 				// removing constructor
@@ -750,30 +784,30 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 					define('NoConstructFunctionType', NaN, 'false' as unknown as object);
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
 				['handler must be a function', () => {
-				define(() => {
+				lazy(() => {
 					const result = {
 						name: null
 					};
 					return result;
 				});
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
-				['this type has already been declared : WithoutPassword', () => {
+				['this type has already been declared : UserTypeConstructor', () => {
 					// UserTypeConstructor is already defined in index.ts
 					// Try to define it again - should throw ALREADY_DECLARED
-					define('UserTypeConstructor', () => {
+					lazy('UserTypeConstructor', () => {
 						return function WithoutPassword() { };
 					});
 				}, errors.ALREADY_DECLARED],
-				['this type has already been declared : UserTypePL1', () => {
+				['this type has already been declared : UserType.UserTypePL1', () => {
 					// UserType.UserTypePL1 is already defined in index.ts
 					// in-depth re-declaration
-					define('UserType.UserTypePL1', () => {
+					lazy('UserType.UserTypePL1', () => {
 						return function () { };
 					});
 				}, errors.ALREADY_DECLARED],
 				['typename must be a string', () => {
 					// Function without a name - should throw TYPENAME_MUST_BE_A_STRING
-					define(() => {
+					lazy(() => {
 						return function () { };
 					});
 				}, errors.TYPENAME_MUST_BE_A_STRING],
@@ -805,7 +839,7 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			it('Instance Of Another and AnotherCollectionType', () => {
 				expect(anotherCollectionInstance).toBeInstanceOf(AnotherCollectionType);
 			});
-			it('anotherCollectionInstance.TestForAddition pass gaia proxy', () => {
+			it('anotherCollectionInstance.TestForAddition passes through proxy', () => {
 				expect(anotherCollectionInstance.TestForAddition).toEqual('passed');
 			});
 			it('starter Instance can extend', () => {

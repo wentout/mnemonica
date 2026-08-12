@@ -122,7 +122,7 @@ The key inversion: `new` is called on the **parent instance** (`alice`), not on 
 - **Curious about the theory?** Read [`README.md`](./README.md) — the HoTT framing, the Trie observation, the pipeline pattern, the AI-agent angle.
 - **Want examples you can run?** See the [Examples](#examples) section below.
 - **Going deeper on philosophy?** Read [`docs/purpose.md`](./docs/purpose.md).
-- **Background reading:** [Inheritance in JavaScript: Factory of Constructors with Prototype Chain](https://github.com/mythographica/stash/blob/master/inheritance.md) · [Architecture of Prototype Inheritance in JavaScript](https://dev.to/wentout/architecture-of-prototype-inheritance-in-javascript-ce6) · [Dead Simple type checker for JavaScript](https://dev.to/wentout/dead-simple-type-checker-for-javascript-4l40)
+- **Background reading:** [Inheritance in JavaScript: Factory of Constructors with Prototype Chain](https://github.com/mythographica/stash/blob/master/inheritance.md) · [Architecture of Prototype Inheritance in JavaScript](https://github.com/mythographica/stash/blob/master/inheritance_architecture.md) · [Dead Simple type checker for JavaScript](https://github.com/mythographica/typologica)
 
 ---
 
@@ -493,10 +493,11 @@ const AsyncTypeNoReturn = define('AsyncType', async function () {
 | I want to... | Use |
 |---|---|
 | Define a type | `define('Name', ctor)` |
+| Define a type lazily | `lazy('Name', () => ctor)` or `Type.lazy(() => ctor)` |
 | Create from instance | `new instance.SubType(args)` |
-| Look up a type | `lookup('Name')` or `lookup('Name')` |
+| Look up a type | `lookup('Name')` or `Type.lookup('Path')` |
 | Read construction history | `getProps(instance)` |
-| Get parent instance | `utils.parent(instance)` or `utils.parent(instance, 'TypeName')` |
+| Get parent instance | `utils.parent(instance)`, `utils.parent(instance, 'TypeName')` or `utils.parent(instance, 'Root.Parent')` |
 | Flatten to plain object | `utils.extract(instance)` |
 | Add lifecycle hooks | `type.registerHook('postCreation', cb)` |
 | Use classes (requires Tactica) | see [`docs/decorate.md`](./docs/decorate.md) |
@@ -517,9 +518,43 @@ const MyType = define('MyType', function (data) {
 ```
 
 **Parameters:**
-- `typeName` (string): Name of the type (optional if using factory function)
+- `typeName` (string): Name of the type (optional if using factory function). Must be non-empty, start with an uppercase letter, and must not be one of the reserved names `Mnemonica` or `Mnemosyne`. May be a nested path (`'Parent.Child'`) to define a subtype under an existing type.
 - `constructHandler` (Function): Constructor function
 - `config` (object, optional): Configuration options
+
+#### `lazy(typeName?, getter, config?)`
+
+Defines a type whose constructor is resolved through a zero-arg getter. Useful
+for breaking circular dependencies or deferring constructor selection until
+definition time. The resulting type behaves like a type created with `define()`.
+
+```js
+const { lazy } = require('mnemonica');
+
+// unnamed: type name is taken from the returned constructor's .name
+const LazyType = lazy(() => function LazyType(data) {
+  Object.assign(this, data);
+});
+
+// named: explicit type name
+const NamedType = lazy('NamedType', () => function (data) {
+  Object.assign(this, data);
+});
+
+// chainable on constructors and collections
+const SubType = MyType.lazy('SubType', () => function (data) {
+  this.extra = data;
+});
+```
+
+**Parameters:**
+- `typeName` (string, optional): Name of the type. If omitted, the name is taken from the getter's returned constructor.
+- `getter` (Function): Zero-arg function returning the constructor.
+- `config` (object, optional): Configuration options
+
+**Note:** the getter is invoked **once at definition time** (to determine the
+type name, class mode, and prototype) and then again on every construction.
+Keep it free of side effects that must not run at `define()` time.
 
 #### `lookup(typeNestedPath)`
 
@@ -530,6 +565,11 @@ const { lookup } = require('mnemonica');
 const SomeType = lookup('SomeType');
 const SomeNestedType = lookup('SomeType.SomeNestedType');
 ```
+
+Path segments may be separated by `.`, `/`, or `:`, and whitespace inside the
+path is ignored — `lookup('A/B')`, `lookup('A:B')`, and `lookup(' A . B ')`
+all resolve like `lookup('A.B')`. The same path forms work everywhere a
+nested type path is accepted (`define()`, `utils.parent()`, hooks, etc.).
 
 #### `lookup(typeNestedPath)`
 
@@ -619,6 +659,7 @@ For advanced TypeScript usage, the following types are exported from `mnemonica`
 | Type | Description | Usage |
 |------|-------------|-------|
 | `IDEF<T>` | Base constructor function type | `define('Name', fn: IDEF<MyType>)` |
+| `LazyDef<T>` | Zero-arg getter returning a constructor | `lazy('Name', fn: LazyDef<MyType>)` |
 | `MnemonicaInstance` | Optional helper interface | Can be used when attaching the legacy instance methods to your own prototype |
 | `TypeClass` | Base type constructor | `const MyType: TypeClass = define(...)` |
 | `DecoratedClass<T>` | Decorated class type | `@decorate() class MyClass {}` (see [`docs/decorate.md`](./docs/decorate.md)) |
@@ -732,6 +773,11 @@ myCollection.registerHook('preCreation', (opts) => {
 const FoundType = myCollection.lookup('MyType');
 ```
 
+Only known option keys are applied to a collection: unknown keys are
+silently dropped, and a value whose type does not match the option's default
+falls back to that default. Note that `asClass` is a per-`define()` option —
+it is not part of the collection-level defaults and is ignored here.
+
 #### `getProps(instance)` / `setProps(instance, values)`
 
 Get or set internal properties of an instance.
@@ -742,9 +788,11 @@ const { getProps, setProps } = require('mnemonica');
 const props = getProps(instance);
 console.log(props.__type__, props.__args__);
 
-// Set properties
-setProps(instance, { __timestamp__: Date.now() });
+// Set custom properties
+setProps(instance, { myFlag: true });
 ```
+
+`setProps` only accepts non-reserved names: the internal `__…__` properties (`__type__`, `__args__`, `__timestamp__`, etc.) are filtered out and cannot be overwritten. Also note that `getProps` returns the *live* internal object when no custom properties are set — mutating the result mutates the instance's construction record. Once `setProps` has been used, `getProps` returns a merged copy instead.
 
 ---
 
@@ -792,13 +840,26 @@ const pickedArray = utils.pick(instance, ['email', 'password']);
 
 #### `utils.parent(instance, constructorName?)`
 
-Gets the parent instance. If `constructorName` is provided, walks up the chain.
+Gets the parent instance. If `constructorName` is provided, walks up the chain
+and returns the nearest ancestor with that constructor name. The instance itself
+is never a candidate — only ancestors are searched.
+
+A **dotted path** (`'GrandParent.Parent'`) requires the segments to match
+contiguously upwards: each leading segment must be the direct parent of the
+instance matched by the next one. The return value is the instance matched by
+the **last** segment. This disambiguates lineages where the same type name
+appears more than once (possible with `strictChain: false` re-construction).
+If no contiguous match exists, the result is `undefined`.
+
 The structural return type is `object | undefined`; a specific nominal parent
 type requires a `TypeRegistry` augmentation (see [`docs/typed-lookup.md`](./docs/typed-lookup.md)).
 
 ```ts
 const immediateParent = utils.parent(instance);
 const specificParent = utils.parent(instance, 'UserType'); // object | undefined
+// lineage request → route → page → response:
+const route = utils.parent(response, 'RequestData.RouteData'); // route instance
+const nearest = utils.parent(response, 'RouteData');           // page's parent, as before
 ```
 
 #### `utils.clone(instance)`
@@ -891,7 +952,7 @@ explicit `<T>` cast is required for ordinary use.
 | `utils.fork(instance)` | `(this: object, ...args: unknown[]) => T` |
 | `utils.parent(instance, path?)` | `object \| undefined` |
 | `utils.sibling(instance)` | `SiblingAccessor` |
-| `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>, constructorOptions>` |
+| `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>>` |
 | `utils.parse(instance)` | `Parsed<T>` |
 | `utils.toJSON(instance)` | `string` |
 | `utils.collectConstructors(instance, flat?)` | `(CallableFunction \| string)[]` |
@@ -948,7 +1009,7 @@ interface HookData {
   args: unknown[];               // Arguments passed to constructor
   existentInstance: object;      // Parent instance
   inheritedInstance: object;     // New instance (postCreation only)
-  throwModificationError(error: Error): void;  // Throw error from hook
+  throwModificationError(error: Error): void;  // Throw error from hook (not available in preCreation)
 }
 ```
 
@@ -960,6 +1021,13 @@ MyType.registerHook('postCreation', (hookData) => {
 ```
 
 **Note:** In preCreation hooks, `existentInstance` refers to the parent; in postCreation hooks, it refers to the instance used for inheritance.
+
+**Error wrapping boundaries.** `preCreation` hooks do not receive
+`throwModificationError` — throw normally to abort construction; the error
+propagates unwrapped. The same is true for errors thrown by a lazy type's
+getter at setup and by a custom `ModificationConstructor` during prototype
+wiring: they propagate as-is. Only failures of the user constructor body are
+wrapped into mnemonica errored instances (when `blockErrors` is `true`).
 
 ---
 
@@ -1014,6 +1082,10 @@ const { defineStackCleaner } = require('mnemonica');
 defineStackCleaner(/node_modules\/some-package/);
 ```
 
+Multiple cleaners may be registered; a stack line is removed if **any** of
+them matches. If cleaning would remove every line, the original stack is
+kept instead.
+
 ---
 
 ### Symbols & Constants
@@ -1056,6 +1128,26 @@ define('SomeType', function () {}, {
 | `awaitReturn` | `boolean` | `true` | For async constructors, ensures `await new Constructor()` returns the instance. |
 | `asClass` | `boolean` | `auto` | Force class mode detection. Usually auto-detected from constructor syntax. |
 | `ModificationConstructor` | `Function` | - | Custom constructor function for internal instance modification. |
+
+### What `strictChain` actually guards
+
+`strictChain` is checked at two independent points, and re-constructing a
+predecessor type on a deeper instance (`apply(deepInstance, AncestorType)`)
+requires **both** of them to be off:
+
+1. **Subtype resolution** checks the config of the **entity's type**: may this
+   instance construct a subtype that is not its own direct subtype? With
+   `strictChain: false`, the search walks up the parent chain and a subtype
+   registered on any ancestor type becomes constructible
+   (`Mnemosyne.prepareSubtypeForConstruction` → `findSubTypeFromParent`).
+2. **Construction validation** checks the config of the **target type**: must
+   the new instance's parent be an instance of the type's declared parent
+   kind? With `strictChain: false`, a parent of a different kind is accepted
+   (`InstanceCreator.postProcessing`).
+
+This is how one lineage can end up carrying the same type name more than
+once — which is exactly the case `utils.parent(instance, 'A.B')` dotted
+paths were made for.
 
 ### Instance Method Opt-In
 
@@ -1272,8 +1364,8 @@ rules live in [AGENTS.md](AGENTS.md).
 
 **Related reading:**
 - [Inheritance in JavaScript: Factory of Constructors with Prototype Chain](https://github.com/mythographica/stash/blob/master/inheritance.md)
-- [Architecture of Prototype Inheritance in JavaScript](https://dev.to/wentout/architecture-of-prototype-inheritance-in-javascript-ce6)
-- [Dead Simple type checker for JavaScript](https://dev.to/wentout/dead-simple-type-checker-for-javascript-4l40)
+- [Architecture of Prototype Inheritance in JavaScript](https://github.com/mythographica/stash/blob/master/inheritance_architecture.md)
+- [Dead Simple type checker for JavaScript](https://github.com/mythographica/typologica)
 
 ---
 

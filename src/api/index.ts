@@ -1,13 +1,5 @@
 'use strict';
 
-// TODO :
-
-// events
-// handlers
-// helpers
-// loaders
-// transforms
-
 import {
 	invokeHook,
 	registerHook,
@@ -15,6 +7,7 @@ import {
 } from './hooks';
 import {
 	define,
+	lazy,
 	lookup,
 } from './types';
 
@@ -28,5 +21,6 @@ export const hooks = {
 
 export const types = {
 	define,
+	lazy,
 	lookup,
 };

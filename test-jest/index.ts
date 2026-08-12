@@ -5,6 +5,7 @@ import { asyncChainTests } from './async.chain';
 import { environmentTests } from './environment';
 import { withInstanceMethods } from './instance-methods-helper';
 import './utils';
+import './collection-decorate';
 import type {
 	HookInvocationEntry,
 	HookInvocationsArray,
@@ -24,7 +25,6 @@ import type {
 	SubOfNestedAsyncPostHookData,
 	BoundMethodAsConstructor,
 	ChainedMethodResult,
-	AsyncInstanceWithSymbols,
 	TypeWithApplyDecorator
 } from './types';
 import type { hooksOpts } from '../src/types';
@@ -59,10 +59,9 @@ import { createTypesCollection } from '../src/index';
 
 const {
 	define,
+	lazy,
 	defaultTypes: types,
 	MNEMONICA,
-	URANUS,
-	SymbolGaia,
 	lookup,
 	getProps,
 	apply,
@@ -136,7 +135,7 @@ const pl1Proto = {
 	UserTypePL1Extra: 'UserTypePL_1_Extra',
 };
 
-UserType.define(() => {
+UserType.lazy(() => {
 	const UserTypePL1 = function (this: { user_pl_1_sign: string }) {
 		this.user_pl_1_sign = 'pl_1';
 	};
@@ -161,7 +160,7 @@ const shaperFactory = () => {
 	};
 };
 
-UserType.define(() => {
+UserType.lazy(() => {
 	const Shaper = shaperFactory();
 	class UserTypePL2 extends Shaper {
 		user_pl_2_sign: string;
@@ -483,7 +482,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		WithoutPasswordSign: 'WithoutPasswordSign'
 	};
 
-	const UserWithoutPassword = types.UserTypeConstructor.define(() => {
+	const UserWithoutPassword = types.UserTypeConstructor.lazy(() => {
 		const WithoutPassword = function (this: UserWithoutPasswordInstance) {
 			this.password = undefined;
 		};
@@ -496,7 +495,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	const WithAdditionalSignProto = {
 		WithAdditionalSignSign: 'WithAdditionalSignSign'
 	};
-	const WithAdditionalSignTypeDef = UserWithoutPassword.define(() => {
+	const WithAdditionalSignTypeDef = UserWithoutPassword.lazy(() => {
 		const WithAdditionalSign = function (this: WithAdditionalSignInstance, sign: string) {
 			this.sign = sign;
 		};
@@ -509,7 +508,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	const MoreOverProto = {
 		MoreOverSign: 'MoreOverSign'
 	};
-	const MoreOverTypeDef = WithAdditionalSignTypeDef.define(() => {
+	const MoreOverTypeDef = WithAdditionalSignTypeDef.lazy(() => {
 		class MoreOver {
 			str: string;
 			constructor(str: string) {
@@ -543,9 +542,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		EvenMoreSign: 'EvenMoreSign'
 	};
 
-	const EvenMoreTypeDef = WithAdditionalSignTypeDef.define(`
-		MoreOver . OverMore
-	`, function () {
+	const EvenMoreTypeDef = OverMore.lazy(() => {
 
 		// it would be MoreOver . OverMore . EvenMore
 		const EvenMore = function (this: EvenMoreInstance, str: string) {
@@ -1427,6 +1424,156 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				}
 			});
 
+			describe('.parent("A.B") dotted path checks', () => {
+
+				const DotA = define('DotA', function (this: { mark: string }) {
+					this.mark = 'DotA';
+				});
+				const DotB = DotA.define('DotB', function (this: { mark: string }) {
+					this.mark = 'DotB';
+				});
+				DotB.define('DotC', function (this: { mark: string }) {
+					this.mark = 'DotC';
+				});
+
+				const dotA = new DotA();
+				const dotB = new dotA.DotB();
+				const dotC = new dotB.DotC();
+
+				it('should return the endpoint instance of a contiguous path', () => {
+					expect(parent(dotC, 'DotA.DotB')).toBe(dotB);
+					expect(parent(dotC, 'DotB')).toBe(dotB);
+				});
+
+				it('should return undefined for non-contiguous path', () => {
+					expect(parent(dotC, 'DotA.DotC')).toBeUndefined();
+				});
+
+				it('should return undefined when window walks past the root', () => {
+					expect(parent(dotC, `DotA.${MNEMONICA}`)).toBeUndefined();
+				});
+
+				it('should never return the instance itself, even via full path', () => {
+					expect(parent(dotC, 'DotA.DotB.DotC')).toBeUndefined();
+				});
+
+				it('should return undefined when a leading segment mismatches', () => {
+					// dotA matches the last segment, but its parent is the chain
+					// root, not a "DotB" instance
+					expect(parent(dotC, 'DotB.DotA')).toBeUndefined();
+				});
+
+				it('should return undefined for props-less instances', () => {
+					expect(parent({}, 'DotA')).toBeUndefined();
+				});
+
+				describe('repeated names in one lineage', () => {
+
+					const ReUser = define('ReUser', function (this: { level: string }) {
+						this.level = 'ReUser';
+					});
+					const ReData1Type = ReUser.define('ReData', function (this: { level: string }) {
+						this.level = 'ReData1';
+					});
+					const ReData2Type = ReData1Type.define('ReData', function (this: { level: string }) {
+						this.level = 'ReData2';
+					});
+					ReData2Type.define('ReData', function (this: { level: string }) {
+						this.level = 'ReData3';
+					});
+
+					const reUser = new ReUser();
+					const reData1 = new reUser.ReData();
+					const reData2 = new reData1.ReData();
+					const reData3 = new reData2.ReData();
+
+					it('leaf name returns the nearest ancestor', () => {
+						expect(parent(reData3, 'ReData')).toBe(reData2);
+					});
+
+					it('dotted path disambiguates repeated names', () => {
+						expect(parent(reData3, 'ReData.ReData')).toBe(reData2);
+						expect(parent(reData3, 'ReUser.ReData')).toBe(reData1);
+						expect(parent(reData3, 'ReUser.ReData.ReData')).toBe(reData2);
+					});
+
+				});
+
+				describe('strictChain off ancestor re-construction', () => {
+
+					const AncUser = define('AncUser', function (this: { level: string }) {
+						this.level = 'AncUser';
+					});
+					// strictChain guards two gates, both must be off for re-construction:
+					// 1. Mnemosyne's prepareSubtypeForConstruction checks the config of the
+					//    entity's type (AncSub) before resolving a subtype from ancestors
+					// 2. InstanceCreator's postProcessing checks the config of the target
+					//    type (AncData) before accepting a parent of a "wrong" type
+					const AncDataType = AncUser.define('AncData', function (this: { level: string }) {
+						this.level = 'AncData';
+					}, {
+						strictChain: false
+					});
+					AncDataType.define('AncSub', function (this: { level: string }) {
+						this.level = 'AncSub';
+					}, {
+						strictChain: false
+					});
+
+					const ancUser = new AncUser();
+					const ancData = new ancUser.AncData();
+					const ancSub = new ancData.AncSub();
+					const reConstructed = apply(ancSub, AncDataType);
+					// lineage: ancUser → ancData → ancSub → reConstructed(AncData) → deepSub(AncSub)
+					const deepSub = new (reConstructed as typeof ancData).AncSub();
+
+					it('re-constructs a predecessor type on a deeper ancestor', () => {
+						expect(getProps(reConstructed).__parent__).toBe(ancSub);
+					});
+
+					it('leaf name still seeks the nearest matching ancestor', () => {
+						expect(parent(reConstructed, 'AncData')).toBe(ancData);
+						expect(parent(deepSub, 'AncData')).toBe(reConstructed);
+					});
+
+					it('dotted path resumes scanning after a window mismatch', () => {
+						// the nearest "AncData" is reConstructed, but its parent is
+						// ancSub, not an "AncUser" — the older ancData ← ancUser pair must win
+						expect(parent(deepSub, 'AncUser.AncData')).toBe(ancData);
+					});
+
+					it('dotted path matches repeated names contiguously', () => {
+						expect(parent(deepSub, 'AncData.AncSub')).toBe(ancSub);
+						expect(parent(deepSub, 'AncSub.AncData')).toBe(reConstructed);
+						expect(parent(deepSub, 'AncData.AncSub.AncData')).toBe(reConstructed);
+					});
+
+				});
+
+			});
+
+			describe('subtype lookup caching', () => {
+
+				const CacheRoot = define('CacheRoot', function (this: { v: number }) {
+					this.v = 0;
+				});
+				CacheRoot.define('CacheSub', function (this: { s: number }) {
+					this.s = 1;
+				});
+				const cacheInst = new CacheRoot();
+
+				it('repeated subtype access returns the same constructor', () => {
+					expect(cacheInst.CacheSub).toBe(cacheInst.CacheSub);
+				});
+
+				it('cached constructor still builds proper instances', () => {
+					const cacheSub = new cacheInst.CacheSub();
+					expect(cacheSub.s).toEqual(1);
+					expect(getProps(cacheSub).__parent__).toBe(cacheInst);
+				});
+
+			});
+
 			describe('merge tests', () => {
 				it('should merge instances properly', () => {
 					expect(merged).toBeDefined();
@@ -1928,16 +2075,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(asyncInstanceFork).toBeInstanceOf(AsyncType);
 
 				expect(typeof asyncInstanceDirect.on === 'function').toEqual(true);
-				// Skip Gaia checks if not available in this environment
-				if (asyncInstanceDirect[SymbolGaia]) {
-					expect(ogp(ogp(asyncInstanceDirect[SymbolGaia])) === process).toEqual(true);
-					expect((((asyncInstanceDirect as unknown) as AsyncInstanceWithSymbols)[SymbolGaia] as Record<string, unknown>)[MNEMONICA] === URANUS).toEqual(true);
-				}
 				expect(typeof asyncInstanceDirectApply.on === 'function').toEqual(true);
-				if (asyncInstanceDirectApply[SymbolGaia]) {
-					expect(ogp(ogp(asyncInstanceDirectApply[SymbolGaia])) === process).toEqual(true);
-					expect((((asyncInstanceDirectApply as unknown) as AsyncInstanceWithSymbols)[SymbolGaia] as Record<string, unknown>)[MNEMONICA] === URANUS).toEqual(true);
-				}
 
 				expect(nestedAsyncInstance).toBeInstanceOf(AsyncType);
 				expect(nestedAsyncInstance).toBeInstanceOf(NestedAsyncType);
@@ -2073,6 +2211,19 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const result = new instance.DecoratedType();
 				expect(result.decorated).toBe(true);
 			});
+
+			it('should work with decorator pattern using type.decorate', () => {
+				const DecoratorBase = define('DecoratorBaseCoverageDecorate', function () {});
+				const instance = new DecoratorBase();
+				const { decorate } = DecoratorBase;
+				
+				// Test decorator pattern via type.decorate (destructured from builder node)
+				decorate()(class DecoratedType {
+					decorated = true;
+				});
+				const result = new (instance as { DecoratedType: new () => { decorated: boolean } }).DecoratedType();
+				expect(result.decorated).toBe(true);
+			});
 		});
 
 		describe('exceptionConstructor error handling', () => {
@@ -2190,7 +2341,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				// Test the decorator pattern through apply method
 				const BaseType = define('BaseTypeForApply', function () {});
 				
-				// Use apply with undefined Uranus to get decorator
+				// Use apply with undefined thisArg to get decorator
 				const DecoratorType = ((BaseType as unknown) as TypeWithApplyDecorator).apply(undefined, [undefined], [{ strictChain: false }]);
 				expect(typeof DecoratorType).toBe('function');
 			});
@@ -2365,7 +2516,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const instance = new BaseType();
 				
 				// Call the decorator pattern through .apply() usage
-				// When Uranus is undefined, apply returns a decorator function
+				// When thisArg is undefined, apply returns a decorator function
 				BaseType.define('DecoratorSubType', function (this: { value: string }) {
 					this.value = 'decorated';
 				});
@@ -2818,24 +2969,24 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(nestedType).toBeDefined();
 			});
 
-			it('should cover defineUsingType HANDLER_MUST_BE_A_FUNCTION', () => {
-				const { define } = require('../src/index');
+			it('should cover lazy HANDLER_MUST_BE_A_FUNCTION', () => {
+				const { lazy } = require('../src/index');
 
-				// Try to define a type with a non-function handler using the type factory pattern
+				// Try to define a type with a non-function handler using lazy getter
 				expect(() => {
-					define(() => {
+					lazy(() => {
 						// Return a non-function (string instead of function)
 						return 'not a function' as unknown as CallableFunction;
 					});
 				}).toThrow();
 			});
 
-			it('should cover defineUsingType TYPENAME_MUST_BE_A_STRING', () => {
-				const { define } = require('../src/index');
+			it('should cover lazy TYPENAME_MUST_BE_A_STRING', () => {
+				const { lazy } = require('../src/index');
 				
 				// Define a type with a function that has no name property
 				expect(() => {
-					define(() => {
+					lazy(() => {
 						// Return an anonymous function without a name
 						const fn = function () {};
 						// Ensure it has no name
@@ -3073,31 +3224,118 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			});
 			});
 	
-			describe('Line 377 coverage - factory returns non-Function', () => {
-				it('should throw ALREADY_DECLARED when factory returns object instead of function', () => {
-					// Define a type first
-					define('TypeForLine377', function () { });
-					
-					// Try to redefine with factory that returns a non-Function (object)
-					// This triggers line 375-377: if (!(type instanceof Function)) throw new ALREADY_DECLARED
+			describe('lazy coverage - factory returns non-Function', () => {
+				it('should throw HANDLER_MUST_BE_A_FUNCTION when lazy factory returns object', () => {
+					const { lazy } = require('../src/index');
 					expect(() => {
-						define('TypeForLine377', () => {
+						lazy(() => {
 							// Return an object instead of a function
 							const fnResult = { notAFunction: true } as unknown as CallableFunction;
 							return fnResult;
 						});
-					}).toThrow(ErrorsTypes.ALREADY_DECLARED);
+					}).toThrow(ErrorsTypes.HANDLER_MUST_BE_A_FUNCTION);
 				});
 			});
 
-			describe('isLazyGetter catch coverage', () => {
-				it('should throw ALREADY_DECLARED when factory throws', () => {
-					define('TypeForLazyCatch', function () { });
+			describe('lazy coverage - factory throws', () => {
+				it('should propagate the factory error', () => {
+					const { lazy } = require('../src/index');
 					expect(() => {
-						define('TypeForLazyCatch', () => {
+						lazy(() => {
 							throw new Error('factory throws');
 						});
-					}).toThrow(ErrorsTypes.ALREADY_DECLARED);
+					}).toThrow('factory throws');
+				});
+			});
+
+			describe('lazy coverage - named lazy on type proxy', () => {
+				it('should create a named lazy subtype', () => {
+					const NamedLazyJestType = UserType.lazy('NamedLazyJestType', () => {
+						return class NamedLazyJestType {};
+					});
+					expect(NamedLazyJestType.TypeName).toBe('NamedLazyJestType');
+				});
+			});
+
+			describe('lazy coverage - named free lazy', () => {
+				it('should create a named lazy top-level type', () => {
+					const FreeNamedLazyJestType = lazy('FreeNamedLazyJestType', () => {
+						return class FreeNamedLazyJestType {};
+					});
+					expect(FreeNamedLazyJestType.TypeName).toBe('FreeNamedLazyJestType');
+				});
+			});
+
+			describe('lazy coverage - explicit-source lazy', () => {
+				it('should support lazy(source, getter) form', () => {
+					const ExplicitSourceJestType = lazy(types, () => {
+						return class ExplicitSourceJestType {};
+					});
+					expect(ExplicitSourceJestType.TypeName).toBe('ExplicitSourceJestType');
+				});
+				it('should support lazy(source, name, getter) form', () => {
+					const ExplicitSourceNamedJestType = lazy(types, 'ExplicitSourceNamedJestType', () => {
+						return class SomeOtherClassName {};
+					});
+					expect(ExplicitSourceNamedJestType.TypeName).toBe('ExplicitSourceNamedJestType');
+				});
+			});
+
+			describe('lazy coverage - non-function getter', () => {
+				it('should throw HANDLER_MUST_BE_A_FUNCTION for missing getter', () => {
+					expect(() => {
+						lazy('NoGetterLazyType');
+					}).toThrow(errors.HANDLER_MUST_BE_A_FUNCTION);
+				});
+			});
+
+			describe('define coverage - anonymous function as first arg', () => {
+				it('should throw TYPENAME_MUST_BE_A_STRING for anonymous arrow', () => {
+					expect(() => {
+						define(() => {});
+					}).toThrow(errors.TYPENAME_MUST_BE_A_STRING);
+				});
+			});
+
+			describe('TypeDescriptor constructor ALREADY_DECLARED coverage', () => {
+				it('should throw ALREADY_DECLARED from TypeDescriptor constructor', () => {
+					expect(() => {
+						define('UserTypeConstructor', function () {});
+					}).toThrow(errors.ALREADY_DECLARED);
+				});
+			});
+
+			describe('free lazy this = mnemonica branch coverage', () => {
+				it('should cover checkThis true branch in free lazy', () => {
+					const MnemonicaThisJestType = mnemonica.lazy(() => {
+						return class MnemonicaThisJestType {};
+					});
+					expect(MnemonicaThisJestType.TypeName).toBe('MnemonicaThisJestType');
+				});
+			});
+
+			describe('lazy coverage - getter returns function without prototype', () => {
+				it('should cover getDefaultPrototype branch in createFromLazyGetter', () => {
+					const NoProtoLazyType = lazy('NoProtoLazyType', () => {
+						const ArrowCtor = () => {};
+						return ArrowCtor;
+					});
+					expect(NoProtoLazyType.TypeName).toBe('NoProtoLazyType');
+				});
+			});
+
+			describe('lazy coverage - config object branch', () => {
+				it('should cover config-as-object branch in lazy', () => {
+					const LazyWithConfigJestType = UserType.lazy(() => {
+						return class LazyWithConfigJestType {};
+					}, { strictChain: false });
+					expect(LazyWithConfigJestType.TypeName).toBe('LazyWithConfigJestType');
+				});
+				it('should cover config-as-function branch in lazy', () => {
+					const LazyWithFunctionConfigJestType = UserType.lazy(() => {
+						return class LazyWithFunctionConfigJestType {};
+					}, () => {});
+					expect(LazyWithFunctionConfigJestType.TypeName).toBe('LazyWithFunctionConfigJestType');
 				});
 			});
 

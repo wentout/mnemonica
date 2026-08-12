@@ -116,21 +116,7 @@ links and broken anchors across all Markdown files in the repo.
 
 ## Releasing
 
-### 1. Update the changelog
-
-In `CHANGELOG.md`, move everything under `## [Unreleased]` into a
-new versioned section:
-
-```markdown
-## [1.0.1] - 2026-05-22
-
-### Fixed
-- ...
-```
-
-Leave a fresh empty `## [Unreleased]` block at the top for the next cycle.
-
-### 2. Bump the version
+### 1. Bump the version
 
 ```bash
 npm version patch   # 1.0.0 → 1.0.1
@@ -140,7 +126,7 @@ npm version patch   # 1.0.0 → 1.0.1
 `npm version` updates `package.json` and creates a git commit + tag
 (`v1.0.1`) automatically. Do not edit `package.json` by hand for this.
 
-### 3. Verify
+### 2. Verify
 
 ```bash
 npm run verify                               # build + lint:check
@@ -150,14 +136,14 @@ npm run lint:md                              # no dead links or broken anchors
 
 All three must pass before publishing.
 
-### 4. Inspect the tarball
+### 3. Inspect the tarball
 
 ```bash
 npm pack --dry-run
 ```
 
 The tarball must include: `build/`, `module/`, `src/`, `docs/`, `.ai/`,
-`examples/`, `README.md`, `FOR_HUMANS.md`, `AGENTS.md`, `SKILL.md`,
+`README.md`, `FOR_HUMANS.md`, `AGENTS.md`, `SKILL.md`,
 `CONTRIBUTING.md`, `LICENSE`.
 
 It must **not** include: `test/`, `test-jest/`, `test-ts/`, `test_async/`,

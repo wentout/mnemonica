@@ -4,6 +4,8 @@ import type {
 	_Internal_TC_,
 	CreateTypesCollectionFunction,
 	TypesCollection,
+	TypeClass,
+	IDEF,
 	hooksOpts,
 	hook
 } from '../../types';
@@ -22,7 +24,7 @@ const {
 
 // here is TypesCollection.define() method
 import {
-	define, lookup, type TypesMap
+	define, lazy, lookup, type TypesMap, type LazyTypeGetter
 } from '../../api/types';
 
 import * as hooksAPI from '../../api/hooks';
@@ -154,15 +156,91 @@ odp(
 				constructHandlerOrConfig?: CallableFunction | object,
 				config?: object
 			) {
-				// this - define function of mnemonica interface
+				// pass `result` itself as the stack-capture boundary (StackBoundary):
+				// it is a real callable on the stack, so captureStackTrace
+				// truncates at the user's call site instead of keeping internal frames
 				const defineResult = define.call(
-					this as unknown,
+					result,
 					subtypes as TypesMap,
 					TypeOrTypeName,
 					constructHandlerOrConfig,
 					config
 				);
 				return defineResult;
+			};
+			return result;
+		},
+		enumerable : true
+	}
+);
+
+odp(
+	TypesCollection.prototype,
+	'lazy',
+	{
+		get (this: { subtypes: Map<string, object> }) {
+			const { subtypes } = this;
+			const result = function (
+				this: CallableFunction,
+				arg1: string | CallableFunction,
+				arg2?: CallableFunction | object,
+				arg3?: object
+			) {
+				let name: string | undefined;
+				let getter: LazyTypeGetter;
+				let config: object | undefined;
+				if (typeof arg1 === 'string') {
+					name = arg1;
+					getter = arg2 as LazyTypeGetter;
+					config = arg3;
+				} else {
+					getter = arg1 as LazyTypeGetter;
+					config = arg2 as object;
+				}
+				let lazyResult: TypeClass;
+				// same as in `define` above: pass `result` itself as the
+				// stack-capture boundary, not the collection object
+				if (name) {
+					lazyResult = lazy.call(
+						result,
+						subtypes as TypesMap,
+						name,
+						getter as LazyTypeGetter,
+						config
+					);
+				} else {
+					lazyResult = lazy.call(
+						result,
+						subtypes as TypesMap,
+						getter as LazyTypeGetter,
+						config
+					);
+				}
+				return lazyResult;
+			};
+			return result;
+		},
+		enumerable : true
+	}
+);
+
+odp(
+	TypesCollection.prototype,
+	'decorate',
+	{
+		get (this: TypesCollection) {
+			const self = this;
+			const result = function (config?: object) {
+				const decorator = function (cstr: CallableFunction) {
+					const { name } = cstr;
+					const defineResult = self.define(
+						name,
+						cstr as IDEF<object>,
+						config
+					);
+					return defineResult;
+				};
+				return decorator;
 			};
 			return result;
 		},

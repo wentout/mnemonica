@@ -35,7 +35,7 @@ import {
 
 // Lazy getter: a function that, when called, returns the actual constructor function.
 // Used when define() receives an anonymous function wrapping the real constructor.
-interface LazyTypeGetter extends CallableFunction {
+export interface LazyTypeGetter extends CallableFunction {
 	(): ConstructHandler;
 }
 
@@ -76,7 +76,7 @@ import compileNewModificatorFunctionBody, { ConstructHandler } from './compileNe
 
 import TypesUtils, { CreationHandler } from '../utils';
 const {
-	getTypeChecker,
+	getCachedTypeChecker,
 	getTypeSplitPath,
 	checkTypeName,
 	isClass,
@@ -149,7 +149,22 @@ const TypeDescriptor = function (
 
 			config,
 
-			hooks : Object.create(null)
+			hooks : Object.create(null),
+
+			decorate : function (options?: object) {
+				const self = type;
+				const decorator = function (cstr: CallableFunction) {
+					const { name } = cstr;
+					const defineResult = self.define(
+						name,
+						cstr,
+						options
+					);
+					const decoratedResult = defineResult as unknown as CallableFunction;
+					return decoratedResult;
+				};
+				return decorator;
+			},
 
 		}
 	);
@@ -170,13 +185,13 @@ const TypeDescriptor = function (
 		}
 	);
 
-	// const Uranus = isSubType ? Object.create(null) : proto;
-	const Uranus = isSubType ? undefined : proto;
+	// const ancestor = isSubType ? Object.create(null) : proto;
+	const ancestor = isSubType ? undefined : proto;
 	types.set(
 		TypeName,
 		new TypeProxy(
 			type,
-			Uranus
+			ancestor
 		)
 	);
 
@@ -208,6 +223,43 @@ TypeDescriptor.prototype.define = function (
 	return result;
 };
 
+TypeDescriptor.prototype.lazy = function (
+	this: TypeDescriptorInstance,
+	arg1: string | CallableFunction,
+	arg2?: CallableFunction | object,
+	arg3?: object
+) {
+	let name: string | undefined;
+	let getter: LazyTypeGetter;
+	let config: object | undefined;
+	if (typeof arg1 === 'string') {
+		name = arg1;
+		getter = arg2 as LazyTypeGetter;
+		config = arg3;
+	} else {
+		getter = arg1 as LazyTypeGetter;
+		config = arg2 as object;
+	}
+	let result: TypeClass;
+	if (name) {
+		result = lazy.call(
+			this,
+			this.subtypes as TypesMap,
+			name,
+			getter as LazyTypeGetter,
+			config
+		);
+	} else {
+		result = lazy.call(
+			this,
+			this.subtypes as TypesMap,
+			getter as LazyTypeGetter,
+			config
+		);
+	}
+	return result;
+};
+
 TypeDescriptor.prototype.lookup = function (
 	this: TypeDescriptorInstance,
 	TypeNestedPath: string
@@ -233,7 +285,7 @@ odp(
 	TypeDescriptor.prototype,
 	Symbol.hasInstance, {
 		get (this: TypeDescriptorInstance) {
-			const result = getTypeChecker(this.TypeName);
+			const result = getCachedTypeChecker(this.TypeName);
 			return result;
 		}
 	}
@@ -298,27 +350,6 @@ const checkDuplicate = function (target: TypesMap, name: string): void {
 };
 
 // ============================================================
-// LAZY GETTER DETECTION
-// A lazy getter is a function that, when called, returns a
-// named constructor. Used for late-bound type definitions.
-// If the call throws or returns a non-named function, it is
-// treated as a direct handler instead.
-// ============================================================
-
-const isLazyGetter = function (handler: ConstructHandler | LazyTypeGetter): boolean {
-	try {
-		// Probe: try to call as a lazy getter. If it succeeds and returns a named
-		// function, it's a lazy getter. Otherwise (throws or returns non-function),
-		// it's a direct handler. The cast is the probe — runtime decides which it is.
-		const lazyResult = (handler as LazyTypeGetter)();
-		const result = lazyResult instanceof Function && lazyResult.name.length > 0;
-		return result;
-	} catch {
-		return false;
-	}
-};
-
-// ============================================================
 // CONSTRUCTION STRATEGIES
 // Two branches, same return type, no recursion.
 // Both receive the resolved context and return TypeDescriptor.
@@ -374,25 +405,40 @@ const createFromDirectHandler = function (
 const createFromLazyGetter = function (
 	defineOrigin: TypeAbsorber,
 	target: TypesMap,
-	name: string,
+	name: string | undefined,
 	getter: LazyTypeGetter,
 	config: constructorOptions
 ) {
+
 	const type = getter();
 
 	if (typeof type !== 'function') {
 		throw new HANDLER_MUST_BE_A_FUNCTION;
 	}
 
-	const TypeName = type.name || name;
+	const TypeName = name || type.name;
 	if (!TypeName) {
 		throw new TYPENAME_MUST_BE_A_STRING;
 	}
 
+	checkDuplicate(
+		target,
+		TypeName
+	);
+
 	const asClass = isClass(type);
+
+	const proto = (
+		hop(
+			type,
+			'prototype'
+		) &&
+		(typeof type.prototype === 'object')
+	) ? type.prototype : getDefaultPrototype();
 
 	const makeConstructHandler = () => {
 		const constructHandler = getter();
+
 		odp(
 			constructHandler,
 			SymbolConstructorName, {
@@ -411,7 +457,8 @@ const createFromLazyGetter = function (
 			constructHandler.prototype = getDefaultPrototype();
 		}
 
-		return constructHandler;
+		const handlerResult = constructHandler as MnemonicaConstructorFactory;
+		return handlerResult;
 	};
 
 	config = Object.assign(
@@ -426,7 +473,7 @@ const createFromLazyGetter = function (
 		target,
 		TypeName,
 		makeConstructHandler,
-		type.prototype,
+		proto,
 		config
 	) as unknown as TypeClass;
 	return result;
@@ -468,18 +515,9 @@ export const define = function (
 			);
 			return defineResult;
 		}
-		// Anonymous function: constructHandlerOrConfig may hold the config
-		const lazyConfig = typeof constructHandlerOrConfig === 'object' && constructHandlerOrConfig !== null
-			? constructHandlerOrConfig as constructorOptions
-			: config as constructorOptions;
-		const lazyResult = createFromLazyGetter(
-			this as TypeAbsorber,
-			subtypes,
-			'',
-			fn as LazyTypeGetter,
-			lazyConfig
-		);
-		return lazyResult;
+		// Anonymous function as first arg is not a valid .define() form.
+		// Use .lazy(() => Constructor, config?) for lazy getters instead.
+		throw new TYPENAME_MUST_BE_A_STRING;
 	}
 
 	// --- Branch: string path passed as first arg ---
@@ -488,9 +526,9 @@ export const define = function (
 	}
 	checkTypeName(TypeOrTypeName);
 
-	let handler: ConstructHandler | LazyTypeGetter | undefined;
+	let handler: ConstructHandler | undefined;
 	if (typeof constructHandlerOrConfig === 'function') {
-		handler = constructHandlerOrConfig as ConstructHandler | LazyTypeGetter;
+		handler = constructHandlerOrConfig as ConstructHandler;
 	} else if (typeof constructHandlerOrConfig === 'object') {
 		config = constructHandlerOrConfig as constructorOptions;
 	}
@@ -507,25 +545,6 @@ export const define = function (
 		throw new WRONG_TYPE_DEFINITION('definition is not provided');
 	}
 
-	// If the path resolved to an existing type and the handler
-	// is a lazy getter, define the getter's returned constructor
-	// as a subtype of the existing type.
-	if (parent && handler && isLazyGetter(handler)) {
-		const lazyType = (handler as LazyTypeGetter)();
-		checkDuplicate(
-parent.subtypes as TypesMap,
-lazyType.name
-		);
-		const lazyParentResult = createFromLazyGetter(
-			this as TypeAbsorber,
-			parent.subtypes as TypesMap,
-			lazyType.name,
-			handler as LazyTypeGetter,
-			config as constructorOptions
-		);
-		return lazyParentResult;
-	}
-
 	const result = createFromDirectHandler(
 		this as TypeAbsorber,
 		target,
@@ -534,6 +553,44 @@ lazyType.name
 		config as constructorOptions
 	);
 	return result;
+};
+
+export const lazy = function (
+	this: unknown,
+	subtypes: TypesMap,
+	arg1: string | LazyTypeGetter | undefined,
+	arg2?: LazyTypeGetter | object,
+	arg3?: object
+): TypeClass {
+
+	let name: string | undefined;
+	let getter: LazyTypeGetter;
+	let config: object | undefined;
+	if (typeof arg1 === 'string') {
+		name = arg1;
+		getter = arg2 as LazyTypeGetter;
+		config = arg3;
+	} else {
+		getter = arg1 as LazyTypeGetter;
+		config = arg2 as object;
+	}
+
+	if (typeof getter !== 'function') {
+		throw new HANDLER_MUST_BE_A_FUNCTION;
+	}
+
+	if (!config || (typeof config !== 'object' && typeof config !== 'function')) {
+		config = {};
+	}
+
+	const lazyResult = createFromLazyGetter(
+		this as TypeAbsorber,
+		subtypes,
+		name,
+		getter as LazyTypeGetter,
+		config as constructorOptions
+	);
+	return lazyResult;
 };
 
 export const lookup = function (

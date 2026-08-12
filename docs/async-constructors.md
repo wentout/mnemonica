@@ -179,7 +179,7 @@ console.log(child instanceof AsyncChild);  // true
 
 When a constructor returns a Promise, the initial result of `new Constructor()` is that Promise. mnemonica's async pipeline waits for it to resolve, then must run validation and lifecycle hooks. But it must not run them again if the resolved instance is ever re-examined.
 
-`_setSelf(instance)` solves this by adding a `__self__` getter to the instance's internal props that returns the instance itself, and by storing the props under the instance in the internal `WeakMap`. `makeAwaiter` then checks:
+`_setSelf(instance)` solves this by adding a `__self__` getter to the instance's internal props that returns the instance itself. `makeAwaiter` retrieves those props through the same prototype-chain walk `getProps` uses (down to the instance's memory layer) and checks:
 
 ```js
 if (props.__self__ !== self.inheritedInstance) {

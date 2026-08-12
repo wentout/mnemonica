@@ -22,7 +22,7 @@ TypeScript, however, cannot see a type graph built by runtime calls. There are
 
 ## Builder mode (default)
 
-Import the module object or create a custom collection, then chain `.define()` calls. The returned object carries a local type registry.
+Import the module object or create a custom collection, then chain `.define()` or `.lazy()` calls. The returned object carries a local type registry.
 
 ```typescript
 import { mnemonica } from 'mnemonica';
@@ -95,6 +95,17 @@ You can also look up a root constructor and call `.define()` on it directly:
 const User = App.lookup('User');
 
 User.define('Guest', function (this: GuestShape, data: { token: string }) {
+	this.token = data.token;
+});
+```
+
+You can also use `.lazy()` when the constructor must be resolved through a
+getter (for example, to break a circular dependency):
+
+```typescript
+const User = App.lookup('User');
+
+const Guest = User.lazy('Guest', () => function (this: GuestShape, data: { token: string }) {
 	this.token = data.token;
 });
 ```
@@ -204,7 +215,7 @@ value and want the free-function style anyway, pass it as the first argument —
 the registry is then inferred from the source, not from the global interface:
 
 ```typescript
-import { lookup, define } from 'mnemonica';
+import { lookup, define, lazy } from 'mnemonica';
 
 // typed from App's registry, never a silent `TypeClass | undefined`
 const Admin = lookup(App, 'User.Admin');
@@ -216,11 +227,17 @@ const Guest = define(User, 'Guest', function (this: GuestShape, data: { token: s
 
 // same semantics as collection.define('NewRoot', ...) — a root type
 const NewRoot = define(AppCollection, 'NewRoot', function (this: NewRootShape) { /* ... */ });
+
+// lazy variants infer the registry from the source as well
+const LazyGuest = lazy(User, 'Guest', () => function (this: GuestShape, data: { token: string }) {
+	this.token = data.token;
+});
 ```
 
 Semantics follow the source object: a **collection** source defines a root
 type, a **constructor** source defines a subtype. `lookup(source, path)`
 resolves exactly like `source.lookup(path)` — relative first, root fallback.
+The same source inference applies to `lazy(source, name?, getter, config?)`.
 
 ---
 

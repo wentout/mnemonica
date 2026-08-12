@@ -8,16 +8,15 @@ const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
 
 const {
 	define,
+	lazy,
 	defaultTypes: types,
 	defaultCollection,
 	SymbolDefaultTypesCollection,
 	SymbolParentType,
 	SymbolConstructorName,
-	// SymbolGaia,
 	SymbolConfig,
 	MNEMONICA,
 	MNEMOSYNE,
-	// GAIA,
 	createTypesCollection,
 	utils: {
 		toJSON,
@@ -125,6 +124,8 @@ const tests = (opts) => {
 				'lookup',
 				'_define',
 				'_lookup',
+				'lazy',
+				'_lazy',
 				'mnemonica',
 				'apply',
 				'call',
@@ -210,7 +211,7 @@ const tests = (opts) => {
 				expect(__subtypes__.has('NamedFunction')).is.equal(true);
 			});
 
-			const NamedClassPtr = UserType.define(() => {
+			const NamedClassPtr = UserType.lazy(() => {
 				const result = class NamedClass {
 					constructor (snc) {
 						this.type = 'class';
@@ -224,7 +225,7 @@ const tests = (opts) => {
 				return result;
 			});
 
-			UserType.define(function () {
+			UserType.lazy(function () {
 				const result = class NamedClass2 {
 					constructor (snc) {
 						this.type = 'class';
@@ -238,7 +239,7 @@ const tests = (opts) => {
 				return result;
 			});
 
-			const SubNamedClassPtr = NamedClassPtr.define(() => {
+			const SubNamedClassPtr = NamedClassPtr.lazy(() => {
 				const result = class SubNamedClass {
 					constructor () {
 						this.type = 'subclass';
@@ -335,9 +336,6 @@ const tests = (opts) => {
 
 		describe('core env tests', () => {
 
-			// it('Symbol Gaia', () => {
-			// 	expect(userTC[ SymbolGaia ][ MNEMONICA ] === GAIA).is.equal(true);
-			// });
 			it('.SubTypes definition is correct Regular', () => {
 				expect(hop(userTC, 'WithoutPassword')).is.equal(false);
 			});
@@ -603,6 +601,37 @@ const tests = (opts) => {
 			});
 		});
 
+		describe('multiple stack cleaners filtering', () => {
+
+			const { cleanupStack } = require('../build/api/errors');
+
+			it('should remove lines matched by any cleaner, keeping the rest once', () => {
+				// synthetic patterns: never match real stack lines,
+				// so these registrations cannot disturb other tests
+				defineStackCleaner(/__cleaner_alpha__/);
+				defineStackCleaner(/__cleaner_beta__/);
+				const stack = [
+					'__cleaner_alpha__ line',
+					'__cleaner_beta__ line',
+					'__cleaner_alpha__ and __cleaner_beta__ line',
+					'ordinary frame line'
+				];
+				const cleaned = cleanupStack(stack);
+				assert.deepEqual(cleaned, [ 'ordinary frame line' ]);
+			});
+
+			it('should return the original stack when every line is cleaned', () => {
+				// relies on the cleaners registered by the previous test
+				const stack = [
+					'__cleaner_alpha__ only',
+					'__cleaner_beta__ only'
+				];
+				const cleaned = cleanupStack(stack);
+				assert.deepEqual(cleaned, stack);
+			});
+
+		});
+
 		describe('should not hack DFD', () => {
 			const BadTypeReThis = define('BadTypeReThis', function () {
 				// removing constructor
@@ -752,7 +781,7 @@ const tests = (opts) => {
 				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
 
 				[ 'handler must be a function', () => {
-					define(() => {
+					lazy(() => {
 						const result = {
 							name : null
 						};
@@ -761,7 +790,7 @@ const tests = (opts) => {
 				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
 
 				[ 'this type has already been declared : WithoutPassword', () => {
-					define('UserTypeConstructor', () => {
+					types.UserTypeConstructor.lazy(() => {
 						// eslint-disable-next-line func-name-matching
 						const result = function WithoutPassword () { };
 						return result;
@@ -770,14 +799,14 @@ const tests = (opts) => {
 
 				[ 'this type has already been declared : UserTypePL1', () => {
 					// in-depth re-declaration
-					define('UserType.UserTypePL1', () => {
+					types.UserType.UserTypePL1.lazy(() => {
 						const result = function () { };
 						return result;
 					});
 				}, errors.ALREADY_DECLARED ],
 
 				[ 'typename must be a string', () => {
-					define(() => {
+					lazy(() => {
 						// eslint-disable-next-line mnemonica/return-intermediate
 						return function () { };
 					});
@@ -819,7 +848,7 @@ const tests = (opts) => {
 			}
 
 			try {
-				define(() => {
+				lazy(() => {
 					// eslint-disable-next-line mnemonica/return-intermediate
 					return function SetSomeName () { };
 				});
@@ -828,7 +857,7 @@ const tests = (opts) => {
 			}
 
 			try {
-				define(() => {
+				lazy(() => {
 					// eslint-disable-next-line mnemonica/return-intermediate
 					return class SetSomeName { };
 				});
@@ -938,7 +967,7 @@ const tests = (opts) => {
 			it('Instance Of Another and AnotherCollectionType', () => {
 				expect(anotherCollectionInstance).instanceOf(AnotherCollectionType);
 			});
-			it('anotherCollectionInstance.TestForAddition pass gaia proxy', () => {
+			it('anotherCollectionInstance.TestForAddition passes through proxy', () => {
 				expect(anotherCollectionInstance.TestForAddition).equal('passed');
 			});
 			it('starter Instance can extend', () => {

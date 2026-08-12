@@ -28,6 +28,7 @@ debugger;
 
 const {
 	define,
+	lazy,
 	apply,
 	call,
 	bind,
@@ -35,10 +36,8 @@ const {
 	defaultTypes,
 	createTypesCollection,
 	MNEMONICA,
-	// URANUS,
 	SymbolParentType,
 	SymbolConstructorName,
-	// SymbolGaia,
 	utils: {
 		extract,
 		pick,
@@ -49,6 +48,8 @@ const {
 	errors,
 	getProps
 } = mnemonica;
+
+
 
 const USER_DATA = {
 	email    : 'went.out@gmail.com',
@@ -107,7 +108,7 @@ const pl1Proto = {
 	UserTypePL1Extra : 'UserTypePL_1_Extra',
 };
 
-UserType.define(() => {
+UserType.lazy(() => {
 	const UserTypePL1 = function () {
 		this.user_pl_1_sign = 'pl_1';
 	};
@@ -134,7 +135,7 @@ const shaperFactory = () => {
 	return result;
 };
 
-UserType.define(() => {
+UserType.lazy(() => {
 	// const Shaper = shaperFactory(true);
 	const Shaper = shaperFactory();
 	class UserTypePL2 extends Shaper {
@@ -462,7 +463,7 @@ describe('Main Test', () => {
 		WithoutPasswordSign : 'WithoutPasswordSign'
 	};
 
-	const UserWithoutPassword = defaultTypes.UserTypeConstructor.define(() => {
+	const UserWithoutPassword = defaultTypes.UserTypeConstructor.lazy(() => {
 		const WithoutPassword = function () {
 			this.password = undefined;
 		};
@@ -476,7 +477,7 @@ describe('Main Test', () => {
 	const WithAdditionalSignProto = {
 		WithAdditionalSignSign : 'WithAdditionalSignSign'
 	};
-	const WithAdditionalSignTypeDef = UserWithoutPassword.define(() => {
+	const WithAdditionalSignTypeDef = UserWithoutPassword.lazy(() => {
 		const WithAdditionalSign = function (sign) {
 			this.sign = sign;
 		};
@@ -489,7 +490,7 @@ describe('Main Test', () => {
 	const MoreOverProto = {
 		MoreOverSign : 'MoreOverSign'
 	};
-	const MoreOverTypeDef = WithAdditionalSignTypeDef.define(() => {
+	const MoreOverTypeDef = WithAdditionalSignTypeDef.lazy(() => {
 		class MoreOver {
 			constructor (str) {
 				this.str = str || 'moreover str';
@@ -522,9 +523,7 @@ describe('Main Test', () => {
 		EvenMoreSign : 'EvenMoreSign'
 	};
 
-	const EvenMoreTypeDef = WithAdditionalSignTypeDef.define(`
-		MoreOver . OverMore
-	`, function () {
+	const EvenMoreTypeDef = OverMore.lazy(() => {
 
 		// it would be MoreOver . OverMore . EvenMore
 		const EvenMore = function (str) {
@@ -609,7 +608,12 @@ describe('Main Test', () => {
 	const filledEmptySign = 'FilledEmptySign';
 	const emptySub = empty.EmptySubType(filledEmptySign);
 
-	const evenMoreForkCall = evenMore.fork.call(user, USER_DATA);
+	let evenMoreForkCall;
+	try {
+		evenMoreForkCall = evenMore.fork.call(user, USER_DATA);
+	} catch (e) {
+		throw e;
+	}
 
 	const strFork = 'fork of evenMore';
 	const strForkOfFork = 'fork of fork of evenMore';
@@ -684,6 +688,10 @@ describe('Main Test', () => {
 		AsyncWOReturn,
 		AsyncWOReturnNAR,
 	});
+
+	require('./decorate-builder.check')();
+
+	require('./collection-decorate');
 
 
 	if (hooksTest) {
@@ -1320,11 +1328,7 @@ describe('Main Test', () => {
 					expect(asyncInstanceFork).instanceof(AsyncType);
 
 					expect(typeof asyncInstanceDirect.on === 'function').is.equal(true);
-					// expect(ogp(ogp(ogp(asyncInstanceDirect[ SymbolGaia ]))) === process).is.equal(true);
-					// expect(asyncInstanceDirect[ SymbolGaia ][ MNEMONICA ] === URANUS).is.equal(true);
 					expect(typeof asyncInstanceDirectApply.on === 'function').is.equal(true);
-					// expect(ogp(ogp(ogp(asyncInstanceDirectApply[ SymbolGaia ]))) === process).is.equal(true);
-					// expect(asyncInstanceDirectApply[ SymbolGaia ][ MNEMONICA ] === URANUS).is.equal(true);
 
 					expect(nestedAsyncInstance).instanceof(AsyncType);
 					expect(nestedAsyncInstance).instanceof(NestedAsyncType);
@@ -1346,7 +1350,6 @@ describe('Main Test', () => {
 				});
 
 				it('parse shouls work with async .call\'ed instances', () => {
-					// const etalon = [ 'name', 'props', 'self', 'proto', 'joint', 'parent', 'gaia' ];
 					const etalon = [ 'name', 'props', 'self', 'proto', 'joint', 'parent', ];
 					const keys = Object.keys(parse(asyncInstance));
 					assert.deepEqual(keys, etalon);
@@ -1622,17 +1625,17 @@ describe('Main Test', () => {
 		});
 
 		describe('define() coverage for refactored paths', () => {
-			it('should cover isLazyGetter catch (factory throws)', () => {
-				define('ParentTypeForCatch', function () {});
+			it('should propagate factory errors from .lazy()', () => {
 				let thrownError;
 				try {
-					define('ParentTypeForCatch', () => {
+					lazy(() => {
 						throw new Error('factory throws');
 					});
 				} catch (error) {
 					thrownError = error;
 				}
-				expect(thrownError).instanceOf(errors.ALREADY_DECLARED);
+				expect(thrownError).instanceOf(Error);
+				expect(thrownError.message).to.equal('factory throws');
 			});
 
 			it('should cover config as object in string branch', () => {
@@ -1658,6 +1661,121 @@ describe('Main Test', () => {
 				}
 				expect(thrownError).instanceOf(errors.WRONG_TYPE_DEFINITION);
 				expect(thrownError.message).to.equal('wrong type definition : definition is not provided');
+			});
+
+			it('should cover explicit-source lazy form', () => {
+				const LazyExplicitSourceTypeResult = lazy(defaultTypes, () => {
+					const result = class LazyExplicitSourceType {};
+					return result;
+				});
+				expect(LazyExplicitSourceTypeResult).to.exist;
+				expect(LazyExplicitSourceTypeResult.TypeName).to.equal('LazyExplicitSourceType');
+			});
+
+			it('should throw TYPENAME_MUST_BE_A_STRING for anonymous function in define', () => {
+				let thrownError;
+				try {
+					define(() => {});
+				} catch (error) {
+					thrownError = error;
+				}
+				expect(thrownError).instanceOf(Error);
+				expect(thrownError.message).to.equal('typename must be a string');
+			});
+
+			it('should throw HANDLER_MUST_BE_A_FUNCTION for non-function getter in lazy', () => {
+				let thrownError;
+				try {
+					lazy('not a function');
+				} catch (error) {
+					thrownError = error;
+				}
+				expect(thrownError).instanceOf(Error);
+				expect(thrownError.message).to.equal('handler must be a function');
+			});
+
+			it('should cover free lazy with successful getter', () => {
+				const FreeLazyTypeResult = lazy(() => {
+					const result = class FreeLazyType {};
+					return result;
+				});
+				expect(FreeLazyTypeResult).to.exist;
+				expect(FreeLazyTypeResult.TypeName).to.equal('FreeLazyType');
+			});
+
+			it('should cover lazy with config object', () => {
+				const LazyWithConfigTypeResult = UserType.lazy(() => {
+					const result = class LazyWithConfigType {};
+					return result;
+				}, { strictChain : false });
+				expect(LazyWithConfigTypeResult).to.exist;
+				expect(LazyWithConfigTypeResult.config.strictChain).to.equal(false);
+			});
+
+			it('should cover lazy getter returning function with non-object prototype', () => {
+				const NonObjectProtoTypeResult = lazy(() => {
+					function NonObjectProtoType () {}
+					NonObjectProtoType.prototype = 123;
+					const result = NonObjectProtoType;
+					return result;
+				});
+				expect(NonObjectProtoTypeResult).to.exist;
+				expect(NonObjectProtoTypeResult.TypeName).to.equal('NonObjectProtoType');
+				const instance = new NonObjectProtoTypeResult();
+				expect(instance).to.exist;
+			});
+
+			it('should cover free lazy with null this', () => {
+				const LazyNullThisTypeResult = lazy.call(null, () => {
+					const result = class LazyNullThisType {};
+					return result;
+				});
+				expect(LazyNullThisTypeResult).to.exist;
+				expect(LazyNullThisTypeResult.TypeName).to.equal('LazyNullThisType');
+			});
+
+			it('should cover free lazy with type proxy this', () => {
+				const LazyProxyThisTypeResult = lazy.call(UserType, () => {
+					const result = class LazyProxyThisType {};
+					return result;
+				});
+				expect(LazyProxyThisTypeResult).to.exist;
+				expect(LazyProxyThisTypeResult.TypeName).to.equal('LazyProxyThisType');
+			});
+
+			it('should cover free lazy with mnemonica this', () => {
+				const LazyMnemonicaThisTypeResult = lazy.call(mnemonica, () => {
+					const result = class LazyMnemonicaThisType {};
+					return result;
+				});
+				expect(LazyMnemonicaThisTypeResult).to.exist;
+				expect(LazyMnemonicaThisTypeResult.TypeName).to.equal('LazyMnemonicaThisType');
+			});
+
+			it('should cover lazy with function config', () => {
+				const LazyFunctionConfigTypeResult = UserType.lazy(() => {
+					const result = class LazyFunctionConfigType {};
+					return result;
+				}, () => {});
+				expect(LazyFunctionConfigTypeResult).to.exist;
+			});
+
+			it('should cover named lazy on type proxy', () => {
+				const NamedLazyOnProxyResult = UserType.lazy('NamedLazyOnProxy', () => {
+					const result = class NamedLazyOnProxyCtor {};
+					return result;
+				});
+				expect(NamedLazyOnProxyResult).to.exist;
+				expect(NamedLazyOnProxyResult.TypeName).to.equal('NamedLazyOnProxy');
+			});
+
+			it('should cover named free lazy', () => {
+				const NamedFreeLazyTypeResult = lazy('NamedFreeLazyType', () => {
+					const result = class SomeOtherNameCtor {};
+					return result;
+				});
+				expect(NamedFreeLazyTypeResult).to.exist;
+				expect(NamedFreeLazyTypeResult.TypeName).to.equal('NamedFreeLazyType');
 			});
 		});
 

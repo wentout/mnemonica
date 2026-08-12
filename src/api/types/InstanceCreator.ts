@@ -59,6 +59,12 @@ const invokePreHooks = function ( this: InstanceCreatorContext ) {
 
 	const { collection, } = type;
 
+	// fast path: nothing registered for preCreation on either side,
+	// so there is no hookData to build and no invokeHook to run
+	if (!type.hooks.preCreation && !collection.hooks.preCreation) {
+		return;
+	}
+
 	const hookData = {
 		type,
 		TypeName : type.TypeName,
@@ -85,20 +91,31 @@ const invokePostHooks = function ( this: InstanceCreatorContext ) {
 
 	 
 	const creator = this;
+	const { type } = creator;
+	const { collection, } = type;
+
+	const hookType = creator.inheritedInstance instanceof Error ?
+		'creationError' : 'postCreation';
+
+	// fast path: nothing registered for this hookType on either side;
+	// creator.type is the same object props.__type__ would give,
+	// and it saves the _getProps chain walk entirely
+	if (!type.hooks[ hookType ] && !collection.hooks[ hookType ]) {
+		const emptyResult = {
+			type       : new Set<unknown>(),
+			collection : new Set<unknown>(),
+		};
+		return emptyResult;
+	}
+
 	const { inheritedInstance, } = creator;
 
 	const props = _getProps(inheritedInstance) as Props;
 
 	const {
-		__type__: type,
 		__parent__: existentInstance,
 		__args__: args,
 	} = props;
-
-	const { collection, } = type;
-
-	const hookType = inheritedInstance instanceof Error ?
-		'creationError' : 'postCreation';
 
 	const hookData = {
 		type,
@@ -371,6 +388,11 @@ const runBlockErrorsCheck = function ( self: InstanceCreatorContext, args: unkno
 };
 
 const runBuild = function ( self: InstanceCreatorContext, args: unknown[] ) {
+	// NOTE: makeInstanceModificator runs OUTSIDE the blockErrors guard below.
+	// That placement is pragmatic, not principled (too many other things were
+	// on fire at the time): a custom ModificationConstructor throwing during
+	// wiring propagates raw, because wrapping an error into an errored
+	// instance needs a valid instance context that does not exist yet here.
 	self.InstanceModificator = makeInstanceModificator( self );
 
 	if ( self.config.blockErrors ) {
