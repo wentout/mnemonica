@@ -11,7 +11,17 @@ const { odp, } = constants;
 // Instance metadata (__type__, __parent__, __args__, etc.) is stored
 // against the prototype object, not the instance itself, so it never
 // shows up in for...in, Object.keys, or JSON.stringify.
+//
+// Records may also be keyed by an object itself (not its prototype):
+// this is how error instances carry their data (args, originalError,
+// instance, exceptionReason, reasons, surplus) — nothing is defined
+// on the error object, getProps(error) finds the record directly.
+// That second key-space lives in a separate WeakMap: memory layer
+// objects are themselves keys in __props__, so sharing one map would
+// conflate the two spaces (a layer would "find" its own record when
+// the caller meant to reach the parent layer's one).
 const __props__ = new WeakMap();
+const __object_props__ = new WeakMap();
 
 const nativeProps = new Set([
 	'__proto_proto__',
@@ -157,6 +167,13 @@ const isObjectNature = (instance: unknown) => {
 
 export const _getProps = (instance: object, base?: object): PropsType | undefined => {
 	if (!isObjectNature(instance)) return undefined;
+	// object-keyed records (error props etc.) take precedence over
+	// the prototype-layer records looked up below
+	const ownRecord = __object_props__.get(instance);
+	if (ownRecord !== undefined) {
+		const ownResult = ownRecord as PropsType;
+		return ownResult;
+	}
 	const proto = Reflect.getPrototypeOf(instance) as object;
 	if (
 		base !== undefined &&
@@ -227,22 +244,40 @@ export const getProps = (instance: object): PropsType | undefined => {
 
 export const setProps = (instance: object, _values: object): string[] | false => {
 	const props = _getProps(instance);
+	const prevAdditions = props ? __props__.get(props) : undefined;
+	const values = Object.getOwnPropertyDescriptors(_values);
+	const written: string[] = [];
+	const allowed = {};
+	if (prevAdditions instanceof Object) {
+		// repeated setProps calls accumulate: previous additions are the
+		// base, new values override per key
+		Object.defineProperties(
+			allowed,
+			Object.getOwnPropertyDescriptors(prevAdditions)
+		);
+	}
+	Object.entries(values).forEach(([ name, value ]) => {
+		if (!nativeProps.has(name)) {
+			written.push(name);
+			Object.defineProperty(
+				allowed,
+				name,
+				value
+			);
+		}
+	});
 	if (props) {
-		const values = Object.getOwnPropertyDescriptors(_values);
-		const written: string[] = [];
-		const allowed = {};
-		Object.entries(values).forEach(([ name, value ]) => {
-			if (!nativeProps.has(name)) {
-				written.push(name);
-				Object.defineProperty(
-					allowed,
-					name,
-					value
-				);
-			}
-		});
 		__props__.set(
 			props,
+			allowed
+		);
+		return written;
+	}
+	if (isObjectNature(instance)) {
+		// no props record anywhere in the chain (plain objects, Error
+		// objects, library errors) — start one, keyed by the object itself
+		__object_props__.set(
+			instance,
 			allowed
 		);
 		return written;

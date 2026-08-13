@@ -27,7 +27,7 @@ import type {
 	ChainedMethodResult,
 	TypeWithApplyDecorator
 } from './types';
-import type { hooksOpts } from '../src/types';
+import type { ErrorProps, hooksOpts } from '../src/types';
 
 declare const process: NodeJS.Process;
 
@@ -2012,7 +2012,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(thrown).toBeInstanceOf(Error);
 				expect(thrown!.message).toBeDefined();
 				expect(typeof thrown!.message).toEqual('string');
-				expect((thrown as MnemonicaError).originalError).toBeInstanceOf(Error);
+				expect((getProps(thrown!) as unknown as ErrorProps).originalError).toBeInstanceOf(Error);
 			});
 
 			it('should be able to throw async bound methods invocations properly', async () => {
@@ -2033,8 +2033,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(thrown!.message).toBeDefined();
 				expect(typeof thrown!.message).toEqual('string');
 				expect(thrown!.message).toEqual('async error');
-				expect((thrown as MnemonicaError).originalError).toBeInstanceOf(Error);
-				expect((thrown as MnemonicaError).originalError).not.toBeInstanceOf(AsyncType);
+				expect((getProps(thrown!) as unknown as ErrorProps).originalError).toBeInstanceOf(Error);
+				expect((getProps(thrown!) as unknown as ErrorProps).originalError).not.toBeInstanceOf(AsyncType);
 
 			});
 
@@ -2054,7 +2054,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(thrown).toBeInstanceOf(Error);
 				expect(thrown!.message).toBeDefined();
 				expect(typeof thrown!.message).toEqual('string');
-				expect((thrown as MnemonicaError).originalError).toBeInstanceOf(Error);
+				expect((getProps(thrown!) as unknown as ErrorProps).originalError).toBeInstanceOf(Error);
 			});
 
 			it('should be able to construct async', () => {
@@ -2266,17 +2266,24 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 
 		describe('throwModificationError coverage', () => {
 			it('should handle nested exception reasons', () => {
-				// Create a type that throws an error which already has exceptionReason
-				// This simulates a nested error scenario
+				// Create a type that throws an error which was already
+				// processed once — this exercises the nested (re-entry)
+				// error handling path of throwModificationError
 				let thrownError: MnemonicaError | undefined;
-				
+				let processedError: Error | undefined;
+
+				const FirstThrowingType = define('FirstThrowingType', function () {
+					throw new Error('previous reason');
+				});
+				try {
+					new FirstThrowingType();
+				} catch (firstError) {
+					processedError = firstError as Error;
+				}
+				const previouslyProcessed = processedError as Error;
+
 				const NestedThrowingType = define('NestedThrowingType', function () {
-					const err = new Error('inner error') as MnemonicaError;
-					// Pre-populate the error with exceptionReason to trigger nested error handling
-					err.exceptionReason = new Error('previous reason');
-					err.reasons = [];
-					err.surplus = [];
-					throw err;
+					throw previouslyProcessed;
 				});
 				
 				try {
@@ -2285,8 +2292,9 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					thrownError = error as MnemonicaError;
 					// The error should have been processed by throwModificationError
 					// and should have reasons array with the nested exceptionReason pushed
-					expect((error as MnemonicaError).reasons).toBeDefined();
-					expect((error as MnemonicaError).surplus).toBeDefined();
+					const nestedProps = getProps(error as Error) as unknown as ErrorProps;
+					expect(nestedProps.reasons).toBeDefined();
+					expect(nestedProps.surplus).toBeDefined();
 				}
 				
 				expect(thrownError).toBeDefined();
@@ -2302,35 +2310,38 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					new ThrowingType();
 					expect(false).toBe(true); // Should not reach here
 				} catch (error) {
-					// Test exceptionReason getter
-					expect((error as MnemonicaError).exceptionReason).toBeDefined();
-					expect((error as MnemonicaError).exceptionReason!.message).toBe('intentional construction error');
+					// error data lives in the external props storage,
+					// read via getProps(error) — nothing is on the error object
+					const errorProps = getProps(error as Error) as unknown as ErrorProps;
+
+					// Test exceptionReason
+					expect(errorProps.exceptionReason).toBeDefined();
+					expect((errorProps.exceptionReason as Error).message).toBe('intentional construction error');
 					
-					// Test reasons getter
-					expect((error as MnemonicaError).reasons).toBeInstanceOf(Array);
-					expect((error as MnemonicaError).reasons!.length).toBeGreaterThan(0);
+					// Test reasons
+					expect(errorProps.reasons).toBeInstanceOf(Array);
+					expect(errorProps.reasons!.length).toBeGreaterThan(0);
 					
-					// Test surplus getter
-					expect((error as MnemonicaError).surplus).toBeInstanceOf(Array);
+					// Test surplus
+					expect(errorProps.surplus).toBeInstanceOf(Array);
 					
-					// Test args getter
-					expect((error as MnemonicaError).args).toBeInstanceOf(Array);
+					// Test args
+					expect(errorProps.args).toBeInstanceOf(Array);
 					
-					// Test originalError getter
-					expect((error as MnemonicaError).originalError).toBeInstanceOf(Error);
-					expect((error as MnemonicaError).originalError!.message).toBe('intentional construction error');
+					// Test originalError
+					expect(errorProps.originalError).toBeInstanceOf(Error);
+					expect(errorProps.originalError!.message).toBe('intentional construction error');
 					
-					// Test instance getter
-					expect((error as MnemonicaError).instance).toBe(error);
+					// Test instance
+					expect(errorProps.instance).toBe(error);
 					
-					// Test extract getter
-					expect(typeof (error as MnemonicaError).extract).toBe('function');
-					const extracted = (error as MnemonicaError).extract!();
+					// no bound extract/parse methods since v1.0.6 — use utils instead
+					expect((error as MnemonicaError & { extract?: unknown }).extract).toBeUndefined();
+					const extracted = extract(error as object);
 					expect(extracted).toBeDefined();
 					
-					// Test parse getter
-					expect(typeof (error as MnemonicaError).parse).toBe('function');
-					const parsed = (error as MnemonicaError).parse!();
+					expect((error as MnemonicaError & { parse?: unknown }).parse).toBeUndefined();
+					const parsed = parse(error);
 					expect(parsed).toBeDefined();
 				}
 			});

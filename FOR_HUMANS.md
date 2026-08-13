@@ -792,7 +792,9 @@ console.log(props.__type__, props.__args__);
 setProps(instance, { myFlag: true });
 ```
 
-`setProps` only accepts non-reserved names: the internal `__…__` properties (`__type__`, `__args__`, `__timestamp__`, etc.) are filtered out and cannot be overwritten. Also note that `getProps` returns the *live* internal object when no custom properties are set — mutating the result mutates the instance's construction record. Once `setProps` has been used, `getProps` returns a merged copy instead.
+`setProps` only accepts non-reserved names: the internal `__…__` properties (`__type__`, `__args__`, `__timestamp__`, etc.) are filtered out and cannot be overwritten. Repeated `setProps` calls accumulate: earlier values are kept, new values override per key. Also note that `getProps` returns the *live* internal object when no custom properties are set — mutating the result mutates the instance's construction record. Once `setProps` has been used, `getProps` returns a merged copy instead.
+
+`setProps` also works on objects with no mnemonica record at all (plain objects, `Error` objects): a record keyed by the object itself is created on demand, and `getProps` finds it directly. This is how library errors carry their data. On primitives (`setProps(5, …)`) it returns `false`.
 
 ---
 
@@ -807,7 +809,7 @@ utils.extract(instance);
 utils.pick(instance, 'key');
 utils.parent(instance, 'ParentType');
 utils.fork(instance)(newArgs);
-utils.exception(instance, error);
+new utils.exception(instance, error); // must be called with `new`
 utils.sibling(instance);
 utils.clone(instance);
 ```
@@ -895,12 +897,19 @@ const dagInstance = forkFn.call(instanceB, 'args');
 
 #### `utils.exception(instance, error, ...args)`
 
-Creates an exception instance from the given instance.
+Creates an exception instance from the given instance. Must be called with
+`new` (it throws `WRONG_INSTANCE_INVOCATION` otherwise).
 
 ```ts
-const error = utils.exception(someInstance, new Error('Something went wrong'));
+const error = new utils.exception(someInstance, new Error('Something went wrong'));
 throw error;
 ```
+
+The resulting error is a plain `Error` — data lives in its props, read via
+`getProps(error)`: `args`, `originalError`, `instance`. Only `.message` and
+`.stack` (merged lifecycle trace) sit on the error object itself. No bound
+methods either: use `utils.extract(getProps(error).instance)` /
+`utils.parse(getProps(error).instance)` for properties and structural info.
 
 #### `utils.sibling(instance)`
 
@@ -1059,18 +1068,22 @@ errors.WRONG_STACK_CLEANER
 
 #### Exception Instances
 
-When creating exceptions using `utils.exception()`:
+When creating exceptions using `utils.exception()` (must be called with `new`):
 
 ```js
-const { utils } = require('mnemonica');
-const error = utils.exception(instance, new Error('Original error'));
+const { utils, getProps } = require('mnemonica');
+const error = new utils.exception(instance, new Error('Original error'));
 
-// Properties:
-error.originalError    // The original error
-error.exceptionReason  // { methodName, ... }
-error.BaseStack        // Base stack trace
-error.parse()          // Parse the exception structure
-error.extract()        // Extract properties from the exception
+// The error object itself is a plain Error: .message and .stack
+// (merged lifecycle trace) only. Everything else lives in props:
+const errorProps = getProps(error);
+errorProps.args           // Extra arguments passed to the exception call
+errorProps.originalError  // The original error
+errorProps.instance       // The mnemonica instance the error was made from
+
+// Errors carry no bound methods — use the utils on the props instance:
+utils.extract(errorProps.instance)  // Extract properties from the instance
+utils.parse(errorProps.instance)    // Parse the instance structure
 ```
 
 #### Stack Cleaning

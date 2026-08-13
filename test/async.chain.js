@@ -32,8 +32,9 @@ const tests = ( opts ) => {
 			expect( thrown ).instanceOf( AsyncWOReturn );
 			expect( thrown ).instanceOf( errors.WRONG_MODIFICATION_PATTERN );
 			expect( thrown.message ).exist.and.is.a( 'string' );
-			expect( typeof thrown.exceptionReason.constructor.name ).equal( 'object' );
-			expect( thrown.exceptionReason.constructor.name ).instanceOf( String );
+			const thrownProps = getProps( thrown );
+			expect( typeof thrownProps.exceptionReason.constructor.name ).equal( 'object' );
+			expect( thrownProps.exceptionReason.constructor.name ).instanceOf( String );
 			assert.equal( thrown.message, 'wrong modification pattern : should inherit from AsyncWOReturn: seems async AsyncWOReturn has no return statement' );
 		} );
 

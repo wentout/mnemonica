@@ -17,6 +17,16 @@ All errors extend from `BASE_MNEMONICA_ERROR` which provides:
 - Additional stack prepending
 - BaseStack preservation
 
+## Error Data Lives in Props, Not on the Error Object
+
+Mnemonica errors are plain `Error` objects: only `.message` and `.stack` are
+own properties. All mnemonica-specific data (`args`, `originalError`,
+`instance`, `exceptionReason`, `reasons`, `surplus`, `error`) is stored in the
+external props storage — read it with `getProps(error)`, write it with
+`setProps(error, …)` (see `.ai/PROTOTYPE-CHAIN.md` for the two key-spaces).
+Never read `error.originalError` etc. directly, and never add those fields back
+onto the error object.
+
 ## constructError Factory
 
 ```typescript

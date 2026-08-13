@@ -5,12 +5,11 @@ import type { MnemonicaInstance } from '../src/types';
 import type {
 	EnvironmentTestOptions,
 	MnemonicaError,
-	MnemonicaErrorWithError,
 	SomeADTCInstance,
 	FlexibleConstructor,
 } from './types';
 
-import type { MnemonicaModule } from '../src/types';
+import type { ErrorProps, MnemonicaModule } from '../src/types';
 const mnemonica = require('../src/index') as MnemonicaModule;
 
 const hop = (o: unknown, p: string) => Object.prototype.hasOwnProperty.call(o, p);
@@ -28,6 +27,7 @@ const {
 	utils: {
 		toJSON,
 		merge,
+		extract,
 		parse,
 	},
 	errors,
@@ -181,8 +181,14 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 
 
 		describe('missing instance props test', () => {
-			const result = setProps({}, {});
-			expect(result).toEqual(false);
+			// plain objects get an external record created on demand,
+			// keyed by the object itself — error props rely on this
+			const plain = {};
+			const result = setProps(plain, {});
+			expect(result).toEqual([]);
+			expect(getProps(plain)).not.toEqual(undefined);
+			// primitives can not hold a record at all
+			expect(setProps(5 as unknown as object, {})).toEqual(false);
 			expect(getProps({})).toEqual(undefined);
 			expect(getProps(5)).toEqual(undefined);
 			expect(getProps(false)).toEqual(undefined);
@@ -996,23 +1002,34 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			expect(errorInstance).toBeInstanceOf(Error);
 		});
 		it('.exception() args should exist and create instanceof Error', () => {
-			expect(errorInstance!.args).toBeInstanceOf(Array);
+			expect((getProps(errorInstance!) as unknown as ErrorProps).args).toBeInstanceOf(Array);
 			expect(errorInstance).toBeInstanceOf(Error);
 		});
 		it('.exception() .instance should be existent instance', () => {
-			expect(errorInstance!.instance).toEqual(someADTCInstance);
+			expect((getProps(errorInstance!) as unknown as ErrorProps).instance).toEqual(someADTCInstance);
 		});
 		it('.exception() should have nice .args property', () => {
-			expect(errorInstance!.args![0]).toEqual(1);
-			expect(errorInstance!.args![1]).toEqual(2);
-			expect(errorInstance!.args![2]).toEqual(3);
+			const exceptionProps = getProps(errorInstance!) as unknown as ErrorProps;
+			expect(exceptionProps.args![0]).toEqual(1);
+			expect(exceptionProps.args![1]).toEqual(2);
+			expect(exceptionProps.args![2]).toEqual(3);
 		});
 
-		it('.exception() .extract() works property', () => {
-			expect((errorInstance as unknown as { extract(): Record<string, unknown> }).extract()).toMatchObject((someADTCInstance as unknown as { extract(): Record<string, unknown> }).extract());
+		it('.exception() exposes nothing but standard Error props', () => {
+			expect((errorInstance as unknown as { extract: unknown }).extract).toBeUndefined();
+			expect((errorInstance as unknown as { parse: unknown }).parse).toBeUndefined();
+			// error data lives in getProps(error), not on the error object
+			expect((errorInstance as unknown as { args: unknown }).args).toBeUndefined();
+			expect((errorInstance as unknown as { originalError: unknown }).originalError).toBeUndefined();
+			expect((errorInstance as unknown as { instance: unknown }).instance).toBeUndefined();
 		});
-		it('.exception() .parse() works property', () => {
-			expect(errorInstance!.parse!()).toMatchObject(parse(someADTCInstance));
+		it('.exception() extract works via utils on props instance', () => {
+			const exceptionProps = getProps(errorInstance!) as unknown as ErrorProps;
+			expect(extract(exceptionProps.instance as object)).toMatchObject((someADTCInstance as unknown as { extract(): Record<string, unknown> }).extract());
+		});
+		it('.exception() parse works via utils on props instance', () => {
+			const exceptionProps = getProps(errorInstance!) as unknown as ErrorProps;
+			expect(parse(exceptionProps.instance as SomeADTCInstance)).toMatchObject(parse(someADTCInstance));
 		});
 
 
@@ -1053,15 +1070,18 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 		});
 
 		it('wrong .exception() .instance should be existent instance', () => {
-			expect(wrongErrorInstanceIsNotAnError!.instance).toEqual(someADTCInstance);
+			const wrongProps = getProps(wrongErrorInstanceIsNotAnError!) as unknown as ErrorProps;
+			expect(wrongProps.instance).toEqual(someADTCInstance);
 		});
 		it('wrong .exception() .error should be given error', () => {
-			expect((wrongErrorInstanceIsNotAnError as unknown as MnemonicaErrorWithError).error).toEqual('asdf');
+			const wrongProps = getProps(wrongErrorInstanceIsNotAnError!) as unknown as ErrorProps;
+			expect(wrongProps.error).toEqual('asdf');
 		});
 		it('wrong .exception() .args should be given args', () => {
-			expect(wrongErrorInstanceIsNotAnError!.args![0]).toEqual(1);
-			expect(wrongErrorInstanceIsNotAnError!.args![1]).toEqual(2);
-			expect(wrongErrorInstanceIsNotAnError!.args![2]).toEqual(3);
+			const wrongProps = getProps(wrongErrorInstanceIsNotAnError!) as unknown as ErrorProps;
+			expect(wrongProps.args![0]).toEqual(1);
+			expect(wrongProps.args![1]).toEqual(2);
+			expect(wrongProps.args![2]).toEqual(3);
 		});
 
 

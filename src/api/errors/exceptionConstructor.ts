@@ -13,9 +13,6 @@ import {
 	cleanupStack, getStack 
 } from '../errors';
 
-import { parse } from '../../utils/parse';
-import { extract } from '../../utils/extract';
-
 import TypesUtils from '../utils';
 
 const { makeErrorModificatorType } = TypesUtils;
@@ -23,8 +20,10 @@ const { makeErrorModificatorType } = TypesUtils;
 import { makeInstanceModificator } from '../types/InstanceModificator';
 
 import {
-	_getProps, Props 
+	_getProps, getProps, setProps, Props 
 } from '../types/Props';
+
+import type { ErrorProps } from '../../types';
 
 const checkThrowArgs = ( instance: unknown, target: unknown, error: Error, args: unknown[] ) => {
 
@@ -51,33 +50,14 @@ const checkThrowArgs = ( instance: unknown, target: unknown, error: Error, args:
 		return;
 	}
 
-	odp(
+	// usage-error data also goes to the external props storage,
+	// nothing is defined on the thrown error object itself
+	setProps(
 		wrongThrow,
-		'instance',
 		{
-			get () {
-				return instance;
-			}
-		} 
-	);
-
-	odp(
-		wrongThrow,
-		'error',
-		{
-			get () {
-				return error;
-			}
-		} 
-	);
-
-	odp(
-		wrongThrow,
-		'args',
-		{
-			get () {
-				return args;
-			}
+			instance,
+			error,
+			args
 		} 
 	);
 
@@ -94,7 +74,7 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 		args,
 		error
 	} = opts as {
-		instance: { extract: () => unknown };
+		instance: object;
 		TypeName: string;
 		typeStack: string[];
 		args: unknown[];
@@ -105,63 +85,40 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 	 
 	const exception = this;
 
-	odp(
+	// if the wrapped error already carries error data (packaged by a previous
+	// processing round), the exception inherits it — the same way the
+	// prototype chain used to expose it before props moved off the objects
+	const wrappedErrorProps = getProps( error ) as unknown as ErrorProps | undefined;
+	const inheritedProps: ErrorProps = {};
+	if ( wrappedErrorProps !== undefined ) {
+		if ( wrappedErrorProps.exceptionReason !== undefined ) {
+			inheritedProps.exceptionReason = wrappedErrorProps.exceptionReason;
+		}
+		if ( wrappedErrorProps.reasons !== undefined ) {
+			inheritedProps.reasons = wrappedErrorProps.reasons;
+		}
+		if ( wrappedErrorProps.surplus !== undefined ) {
+			inheritedProps.surplus = wrappedErrorProps.surplus;
+		}
+	}
+
+	// exception data lives in the external props storage (WeakMap):
+	// read it via getProps(exception) — .args / .originalError / .instance
+	setProps(
 		exception,
-		'args',
-		{
-			get () {
-				return args;
-			}
-		} 
+		Object.assign(
+			{
+				args,
+				originalError : error,
+				instance
+			},
+			inheritedProps
+		) 
 	);
 
-	odp(
-		exception,
-		'originalError',
-		{
-			get () {
-				return error;
-			}
-		} 
-	);
-
-	odp(
-		exception,
-		'instance',
-		{
-			get () {
-				return instance;
-			}
-		} 
-	);
-
-	odp(
-		exception,
-		'extract',
-		{
-			get () {
-				const result = () => {
-					const extractResult = extract(instance);
-					return extractResult;
-				};
-				return result;
-			}
-		} 
-	);
-
-	odp(
-		exception,
-		'parse',
-		{
-			get () {
-				const result = () => {
-					const parseResult = parse( instance );
-					return parseResult;
-				};
-				return result;
-			}
-		} 
-	);
+	// no bound .extract()/.parse() here: since v1.0.6 instances expose no
+	// methods, so errors follow — call utils.extract(...) / utils.parse(...)
+	// on getProps(exception).instance instead
 
 	// real error stack
 	const errorStack = exception.stack!.split( '\n' );

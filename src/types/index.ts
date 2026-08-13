@@ -54,11 +54,21 @@ export interface MnemonicaErrorConstructor {
 // Errors types map - indexable record of error constructors
 export type ErrorsTypesMap = Record<string, MnemonicaErrorConstructor>;
 
-// Mnemonica error interface for extended Error objects
-export interface MnemonicaError extends Error {
-	exceptionReason?: Error;
-	reasons?: Error[];
-	surplus?: Error[];
+// Mnemonica-processed error. It carries no custom properties of its own:
+// the error data lives in the external props storage (WeakMap) — read it
+// via getProps(error), typed as ErrorProps below.
+export type MnemonicaError = Error;
+
+// Error-instance data props, stored externally (see api/types/Props.ts)
+// and exposed through getProps(error) — never defined on the error object
+export interface ErrorProps {
+	args?: unknown[];
+	originalError?: Error;
+	instance?: object;
+	exceptionReason?: unknown;
+	reasons?: unknown[];
+	surplus?: unknown[];
+	error?: unknown;
 }
 
 /**

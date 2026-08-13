@@ -30,7 +30,7 @@ utils.parent(instance, 'UserType');
 utils.fork(instance)(newArgs);
 utils.clone(instance);
 utils.sibling(instance);
-utils.exception(instance, new Error('oops'));
+new utils.exception(instance, new Error('oops')); // must be called with `new`
 ```
 
 All utilities infer their type parameter from the instance argument.
