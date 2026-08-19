@@ -421,6 +421,15 @@ const tests = ( opts ) => {
 			expect( getProps(sleepError).__args__[ 0 ] ).equal( argsTest );
 		} );
 
+		it( 'sleepError.stack creation section should name the call site', () => {
+			// async failure: the creation section must hold the stack captured
+			// at `new` time (this test file's frames) — not rejection-processing
+			// frames, which is all a fresh capture could see after the await
+			const creationSection = sleepError.stack.split( '<-- with the following error -->' )[ 0 ];
+			expect( creationSection.indexOf( '<-- creation of [ AsyncErroredType ] traced -->' ) > 0 ).is.equal(true);
+			expect( creationSection.indexOf( 'async.chain.js' ) > 0 ).is.equal(true);
+		} );
+
 
 		it( 'straightErrorAsync expect args of AsyncErroredTypeStraight', () => {
 			const props = getProps(straightErrorAsync);

@@ -274,6 +274,8 @@ const AsyncErroredType = define('AsyncErroredType', async function () {
 
 This works because mnemonica catches the error and re-creates it as an instance of the target type with the error attached. The `blockErrors` option controls whether construction is blocked when errors exist in the prototype chain.
 
+The error's composite stack keeps its three sections for async failures too. The `<-- creation of [ X ] traced -->` section is captured **at `new` time**: by the moment a rejection is wrapped, the call site has unwound from the call stack, so an error-time capture could only show rejection-processing frames. This new-time capture happens for every async construction — no `submitStack` opt-in needed — so the creation section always names the file and line that called `new`.
+
 ---
 
 ## Summary

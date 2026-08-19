@@ -2,7 +2,7 @@
 
 import { constants } from '../../constants';
 import type {
-	CollectionDef, InstanceCreatorContext, Props as PropsType, TypeDef 
+	CollectionDef, InstanceCreatorContext, Props as PropsType, TypeDef
 } from '../../types';
 
 const { odp, } = constants;
@@ -38,7 +38,7 @@ const nativeProps = new Set([
 
 export const _addProps = function (this: InstanceCreatorContext): void {
 
-	 
+
 	const self = this;
 
 	const {
@@ -153,8 +153,8 @@ export const _addProps = function (this: InstanceCreatorContext): void {
 
 	// __props__.set(self, value);
 	__props__.set(
-proto!,
-value
+		proto!,
+		value
 	);
 
 };
@@ -287,7 +287,7 @@ export const setProps = (instance: object, _values: object): string[] | false =>
 
 // Re-export types from centralized types
 export type {
-	CollectionDef, TypeDef, PropsType as Props 
+	CollectionDef, TypeDef, PropsType as Props
 };
 
 module.exports = {

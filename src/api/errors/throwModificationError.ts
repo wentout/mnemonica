@@ -139,14 +139,26 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 
 		const title = `\n<-- creation of [ ${TypeName} ] traced -->`;
 
-		getStack.call(
-			erroredInstance,
-			title,
-			[],
-			throwModificationError 
-		);
+		if ( self.inheritedInstance instanceof Promise ) {
 
-		stack.push( ...(erroredInstance as { stack: string[] }).stack );
+			// async construction failure: this runs from makeAwaiter's .catch,
+			// long after the `new` call site has unwound — a fresh capture here
+			// would hold only rejection-processing frames. runAsyncHandling
+			// captured the creation stack at new-time instead; use it.
+			stack.push( ...(self.stack as string[]) );
+
+		} else {
+
+			getStack.call(
+				erroredInstance,
+				title,
+				[],
+				throwModificationError 
+			);
+
+			stack.push( ...(erroredInstance as { stack: string[] }).stack );
+
+		}
 
 		const errorStack = (error.stack as string ).split( '\n' );
 
