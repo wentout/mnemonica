@@ -175,19 +175,6 @@ export interface OneElseCollectionInstance extends MnemonicaInstance {
 export interface MnemonicaError extends Error {
 	BaseStack?: string;
 	message: string;
-	exceptionReason?: Error;
-	reasons?: Error[];
-	surplus?: unknown[];
-	args?: unknown[];
-	originalError?: Error;
-	instance?: Error;
-	extract?(): Record<string, unknown>;
-	parse?(): unknown;
-}
-
-// Error instance from exception method with error property
-export interface MnemonicaErrorWithError extends MnemonicaError {
-	error: unknown;
 }
 
 // Type for bound method that can also be used as a constructor
@@ -400,13 +387,11 @@ export interface ChainedAsyncInstance extends ExtractableInstance {
 export interface WrongSyncTypeInstance extends MnemonicaError {
 	stack: string;
 	message: string;
-	extract(): Record<string, unknown>;
 }
 
 export interface WrongAsyncTypeInstance extends MnemonicaError {
 	stack: string;
 	message: string;
-	extract(): Record<string, unknown>;
 }
 
 // Sleep type and related error types

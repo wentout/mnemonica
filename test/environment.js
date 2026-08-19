@@ -22,6 +22,7 @@ const {
 		toJSON,
 		merge,
 		parse,
+		extract,
 	},
 	errors,
 	ErrorMessages,
@@ -184,8 +185,14 @@ const tests = (opts) => {
 
 
 		describe('missing instance props test', () => {
-			const result = setProps({}, {});
-			expect(result).is.equal(false);
+			// plain objects get an external record created on demand,
+			// keyed by the object itself — error props rely on this
+			const plain = {};
+			const result = setProps(plain, {});
+			expect(result).is.deep.equal([]);
+			expect(getProps(plain)).is.not.equal(undefined);
+			// primitives can not hold a record at all
+			expect(setProps(5, {})).is.equal(false);
 			expect(getProps({})).is.equal(undefined);
 			expect(getProps(5)).is.equal(undefined);
 			expect(getProps(false)).is.equal(undefined);
@@ -1222,21 +1229,32 @@ const tests = (opts) => {
 			expect(errorInstance).instanceOf(__type__);
 		});
 		it('.exception() .instance should be existent instance', () => {
-			expect(errorInstance.instance).equal(someADTCInstance);
+			expect(getProps(errorInstance).instance).equal(someADTCInstance);
 		});
 		it('.exception() should have nice .args property', () => {
-			expect(errorInstance.args[ 0 ]).equal(1);
-			expect(errorInstance.args[ 1 ]).equal(2);
-			expect(errorInstance.args[ 2 ]).equal(3);
+			const exceptionProps = getProps(errorInstance);
+			expect(exceptionProps.args[ 0 ]).equal(1);
+			expect(exceptionProps.args[ 1 ]).equal(2);
+			expect(exceptionProps.args[ 2 ]).equal(3);
 		});
 
-		it('.exception() .extract() works property', () => {
-			assert.deepOwnInclude(errorInstance.extract(), someADTCInstance.extract());
-			assert.deepOwnInclude(someADTCInstance.extract(), errorInstance.extract());
+		it('.exception() exposes nothing but standard Error props', () => {
+			expect(errorInstance.extract).equal(undefined);
+			expect(errorInstance.parse).equal(undefined);
+			// error data lives in getProps(error), not on the error object
+			expect(errorInstance.args).equal(undefined);
+			expect(errorInstance.originalError).equal(undefined);
+			expect(errorInstance.instance).equal(undefined);
 		});
-		it('.exception() .extract() works property', () => {
-			assert.deepOwnInclude(errorInstance.parse(), parse(someADTCInstance));
-			assert.deepOwnInclude(parse(someADTCInstance), errorInstance.parse());
+		it('.exception() extract works via utils on props instance', () => {
+			const exceptionProps = getProps(errorInstance);
+			assert.deepOwnInclude(extract(exceptionProps.instance), someADTCInstance.extract());
+			assert.deepOwnInclude(someADTCInstance.extract(), extract(exceptionProps.instance));
+		});
+		it('.exception() parse works via utils on props instance', () => {
+			const exceptionProps = getProps(errorInstance);
+			assert.deepOwnInclude(parse(exceptionProps.instance), parse(someADTCInstance));
+			assert.deepOwnInclude(parse(someADTCInstance), parse(exceptionProps.instance));
 		});
 
 
@@ -1275,15 +1293,16 @@ const tests = (opts) => {
 		});
 
 		it('wrong .exception() .instance should be existent instance', () => {
-			expect(wrongErrorInstanceIsNotAnError.instance).equal(someADTCInstance);
+			expect(getProps(wrongErrorInstanceIsNotAnError).instance).equal(someADTCInstance);
 		});
 		it('wrong .exception() .error should be given error', () => {
-			expect(wrongErrorInstanceIsNotAnError.error).equal('asdf');
+			expect(getProps(wrongErrorInstanceIsNotAnError).error).equal('asdf');
 		});
 		it('wrong .exception() .args should be given args', () => {
-			expect(wrongErrorInstanceIsNotAnError.args[ 0 ]).equal(1);
-			expect(wrongErrorInstanceIsNotAnError.args[ 1 ]).equal(2);
-			expect(wrongErrorInstanceIsNotAnError.args[ 2 ]).equal(3);
+			const wrongExceptionProps = getProps(wrongErrorInstanceIsNotAnError);
+			expect(wrongExceptionProps.args[ 0 ]).equal(1);
+			expect(wrongExceptionProps.args[ 1 ]).equal(2);
+			expect(wrongExceptionProps.args[ 2 ]).equal(3);
 		});
 
 

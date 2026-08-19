@@ -84,7 +84,7 @@ This is why the same constructor function can be reused across multiple type def
 - `__proto_proto__`
 - `__stack__`
 
-`getProps(instance)` walks the prototype chain from the instance until it finds the first object with a `WeakMap` entry. That is always the instance’s own memory layer. `parent(instance)` reads `__parent__` from that props object; it is the `existentInstance` passed to `InstanceCreator`.
+`getProps(instance)` first checks for a record keyed by the object itself (see the error-props note below), then walks the prototype chain from the instance until it finds the first object with a `WeakMap` entry. For instances that is always the instance's own memory layer. `parent(instance)` reads `__parent__` from that props object; it is the `existentInstance` passed to `InstanceCreator`.
 
 ## Why the memory layer is the `WeakMap` key
 
@@ -92,7 +92,9 @@ This is why the same constructor function can be reused across multiple type def
 
 **This is not a security boundary.** JavaScript within a realm offers none: a determined user with `Reflect` can reach the memory layer (`Reflect.getPrototypeOf(instance.constructor.prototype)`) and even change its prototype. The design goal is determinism under *accidental* interference — the `WeakMap` entry is keyed by identity rather than by any name or property another library could collide with, and the `constructor` getter cannot be redefined. (This was historically nicknamed "MITM resistance": forgery and pollution of the metadata lookup are structurally deflected; deliberate reflection is not. Security tooling would rightly not count this as a defense.)
 
-**Do not re-add keying by instance or creator.** Props were historically keyed by the `InstanceCreator` context, then by the instance itself. Both writes were proven unread (sentinel experiment: both suites green with garbage stored in the entry) and removed. The memory layer is the only props key; `setProps` additions are keyed by the props object itself.
+**Do not re-add keying by instance or creator.** Props were historically keyed by the `InstanceCreator` context, then by the instance itself. Both writes were proven unread (sentinel experiment: both suites green with garbage stored in the entry) and removed. For instances the memory layer is the only props key; `setProps` additions are keyed by the props object itself.
+
+**Error props use a second key-space.** Error instances carry their data (`args`, `originalError`, `instance`, `exceptionReason`, `reasons`, `surplus`) in a record keyed by the error object itself, stored in a *separate* `WeakMap` (`__object_props__` in `Props.ts`) that `_getProps` consults before the chain walk. The two key-spaces must never share one map: memory layer objects are themselves keys in `__props__`, so a shared map would make `_getProps(memoryLayer)` return the layer's own record when the caller meant to reach the parent layer's one (this exact regression once silently bypassed the `prepareSubtypeForConstruction` early-exit and cost a coverage branch). `setProps` on an object with no chain record (plain objects, `Error` objects) creates such an object-keyed record on demand; on primitives it returns `false`.
 
 **The `_getProps` guard.** The chain walk stops with `undefined` as soon as the next level’s `constructor` differs from the original object’s; the memory layer’s own getter keeps constructors aligned across its level, so the walk survives it. Consequence: `getProps(Object.create(instance))` resolves to the parent instance’s props — derived objects share the nearest ancestor’s memory layer.
 

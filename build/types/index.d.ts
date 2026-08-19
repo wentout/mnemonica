@@ -19,10 +19,15 @@ export interface MnemonicaErrorConstructor {
     };
 }
 export type ErrorsTypesMap = Record<string, MnemonicaErrorConstructor>;
-export interface MnemonicaError extends Error {
-    exceptionReason?: Error;
-    reasons?: Error[];
-    surplus?: Error[];
+export type MnemonicaError = Error;
+export interface ErrorProps {
+    args?: unknown[];
+    originalError?: Error;
+    instance?: object;
+    exceptionReason?: unknown;
+    reasons?: unknown[];
+    surplus?: unknown[];
+    error?: unknown;
 }
 export interface _Internal_TC_<ConstructorInstance extends object> {
     new (...args: unknown[]): ConstructorInstance;

@@ -8,6 +8,7 @@ const { withInstanceMethods } = require('./instance-methods-helper');
 const {
 	define,
 	errors,
+	getProps,
 } = mnemonica;
 
 // Import raw utilities directly for testing
@@ -15,6 +16,7 @@ const { exception } = require('../build/utils/exception');
 const { sibling } = require('../build/utils/sibling');
 const { fork } = require('../build/utils/fork');
 const { clone } = require('../build/utils/clone');
+const { extract } = require('../build/utils/extract');
 
 const tests = () => {
 
@@ -56,21 +58,26 @@ const tests = () => {
 				);
 
 				assert.instanceOf(exceptionInstance, Error);
-				assert.equal(exceptionInstance.instance, instance);
-				assert.equal(exceptionInstance.originalError, originalError);
-				assert.deepEqual(exceptionInstance.args, [ 1, 2, 3 ]);
+				const exceptionProps = getProps(exceptionInstance);
+				assert.equal(exceptionProps.instance, instance);
+				assert.equal(exceptionProps.originalError, originalError);
+				assert.deepEqual(exceptionProps.args, [ 1, 2, 3 ]);
 			});
 
-			it('should have extract method matching instance', () => {
+			it('should expose no bound methods; use utils on props instance instead', () => {
 				const originalError = new Error('original');
 				const exceptionInstance = new exception(
 					instance,
 					originalError
 				);
 
+				assert.isUndefined(exceptionInstance.extract);
+				assert.isUndefined(exceptionInstance.parse);
+				assert.isUndefined(exceptionInstance.instance);
+				const exceptionProps = getProps(exceptionInstance);
 				assert.deepEqual(
-					exceptionInstance.extract(),
-					instance.extract()
+					extract(exceptionProps.instance),
+					extract(instance)
 				);
 			});
 

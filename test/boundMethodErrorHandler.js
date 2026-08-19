@@ -1,9 +1,9 @@
 'use strict';
 
-const odp = ( o, p, attributes ) => {
-	const result = Object.defineProperty( o, p, attributes );
-	return result;
-};
+// Packages bound-method failures the way throwModificationError does:
+// error data lives in the external props storage (WeakMap), never on the
+// error object itself — getProps(error) is the accessor.
+const { getProps, setProps } = require('..');
 
 module.exports.boundMethodErrorHandler = ( exceptionReason ) => {
 
@@ -17,33 +17,21 @@ module.exports.boundMethodErrorHandler = ( exceptionReason ) => {
 		error
 	} = exceptionReason;
 
-	const reThrown = error.exceptionReason !== undefined;
+	const errorProps = getProps( error );
+	const reThrown = errorProps !== undefined && errorProps.exceptionReason !== undefined;
 	if ( reThrown ) {
-		error.reasons.push( exceptionReason );
-		error.surplus.push( error );
+		errorProps.reasons.push( exceptionReason );
+		errorProps.surplus.push( error );
 		return error;
-	} else {
-		odp( error, 'exceptionReason', {
-			get () {
-				return exceptionReason;
-			},
-			enumerable : true
-		} );
-		const reasons = [ exceptionReason ];
-		odp( error, 'reasons', {
-			get () {
-				return reasons;
-			},
-			enumerable : true
-		} );
-		const surplus = [];
-		odp( error, 'surplus', {
-			get () {
-				return surplus;
-			},
-			enumerable : true
-		} );
 	}
+
+	const reasons = [ exceptionReason ];
+	const surplus = [];
+	setProps( error, {
+		exceptionReason,
+		reasons,
+		surplus
+	} );
 
 	// if ( typeof applyTo === 'object' && applyTo.exception instanceof Function ) {
 	if ( applyTo && applyTo.exception instanceof Function ) {
@@ -57,7 +45,7 @@ module.exports.boundMethodErrorHandler = ( exceptionReason ) => {
 				reasonsIsNew          : asNew
 			} );
 		} catch ( additionalError ) {
-			error.surplus.push( additionalError );
+			surplus.push( additionalError );
 			return error;
 		}
 		if ( preparedException instanceof Error ) {

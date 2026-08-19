@@ -1148,8 +1148,8 @@ describe('Main Test', () => {
 
 					assert.equal(thrown.message, 'prop is missing: missingProp');
 
-					expect(thrown.originalError).instanceOf(Error);
-					expect(thrown.originalError).not.instanceOf(SubOfNestedAsync);
+					expect(getProps(thrown).originalError).instanceOf(Error);
+					expect(getProps(thrown).originalError).not.instanceOf(SubOfNestedAsync);
 
 					let thrown2;
 					try {
@@ -1162,8 +1162,8 @@ describe('Main Test', () => {
 
 					// >>> expect(thrown2.originalError).instanceOf(Error);
 
-					expect(thrown2.exceptionReason).instanceOf(Object);
-					expect(thrown2.exceptionReason.methodName).equal('hookedMethod');
+					expect(getProps(thrown2).exceptionReason).instanceOf(Object);
+					expect(getProps(thrown2).exceptionReason.methodName).equal('hookedMethod');
 
 
 					Object.defineProperty(asyncSub, 'exception', {
@@ -1185,8 +1185,8 @@ describe('Main Test', () => {
 					expect(thrown3.message).exist.and.is.a('string');
 					// >>> expect(thrown2.originalError).instanceOf(Error);
 
-					expect(thrown3.exceptionReason).instanceOf(Object);
-					expect(thrown3.exceptionReason.methodName).equal('getThisPropMethod');
+					expect(getProps(thrown3).exceptionReason).instanceOf(Object);
+					expect(getProps(thrown3).exceptionReason.methodName).equal('getThisPropMethod');
 
 					const cae = 'check additional error';
 					Object.defineProperty(nestedAsyncInstance, 'exception', {
@@ -1208,11 +1208,11 @@ describe('Main Test', () => {
 					expect(thrown4.message).exist.and.is.a('string');
 					// >>> expect(thrown2.originalError).instanceOf(Error);
 
-					expect(thrown4.exceptionReason).instanceOf(Object);
-					expect(thrown4.exceptionReason.methodName).equal('getThisPropMethod');
+					expect(getProps(thrown4).exceptionReason).instanceOf(Object);
+					expect(getProps(thrown4).exceptionReason.methodName).equal('getThisPropMethod');
 
-					expect(thrown4.surplus[ 0 ]).instanceOf(Error);
-					expect(thrown4.surplus[ 0 ].message).equal(cae);
+					expect(getProps(thrown4).surplus[ 0 ]).instanceOf(Error);
+					expect(getProps(thrown4).surplus[ 0 ].message).equal(cae);
 
 				});
 
@@ -1246,19 +1246,26 @@ describe('Main Test', () => {
 					expect(thrown).not.instanceOf(AsyncType);
 					expect(thrown.message).exist.and.is.a('string');
 					assert.equal(thrown.message, 'Nested SubError Constructor Special Error');
-					expect(thrown.originalError).instanceOf(Error);
-					expect(thrown.originalError).not.instanceOf(AsyncType);
+					expect(thrown.originalError === undefined).equal(true);
+					expect(getProps(thrown).originalError).instanceOf(Error);
+					expect(getProps(thrown).originalError).not.instanceOf(AsyncType);
 
 					const {
 						args,
 						instance
-					} = thrown;
+					} = getProps(thrown);
 					assert.equal(args[ 0 ], 123);
 					assert.equal(instance.constructor.name, 'NestedSubError');
-					const parsed = thrown.parse();
+					// error instances expose no bound methods since v1.0.6,
+					// the same as instances — use utils on the error itself
+					expect(thrown.extract).equal(undefined);
+					expect(thrown.parse).equal(undefined);
+					const parsed = parse(thrown);
 					assert.equal(parsed.name, 'NestedSubError');
 
-					const extracted = thrown.extract();
+					// the old bound .extract() returned the pre-failure layer,
+					// which is utils.parent(thrown)
+					const extracted = extract(mnemonica.utils.parent(thrown));
 					assert.equal(typeof extracted.constructNested, 'function');
 
 				});
@@ -1280,8 +1287,8 @@ describe('Main Test', () => {
 					expect(thrown).instanceOf(AsyncType);
 					expect(thrown.message).exist.and.is.a('string');
 					assert.equal(thrown.message, 'async error');
-					expect(thrown.originalError).instanceOf(Error);
-					expect(thrown.originalError).not.instanceOf(AsyncType);
+					expect(getProps(thrown).originalError).instanceOf(Error);
+					expect(getProps(thrown).originalError).not.instanceOf(AsyncType);
 
 				});
 
@@ -1302,11 +1309,12 @@ describe('Main Test', () => {
 					expect(thrown).instanceOf(AsyncType);
 					expect(thrown.message).exist.and.is.a('string');
 					assert.equal(thrown.message, 'async error');
-					expect(thrown.originalError).instanceOf(Error);
-					expect(thrown.originalError).not.instanceOf(AsyncType);
-					expect(thrown.surplus[ 0 ]).instanceOf(AsyncType);
+					const reThrownProps = getProps(thrown);
+					expect(reThrownProps.originalError).instanceOf(Error);
+					expect(reThrownProps.originalError).not.instanceOf(AsyncType);
+					expect(reThrownProps.surplus[ 0 ]).instanceOf(AsyncType);
 
-					expect(thrown.reasons.length).equal(2);
+					expect(reThrownProps.reasons.length).equal(2);
 
 				});
 

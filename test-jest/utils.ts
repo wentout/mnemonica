@@ -1,7 +1,7 @@
 'use strict';
 
 import { beforeAll, describe, expect, it } from '@jest/globals';
-import type { MnemonicaModule } from '../src/types';
+import type { ErrorProps, MnemonicaModule } from '../src/types';
 import { withInstanceMethods } from './instance-methods-helper';
 
 const mnemonica = require('../src/index') as MnemonicaModule;
@@ -9,6 +9,7 @@ const mnemonica = require('../src/index') as MnemonicaModule;
 const {
 	define,
 	errors,
+	getProps,
 } = mnemonica;
 
 // Import raw utilities (not wrapped by wrapThis) to test them directly
@@ -16,6 +17,7 @@ import { exception } from '../src/utils/exception';
 import { sibling } from '../src/utils/sibling';
 import { fork } from '../src/utils/fork';
 import { clone } from '../src/utils/clone';
+import { extract } from '../src/utils/extract';
 
 describe('utils/exception', () => {
 
@@ -49,19 +51,24 @@ describe('utils/exception', () => {
 			);
 
 			expect(exceptionInstance).toBeInstanceOf(Error);
-			expect(exceptionInstance.instance).toEqual(instance);
-			expect(exceptionInstance.originalError).toEqual(originalError);
-			expect(exceptionInstance.args).toEqual([1, 2, 3]);
+			const exceptionProps = getProps(exceptionInstance) as unknown as ErrorProps;
+			expect(exceptionProps.instance).toEqual(instance);
+			expect(exceptionProps.originalError).toEqual(originalError);
+			expect(exceptionProps.args).toEqual([1, 2, 3]);
 		});
 
-		it('should have extract method matching instance', () => {
+		it('should expose no bound methods; use utils on .instance instead', () => {
 			const originalError = new Error('original');
 			const exceptionInstance = new (exception as CallableFunction)(
 				instance,
 				originalError
 			);
 
-			expect(exceptionInstance.extract()).toMatchObject(instance.extract());
+			expect(exceptionInstance.extract).toBeUndefined();
+			expect(exceptionInstance.parse).toBeUndefined();
+			expect(exceptionInstance.instance).toBeUndefined();
+			const exceptionProps = getProps(exceptionInstance) as unknown as ErrorProps;
+			expect(extract(exceptionProps.instance as object)).toMatchObject(instance.extract());
 		});
 
 	});

@@ -32,8 +32,9 @@ const tests = ( opts ) => {
 			expect( thrown ).instanceOf( AsyncWOReturn );
 			expect( thrown ).instanceOf( errors.WRONG_MODIFICATION_PATTERN );
 			expect( thrown.message ).exist.and.is.a( 'string' );
-			expect( typeof thrown.exceptionReason.constructor.name ).equal( 'object' );
-			expect( thrown.exceptionReason.constructor.name ).instanceOf( String );
+			const thrownProps = getProps( thrown );
+			expect( typeof thrownProps.exceptionReason.constructor.name ).equal( 'object' );
+			expect( thrownProps.exceptionReason.constructor.name ).instanceOf( String );
 			assert.equal( thrown.message, 'wrong modification pattern : should inherit from AsyncWOReturn: seems async AsyncWOReturn has no return statement' );
 		} );
 
@@ -418,6 +419,15 @@ const tests = ( opts ) => {
 		} );
 		it( 'sleepError expect args of SyncErroredType', () => {
 			expect( getProps(sleepError).__args__[ 0 ] ).equal( argsTest );
+		} );
+
+		it( 'sleepError.stack creation section should name the call site', () => {
+			// async failure: the creation section must hold the stack captured
+			// at `new` time (this test file's frames) — not rejection-processing
+			// frames, which is all a fresh capture could see after the await
+			const creationSection = sleepError.stack.split( '<-- with the following error -->' )[ 0 ];
+			expect( creationSection.indexOf( '<-- creation of [ AsyncErroredType ] traced -->' ) > 0 ).is.equal(true);
+			expect( creationSection.indexOf( 'async.chain.js' ) > 0 ).is.equal(true);
 		} );
 
 

@@ -410,6 +410,20 @@ const runBuild = function ( self: InstanceCreatorContext, args: unknown[] ) {
 
 const runAsyncHandling = function ( self: InstanceCreatorContext, type: TypeDef ) {
 	if ( self.inheritedInstance instanceof Promise ) {
+		// Async construction: capture the creation stack NOW, while the `new`
+		// call site is still on the stack. When a rejection gets wrapped later
+		// (makeAwaiter .catch → throwModificationError), the call site has
+		// already unwound, and a fresh capture would hold nothing but
+		// rejection-processing frames. Skipped when runSetup already captured
+		// one (submitStack).
+		if ( !Array.isArray( self.stack ) ) {
+			const title = `\n<-- creation of [ ${type.TypeName} ] traced -->`;
+			getStack.call(
+				self,
+				title,
+				[] 
+			);
+		}
 		const waiter = self.makeAwaiter( type );
 		odp(
 			waiter,

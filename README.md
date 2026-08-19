@@ -368,7 +368,7 @@ utils.extract(instance);
 utils.pick(instance, 'key');
 utils.parent(instance, 'ParentType');
 utils.fork(instance)(newArgs);
-utils.exception(instance, error);
+new utils.exception(instance, error); // must be called with `new`
 utils.sibling(instance);
 utils.clone(instance);
 ```
@@ -384,7 +384,7 @@ const withInstanceMethods = (Constructor) => {
   Object.defineProperty(proto, 'parent',  { get () { return (path) => utils.parent(this, path); } });
   Object.defineProperty(proto, 'clone',   { get () { return utils.clone(this); } });
   Object.defineProperty(proto, 'fork',    { get () { return utils.fork(this); } });
-  Object.defineProperty(proto, 'exception', { get () { return (...args) => utils.exception(this, ...args); } });
+  Object.defineProperty(proto, 'exception', { get () { return (...args) => new utils.exception(this, ...args); } });
   Object.defineProperty(proto, 'sibling', { get () { return utils.sibling(this); } });
   return Constructor;
 };

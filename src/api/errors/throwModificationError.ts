@@ -1,7 +1,7 @@
 'use strict';
 
 import type {
-	MnemonicaError, InstanceCreatorContext 
+	MnemonicaError, ErrorProps, InstanceCreatorContext 
 } from '../../types';
 
 import { constants } from '../../constants';
@@ -21,9 +21,9 @@ import {
 import TypesUtils from '../utils';
 const { makeErrorModificatorType } = TypesUtils;
 
-import { parse } from '../../utils/parse';
-import { parent } from '../../utils/parent';
-import { extract } from '../../utils/extract';
+import {
+	getProps, setProps 
+} from '../types/Props';
 
 import { makeInstanceModificator } from '../types/InstanceModificator';
 
@@ -45,51 +45,34 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 	// 	debugger;
 	// }
 
-	const exceptionReason = error.exceptionReason || error;
+	// error data (exceptionReason, reasons, surplus, args, originalError,
+	// instance) is never defined on error objects — it lives in the external
+	// props storage (WeakMap), read it via getProps(error).
+	// NOTE: the public getProps is required here (not _getProps) because the
+	// error data sits in the additions slot of the record — _getProps returns
+	// the raw record only and would miss it.
+	const errorProps = getProps( error ) as unknown as ErrorProps | undefined;
 
-	if ( error.exceptionReason !== undefined ) {
+	const exceptionReason = (
+		errorProps !== undefined &&
+		errorProps.exceptionReason !== undefined
+	) ?
+		errorProps.exceptionReason :
+		error;
 
-		(error.reasons as Error[]).push( error.exceptionReason );
-		(error.surplus as Error[]).push( error );
+	if ( errorProps !== undefined && errorProps.exceptionReason !== undefined ) {
+
+		(errorProps.reasons as unknown[]).push( errorProps.exceptionReason );
+		(errorProps.surplus as unknown[]).push( error );
 
 		throw error;
 
 	}
 
-	odp(
-		error,
-		'exceptionReason',
-		{
-			get () {
-				return exceptionReason;
-			},
-			enumerable : true
-		} 
-	);
-
-	const reasons: Error[] = [ exceptionReason ];
-
-	odp(
-		error,
-		'reasons',
-		{
-			get () {
-				return reasons;
-			},
-			enumerable : true
-		} 
-	);
-	const surplus: Error[] = [];
-	odp(
-		error,
-		'surplus',
-		{
-			get () {
-				return surplus;
-			},
-			enumerable : true
-		} 
-	);
+	// reasons/surplus may hold non-Error reason objects (bound method
+	// failures push { methodName, ... } shaped reasons), hence unknown[]
+	const reasons: unknown[] = [ exceptionReason ];
+	const surplus: unknown[] = [];
 
 	self.ModificatorType = makeErrorModificatorType( TypeName );
 
@@ -97,6 +80,17 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 
 	// let erroredInstance = new self.InstanceModificator();
 	const erroredInstance = new self.InstanceModificator();
+
+	// the first portion of error data: stored against the failed
+	// construction layer props, so getProps(erroredInstance) exposes it
+	setProps(
+		erroredInstance,
+		{
+			exceptionReason,
+			reasons,
+			surplus
+		} 
+	);
 
 	let errorProto: object | null = Reflect.getPrototypeOf( erroredInstance );
 	let isMnemonicaInstance = false;
@@ -145,14 +139,26 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 
 		const title = `\n<-- creation of [ ${TypeName} ] traced -->`;
 
-		getStack.call(
-			erroredInstance,
-			title,
-			[],
-			throwModificationError 
-		);
+		if ( self.inheritedInstance instanceof Promise ) {
 
-		stack.push( ...(erroredInstance as { stack: string[] }).stack );
+			// async construction failure: this runs from makeAwaiter's .catch,
+			// long after the `new` call site has unwound — a fresh capture here
+			// would hold only rejection-processing frames. runAsyncHandling
+			// captured the creation stack at new-time instead; use it.
+			stack.push( ...(self.stack as string[]) );
+
+		} else {
+
+			getStack.call(
+				erroredInstance,
+				title,
+				[],
+				throwModificationError 
+			);
+
+			stack.push( ...(erroredInstance as { stack: string[] }).stack );
+
+		}
 
 		const errorStack = (error.stack as string ).split( '\n' );
 
@@ -206,66 +212,20 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 
 		// if hooks had some interception: stop
 
-		odp(
+		// the rest of error data, available only when the error is thrown
+		setProps(
 			erroredInstance,
-			'args',
 			{
-				get () {
-					return args;
-				}
+				args,
+				originalError : error,
+				instance      : erroredInstance
 			} 
 		);
 
-		odp(
-			erroredInstance,
-			'originalError',
-			{
-				get () {
-					return error;
-				}
-			} 
-		);
-
-		odp(
-			erroredInstance,
-			'instance',
-			{
-				get () {
-					return erroredInstance;
-				}
-			} 
-		);
-
-		odp(
-			erroredInstance,
-			'extract',
-			{
-				get () {
-					const extractGetter = () => {
-						// mnemonica instances always have a parent object,
-						// so the runtime value is guaranteed to be object here
-						const _parent = parent(erroredInstance) as object;
-						const extractResult = extract(_parent);
-						return extractResult;
-					};
-					return extractGetter;
-				}
-			} 
-		);
-
-		odp(
-			erroredInstance,
-			'parse',
-			{
-				get () {
-					const parseGetter = () => {
-						const parseResult = parse( erroredInstance );
-						return parseResult;
-					};
-					return parseGetter;
-				}
-			} 
-		);
+		// no bound .extract()/.parse() here: since v1.0.6 instances expose no
+		// methods, so errors follow — call utils.extract(...) / utils.parse(...)
+		// on the thrown error (or on utils.parent(error) for the pre-failure
+		// layer, which the old bound .extract() used to return)
 	}
 
 	throw erroredInstance;
