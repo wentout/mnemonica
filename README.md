@@ -28,7 +28,7 @@ Mnemonica promotes the Trie from implementation detail to first-class data model
 
 Every instance carries its full history. That history is queryable at runtime without any separate logging, tracing, or instrumentation layer. The construction record *is the object*.
 
-### One runtime, two type-system paths
+### One runtime, three type-system paths
 
 Mnemonica has exactly one runtime behavior. Whether you write `define('Person', ...)` or `mnemonica.define('Person', ...)`, the same constructor is registered and the same prototype chain is built.
 
@@ -37,6 +37,14 @@ TypeScript, however, cannot see the type graph created by runtime `define()` cal
 1. **Builder mode** (default) — chain `.define()` on the `mnemonica` module object or on `createTypesCollection()`. The returned object carries a **local type registry**, so `.lookup()` is typed without any global augmentation. No tooling required; exported builder values carry the registry across files.
 2. **Registry bridge** — merge the builder's local registry into the global `TypeRegistry` with one hand-written line: `interface TypeRegistry extends RegistryOf<typeof App> {}`. Now the free `lookup()` is typed too, with no codegen and nothing to keep in sync.
 3. **Augmented mode** — use the free `define()` / `lookup()` exports and `@decorate()`, with the global `TypeRegistry` populated by `@mnemonica/tactica` (or written by hand). Required for `@decorate()`, which neither of the other paths can type.
+
+| Path | Extra tooling | `new instance.SubType()` typed | Free `lookup()` typed | `@decorate()` typed |
+|---|---|---|---|---|
+| **Builder mode** (default) | **None** | Yes | No (unless bridged) | No |
+| **Registry bridge** (`RegistryOf`) | One hand-written line | Yes | **Yes** | No |
+| **Augmented mode** (tactica) | `npx tactica` build step | Yes | Yes | **Yes** |
+
+**Which one to pick:** start with builder mode — zero tooling, types work out of the box. Add the one-line bridge the moment you want the free `lookup()` typed. Reach for tactica when you need `@decorate()`, or when a large codebase already uses free `define()` calls everywhere.
 
 At runtime all paths are identical. The only difference is where TypeScript looks up the types. The runtime is the source of truth; the type-system path is a projection chosen by the developer.
 
@@ -469,7 +477,7 @@ For the full construction pipeline with source file references for every stage, 
 | `Proto<P, T>` | Merge parent and child types; child wins on key collision |
 | `ProtoFlat<P, T>` | Flattened version used in tactica-generated types |
 | `MnemonicaInstance` | The instance-method surface (extract, pick, parent, etc.) |
-| `TypeRegistry` | Empty interface — tactica augments it for `lookup` |
+| `TypeRegistry` | Empty interface — augmented for `lookup` by tactica, by hand, or via the `RegistryOf` bridge |
 | `TypeConstructor<T>` | What `define()` returns; both newable and callable |
 | `hooksOpts<P, T>` | Shape of data passed to hook callbacks |
 

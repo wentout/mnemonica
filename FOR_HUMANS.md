@@ -50,14 +50,15 @@ The key inversion: subtypes are instantiated *from parent instances*, not from c
 
 **Why it matters:** in any system where data transformation order matters — HTTP pipelines, ETL flows, AI agent chains — the construction history *is* the business logic. mnemonica makes that history first-class.
 
-### One runtime, two type-system paths
+### One runtime, three type-system paths
 
-Mnemonica has one runtime behavior, but TypeScript cannot see the type graph created by runtime `define()` calls. To solve this, there are two compile-time paths:
+Mnemonica has one runtime behavior, but TypeScript cannot see the type graph created by runtime `define()` calls. To solve this, there are three compile-time paths:
 
 1. **Builder mode** — chain `.define()` on the `mnemonica` object or on `createTypesCollection()`. The returned object carries a local type registry, so `.lookup()` is typed without any global augmentation.
-2. **Augmented mode** — use the free `define()` / `lookup()` exports and augment the global `TypeRegistry` by hand or with `@mnemonica/tactica`.
+2. **Registry bridge** — merge the builder's local registry into the global `TypeRegistry` with one hand-written line (`interface TypeRegistry extends RegistryOf<typeof App> {}`), so the free `lookup()` is typed too.
+3. **Augmented mode** — use the free `define()` / `lookup()` exports and `@decorate()`, with the global `TypeRegistry` populated by `@mnemonica/tactica` or written by hand.
 
-There is also a one-line middle path: the `RegistryOf` bridge merges a builder's local registry into the global `TypeRegistry` by hand. At runtime all paths are identical — the only difference is where TypeScript looks up the types. See [`docs/typed-lookup.md`](./docs/typed-lookup.md) for details.
+At runtime all paths are identical — the only difference is where TypeScript looks up the types. See [`docs/typed-lookup.md`](./docs/typed-lookup.md) for details.
 
 ---
 

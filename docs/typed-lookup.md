@@ -20,6 +20,38 @@ TypeScript, however, cannot see a type graph built by runtime calls. There are
 
 ---
 
+## Every `define()` lands in the same collection
+
+All of these call the **same function** and register into the same runtime
+collection (`defaultTypes`, unless you pass another source explicitly):
+
+```typescript
+import { mnemonica, define, defaultTypes } from 'mnemonica';
+
+mnemonica.define('User', handler);    // this === mnemonica → defaultTypes
+define('User', handler);              // this === undefined → defaultTypes
+
+const { define: define2 } = mnemonica;
+define2('User', handler);             // same function, bare call → defaultTypes
+
+defaultTypes.define('User', handler); // the collection itself, directly
+```
+
+The routing rule is one line in the source (`src/index.ts`): the free `define`
+resolves to `defaultTypes` when called bare or on the `mnemonica` module
+object, and to `this` when invoked on a types collection. Runtime behavior
+never changes between these call styles — same type graph, same hooks, same
+registry entries.
+
+**What differs is purely compile-time.** Builder-style calls thread the
+registry through *return types*, so `chain.lookup('User')` is typed without
+any augmentation. The *free* `lookup('User')` at module scope, and
+`@decorate()`, can only be typed through the global `TypeRegistry` interface —
+which is what Tactica (or a hand-written file) populates. That split is the
+only reason declaration merging exists in this library.
+
+---
+
 ## Builder mode (default)
 
 Import the module object or create a custom collection, then chain `.define()` or `.lazy()` calls. The returned object carries a local type registry.
@@ -345,9 +377,9 @@ At runtime the results are identical. At compile time, TypeScript picks whicheve
 
 ---
 
-## Why two type systems exist
+## Why two typing mechanisms exist
 
-It feels like there should be one type system. In an ideal world, every `define()` call would add its type to the same registry, and `lookup()` would always be typed. TypeScript does not allow that.
+The three paths above are built from **two** underlying mechanisms: a local registry carried in builder values, and the global `TypeRegistry` interface. It feels like there should be one type system. In an ideal world, every `define()` call would add its type to the same registry, and `lookup()` would always be typed. TypeScript does not allow that.
 
 ### The hard limitation
 
