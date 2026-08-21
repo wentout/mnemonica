@@ -3325,6 +3325,26 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				});
 			});
 
+			describe('loader facade (exports proxy) as module context', () => {
+				it('should define on defaultTypes when this is a facade proxy', () => {
+					// vite-node and similar loaders wrap this module's exports in
+					// a facade Proxy: identity with `exports` fails through it,
+					// and define() with such a facade as `this` used to recurse
+					// until RangeError. checkThis() now recognises the facade by
+					// our own `define` reference and falls back to defaultTypes.
+					const facade = new Proxy({ define }, {});
+					const FacadeContextJestType = define.call(
+						facade as never,
+						'FacadeContextJestType',
+						function (this: { facadeMade?: boolean }) {
+							this.facadeMade = true;
+						}
+					);
+					const instance = new (FacadeContextJestType as never)() as { facadeMade: boolean };
+					expect(instance.facadeMade).toBe(true);
+				});
+			});
+
 			describe('lazy coverage - getter returns function without prototype', () => {
 				it('should cover getDefaultPrototype branch in createFromLazyGetter', () => {
 					const NoProtoLazyType = lazy('NoProtoLazyType', () => {
