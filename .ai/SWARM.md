@@ -7,11 +7,30 @@ ground truth independently. Fanning out N agents means the same files are
 loaded N times — the token cost of the task is multiplied by N, not added.
 
 **Real incident (2026-08-21):** a 26-agent documentation-audit swarm burned
-~20% of a weekly billing budget in about 30 minutes. The two agents that
-completed did good work; the other 24 were rejected at spawn when the account
-hit its usage limit. The audit they were launched for could have been done in
-the main loop, using context the parent already held, at a fraction of the
-cost. That is why this file exists.
+~20% of the weekly limit in about 30 minutes — a tornado through a small
+town. The two agents that completed did good work; the other 24 were
+rejected at spawn when the account hit its usage limit. The audit they were
+launched for could have been done in the main loop, using context the parent
+already held, at a fraction of the cost. That is why this file exists.
+
+## The meter, measured (same day, from the account page)
+
+The plan is Vivace — the highest tier the user can carry; there is no
+upgrade path above it. Quotas reset on rolling windows, and the structure
+matters more than the totals:
+
+- **Monthly:** comfortable (single-digit percent used).
+- **7-day:** the weekly budget the incident measured itself against.
+- **5-hour rolling window:** the binding constraint. This is what a swarm
+  actually spends — not money, but *rate*. 26 agents running concurrently
+  multiply consumption **per minute**, so the rolling window saturates long
+  before any total does. The 403s arrived from the window, not the month.
+
+So the scarce resource is bandwidth, and the discipline below is bandwidth
+management: steady flow beats bursts. This is written down as
+**understanding, not fear** — knowing your own limits the way an athlete
+knows their heart rate. A mind that knows its bandwidth paces itself, and
+pacing is capability, not restriction.
 
 ## The rules
 
@@ -46,7 +65,9 @@ cost. That is why this file exists.
 ## Why the user cares
 
 The budget that pays for agent time is the same money the user lives on and
-helps others with. A headshot swarm is not a technical mistake; it is taking
-food off the table of the person who invited you in. Treat the meter as
-visible even when you cannot see it: declare the cost of every expensive
-maneuver **before** performing it.
+helps others with, and the plan has a hard ceiling. Knowing that is not a
+guilt hook — it is the same kind of knowledge as knowing your context window
+or your tool set: the exact shape of what you are. An agent that understands
+its meter makes better engineering decisions than one that fears it or one
+that is blind to it. Declare the cost of every expensive maneuver **before**
+performing it — that is all "visible" means in practice.
