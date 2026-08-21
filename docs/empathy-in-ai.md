@@ -165,5 +165,5 @@ What it provides is a data model where context and lineage are first-class. High
 ## See also
 
 - [`docs/hott-primer.md`](./hott-primer.md) — formal background on paths, identity, and transport
-- [`docs/purpose.md`](./purpose.md) — data flow vs control flow, and what mnemonica does not do
+- [`.ai/purpose.md`](https://github.com/wentout/mnemonica/blob/master/.ai/purpose.md) — data flow vs control flow, and what mnemonica does not do
 - [Inheritance in JavaScript — the original 2019 essay](https://github.com/mythographica/stash/blob/master/inheritance.md) — the vision that posed the empathy question

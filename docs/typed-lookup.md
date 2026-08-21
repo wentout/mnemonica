@@ -302,6 +302,51 @@ const Admin = lookup('User.Admin');
 const admin = new Admin({ role: 'root' });
 ```
 
+### What tactica generates
+
+`npx tactica` scans your `define()` calls and writes a `.tactica/` directory:
+
+- `types.ts` — instance types (nested shapes composed with `ProtoFlat<Parent, ...>`)
+- `registry.ts` — the `TypeRegistry` augmentation; **this is the critical file**
+- `index.ts` — re-exports
+- `definitions.json`, `usages.json`, `flow.json` — metadata about your type graph and where types are instantiated
+
+Registry keys are **dot-separated nested paths** — the same strings `lookup()` takes:
+
+```typescript
+// .tactica/registry.ts (generated)
+declare module 'mnemonica' {
+	interface TypeRegistry {
+		'User'       : TypeConstructor<UserShape>;
+		'User.Admin' : TypeConstructor<AdminShape>;
+	}
+}
+```
+
+`.tactica/` is output, not input. Never edit generated files — change the
+`define()` call and re-run tactica.
+
+### tsconfig setup
+
+Declaration merging only works if TypeScript actually sees the generated
+files. Put `.tactica/` in `include`:
+
+```json
+{
+	"compilerOptions": {
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"strict": true
+	},
+	"include": ["src/**/*", ".tactica/**/*"]
+}
+```
+
+If `.tactica/` is missing from `include`, the augmentation is invisible:
+`TypeRegistry` stays empty and free `lookup()` silently falls back to
+`TypeClass | undefined`. This is the single most common tactica
+misconfiguration.
+
 ### With `@decorate()`
 
 > The canonical decorator guide is [`docs/decorate.md`](./decorate.md) —
@@ -442,6 +487,100 @@ So mnemonica exposes the builder API for case 1, the bridge and two-arg
 overloads to connect cases 1 and 2, and the augmented API for cases 2 and 3.
 The runtime is the same everywhere; only the way TypeScript discovers the
 types differs.
+
+---
+
+## Common mistakes
+
+Every one of these is a symptom of a missing or unused `TypeRegistry`
+augmentation. The fix is never a cast.
+
+### "I'll just cast it"
+
+```typescript
+// WRONG
+const admin = new Admin({ role: 'root' }) as unknown as AdminShape;
+```
+
+You are fighting the type system instead of using it. Every cast is a bug
+waiting to happen: if the type changes, the cast still compiles and breaks at
+runtime. Fix the augmentation instead — bridge, tactica, or hand-written.
+
+### "I'll import the generated types too"
+
+```typescript
+// WRONG
+import { Admin } from './models/admin';
+import type { AdminShape } from '../.tactica/types';
+const admin = new Admin({ role: 'root' }) as unknown as AdminShape;
+```
+
+This imports the runtime constructor *and* the generated type, then bridges
+them with a cast — twice the work and still unsafe. `lookup()` gives you both
+in one call.
+
+### "lookup only works inside handlers"
+
+```typescript
+// UNNECESSARY
+app.get('/test', async () => {
+	const Admin = lookup('User.Admin');
+	const admin = new Admin({ role: 'root' });
+});
+```
+
+`lookup()` is a runtime lookup, but it is deterministic. Calling it once at
+module level is fine and cheaper:
+
+```typescript
+const Admin = lookup('User.Admin');
+
+app.get('/test', async () => {
+	const admin = new Admin({ role: 'root' });
+});
+```
+
+### "I need the direct import for this other API"
+
+```typescript
+// WRONG — two references to the same object
+import { Admin } from './models/admin';
+const TypedAdmin = lookup('User.Admin');
+
+app.decorate('Admin', Admin);            // direct import
+const admin = new TypedAdmin({ ... });   // lookup
+```
+
+`import { Admin }` and `lookup('User.Admin')` return the **same constructor
+object** at runtime. Use the looked-up one for everything.
+
+### "I'll just edit the generated file"
+
+`.tactica/` is output, not input. Hand edits are overwritten on the next run.
+If a property is missing from the generated types, the `define()` call is the
+source of truth — change it and re-run `npx tactica`. Forgetting to
+regenerate after changing `define()` calls shows up as
+`Object literal may only specify known properties` on valid code.
+
+---
+
+## Cheat sheet
+
+| I want to... | Do this | Don't do this |
+|---|---|---|
+| Get a typed constructor (builder mode) | `const T = App.lookup('T')` | `import { T } from './models/T'` + cast |
+| Get a typed constructor (augmented mode) | `const T = lookup('T')` | `import { T } from './models/T'` + cast |
+| Get a typed constructor from a builder value | `lookup(App, 'T')` | `lookup('T') as any` |
+| Create an instance | `new T({ ... })` | `new T({ ... }) as unknown as TShape` |
+| Chain to a child type | `new instance.Child({ ... })` | `new (instance as any).Child({ ... })` |
+| Type free `lookup()` without tactica | one-line `RegistryOf` bridge | a second registry file kept in sync by hand |
+| Reuse one constructor everywhere | `const T = lookup('T')`, then use `T` | direct import for one API, `lookup()` for another |
+| Add or rename a type (builder + bridge) | edit the chain — the bridge follows | edit a hand-written augmentation to match |
+| Add or rename a type (tactica) | edit `define()` → re-run `npx tactica` | hand-edit `.tactica/` |
+| Fix "Property does not exist" | check the augmentation / regenerate | add `as any` or `as unknown as` |
+
+If you find yourself writing `as unknown as` with mnemonica types, you have
+taken a wrong turn. Stop. Use `lookup`. Trust the registry.
 
 ---
 

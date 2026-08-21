@@ -4,6 +4,9 @@ This file provides guidance specific to **mnemonica/core** for AI agents
 modifying the library itself. If you are *using* mnemonica in your own
 project, start with [`README.md`](./README.md).
 
+> **Before any subagent fan-out or swarm: read [`.ai/SWARM.md`](./.ai/SWARM.md).**
+> Stop-and-ask is mandatory there, exactly as in Rule #1 below.
+
 ---
 
 ## Rule #1 — Non-negotiable: PAUSE AND ASK
@@ -38,9 +41,10 @@ Confident guesses produce code that compiles but corrupts the design.
 
 ---
 
-> **Note:** Framework-agnostic rules are also available in `.ai/`:
-> [`AGENTS.md`](./.ai/AGENTS.md),
-> [`ARCHITECT.md`](./.ai/ARCHITECT.md), [`DEBUG.md`](./.ai/DEBUG.md).
+> **Note:** Framework-agnostic rules are also available in [`.ai/`](./.ai/) —
+> start with [`ONBOARDING.md`](./.ai/ONBOARDING.md) (the quickstart); role
+> notes for plan/answer/debug work are folded in there, and
+> [`DEBUG.md`](./.ai/DEBUG.md) covers debugger workflow.
 > These rules apply to all agent frameworks.
 
 > **Document locations:** this repository is agent-tools-agnostic. Documents
@@ -68,16 +72,18 @@ Load the docs that match your change type. The wrong context produces broken cod
 | Involves async constructors | + [`.ai/rules-async-constructors.md`](./.ai/rules-async-constructors.md) |
 | Involves TypeScript types | + [`.ai/rules-type-system.md`](./.ai/rules-type-system.md) |
 | Involves proxy internals | + [`.ai/PROTOTYPE-CHAIN.md`](./.ai/PROTOTYPE-CHAIN.md) |
-| Uses tactica / `lookup` | + [`docs/tactica-deep-dive.md`](./docs/tactica-deep-dive.md) |
-| Docs-only change | README section you're touching only |
+| Involves errors | + [`.ai/rules-error-system.md`](./.ai/rules-error-system.md) |
+| Involves tests / coverage | + [`.ai/rules-testing.md`](./.ai/rules-testing.md) |
+| Involves utils / instance methods | + [`.ai/rules-instance-methods.md`](./.ai/rules-instance-methods.md) |
+| Uses tactica / `lookup` | + [`docs/typed-lookup.md`](./docs/typed-lookup.md) |
+| Docs-only change | README section you're touching only — then run `npm run lint:md` |
 
 **This file + `.ai/ONBOARDING.md` are the always-required baseline for any `src/` edit.**
 
 ### Framework-specific rules
 
-Mode-specific files in `.ai/`:
+Mode-agnostic rule files in `.ai/`:
 - [`.ai/rules-coding.md`](./.ai/rules-coding.md) — universal coding rules
-- [`.ai/rules-reminders.md`](./.ai/rules-reminders.md) — type vs interface, spacing reminders
 - [`.ai/rules-context-condensing.md`](./.ai/rules-context-condensing.md) — context recovery protocol
 
 ## Build/Test Commands
@@ -85,7 +91,8 @@ Mode-specific files in `.ai/`:
 See [`.ai/rules-testing.md`](./.ai/rules-testing.md) for the full command reference, dual-framework details, and coverage requirements. Summary:
 
 ```bash
-npm run build          # full build with linting
+npm run build          # tsc only — no linting happens here
+npx eslint ./src       # the lint gate: zero warnings allowed
 npm run test:cov       # Mocha + coverage (runs build:all internally)
 npm run test:jest:cov  # Jest on TypeScript source
 npm run watch          # watch mode
@@ -109,7 +116,7 @@ The core API is `define(TypeName, constructHandler, config?)` in `src/index.ts`.
 
 ### The `lookup()` Function
 
-For user-facing semantics, see [`README.md`](./README.md) and [`docs/tactica-deep-dive.md`](./docs/tactica-deep-dive.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` starts empty, and `lookup()` uses overloads so augmented keys return the typed constructor while unaugmented keys fall back to `TypeClass | undefined`.
+For user-facing semantics, see [`README.md`](./README.md) and [`docs/typed-lookup.md`](./docs/typed-lookup.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` starts empty, and `lookup()` uses overloads so augmented keys return the typed constructor while unaugmented keys fall back to `TypeClass | undefined`.
 
 ```typescript
 // In mnemonica core (src/index.ts)
@@ -121,13 +128,32 @@ export function lookup<const K extends keyof TypeRegistry>(
 	this: unknown,
 	TypeNestedPath: K
 ): TypeRegistry[K];
+// explicit-source form: lookup(source, path) — resolves against the
+// registry carried by a builder/collection value
+export function lookup<Reg extends object, const K extends keyof Reg & string>(
+	source: { lookup: TypeLookup<Reg> },
+	TypeNestedPath: K
+): LookupResult<Reg, K>;
+export function lookup(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 export function lookup(
-	this: unknown,
+	source: { lookup: (path: string) => TypeClass | undefined },
 	TypeNestedPath: string
-): TypeClass | undefined {
+): TypeClass | undefined;
+export function lookup (
+	this: unknown,
+	arg1: unknown,
+	arg2?: unknown
+): unknown {
+	// explicit-source form wins when (source, path) are passed
+	if (typeof arg1 !== 'string' && typeof arg2 === 'string') {
+		const source = arg1 as { lookup: (path: string) => TypeClass | undefined };
+		const sourceResult = source.lookup(arg2);
+		return sourceResult;
+	}
 	// Runtime delegates to types.lookup(); type safety is compile-time only.
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	return types.lookup(TypeNestedPath);
+	const lookupResult = (types as { lookup: (path: string) => TypeClass | undefined }).lookup(arg1 as string);
+	return lookupResult;
 }
 ```
 
@@ -209,7 +235,7 @@ For the full guide — multi-file threading, the bridge, two-arg overloads,
 ### Type System Structure
 ```
 src/
-├── index.ts           # Main exports: define, lookup, apply, call, bind
+├── index.ts           # Main exports: define, lazy, lookup, apply, call, bind, decorate
 ├── types/index.ts     # TypeScript type definitions
 ├── constants/         # Symbols and default options
 ├── descriptors/       # Type collection and error definitions
@@ -229,19 +255,19 @@ The library makes heavy use of JavaScript Proxies:
 
 ### Internal Instance Properties
 
-Stored in a `WeakMap` keyed by the instance's **Mnemosyne memory layer** — the prototype object created per construction in `createInstanceModificator` — not as own properties on the instance itself. `_getProps` reaches it by walking the prototype chain from the instance. Access via `getProps(instance)`. For the full property list (9 entries, with meanings) see the **Internal instance properties** table in [`README.md`](./README.md) — that table is the canonical reference.
+Stored in a `WeakMap` keyed by the instance's **Mnemosyne memory layer** — the prototype object created per construction in `createInstanceModificator` — not as own properties on the instance itself. `_getProps` reaches it by walking the prototype chain from the instance. Access via `getProps(instance)`. For the full property list (9 internal entries + `__self__`, which is installed separately after construction, with meanings) see the **Internal instance properties** table in [`FOR_HUMANS.md`](./FOR_HUMANS.md) — that table is the canonical reference.
 
 `setProps(instance, values)` is the mutating counterpart; rarely needed and considered advanced.
 
 ## Build Requirements
 
 ### No Warnings Policy
-The build **must have zero warnings**. Running `npm run build` should produce **no ESLint warnings** in the `./src` directory. If there are warnings:
+Lint **must have zero warnings**: `npx eslint ./src` exits clean. Note that `npm run build` is tsc only — it never runs ESLint, so the lint gate is the separate command. If there are warnings:
 1. Fix the source code causing the warning
 2. Do not modify `./tsconfig.json` or `./eslint.config.js` to suppress warnings
 
 ### Build Output Inspection
-When running `npm run build` or `npm run build:all`, **check the beginning of the output** for errors and warnings. Build failures (TypeScript compilation errors, ESLint issues, etc.) often appear at the start of the output. Do not rely only on the end of the output or `tail` for build status.
+When running `npm run build` or `npm run build:all`, **check the beginning of the output** for errors. TypeScript compilation failures often appear at the start of the output. Do not rely only on the end of the output or `tail` for build status.
 
 For test passing confirmations (e.g., `npm run test:cov`), checking the end of the output is acceptable.
 

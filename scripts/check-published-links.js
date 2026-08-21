@@ -24,12 +24,9 @@ const shipped = new Set(pkg.files);
 const rootFiles = [
 	'README.md',
 	'FOR_HUMANS.md',
-	'AGENTS.md',
-	'SKILL.md',
-	'CONTRIBUTING.md',
 ];
 
-const shippedDirs = [ '.ai', 'docs' ];
+const shippedDirs = [ 'docs' ];
 
 const mdFiles = [];
 const walk = (dir) => {

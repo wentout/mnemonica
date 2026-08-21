@@ -168,7 +168,7 @@ Transform tasks into verifiable goals:
 1. [Analyze type impact] → verify: `npm run build` compiles
 2. [Implement change] → verify: `npm run build` still passes
 3. [Add tests] → verify: `npm run test:cov` shows 100% coverage
-4. [Check style] → verify: `npm run lint` passes
+4. [Check style] → verify: `npx eslint ./src` passes with zero warnings
 5. [Review] → verify: Only requested lines changed
 ```
 
@@ -207,7 +207,6 @@ Folded in from the former `.ai/task-templates/new-feature.md`.
 
 1. **Design**
    - [ ] Define types (use `type` for instances, `interface` for constructors/contracts)
-   - [ ] Check `.ai/rules-reminders.md`
 2. **Coding**
    - [ ] Indentation: TABS ONLY (width 4)
    - [ ] Function spacing: `function myFunc () { }`

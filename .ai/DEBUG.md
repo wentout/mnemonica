@@ -24,11 +24,11 @@ npm run test:jest -- --verbose
 # Run specific test file
 npx jest test-jest/types.ts --verbose
 
-# Run Mocha with debug output
-DEBUG=* npm test
-
 # Build and check for TypeScript errors
 npm run build
+
+# Lint (separate gate — must be zero warnings)
+npx eslint ./src
 ```
 
 ### Build Output Inspection
@@ -77,10 +77,13 @@ function method(this: SpecificType) { }
 ### Instance Chain Issues
 
 ```typescript
-// Check instance properties
-console.log(instance[SymbolConstructorName]);
-console.log(instance[SymbolParentType]);
-console.log(instance[SymbolSubTypes]);
+// Internal props are NOT own properties and NOT keyed by symbols —
+// they live in a WeakMap keyed by the instance's Mnemosyne memory layer.
+// The inspection tool is getProps:
+import { getProps } from 'mnemonica';
+
+const props = getProps(instance);
+console.log(props.__type__, props.__parent__, props.__args__);
 
 // Verify prototype chain
 console.log(Object.getPrototypeOf(instance));
@@ -118,14 +121,17 @@ console.log('Cleaned stack:', cleaned);
 
 ---
 
-## Symbol Debugging
+## Inspecting Instance Metadata
 
 ```typescript
-// Inspect instance symbols
-const symbols = Object.getOwnPropertySymbols(instance);
-symbols.forEach(sym => {
-	console.log(sym.toString(), ':', (instance as Record<symbol, unknown>)[sym]);
-});
+// Instances carry no own symbol-keyed metadata — Object.getOwnPropertySymbols(instance)
+// will not show you the internal props. They live in a WeakMap keyed by the
+// memory layer; reach them with getProps:
+import { getProps } from 'mnemonica';
+
+console.log(getProps(instance));
+// __type__, __parent__, __args__, __collection__, __subtypes__,
+// __proto_proto__, __creator__, __timestamp__, __stack__, __self__
 ```
 
 ---
@@ -137,9 +143,6 @@ symbols.forEach(sym => {
 ```bash
 # Run single test suite
 npx mocha build/test-ts/test-example.js
-
-# With debug output
-DEBUG=mnemonica npx mocha build/test-ts/test-example.js
 ```
 
 ### Jest Tests

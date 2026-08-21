@@ -57,10 +57,17 @@ try {
 }
 ```
 
+`toBeInstanceOf` (Jest) / `instanceOf` (Mocha+Chai) against `ErrorsTypes.X` is
+correct: each error type is a real class extending `BASE_MNEMONICA_ERROR`, and
+both suites assert this way throughout. What does **not** work is comparing
+`error.constructor.name` with `===` against a primitive string — the name is a
+`String` object; coerce with `String(...)` first (see
+[`rules-error-system.md`](./rules-error-system.md)).
+
 ## Key Testing Rules
 
 1. **Jest tests must mirror Mocha patterns** from `test/environment.js`
-2. **Error constructor names are String objects**, not primitives — compare as strings
+2. **Assert error types with `instanceof`/`toBeInstanceOf`**; coerce constructor names before string comparison
 3. **Run `npm run test:cov` before completing** any task
 4. **Run `npm run test:jest:cov`** for Jest coverage validation
 5. Tests must pass with `--allow-uncaught` flag (mocha)

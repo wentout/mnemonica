@@ -38,7 +38,7 @@ When the task involves adding or modifying a type definition:
 2. **Check how `lookup()` is typed** (in order of preference)
    - Builder mode (`mnemonica.define` / `createTypesCollection`)? Nothing to do — the registry is local.
    - Free `lookup()` on a builder project? Use the one-line `RegistryOf` bridge — see [docs/typed-lookup.md](./docs/typed-lookup.md).
-   - Using tactica / `@decorate()`? Does `.tactica/types.ts` need updating? Is `lookup('MyType')` properly typed? See [tactica-deep-dive.md](./docs/tactica-deep-dive.md)
+   - Using tactica / `@decorate()`? Does `.tactica/types.ts` need updating? Is `lookup('MyType')` properly typed? See [typed-lookup.md](./docs/typed-lookup.md)
 
 3. **If the constructor needs a getter**, use `.lazy()`
    - `.define()` no longer accepts an anonymous first-argument function.
@@ -66,7 +66,8 @@ When the task involves adding or modifying a type definition:
 ## Build Commands
 
 ```bash
-npm run build          # Full build with linting
+npm run build          # tsc only — lint is a separate gate
+npx eslint ./src       # zero warnings allowed
 npm run test:cov       # Mocha tests with coverage (includes build:all)
 npm run test:jest:cov  # Jest tests with coverage
 npm run watch          # Watch mode
@@ -81,7 +82,7 @@ Read individual rule files for detailed explanations and code examples:
 
 ### Patterns
 - [rules-define-patterns.md](.ai/rules-define-patterns.md) — `define()` usage, subtypes, config options
-- [tactica-deep-dive.md](./docs/tactica-deep-dive.md) — `TypeRegistry`, `lookup`, tactica integration
+- [typed-lookup.md](./docs/typed-lookup.md) — `TypeRegistry`, `lookup`, tactica integration
 - [rules-async-constructors.md](.ai/rules-async-constructors.md) — async constructors, `awaitReturn`, chaining
 
 ### Architecture
@@ -103,9 +104,10 @@ Read individual rule files for detailed explanations and code examples:
 
 ## Contributing
 
-This file covers **usage** of mnemonica only. If you are modifying the library
-itself, read [`AGENTS.md`](./AGENTS.md) (or [`.ai/AGENTS.md`](./.ai/AGENTS.md)
-for framework-agnostic rules).
+This checklist covers working **in this repository** (both usage questions and
+library changes). If you are modifying the library itself, read
+[`AGENTS.md`](./AGENTS.md) first (mandatory) and
+[`.ai/ONBOARDING.md`](./.ai/ONBOARDING.md) for the contributor quickstart.
 
 ## External Resources
 

@@ -50,6 +50,12 @@ npm run watch
 
 **Rule:** `npm run test:cov` before completing any task. It validates the build and ensures 100% coverage.
 
+**Know your gates:**
+- `npm run build` is **tsc only** — it does not lint.
+- Lint is a separate gate: `npx eslint ./src`, and it must pass with **zero warnings**.
+- `npm run test:cov` runs `build:all` internally, so it always tests a fresh build.
+- `npm test` does **not**: its `pretest` only runs `decorate:ts`, so it can run Mocha against a stale `build/`. Always use `test:cov`.
+
 **Build tip:** Check the **beginning** of build output for errors. For tests, the end is fine.
 
 ---
@@ -77,10 +83,22 @@ return result;
 return { target, name };
 ```
 
+### Key Spacing
+
+Space **before and after** the colon, colons aligned in object literals (see [`rules-code-style.md`](./rules-code-style.md)):
+
+```typescript
+const obj = {
+	key1 : value1,
+	key2 : value2,
+};
+```
+
 ### TypeScript Types
 - `strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`
 - **No `any`** (`@typescript-eslint/no-explicit-any: error`) — use purpose-specific interfaces
 - **Never** use bare `Function`, `CallableFunction`, or `NewableFunction` — define purpose-specific interfaces
+- **`type` vs `interface`:** `type` for instance data shapes, `interface` for constructor contracts — the full rule lives in [`rules-type-system.md`](./rules-type-system.md)
 
 ### Error Handling
 
@@ -175,14 +193,13 @@ Read [`../docs/async-constructors.md`](../docs/async-constructors.md) for the `s
 
 | Need | Read |
 |------|------|
-| Design patterns, constraints | [`ARCHITECT.md`](./ARCHITECT.md) |
-| Prototype chain internals | [`PROTOTYPE-CHAIN.md`](./PROTOTYPE-CHAIN.md) |
+| Construction pipeline, prototype chain internals | [`PROTOTYPE-CHAIN.md`](./PROTOTYPE-CHAIN.md) |
 | Debugging commands, issues | [`DEBUG.md`](./DEBUG.md) |
 | Async constructor deep dive | [`rules-async-constructors.md`](./rules-async-constructors.md) |
-| tactica type-safe lookup | [`tactica-deep-dive.md`](../docs/tactica-deep-dive.md) |
+| tactica type-safe lookup | [`typed-lookup.md`](../docs/typed-lookup.md) |
 | Behavioral guidelines | [`rules-contributing.md`](./rules-contributing.md) |
-| Explaining code (ask mode) | [`mode-ask.md`](./mode-ask.md) |
-| Multi-step coordination | [`mode-orchestrator.md`](./mode-orchestrator.md) |
+
+**Working in a non-editing role?** When acting in a planning/architect capacity, produce plans, not edits. When answering questions about the codebase, explain — don't modify code. When debugging, investigate read-only until the root cause is identified and the user agrees on the fix.
 
 ---
 

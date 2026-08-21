@@ -36,18 +36,28 @@ const MyError = constructError('MY_ERROR', 'Error message');
 throw new MyError('additional info', stack);
 ```
 
-## Error Constructor Names Are String Objects
+## Asserting on Errors
 
-Error constructor names are `String` objects, not primitives. Compare as strings:
+Thrown mnemonica errors are real class instances: every `ErrorsTypes.X` is a
+class extending `BASE_MNEMONICA_ERROR extends Error`, so `instanceof` works
+and is the house pattern in both suites:
 
 ```typescript
-// ❌ Wrong — may fail
+// ✅ Correct — used throughout test/ (instanceOf) and test-jest/ (toBeInstanceOf)
 expect(error).toBeInstanceOf(ErrorsTypes.ALREADY_DECLARED);
+expect(error).toBeInstanceOf(Error);
+```
 
-// ✅ Correct
-const expectedName = (err as { name: string }).name;
-const actualName = (error as Error).constructor.name;
-expect(String(actualName)).toEqual(String(expectedName));
+The quirk is elsewhere: error **constructor names are `String` objects**, not
+primitives (`Object.defineProperty` getter returning `new String(name)` in
+`src/api/errors/index.ts`). This only bites when comparing *names*:
+
+```typescript
+// ❌ Wrong — String object !== primitive string under ===
+error.constructor.name === 'ALREADY_DECLARED';
+
+// ✅ Correct — coerce before comparing
+expect(String(error.constructor.name)).toEqual('ALREADY_DECLARED');
 ```
 
 ## Common Error Types

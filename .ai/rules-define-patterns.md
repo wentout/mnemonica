@@ -40,6 +40,27 @@ const SubType = MyType.define('SubType', function (this: SubType, extra: string)
 
 When working in a codebase that uses one style: **stay consistent with that style** rather than mixing.
 
+## The `decorate` Shape
+
+`decorate` exists at two levels, and both are **getters**, not plain methods:
+
+- **Collection level** — a getter on `TypesCollection.prototype` (`src/descriptors/types/index.ts:229`), so `defaultTypes.decorate(config)` and `createTypesCollection().decorate(config)` return a fresh decorator bound to that collection.
+- **Type level** — a getter on `TypeDescriptor.prototype` (`src/api/types/index.ts:275`) that binds the current descriptor at access time.
+
+Because binding happens at access time, both call forms work:
+
+```typescript
+@Type.decorate({ strictChain: false })   // method-style access
+class Admin { /* ... */ }
+
+const { decorate } = Type;               // destructured — still bound
+@decorate()
+class Moderator { /* ... */ }
+```
+
+For usage patterns (options, subtype decoration, typing limits), see
+[`docs/decorate.md`](../docs/decorate.md).
+
 ## Calling Conventions
 
 ### 1. Modern (explicit name)
