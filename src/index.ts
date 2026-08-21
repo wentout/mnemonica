@@ -96,7 +96,18 @@ const { prepareSubtypeForConstruction } = mnemosynes;
 export const { defaultTypes, } = descriptors;
 
 function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolean {
-	const result = pointer === mnemonica || pointer === exports;
+	if (pointer === mnemonica || pointer === exports) {
+		return true;
+	}
+	// Loader facades (vite-node CJS interop proxies and similar) wrap this
+	// module's exports in their own Proxy — identity fails through them,
+	// but the facade still exposes OUR exact `define` reference. Without
+	// this, `this || defaultTypes` in define/lookup/lazy picks the facade
+	// itself and recurses until RangeError. A foreign object cannot pass:
+	// it must hold the same `define` instance of this module (which means
+	// it already has full access to the module surface anyway).
+	const facade = pointer as { define?: unknown } | null | undefined;
+	const result = facade != null && facade.define === define;
 	return result;
 }
 

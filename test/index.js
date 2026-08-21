@@ -1680,6 +1680,22 @@ describe('Main Test', () => {
 				expect(LazyExplicitSourceTypeResult.TypeName).to.equal('LazyExplicitSourceType');
 			});
 
+			it('should treat a loader facade (exports proxy) as module context', () => {
+				// vite-node and similar loaders wrap this module's exports in a
+				// facade Proxy: identity with `exports` fails through it, and
+				// define() with such a facade as `this` used to recurse until
+				// RangeError. checkThis() now recognises the facade by our own
+				// `define` reference and falls back to defaultTypes.
+				const facade = new Proxy({ define }, {});
+				const FacadeContextType = define.call(facade, 'FacadeContextType', function () {
+					this.facadeMade = true;
+				});
+				expect(FacadeContextType).to.exist;
+				const instance = new FacadeContextType();
+				expect(instance.facadeMade).to.equal(true);
+				expect(mnemonica.lookup('FacadeContextType')).to.equal(FacadeContextType);
+			});
+
 			it('should throw TYPENAME_MUST_BE_A_STRING for anonymous function in define', () => {
 				let thrownError;
 				try {
