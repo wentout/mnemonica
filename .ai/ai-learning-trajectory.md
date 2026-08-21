@@ -110,7 +110,7 @@ Three things accelerated learning:
 
 ## The HoTT Connection (What the Agent Noticed)
 
-After understanding mnemonica, the agent read `hott/AI-REFLECTION-THEORY.md` (internal docs). It noticed structural parallels:
+After understanding mnemonica, the agent read `hott/theory/AI-REFLECTION-THEORY.md` (internal docs). It noticed structural parallels:
 
 - **Path induction** ↔ prototype chain traversal (`utils.parent(instance)`)
 - **Univalence** ↔ capability equivalence (two types with same behavior are equivalent)

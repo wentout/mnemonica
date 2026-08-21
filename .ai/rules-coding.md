@@ -103,20 +103,20 @@ assert(Array.isArray(data.items));
 ### Step 5: Implement
 Only after Steps 1-4 are complete.
 
-## Example: ReferenceProvider Fix
+## Example: Props Storage Fix
 
 ❌ WRONG - Coder's Approach:
-- Read 50 lines of referenceProvider.ts
-- Assume Usages structure from memory
+- Read 50 lines of Props.ts
+- Assume the storage shape from memory
 - Implement broken marshaling
 
 ✅ CORRECT - Required Approach:
-1. Read FULL referenceProvider.ts (all 300+ lines)
-2. Read FULL usages.json to see actual data format
-3. Read FULL Usages.ts to understand model structure
-4. Document: "usages.json has { typeName: Array<Usage> } format"
-5. Show mapping: "Need to convert from JSON to Mnemonica instance"
-6. Write test case for conversion
+1. Read FULL InstanceCreator.ts (all of it, both ends)
+2. Read FULL Props.ts to see the actual storage format
+3. Read FULL Mnemosyne.ts to understand the memory layer
+4. Document: "internal props live in a WeakMap keyed by the memory layer"
+5. Show mapping: "getProps walks the chain to the first object with a WeakMap entry"
+6. Write test case for the behavior
 7. Implement with verified understanding
 
 ## User's Direct Instructions

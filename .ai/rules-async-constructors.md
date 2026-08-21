@@ -212,6 +212,7 @@ try {
 Mnemonica replaces standard JS `instanceof` with **nominal typing** checked by `getTypeChecker` (`src/api/utils/index.ts`):
 
 ```ts
+// abridged — two defensive guards (typeof, constructor presence) omitted
 const getTypeChecker = (TypeName: string) => {
 	return (instance: object) => {
 		if (Reflect.getPrototypeOf(instance).constructor.name === 'Promise') {

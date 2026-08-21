@@ -297,9 +297,15 @@ define('User.Admin', function (this: AdminShape, data: { role: string }) {
 	this.role = data.role;
 });
 
-// Now the free lookup is typed.
-const Admin = lookup('User.Admin');
-const admin = new Admin({ role: 'root' });
+// Now the free lookup is typed — use it for references and root types.
+const User = lookup('User');
+const user = new User({ name: 'Ada' });
+
+// Subtypes are still constructed from a parent instance — same rule as always.
+const admin = new user.Admin({ role: 'root' });
+
+// The nested lookup gives you the typed constructor itself (e.g. for annotations):
+const AdminCtor = lookup('User.Admin');
 ```
 
 ### What tactica generates
@@ -309,18 +315,28 @@ const admin = new Admin({ role: 'root' });
 - `types.ts` — instance types (nested shapes composed with `ProtoFlat<Parent, ...>`)
 - `registry.ts` — the `TypeRegistry` augmentation; **this is the critical file**
 - `index.ts` — re-exports
+- `hierarchy.json` / `hierarchy.txt` — the type Trie as structured JSON (parent/children
+  with 1-based locations) and as an ASCII tree
 - `definitions.json`, `usages.json`, `flow.json` — metadata about your type graph and where types are instantiated
+- `eds.json` — execution-data-structures metadata, emitted when EDS tracking is on
+  (auto-enabled when `@mnemonica/dive` is in your dependencies; `--eds` / `--no-eds` override)
 
-Registry keys are **dot-separated nested paths** — the same strings `lookup()` takes:
+Registry keys are **dot-separated nested paths** — the same strings `lookup()` takes.
+Values are inline constructor signatures returning the generated instance types:
 
 ```typescript
 // .tactica/registry.ts (generated)
+import type { User, User_Admin } from './types';
+
 declare module 'mnemonica' {
 	interface TypeRegistry {
-		'User'       : TypeConstructor<UserShape>;
-		'User.Admin' : TypeConstructor<AdminShape>;
+		'User'       : new (data: { name: string }) => User;
+		'User.Admin' : new (data: { role: string }) => User_Admin;
 	}
 }
+
+import type { TypeRegistry } from 'mnemonica';
+export type { TypeRegistry };
 ```
 
 `.tactica/` is output, not input. Never edit generated files — change the
@@ -524,8 +540,8 @@ in one call.
 ```typescript
 // UNNECESSARY
 app.get('/test', async () => {
-	const Admin = lookup('User.Admin');
-	const admin = new Admin({ role: 'root' });
+	const User = lookup('User');
+	const user = new User({ name: 'Ada' });
 });
 ```
 
@@ -533,10 +549,11 @@ app.get('/test', async () => {
 module level is fine and cheaper:
 
 ```typescript
-const Admin = lookup('User.Admin');
+const User = lookup('User');
 
 app.get('/test', async () => {
-	const admin = new Admin({ role: 'root' });
+	const user = new User({ name: 'Ada' });
+	const admin = new user.Admin({ role: 'root' }); // subtypes from the parent instance
 });
 ```
 
@@ -547,12 +564,14 @@ app.get('/test', async () => {
 import { Admin } from './models/admin';
 const TypedAdmin = lookup('User.Admin');
 
-app.decorate('Admin', Admin);            // direct import
-const admin = new TypedAdmin({ ... });   // lookup
+app.decorate('Admin', Admin);   // direct import
+register(TypedAdmin);           // lookup result
 ```
 
 `import { Admin }` and `lookup('User.Admin')` return the **same constructor
-object** at runtime. Use the looked-up one for everything.
+object** at runtime — the test suites assert reference identity between the
+two. Use the looked-up one for everything, and construct subtypes from a
+parent instance as usual.
 
 ### "I'll just edit the generated file"
 

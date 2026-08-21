@@ -461,7 +461,7 @@ The most commonly used types for TypeScript projects:
 ```typescript
 import {
   IDEF,                // Base constructor function type
-  MnemonicaInstance,   // Instance methods interface (extract, pick, parent, fork, etc.)
+  LazyDef,             // Zero-arg getter returning a constructor (for lazy())
   constructorOptions,  // Type config options (strictChain, blockErrors, etc.)
   hooksTypes,          // 'preCreation' | 'postCreation' | 'creationError'
   hook,                // Hook callback type
@@ -469,7 +469,7 @@ import {
 } from 'mnemonica';
 ```
 
-Additional types available: `Constructor`, `Props`, `SiblingAccessor`, `IDefinitorInstance`, `DecoratedClass`, `TypeDef`, `CollectionDef`, `hooksOpts`, `ApplyFunction`, `CallFunction`, `BindFunction`, `CreateTypesCollectionFunction`, `TypesCollection`, `HideInstanceMethodsOptions`, `IsHidingMethods`, `Proto`, `SubtypesMap`, `TypeAbsorber`. See [`src/types/index.ts`](./src/types/index.ts) for full definitions.
+Additional types available: `Constructor`, `TypeConstructor`, `TypeConstructorBase`, `Proto`, `ProtoFlat`, `InstanceResult`, `Merge`, `IDefinitorInstance`, `DecoratedClass`, `hooksOpts`, `TypesCollection`, `TypeLookup`, `LookupResult`, `RegistryOf`, `MnemonicaModule`, `TypeAbsorber`, and the `TypeRegistry` interface (for augmentation). See [`src/types/index.ts`](./src/types/index.ts) for full definitions.
 
 ### Generic Type Patterns
 
@@ -690,20 +690,17 @@ For advanced TypeScript usage, the following types are exported from `mnemonica`
 |------|-------------|-------|
 | `IDEF<T>` | Base constructor function type | `define('Name', fn: IDEF<MyType>)` |
 | `LazyDef<T>` | Zero-arg getter returning a constructor | `lazy('Name', fn: LazyDef<MyType>)` |
-| `MnemonicaInstance` | Optional helper interface | Can be used when attaching the legacy instance methods to your own prototype |
+| `TypeConstructor<T>` | Registry-stored constructor type | What an augmented `TypeRegistry` maps paths to |
 | `TypeClass` | Base type constructor | `const MyType: TypeClass = define(...)` |
 | `DecoratedClass<T>` | Decorated class type | `@decorate() class MyClass {}` (see [`docs/decorate.md`](./docs/decorate.md)) |
 | `IDefinitorInstance<N, S>` | Constructor with subtypes | Returned by `define()` with `.define()` method |
-| `ConstructorFunction<T>` | Constructor with prototype | Generic constructor function signature |
 | `constructorOptions` | Configuration options | `{ strictChain: true, blockErrors: true }` |
 | `hooksTypes` | Hook type literals | `'preCreation' \| 'postCreation' \| 'creationError'` |
 | `hook` | Hook callback type | `(opts: hooksOpts) => void` |
 | `hooksOpts` | Hook options object | Passed to hook callbacks |
-| `TypeDef` | Type definition structure | `instance.__type__` structure |
-| `CollectionDef` | Types collection | `instance.__collection__` structure |
-| `ApplyFunction` | apply() function type | `apply<E, T, S>(entity, Ctor, args) => S` |
-| `CallFunction` | call() function type | `call<E, T, S>(entity, Ctor, ...args) => S` |
-| `BindFunction` | bind() function type | `bind<E, T, S>(entity, Ctor) => (...args) => S` |
+| `TypesCollection` | Types collection interface | What `createTypesCollection()` returns |
+| `RegistryOf<T>` | Registry extractor | The one-line bridge: `interface TypeRegistry extends RegistryOf<typeof App> {}` |
+| `TypeRegistry` | Global registry interface | Augmented by hand, by the bridge, or by tactica |
 
 These types enable complete type safety when defining and using mnemonica types in TypeScript projects.
 
@@ -999,7 +996,7 @@ explicit `<T>` cast is required for ordinary use.
 | `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>>` |
 | `utils.parse(instance)` | `Parsed<T>` |
 | `utils.toJSON(instance)` | `string` |
-| `utils.collectConstructors(instance, flat?)` | `(CallableFunction \| string)[]` |
+| `utils.collectConstructors(instance, asSequence?)` | `string[]` when `asSequence: true`, otherwise a `{ [name]: true }` lookup object |
 
 For the full type-level explanation, helper types, and examples, see
 [`docs/UTILS.md`](./docs/UTILS.md).
@@ -1096,7 +1093,7 @@ interface HookData {
   type: TypeDef;                 // The type being constructed
   args: unknown[];               // Arguments passed to constructor
   existentInstance: object;      // Parent instance
-  inheritedInstance: object;     // New instance (postCreation only)
+  inheritedInstance: object;     // New instance (postCreation and creationError)
   throwModificationError(error: Error): void;  // Throw error from hook (not available in preCreation)
 }
 ```

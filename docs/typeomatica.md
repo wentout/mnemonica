@@ -190,7 +190,8 @@ const PremiumCustomer = Customer.define('PremiumCustomer', function(this: { tier
   this.tier = 'gold';
 });
 
-const premium = new PremiumCustomer();
+const premiumCustomer = new Customer();
+const premium = new premiumCustomer.PremiumCustomer();
 // @ts-ignore
 premium.tier = 123;  // ✗ TypeError: Type Mismatch
 ```
@@ -246,8 +247,8 @@ const Admin = User.define('Admin', function(this: {
 // Create instances with full type safety
 // ==========================================
 const entity = new Entity();
-const user = new User();
-const admin = new Admin();
+const user = new entity.User();       // subtypes construct from a parent instance
+const admin = new user.Admin();
 
 // Runtime type enforcement prevents bugs
 user.email = 'john@example.com';     // ✓ Works

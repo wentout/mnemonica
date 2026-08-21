@@ -141,8 +141,8 @@ console.log(getProps(instance));
 ### Mocha Tests
 
 ```bash
-# Run single test suite
-npx mocha build/test-ts/test-example.js
+# Run single test file
+npx mocha test-ts/test-example.js
 ```
 
 ### Jest Tests

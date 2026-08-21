@@ -58,16 +58,17 @@ user.name === 'Alice';
 
 ### 2. The user prototype layer
 
-This layer holds the methods and getters you put on the type when you defined it:
+This layer holds the methods and getters the constructor's own prototype
+carried when the type was defined — `define()` captures them from there
+(there is no `proto` config key):
 
 ```js
-const AdminType = UserType.define('AdminType', function (data) {
+function AdminConstructor(data) {
   Object.assign(this, data);
-}, {
-  proto: {
-    isAdmin() { return true; }
-  }
-});
+}
+AdminConstructor.prototype.isAdmin = function () { return true; };
+
+const AdminType = UserType.define('AdminType', AdminConstructor);
 ```
 
 `admin.isAdmin()` resolves on this layer. This prototype is **fresh per instance**, so one `admin` cannot pollute the prototype of another.

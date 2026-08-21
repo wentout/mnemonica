@@ -55,18 +55,17 @@ export type Merge<E extends object, T extends object> = {
 };
 ```
 
-### `InstanceResult<N, Config>`
+### `InstanceResult<N>`
 
 The public instance surface. It renders in hover tooltips as a plain field
-object literal first, then `& MnemonicaInstance<{ ... }>` once:
+object literal — instance methods are not part of the type at all (they live
+in `utils`), and the inline mapped type is used instead of a `Flatten` alias
+so hover shows the actual fields first:
 
 ```typescript
 export type InstanceResult<
     N extends object,
-    Config extends constructorOptions,
-> = IsHidingMethods<Config> extends true
-    ? { [K in keyof N]: N[K] }
-    : { [K in keyof N]: N[K] } & MnemonicaInstance<{ [K in keyof N]: N[K] }>;
+> = { [K in keyof N]: N[K] };
 ```
 
 ### `Parsed<T>`
@@ -108,10 +107,10 @@ export interface SiblingAccessor {
 | `utils.fork(instance)` | `(this: object, ...args: unknown[]) => T` | Returns a fork constructor. |
 | `utils.parent(instance, path?)` | `object \| undefined` | Structural only; nominal path typing needs `TypeRegistry`. |
 | `utils.sibling(instance)` | `SiblingAccessor` | Look up sibling constructors by string name or property access. |
-| `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>, constructorOptions>` | `A` wins; `B` fills non-overlapping keys; methods shown once. |
+| `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>>` | `A` wins; `B` fills non-overlapping keys. |
 | `utils.parse(instance)` | `Parsed<T>` | One-level prototype-chain snapshot. |
 | `utils.toJSON(instance)` | `string` | Generic so the instance type is captured at the call site. |
-| `utils.collectConstructors(instance, flat?)` | `(CallableFunction \| string)[]` | Introspection helper. |
+| `utils.collectConstructors(instance, asSequence?)` | `string[]` when `asSequence: true`, otherwise a `{ [name]: true }` lookup object | Prototype-chain constructor names, up to `Mnemonica`. |
 | `new utils.exception(instance, error, ...args)` | `Error` | **Must be called with `new`.** Error instance of the instance's type; data via `getProps()`. |
 
 The complete `utils` collection is: `extract`, `pick`, `parent`, `sibling`,

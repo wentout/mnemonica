@@ -444,18 +444,19 @@ const user = new UserType({ name: 'Alice' });  // Full intellisense!
 
 **Usage**:
 ```javascript
-const { loader } = require('@mnemonica/topologica');
-const { define } = require('mnemonica');
+const loader = require('@mnemonica/topologica').default;
+const { define, lookup } = require('mnemonica');
 
-const types = loader('./src/models', define);
-// types.User, types.User.Admin, etc.
+// defines every type found under ./src/models into mnemonica's registry
+const { topology, logs } = loader('./src/models', define);
+// then reach them via lookup: lookup('User'), lookup('User.Admin'), ...
 ```
 
 **Why**: Eliminates manual type registration. Just create files/directories, Topologica finds and wires them.
 
 ---
 
-### 4. Typeomatica: `@mnemonica/typeomatica` - Runtime Types
+### 4. Typeomatica: `typeomatica` - Runtime Types
 
 **Purpose**: Runtime type checking with TypeScript parity
 
@@ -482,7 +483,7 @@ const types = loader('./src/models', define);
 
 ---
 
-### 6. Strategy: `@mnemonica/strategy` - MCP Server
+### 6. Strategy (experimental, unpublished) - MCP Server
 
 **Purpose**: AI integration via Model Context Protocol
 
@@ -683,9 +684,9 @@ console.log(props.__parent__);            // undefined (root type)
 - **Core** (`mnemonica`): Runtime instance inheritance
 - **Tactica** (`@mnemonica/tactica`): Type generation and static analysis
 - **Topologica** (`@mnemonica/topologica`): Filesystem-based type discovery
-- **Typeomatica** (`@mnemonica/typeomatica`): Runtime type checking
+- **Typeomatica** (`typeomatica`): Runtime type checking
 - **MnemoGraphica**: VS Code visualization
-- **Strategy** (`@mnemonica/strategy`): AI integration via MCP
+- **Strategy** (experimental, unpublished): AI integration via MCP
 
 **The User Is**:
 - Asking to transform data storage (not behavior)

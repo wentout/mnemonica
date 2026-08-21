@@ -13,8 +13,8 @@ metadata:
 ## The define() Function
 
 `define(TypeName, constructHandler, config?)` creates a constructor with prototype
-chain inheritance. The constructor has additional methods: `.define()`, `.lookup()`,
-`.registerHook()`.
+chain inheritance. The constructor has additional methods: `.define()`, `.lazy()`,
+`.decorate()`, `.lookup()`, `.registerHook()`.
 
 ```typescript
 const MyType = define('MyType', function (this: MyType, data: Data) {
@@ -118,7 +118,9 @@ const LazyRoot = lazy('LazyRoot', () => class LazyRoot {
 });
 ```
 
-The getter is called once at definition time. The returned constructor is
+The getter is called once at definition time (to resolve the name, class mode,
+and prototype) and then again on every construction — keep it free of side
+effects that must not run at `define()` time. The returned constructor is
 registered exactly like a constructor passed directly to `define()`, and the
 resulting type supports `.define()`, `.lazy()`, `.lookup()`, and subtype
 chaining.

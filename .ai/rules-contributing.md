@@ -55,8 +55,8 @@ TypeProxy.prototype.set = function (_target, name, value) {
 Before implementing, I need to clarify:
 
 1. **Scope**: Should this config be per-type or per-collection?
-2. **Proxy compatibility**: TypeProxy handles `.get`, `.set`, `.construct`.
-   Adding config requires checking all three traps.
+2. **Proxy compatibility**: TypeProxy handles `.get`, `.set`, `.construct`,
+   `.apply`. Adding config requires checking all four traps.
 3. **Existing options**: `strictChain`, `blockErrors`, `awaitReturn`
    already exist. Does this fit the pattern?
 4. **TypeRegistry impact**: Will tactica need to regenerate types?
@@ -199,7 +199,7 @@ Folded in from the former `.ai/task-templates/new-feature.md`.
 
 ### Pre-Flight
 
-- [ ] Read `AGENTS.md` (root) sections on type vs interface vs instance and build/test commands
+- [ ] Read `AGENTS.md` (root) — Rule #1, the reading guide, build/test commands — and `.ai/rules-type-system.md` for the type-vs-interface rule
 - [ ] Check existing code patterns in the target directory
 - [ ] Run `npm run build` to ensure a clean baseline
 
