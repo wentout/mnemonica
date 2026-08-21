@@ -142,9 +142,10 @@ All three must pass before publishing.
 npm pack --dry-run
 ```
 
-The tarball must include: `build/`, `module/`, `src/`, `docs/`, `.ai/`,
-`README.md`, `FOR_HUMANS.md`, `AGENTS.md`, `SKILL.md`,
-`CONTRIBUTING.md`, `LICENSE`.
+The tarball must include: `build/`, `module/`, `src/`, `docs/`,
+`README.md`, `FOR_HUMANS.md`, `LICENSE`.
 
-It must **not** include: `test/`, `test-jest/`, `test-ts/`, `test_async/`,
-`reports/`, `.husky/`, `node_modules/`.
+It must **not** include: contributor docs (`AGENTS.md`, `SKILL.md`,
+`CONTRIBUTING.md`, `.ai/` — those live on GitHub only), `test/`,
+`test-jest/`, `test-ts/`, `test_async/`, `reports/`, `.husky/`,
+`node_modules/`.

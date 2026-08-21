@@ -6,7 +6,7 @@
 
 You MUST pause BEFORE proceeding and ask the user for clarification if ANY of the following is true:
 
-1. **Errors** — `apply_diff` fails, `write_to_file` produces unexpected results, or any tool returns an error. A successful retry does NOT cancel this rule: report the error AND how you recovered.
+1. **Errors** — a file edit fails, a write produces unexpected results, or any tool returns an error. A successful retry does NOT cancel this rule: report the error AND how you recovered.
 2. **Uncertainty** — you are not 100% certain about what change to make, how a function works, or what the user intended.
 3. **Assumptions** — you find yourself filling in gaps with "probably", "likely", "I think", or "it should work".
 4. **Conflicting constraints** — a tool or environment constraint conflicts with the user's stated preference. Surface the conflict verbatim; never silently satisfy the tool at the user's expense.
@@ -49,15 +49,14 @@ When asked to read a file, you MUST read the ENTIRE file, not just the first 50-
 
 ### How to Read Full Files
 
-1. First read with `limit: 200` and check if truncated
-2. If truncated, continue with `offset: 201` until end
-3. For files over 1000 lines, use multiple calls:
-```typescript
-// Read 0-200
-read_file(path, 1, 200)
-// Read 201-400
-read_file(path, 201, 200)
-// Continue until no longer truncated
+1. First read with a line limit (e.g. 200) and check if truncated
+2. If truncated, continue from the next offset until end
+3. For files over 1000 lines, use multiple reads:
+
+```text
+read lines 1-200
+read lines 201-400
+... continue until no longer truncated
 ```
 
 ### NEVER Do This
@@ -104,20 +103,20 @@ assert(Array.isArray(data.items));
 ### Step 5: Implement
 Only after Steps 1-4 are complete.
 
-## Example: ReferenceProvider Fix
+## Example: Props Storage Fix
 
 ❌ WRONG - Coder's Approach:
-- Read 50 lines of referenceProvider.ts
-- Assume Usages structure from memory
+- Read 50 lines of Props.ts
+- Assume the storage shape from memory
 - Implement broken marshaling
 
 ✅ CORRECT - Required Approach:
-1. Read FULL referenceProvider.ts (all 300+ lines)
-2. Read FULL usages.json to see actual data format
-3. Read FULL Usages.ts to understand model structure
-4. Document: "usages.json has { typeName: Array<Usage> } format"
-5. Show mapping: "Need to convert from JSON to Mnemonica instance"
-6. Write test case for conversion
+1. Read FULL InstanceCreator.ts (all of it, both ends)
+2. Read FULL Props.ts to see the actual storage format
+3. Read FULL Mnemosyne.ts to understand the memory layer
+4. Document: "internal props live in a WeakMap keyed by the memory layer"
+5. Show mapping: "getProps walks the chain to the first object with a WeakMap entry"
+6. Write test case for the behavior
 7. Implement with verified understanding
 
 ## User's Direct Instructions
@@ -140,107 +139,3 @@ If you skip these steps:
 They are not your debugger. They are a Scientist.
 Your job is to implement correctly the FIRST time.
 Read thoroughly. Analyze completely. Then code.
-
-## Lessons Learned from Recent Refactoring
-
-### 1. Separation of Concerns: Models vs Controllers
-
-**Pattern:** Models = Pure Data, Controllers = Actions
-
-Models should be pure data containers with only Map/array operations. File I/O and parsing actions belong in controllers.
-
-```typescript
-// ✅ CORRECT - Model is pure data
-export const Definitions = define('Definitions', class {
-    private map: Map<string, DefinitionEntryInstance> = new Map();
-    
-    get(name: string) { return this.map.get(name); }
-    set(name: string, entry: DefinitionEntryInstance) { this.map.set(name, entry); }
-    // Note: loadFromFile action moved to Registry
-});
-
-// ✅ CORRECT - Controller handles file I/O
-export const Registry = define('Registry', class {
-    private async loadDefinitions(tacticaPath: string) {
-        const content = fs.readFileSync(definitionsPath, 'utf-8');
-        // ... populate Definitions instance
-    }
-});
-```
-
-### 2. Avoid Inefficient File Operations
-
-**Pattern:** Store data during parsing, don't re-read files
-
-Never re-read an entire file just to get data that was already available during initial parsing.
-
-```typescript
-// ❌ WRONG - Re-reads file every time
-getLineForType(typeName: string): number | undefined {
-    const entry = this.map.get(typeName);
-    const content = fs.readFileSync(entry.fullPath, 'utf-8');  // NO!
-    // ... search for line number
-}
-
-// ✅ CORRECT - Store lineNumber during parsing
-export type rawTypeEntry = {
-    name: string;
-    fullPath: string;
-    parent?: string;
-    properties: Map<string, string>;
-    lineNumber: number;  // Store during parsing
-};
-
-// During parsing in controller:
-for (let i = 0; i < lines.length; i++) {
-    if (match) {
-        const entry = new this.typesInstance.TypeEntry({
-            // ...
-            lineNumber: i  // Store when we know it
-        } as rawTypeEntry);
-    }
-}
-
-// Simple O(1) lookup later:
-getLineForType(typeName: string): number | undefined {
-    return this.map.get(typeName)?.lineNumber;
-}
-```
-
-### 3. Naming: Use raw* Prefix for Data Transfer Types
-
-**Pattern:** `rawTypeEntry` for external data transfer
-
-Models should export `raw*` types that controllers use when populating them.
-
-```typescript
-// In model file (Types.ts):
-export type rawTypeEntry = {
-    name: string;
-    fullPath: string;
-    parent?: string;
-    properties: Map<string, string>;
-    lineNumber: number;
-};
-
-// In controller file (Registry.ts):
-import type { rawTypeEntry } from './Types';
-
-const entry = new this.typesInstance.TypeEntry({
-    name,
-    fullPath: typesPath,
-    parent,
-    properties: new Map(),
-    lineNumber: i
-} as rawTypeEntry);
-```
-
-### Summary Table
-
-| Concern | Location | Example |
-|---------|----------|---------|
-| Data storage | Model | `Definitions`, `Types`, `Usages`, `Trie` |
-| Data operations | Model | `get()`, `set()`, `has()` |
-| File I/O | Controller | `Registry.loadDefinitions()` |
-| Parsing | Controller | `Registry.loadTypes()` |
-| External data types | Model exports | `rawTypeEntry`, `rawDefinitionEntry` |

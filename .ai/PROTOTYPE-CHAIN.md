@@ -64,6 +64,28 @@ define(TypeName, ctor)  →  new TypeDescriptor()  →  new TypeProxy()
 - `src/api/types/InstanceCreator.ts` orchestrates the pipeline and passes `existentInstance` (the parent instance) into the `ModificationConstructor`.
 - `src/api/types/TypeProxy.ts` is the constructor-like object returned by `define()`. Its `construct` trap creates the root Mnemosyne proxy and then invokes `InstanceCreator`.
 
+## Hooks in the pipeline
+
+Hooks are stored per-type and per-collection (`type.hooks.preCreation` etc.); each firing invokes the collection's list first, then the type's, and collects results into `{ type, collection }` `Set`s. Three firing points, all inside `InstanceCreator`:
+
+- **`preCreation`** — fired by `invokePreHooks` before `runBuild`, i.e. *before the memory layer exists*. A throw here aborts construction raw: there is no instance yet to wrap the error into.
+- **`postCreation`** — fired by `invokePostHooks` at the end of `postProcessing`, after the user constructor has run, validation has passed, and `__self__` is set.
+- **`creationError`** — the same `invokePostHooks` code path, selected instead of `postCreation` whenever `inheritedInstance instanceof Error`. It fires on the errored instance (see below); a hook returning `true` suppresses the throw and the errored instance becomes the construction result.
+
+The per-target flow checker lives in `flowCheckers`, a `WeakMap<Hookable, () => unknown>` (`src/api/hooks/flowCheckers.ts:11`) — keyed by the hookable object, so checkers never leak into enumeration.
+
+## The error path
+
+When the user constructor throws and `blockErrors` is on (the default), `runBuild` catches the error and `throwModificationError` (`src/api/errors/throwModificationError.ts`) takes over:
+
+1. Build an **errored instance** — `makeErrorModificatorType(TypeName)` plus a normal `makeInstanceModificator` pass, so the thrown object is a real instance of the type that failed.
+2. Splice the original error into the errored instance's prototype chain (`Reflect.setPrototypeOf`). This is why a thrown mnemonica error answers `true` to both `instanceof ErroredType` and `instanceof TypeError`.
+3. Store the error data in props, never on the error object: `exceptionReason`, `reasons`, `surplus` first, then `args`, `originalError`, `instance` once the error is actually thrown. Read them with `getProps(error)`.
+4. Merge and clean the stack (creation stack + original error stack + type-definition stack, through `cleanupStack`).
+5. Fire `creationError` hooks; if none suppresses, `throw erroredInstance`.
+
+If an errored instance arrives as the *parent* and `blockErrors` is on, the circuit breaker (`runBlockErrorsCheck`) builds the same kind of errored instance and throws it before pre-hooks even run. With `blockErrors: false` the original error propagates raw — that path exists for mnemonica's own exception construction.
+
 ## Capturing the user prototype
 
 At `define()` time the `TypeDescriptor` stores `proto` — a snapshot of the user constructor’s `.prototype`. During construction that snapshot is copied onto the fresh `ModificatorType.prototype`. The user constructor’s original `.prototype` is restored after construction, so it is never part of the instance chain.

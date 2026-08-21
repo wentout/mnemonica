@@ -90,24 +90,34 @@ const ClarifiedNeed = Turn.define('ClarifiedNeed', function (this: ClarifiedNeed
 	this.need = need;
 });
 
-const EscalationReason = ClarifiedNeed.define('EscalationReason', function (this: EscalationReason, reason: string) {
-	this.reason = reason;
-});
-
 // Turn 1
 const t1 = new Turn('My order is wrong.');
 const c1 = new t1.ClarifiedNeed('missing_item');
 
-// Turn 2: the user adds detail
-const t2 = new c1.Turn('I ordered two, only one arrived.');
-const c2 = new t2.ClarifiedNeed('quantity_error');
+// Turn 2: the user adds detail — each turn extends the chain with a NEW type
+// (a type name appears only once per chain; ancestor types are not
+// re-constructible from deeper instances)
+const FollowUp = ClarifiedNeed.define('FollowUp', function (this: FollowUp, text: string) {
+	this.text = text;
+});
+const RefinedNeed = FollowUp.define('RefinedNeed', function (this: RefinedNeed, need: string) {
+	this.need = need;
+});
+const t2 = new c1.FollowUp('I ordered two, only one arrived.');
+const c2 = new t2.RefinedNeed('quantity_error');
 
 // Turn 3: escalation becomes appropriate
-const t3 = new c2.Turn('This is the third time this month.');
+const FinalTurn = RefinedNeed.define('FinalTurn', function (this: FinalTurn, text: string) {
+	this.text = text;
+});
+const EscalationReason = FinalTurn.define('EscalationReason', function (this: EscalationReason, reason: string) {
+	this.reason = reason;
+});
+const t3 = new c2.FinalTurn('This is the third time this month.');
 const escalation = new t3.EscalationReason('repeat_issue');
 ```
 
-`escalation` knows it is a `EscalationReason` whose parent is `Turn('This is the third time this month.')`, whose parent is `ClarifiedNeed('quantity_error')`, whose parent is `Turn('I ordered two, only one arrived.')`, and so on. The decision to escalate is not a label produced by a classifier. It is a position in a reconstructible path.
+`escalation` knows it is an `EscalationReason` whose parent is `FinalTurn('This is the third time this month.')`, whose parent is `RefinedNeed('quantity_error')`, whose parent is `FollowUp('I ordered two, only one arrived.')`, and so on back to the original `Turn`. The decision to escalate is not a label produced by a classifier. It is a position in a reconstructible path.
 
 ---
 
@@ -165,5 +175,5 @@ What it provides is a data model where context and lineage are first-class. High
 ## See also
 
 - [`docs/hott-primer.md`](./hott-primer.md) — formal background on paths, identity, and transport
-- [`docs/purpose.md`](./purpose.md) — data flow vs control flow, and what mnemonica does not do
+- [`.ai/purpose.md`](https://github.com/wentout/mnemonica/blob/master/.ai/purpose.md) — data flow vs control flow, and what mnemonica does not do
 - [Inheritance in JavaScript — the original 2019 essay](https://github.com/mythographica/stash/blob/master/inheritance.md) — the vision that posed the empathy question

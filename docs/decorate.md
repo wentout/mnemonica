@@ -22,7 +22,7 @@ to recover the types is the global `TypeRegistry` interface — and something
 has to populate it. That something is Tactica: it scans your `@decorate()` and
 `define()` calls and generates the augmentation for you.
 
-For the full explanation of the two type-system paths, see
+For the full explanation of the type-system paths, see
 [`docs/typed-lookup.md`](./typed-lookup.md).
 
 ## Setup

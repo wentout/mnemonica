@@ -13,12 +13,8 @@ TypeØmatica is a companion library that provides strict runtime type checking f
 - [Core Concepts](#core-concepts)
 - [API Reference](#api-reference)
 - [Integration Patterns](#integration-patterns)
-- [Type Examples](#type-examples)
-- [Working with Wrapped Values](#working-with-wrapped-values)
-- [Error Handling](#error-handling)
-- [Advanced: Custom Fields](#advanced-custom-fields)
 - [Complete Integration Example](#complete-integration-example)
-- [Error Reference](#error-reference)
+- [Benefits Summary](#benefits-summary)
 
 ---
 
@@ -96,68 +92,11 @@ Decorators apply **bottom-to-top** (inner to outer). `@Strict` wraps the class f
 
 ## API Reference
 
-### BaseClass
+The full typeomatica API — `BaseClass`, `BasePrototype`, the `@Strict()` decorator and its options, `FieldConstructor`, `SymbolTypeomaticaProxyReference`, `SymbolInitialValue`, and the complete error reference (`Type Mismatch`, `Value Access Denied`, and friends) — is documented in the typeomatica package itself:
 
-The primary class for creating strict-type objects.
+**<https://www.npmjs.com/package/typeomatica>**
 
-```typescript
-import { BaseClass } from 'typeomatica';
-
-class MyClass extends BaseClass {
-  field: string = 'value';
-  constructor() {
-    super();
-  }
-}
-```
-
-### BasePrototype / BaseConstructorPrototype
-
-Functional equivalent of `BaseClass`.
-
-```typescript
-import { BasePrototype } from 'typeomatica';
-
-const Base = BasePrototype({ initialProp: 123 });
-class MyClass extends Base { }
-```
-
-### @Strict() Decorator
-
-Apply strict typing to any class without extending BaseClass.
-
-```typescript
-import { Strict } from 'typeomatica';
-
-@Strict({ deep: true })
-class MyClass {
-  field: number = 0;
-}
-```
-
-**Options:**
-- `deep: true` - Enables recursive/deep property checking
-- Pass initial values as properties to pre-define types
-
-### SymbolTypeomaticaProxyReference
-
-Access the internal proxy reference.
-
-```typescript
-import { SymbolTypeomaticaProxyReference } from 'typeomatica';
-
-const proxyRef = instance[SymbolTypeomaticaProxyReference];
-```
-
-### SymbolInitialValue
-
-Access the original initial value of a property.
-
-```typescript
-import { SymbolInitialValue } from 'typeomatica';
-
-const originalValue = instance[SymbolInitialValue]('fieldName');
-```
+The sections below cover only what you need to combine typeomatica with mnemonica.
 
 ---
 
@@ -251,271 +190,10 @@ const PremiumCustomer = Customer.define('PremiumCustomer', function(this: { tier
   this.tier = 'gold';
 });
 
-const premium = new PremiumCustomer();
+const premiumCustomer = new Customer();
+const premium = new premiumCustomer.PremiumCustomer();
 // @ts-ignore
 premium.tier = 123;  // ✗ TypeError: Type Mismatch
-```
-
----
-
-## Type Examples
-
-### Primitives
-
-All primitive types are fully supported and enforced.
-
-```typescript
-class Primitives extends BaseClass {
-  str: string = 'hello';
-  num: number = 42;
-  bool: boolean = true;
-  bigint: bigint = BigInt(100);
-  sym: symbol = Symbol('test');
-}
-
-const p = new Primitives();
-
-// Valid assignments
-p.str = 'world';          // ✓ string → string
-p.num = 100;              // ✓ number → number
-p.bool = false;           // ✓ boolean → boolean
-p.bigint = BigInt(200);   // ✓ bigint → bigint
-
-// Invalid assignments throw TypeError
-// @ts-ignore
-p.str = 123;              // ✗ TypeError: Type Mismatch
-// @ts-ignore
-p.num = '100';            // ✗ TypeError: Type Mismatch
-// @ts-ignore
-p.bool = 'true';          // ✗ TypeError: Type Mismatch
-// @ts-ignore
-p.bigint = 100;           // ✗ TypeError: Type Mismatch
-```
-
-### Null and Undefined
-
-Null and undefined are distinct types.
-
-```typescript
-class Nullable extends BaseClass {
-  nullValue: null = null;
-  undefinedValue: undefined = undefined;
-}
-
-const n = new Nullable();
-
-n.nullValue = null;              // ✓
-n.undefinedValue = undefined;    // ✓
-
-// @ts-ignore
-n.nullValue = undefined;         // ✗ TypeError: Type Mismatch
-// @ts-ignore
-n.nullValue = 0;                 // ✗ TypeError: Type Mismatch
-// @ts-ignore
-n.undefinedValue = null;         // ✗ TypeError: Type Mismatch
-```
-
-### Objects
-
-Object types are strictly enforced by constructor.
-
-```typescript
-class WithObject extends BaseClass {
-  data: object = {};
-  list: number[] = [];
-  map: Map<string, number> = new Map();
-}
-
-const w = new WithObject();
-
-w.data = { a: 1 };              // ✓ Same type (object)
-w.data = { b: 2 };              // ✓ Same type (object)
-w.list = [1, 2, 3];             // ✓ Array → Array
-w.map = new Map();              // ✓ Map → Map
-
-// @ts-ignore
-w.data = 123;                   // ✗ TypeError: Type Mismatch
-// @ts-ignore
-w.data = new Set();             // ✗ TypeError: Type Mismatch (Set !== Object)
-// @ts-ignore
-w.list = new Set();             // ✗ TypeError: Type Mismatch (Set !== Array)
-```
-
----
-
-## Working with Wrapped Values
-
-TypeØmatica wraps primitive values to enforce type safety. Use `valueOf()` to access the raw value for operations.
-
-### Numeric Operations
-
-```typescript
-class Calculations extends BaseClass {
-  count: number = 10;
-}
-
-const calc = new Calculations();
-
-// ✗ Direct arithmetic throws
-try {
-  const result = calc.count + 5;
-} catch (e) {
-  // ReferenceError: Value Access Denied
-}
-
-// ✓ Use valueOf() for operations
-const result = calc.count.valueOf() + 5;  // 15
-
-// ✓ Use unary + for coercion
-const sum = 3 + +calc.count;  // 13
-
-// ✓ Comparison works with valueOf()
-if (calc.count.valueOf() > 5) {
-  // ...
-}
-```
-
-### String Operations
-
-```typescript
-class TextData extends BaseClass {
-  message: string = 'hello';
-}
-
-const text = new TextData();
-
-// Access string methods through valueOf()
-text.message.valueOf().toUpperCase();  // 'HELLO'
-text.message.valueOf().length;         // 5
-text.message.valueOf().substring(0, 2); // 'he'
-
-// Template literals require valueOf()
-const greeting = `Message: ${text.message.valueOf()}`;
-```
-
-### Boolean Operations
-
-```typescript
-class Flags extends BaseClass {
-  active: boolean = true;
-}
-
-const flags = new Flags();
-
-// ✗ Direct comparison throws
-try {
-  if (flags.active) { }  // May throw in some contexts
-} catch (e) {
-  // ReferenceError: Value Access Denied
-}
-
-// ✓ Use valueOf() for conditions
-if (flags.active.valueOf()) {
-  // ...
-}
-
-// ✓ Comparison with valueOf()
-const isActive = flags.active.valueOf() === true;
-```
-
----
-
-## Error Handling
-
-TypeØmatica throws specific error types for different violations.
-
-```typescript
-import { BaseClass } from 'typeomatica';
-
-class SecureData extends BaseClass {
-  id: number = 1;
-  name: string = 'test';
-  data: object = {};
-}
-
-const secure = new SecureData();
-
-// Type Mismatch - wrong type assignment
-try {
-  // @ts-ignore
-  secure.id = 'not a number';
-} catch (e: any) {
-  console.log(e.message);              // 'Type Mismatch'
-  console.log(e instanceof TypeError);  // true
-}
-
-// Access Denied - wrong receiver context
-const upper = Object.create(secure);
-try {
-  upper.id = 2;
-} catch (e: any) {
-  console.log(e.message);                   // 'Value Access Denied'
-  console.log(e instanceof ReferenceError);  // true
-}
-
-// Undefined Property - accessing non-existent
-try {
-  // @ts-ignore
-  secure.nonExistent;
-} catch (e: any) {
-  console.log(e.message);
-  // 'Attempt to Access to Undefined Prop: [ nonExistent ] for SecureData'
-}
-
-// Functions Restricted - methods on data objects
-try {
-  // @ts-ignore
-  secure.name = function() {};
-} catch (e: any) {
-  console.log(e.message);              // 'Functions are Restricted'
-}
-```
-
----
-
-## Advanced: Custom Fields
-
-Use `FieldConstructor` to create custom property behavior.
-
-```typescript
-import { BaseClass, FieldConstructor, SymbolInitialValue } from 'typeomatica';
-
-// Read-only field implementation
-class ReadOnlyField extends FieldConstructor<string> {
-  private _value: string;
-  
-  constructor(value: string) {
-    super(value);
-    this._value = value;
-    // Make enumerable for Object.keys()
-    Reflect.defineProperty(this, 'enumerable', { value: true });
-  }
-  
-  get() {
-    return this._value;
-  }
-  // No set() method = read-only
-}
-
-// Usage
-const readOnly = new ReadOnlyField('v1.0.0');
-
-class Config extends BaseClass {
-  version = readOnly;
-}
-
-const cfg = new Config();
-console.log(cfg.version);  // 'v1.0.0'
-
-try {
-  cfg.version = 'v2.0.0';  // ✗ Throws!
-} catch (e: any) {
-  console.log(e.message);  // 'Re-Assirnment is Forbidden'
-}
-
-// Access initial value
-const initial = cfg[SymbolInitialValue]('version');
-console.log(initial);  // 'v1.0.0'
 ```
 
 ---
@@ -569,8 +247,8 @@ const Admin = User.define('Admin', function(this: {
 // Create instances with full type safety
 // ==========================================
 const entity = new Entity();
-const user = new User();
-const admin = new Admin();
+const user = new entity.User();       // subtypes construct from a parent instance
+const admin = new user.Admin();
 
 // Runtime type enforcement prevents bugs
 user.email = 'john@example.com';     // ✓ Works
@@ -586,21 +264,6 @@ promotedUser.permissions = 'all';                // ✗ TypeError: Type Mismatch
 // Using valueOf() for operations
 const id = entity.id.valueOf();  // Get raw string value
 ```
-
----
-
-## Error Reference
-
-| Error Message | Error Type | When Thrown |
-|---------------|------------|-------------|
-| `Type Mismatch` | TypeError | Assigning wrong type to property (e.g., string to number field) |
-| `Value Access Denied` | ReferenceError | Accessing property from wrong context/receiver |
-| `Attempt to Access to Undefined Prop` | Error | Reading property that doesn't exist on the object |
-| `Functions are Restricted` | TypeError | Assigning function to data type property |
-| `Re-Assirnment is Forbidden` | TypeError | Modifying read-only field (FieldConstructor without setter) |
-| `Setting prototype is not allowed` | Error | Calling `Object.setPrototypeOf()` on instance |
-| `Defining new Properties is not allowed` | Error | Calling `Object.defineProperty()` on instance |
-| `Properties Deletion is not allowed` | Error | Calling `delete` on instance property |
 
 ---
 

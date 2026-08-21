@@ -14,9 +14,9 @@ metadata:
 
 | Hook | When Fired | Data |
 |------|-----------|------|
-| `preCreation` | Before constructor runs | type, existentInstance, args, InstanceModificator |
-| `postCreation` | After successful construction | type, existentInstance, inheritedInstance, args, creator |
-| `creationError` | After constructor throws | type, existentInstance, inheritedInstance, args, creator |
+| `preCreation` | Before constructor runs | `type`, `TypeName`, `existentInstance`, `args` |
+| `postCreation` | After successful construction | plus `inheritedInstance`, `throwModificationError` |
+| `creationError` | Construction produced an errored instance | plus `inheritedInstance`, `throwModificationError` |
 
 ## Registration Levels
 

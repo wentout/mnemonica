@@ -12,6 +12,9 @@ metadata:
 
 # Philosophical Foundations
 
+> **Disclaimer:** the code examples below are illustrative pseudo-API, not real
+> mnemonica calls — they sketch ideas, not runnable code.
+
 > *"To understand oneself is to understand the space of which one is a point."*
 
 Mnemonica's architecture is not just a utility — it is a mathematical model of

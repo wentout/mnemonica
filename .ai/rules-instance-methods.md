@@ -59,15 +59,13 @@ user.extract(); // works
 
 ## Internal Props System
 
-Instance metadata is stored externally via `WeakMap` against the prototype object,
+Instance metadata is stored externally via `WeakMap` against the memory layer,
 not the instance itself. This keeps instance enumeration clean — internal props
 never show up in `for...in`, `Object.keys()`, or `JSON.stringify()`.
 
-```typescript
-const props = getProps(instance);
-// props contains: __type__, __parent__, __args__, __collection__, __subtypes__,
-//                 __proto_proto__, __creator__, __timestamp__, __self__
-```
+The canonical table of internal props (9 entries plus `__self__`) lives in
+[`FOR_HUMANS.md`](../FOR_HUMANS.md) — consult it instead of maintaining a copy
+here.
 
 ## The __self__ Reference
 

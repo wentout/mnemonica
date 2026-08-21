@@ -13,8 +13,8 @@ metadata:
 ## The define() Function
 
 `define(TypeName, constructHandler, config?)` creates a constructor with prototype
-chain inheritance. The constructor has additional methods: `.define()`, `.lookup()`,
-`.registerHook()`.
+chain inheritance. The constructor has additional methods: `.define()`, `.lazy()`,
+`.decorate()`, `.lookup()`, `.registerHook()`.
 
 ```typescript
 const MyType = define('MyType', function (this: MyType, data: Data) {
@@ -39,6 +39,27 @@ const SubType = MyType.define('SubType', function (this: SubType, extra: string)
 | Config options | third arg: `define('T', fn, config)` | first/second arg: `@decorate(Parent, config)` |
 
 When working in a codebase that uses one style: **stay consistent with that style** rather than mixing.
+
+## The `decorate` Shape
+
+`decorate` exists at two levels, and both are **getters**, not plain methods:
+
+- **Collection level** — a getter on `TypesCollection.prototype` (`src/descriptors/types/index.ts:229`), so `defaultTypes.decorate(config)` and `createTypesCollection().decorate(config)` return a fresh decorator bound to that collection.
+- **Type level** — a getter on `TypeDescriptor.prototype` (`src/api/types/index.ts:275`) that binds the current descriptor at access time.
+
+Because binding happens at access time, both call forms work:
+
+```typescript
+@Type.decorate({ strictChain: false })   // method-style access
+class Admin { /* ... */ }
+
+const { decorate } = Type;               // destructured — still bound
+@decorate()
+class Moderator { /* ... */ }
+```
+
+For usage patterns (options, subtype decoration, typing limits), see
+[`docs/decorate.md`](../docs/decorate.md).
 
 ## Calling Conventions
 
@@ -97,7 +118,9 @@ const LazyRoot = lazy('LazyRoot', () => class LazyRoot {
 });
 ```
 
-The getter is called once at definition time. The returned constructor is
+The getter is called once at definition time (to resolve the name, class mode,
+and prototype) and then again on every construction — keep it free of side
+effects that must not run at `define()` time. The returned constructor is
 registered exactly like a constructor passed directly to `define()`, and the
 resulting type supports `.define()`, `.lazy()`, `.lookup()`, and subtype
 chaining.

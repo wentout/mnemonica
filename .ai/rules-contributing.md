@@ -55,8 +55,8 @@ TypeProxy.prototype.set = function (_target, name, value) {
 Before implementing, I need to clarify:
 
 1. **Scope**: Should this config be per-type or per-collection?
-2. **Proxy compatibility**: TypeProxy handles `.get`, `.set`, `.construct`.
-   Adding config requires checking all three traps.
+2. **Proxy compatibility**: TypeProxy handles `.get`, `.set`, `.construct`,
+   `.apply`. Adding config requires checking all four traps.
 3. **Existing options**: `strictChain`, `blockErrors`, `awaitReturn`
    already exist. Does this fit the pattern?
 4. **TypeRegistry impact**: Will tactica need to regenerate types?
@@ -168,7 +168,7 @@ Transform tasks into verifiable goals:
 1. [Analyze type impact] → verify: `npm run build` compiles
 2. [Implement change] → verify: `npm run build` still passes
 3. [Add tests] → verify: `npm run test:cov` shows 100% coverage
-4. [Check style] → verify: `npm run lint` passes
+4. [Check style] → verify: `npx eslint ./src` passes with zero warnings
 5. [Review] → verify: Only requested lines changed
 ```
 
@@ -199,7 +199,7 @@ Folded in from the former `.ai/task-templates/new-feature.md`.
 
 ### Pre-Flight
 
-- [ ] Read `AGENTS.md` (root) sections on type vs interface vs instance and build/test commands
+- [ ] Read `AGENTS.md` (root) — Rule #1, the reading guide, build/test commands — and `.ai/rules-type-system.md` for the type-vs-interface rule
 - [ ] Check existing code patterns in the target directory
 - [ ] Run `npm run build` to ensure a clean baseline
 
@@ -207,7 +207,6 @@ Folded in from the former `.ai/task-templates/new-feature.md`.
 
 1. **Design**
    - [ ] Define types (use `type` for instances, `interface` for constructors/contracts)
-   - [ ] Check `.ai/rules-reminders.md`
 2. **Coding**
    - [ ] Indentation: TABS ONLY (width 4)
    - [ ] Function spacing: `function myFunc () { }`

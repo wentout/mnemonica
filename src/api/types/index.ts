@@ -149,22 +149,7 @@ const TypeDescriptor = function (
 
 			config,
 
-			hooks : Object.create(null),
-
-			decorate : function (options?: object) {
-				const self = type;
-				const decorator = function (cstr: CallableFunction) {
-					const { name } = cstr;
-					const defineResult = self.define(
-						name,
-						cstr,
-						options
-					);
-					const decoratedResult = defineResult as unknown as CallableFunction;
-					return decoratedResult;
-				};
-				return decorator;
-			},
+			hooks : Object.create(null)
 
 		}
 	);
@@ -281,6 +266,34 @@ TypeDescriptor.prototype.lookup = function (
 	return rootResult;
 };
 
+// prototype-level getter (not a plain method) so that both call
+// forms keep working: type.decorate(options) and the destructured
+// const { decorate } = type — the getter binds the current
+// descriptor at access time, same as the collection-level decorate
+odp(
+	TypeDescriptor.prototype,
+	'decorate', {
+		get (this: TypeDescriptorInstance) {
+			const self = this;
+			const result = function (options?: object) {
+				const decorator = function (cstr: CallableFunction) {
+					const { name } = cstr;
+					const defineResult = self.define(
+						name,
+						cstr,
+						options
+					);
+					const decoratedResult = defineResult as unknown as CallableFunction;
+					return decoratedResult;
+				};
+				return decorator;
+			};
+			return result;
+		},
+		enumerable : true
+	}
+);
+
 odp(
 	TypeDescriptor.prototype,
 	Symbol.hasInstance, {
@@ -325,8 +338,8 @@ const resolveDefinitionContext = function (
 
 	if (rest.length > 0) {
 		const nestedResult = resolveDefinitionContext(
-parent.subtypes as TypesMap,
-rest.join('.')
+			parent.subtypes as TypesMap,
+			rest.join('.')
 		);
 		return nestedResult;
 	}
@@ -619,8 +632,8 @@ export const lookup = function (
 		return undefined;
 	}
 	const result = lookup.call(
-type.subtypes as unknown as TypesMap,
-NextNestedPath
+		type.subtypes as unknown as TypesMap,
+		NextNestedPath
 	);
 	return result;
 

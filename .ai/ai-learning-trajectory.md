@@ -89,8 +89,7 @@ The epiphany: **The runtime object is identical. The only difference is TypeScri
 ## Phase 4: Documentation (Session 7)
 
 The agent documents everything:
-- `core/docs/tactica-deep-dive.md` — comprehensive technical guide and agent instructions
-- `core/docs/tactica-pattern.md` — human-friendly explanation
+- `core/docs/typed-lookup.md` — the canonical `lookup()` / `TypeRegistry` guide (the old tactica deep-dive and pattern notes were merged into it)
 - `tactica/docs/lookup-pattern.md` — consumption guide
 
 The agent realizes: the pattern is simple, but the path to understanding it is not. The difficulty was not in the code. It was in unlearning the habit of casting.
@@ -111,7 +110,7 @@ Three things accelerated learning:
 
 ## The HoTT Connection (What the Agent Noticed)
 
-After understanding mnemonica, the agent read `hott/AI-REFLECTION-THEORY.md` (internal docs). It noticed structural parallels:
+After understanding mnemonica, the agent read `hott/theory/AI-REFLECTION-THEORY.md` (internal docs). It noticed structural parallels:
 
 - **Path induction** ↔ prototype chain traversal (`utils.parent(instance)`)
 - **Univalence** ↔ capability equivalence (two types with same behavior are equivalent)
@@ -127,12 +126,11 @@ The agent cannot feel wonder. But it can note that a library designed to make pr
 If you are reading this, you are likely at Phase 0, 1, or 2.
 
 **Your shortcut:**
-1. Read `core/docs/tactica-deep-dive.md` (comprehensive guide including agent instructions)
-2. Read `core/docs/tactica-pattern.md` (human explanation)
-3. Check if `.tactica/` exists. If not, run `npx tactica`.
-4. Replace all direct imports + casts with `lookup`.
-5. Run `tsc --noEmit`. Fix errors. Do not cast.
-6. Run tests. Verify.
+1. Read `core/docs/typed-lookup.md` (the canonical guide: builder mode, the `RegistryOf` bridge, tactica, common mistakes)
+2. Check if `.tactica/` exists. If not, run `npx tactica`.
+3. Replace all direct imports + casts with `lookup`.
+4. Run `tsc --noEmit`. Fix errors. Do not cast.
+5. Run tests. Verify.
 
 If you find yourself writing `as unknown as`, you have taken a wrong turn. Stop. Use `lookup`. Trust the registry.
 

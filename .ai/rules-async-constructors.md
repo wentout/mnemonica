@@ -209,9 +209,10 @@ try {
 
 ## Symbol.hasInstance — Nominal Typing by Name
 
-Mnemonica replaces standard JS `instanceof` with **nominal typing** checked by `getTypeChecker` (`src/api/utils/index.ts:37`):
+Mnemonica replaces standard JS `instanceof` with **nominal typing** checked by `getTypeChecker` (`src/api/utils/index.ts`):
 
 ```ts
+// abridged — two defensive guards (typeof, constructor presence) omitted
 const getTypeChecker = (TypeName: string) => {
 	return (instance: object) => {
 		if (Reflect.getPrototypeOf(instance).constructor.name === 'Promise') {
@@ -227,9 +228,9 @@ const getTypeChecker = (TypeName: string) => {
 
 Three places define `Symbol.hasInstance`:
 
-1. **`TypeDescriptor.prototype`** (`src/api/types/index.ts:210`) — for `instanceof TypeName` where `TypeName` is what `define()` returned
-2. **`Mnemosyne.prototype`** (`src/api/types/Mnemosyne.ts:381`) — for `instanceof` checks on the instance itself
-3. **`makeSubTypeProxy`** (`src/api/types/Mnemosyne.ts:205`) — for subtype access like `parent.SubType()`
+1. **`TypeDescriptor.prototype`** (`src/api/types/index.ts`) — for `instanceof TypeName` where `TypeName` is what `define()` returned
+2. **`Mnemosyne.prototype`** (`src/api/types/Mnemosyne.ts`) — for `instanceof` checks on the instance itself
+3. **`makeSubTypeProxy`** (`src/api/types/Mnemosyne.ts`) — for subtype access like `parent.SubType()`
 
 ### Impact on Pre-existing Class Hierarchies
 
@@ -242,7 +243,9 @@ When passing a pre-existing class hierarchy (`class Extended extends Base`) to `
 
 ## Test Suite
 
-Tests live in `test_async/index.js` and run via `npm run test:async_init`.
+`test_async/index.js` is a historical record — **not part of the published
+package** — but it still runs via `npm run test:async_init`, and the scenarios
+it covered are preserved in the historical appendix at the end of this file.
 
 ### Acronyms
 
@@ -266,10 +269,11 @@ Tests live in `test_async/index.js` and run via `npm run test:async_init`.
 - `src/api/types/index.ts` — `Symbol.hasInstance` on `TypeDescriptor.prototype`
 - `src/api/types/InstanceCreator.ts` — async routing via `makeAwaiter`
 
-### Historical examples (from the unshipped `test_async` suite)
+### Historical appendix: the `test_async` scenarios
 
-`test_async/index.js` is a historical record and is **not part of the
-published package**. The scenarios it covered are preserved here.
+> **Historical record.** The examples below document what the unshipped
+> `test_async` suite covered. They are kept for reference, not as living
+> documentation of current behavior.
 
 Async class constructors that resolve `this` keep fields and chain identity:
 

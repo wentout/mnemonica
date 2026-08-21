@@ -20,6 +20,38 @@ TypeScript, however, cannot see a type graph built by runtime calls. There are
 
 ---
 
+## Every `define()` lands in the same collection
+
+All of these call the **same function** and register into the same runtime
+collection (`defaultTypes`, unless you pass another source explicitly):
+
+```typescript
+import { mnemonica, define, defaultTypes } from 'mnemonica';
+
+mnemonica.define('User', handler);    // this === mnemonica → defaultTypes
+define('User', handler);              // this === undefined → defaultTypes
+
+const { define: define2 } = mnemonica;
+define2('User', handler);             // same function, bare call → defaultTypes
+
+defaultTypes.define('User', handler); // the collection itself, directly
+```
+
+The routing rule is one line in the source (`src/index.ts`): the free `define`
+resolves to `defaultTypes` when called bare or on the `mnemonica` module
+object, and to `this` when invoked on a types collection. Runtime behavior
+never changes between these call styles — same type graph, same hooks, same
+registry entries.
+
+**What differs is purely compile-time.** Builder-style calls thread the
+registry through *return types*, so `chain.lookup('User')` is typed without
+any augmentation. The *free* `lookup('User')` at module scope, and
+`@decorate()`, can only be typed through the global `TypeRegistry` interface —
+which is what Tactica (or a hand-written file) populates. That split is the
+only reason declaration merging exists in this library.
+
+---
+
 ## Builder mode (default)
 
 Import the module object or create a custom collection, then chain `.define()` or `.lazy()` calls. The returned object carries a local type registry.
@@ -265,10 +297,71 @@ define('User.Admin', function (this: AdminShape, data: { role: string }) {
 	this.role = data.role;
 });
 
-// Now the free lookup is typed.
-const Admin = lookup('User.Admin');
-const admin = new Admin({ role: 'root' });
+// Now the free lookup is typed — use it for references and root types.
+const User = lookup('User');
+const user = new User({ name: 'Ada' });
+
+// Subtypes are still constructed from a parent instance — same rule as always.
+const admin = new user.Admin({ role: 'root' });
+
+// The nested lookup gives you the typed constructor itself (e.g. for annotations):
+const AdminCtor = lookup('User.Admin');
 ```
+
+### What tactica generates
+
+`npx tactica` scans your `define()` calls and writes a `.tactica/` directory:
+
+- `types.ts` — instance types (nested shapes composed with `ProtoFlat<Parent, ...>`)
+- `registry.ts` — the `TypeRegistry` augmentation; **this is the critical file**
+- `index.ts` — re-exports
+- `hierarchy.json` / `hierarchy.txt` — the type Trie as structured JSON (parent/children
+  with 1-based locations) and as an ASCII tree
+- `definitions.json`, `usages.json`, `flow.json` — metadata about your type graph and where types are instantiated
+- `eds.json` — execution-data-structures metadata, emitted when EDS tracking is on
+  (auto-enabled when `@mnemonica/dive` is in your dependencies; `--eds` / `--no-eds` override)
+
+Registry keys are **dot-separated nested paths** — the same strings `lookup()` takes.
+Values are inline constructor signatures returning the generated instance types:
+
+```typescript
+// .tactica/registry.ts (generated)
+import type { User, User_Admin } from './types';
+
+declare module 'mnemonica' {
+	interface TypeRegistry {
+		'User'       : new (data: { name: string }) => User;
+		'User.Admin' : new (data: { role: string }) => User_Admin;
+	}
+}
+
+import type { TypeRegistry } from 'mnemonica';
+export type { TypeRegistry };
+```
+
+`.tactica/` is output, not input. Never edit generated files — change the
+`define()` call and re-run tactica.
+
+### tsconfig setup
+
+Declaration merging only works if TypeScript actually sees the generated
+files. Put `.tactica/` in `include`:
+
+```json
+{
+	"compilerOptions": {
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"strict": true
+	},
+	"include": ["src/**/*", ".tactica/**/*"]
+}
+```
+
+If `.tactica/` is missing from `include`, the augmentation is invisible:
+`TypeRegistry` stays empty and free `lookup()` silently falls back to
+`TypeClass | undefined`. This is the single most common tactica
+misconfiguration.
 
 ### With `@decorate()`
 
@@ -345,9 +438,9 @@ At runtime the results are identical. At compile time, TypeScript picks whicheve
 
 ---
 
-## Why two type systems exist
+## Why two typing mechanisms exist
 
-It feels like there should be one type system. In an ideal world, every `define()` call would add its type to the same registry, and `lookup()` would always be typed. TypeScript does not allow that.
+The three paths above are built from **two** underlying mechanisms: a local registry carried in builder values, and the global `TypeRegistry` interface. It feels like there should be one type system. In an ideal world, every `define()` call would add its type to the same registry, and `lookup()` would always be typed. TypeScript does not allow that.
 
 ### The hard limitation
 
@@ -410,6 +503,103 @@ So mnemonica exposes the builder API for case 1, the bridge and two-arg
 overloads to connect cases 1 and 2, and the augmented API for cases 2 and 3.
 The runtime is the same everywhere; only the way TypeScript discovers the
 types differs.
+
+---
+
+## Common mistakes
+
+Every one of these is a symptom of a missing or unused `TypeRegistry`
+augmentation. The fix is never a cast.
+
+### "I'll just cast it"
+
+```typescript
+// WRONG
+const admin = new Admin({ role: 'root' }) as unknown as AdminShape;
+```
+
+You are fighting the type system instead of using it. Every cast is a bug
+waiting to happen: if the type changes, the cast still compiles and breaks at
+runtime. Fix the augmentation instead — bridge, tactica, or hand-written.
+
+### "I'll import the generated types too"
+
+```typescript
+// WRONG
+import { Admin } from './models/admin';
+import type { AdminShape } from '../.tactica/types';
+const admin = new Admin({ role: 'root' }) as unknown as AdminShape;
+```
+
+This imports the runtime constructor *and* the generated type, then bridges
+them with a cast — twice the work and still unsafe. `lookup()` gives you both
+in one call.
+
+### "lookup only works inside handlers"
+
+```typescript
+// UNNECESSARY
+app.get('/test', async () => {
+	const User = lookup('User');
+	const user = new User({ name: 'Ada' });
+});
+```
+
+`lookup()` is a runtime lookup, but it is deterministic. Calling it once at
+module level is fine and cheaper:
+
+```typescript
+const User = lookup('User');
+
+app.get('/test', async () => {
+	const user = new User({ name: 'Ada' });
+	const admin = new user.Admin({ role: 'root' }); // subtypes from the parent instance
+});
+```
+
+### "I need the direct import for this other API"
+
+```typescript
+// WRONG — two references to the same object
+import { Admin } from './models/admin';
+const TypedAdmin = lookup('User.Admin');
+
+app.decorate('Admin', Admin);   // direct import
+register(TypedAdmin);           // lookup result
+```
+
+`import { Admin }` and `lookup('User.Admin')` return the **same constructor
+object** at runtime — the test suites assert reference identity between the
+two. Use the looked-up one for everything, and construct subtypes from a
+parent instance as usual.
+
+### "I'll just edit the generated file"
+
+`.tactica/` is output, not input. Hand edits are overwritten on the next run.
+If a property is missing from the generated types, the `define()` call is the
+source of truth — change it and re-run `npx tactica`. Forgetting to
+regenerate after changing `define()` calls shows up as
+`Object literal may only specify known properties` on valid code.
+
+---
+
+## Cheat sheet
+
+| I want to... | Do this | Don't do this |
+|---|---|---|
+| Get a typed constructor (builder mode) | `const T = App.lookup('T')` | `import { T } from './models/T'` + cast |
+| Get a typed constructor (augmented mode) | `const T = lookup('T')` | `import { T } from './models/T'` + cast |
+| Get a typed constructor from a builder value | `lookup(App, 'T')` | `lookup('T') as any` |
+| Create an instance | `new T({ ... })` | `new T({ ... }) as unknown as TShape` |
+| Chain to a child type | `new instance.Child({ ... })` | `new (instance as any).Child({ ... })` |
+| Type free `lookup()` without tactica | one-line `RegistryOf` bridge | a second registry file kept in sync by hand |
+| Reuse one constructor everywhere | `const T = lookup('T')`, then use `T` | direct import for one API, `lookup()` for another |
+| Add or rename a type (builder + bridge) | edit the chain — the bridge follows | edit a hand-written augmentation to match |
+| Add or rename a type (tactica) | edit `define()` → re-run `npx tactica` | hand-edit `.tactica/` |
+| Fix "Property does not exist" | check the augmentation / regenerate | add `as any` or `as unknown as` |
+
+If you find yourself writing `as unknown as` with mnemonica types, you have
+taken a wrong turn. Stop. Use `lookup`. Trust the registry.
 
 ---
 
