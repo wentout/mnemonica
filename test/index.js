@@ -1040,6 +1040,7 @@ describe('Main Test', () => {
 
 		require('./modificator.prototype.swap')();
 		require('./utils')();
+		require('./hott-laws')();
 
 		if (asyncConstructionTest) {
 			describe('Async Constructors Test', () => {

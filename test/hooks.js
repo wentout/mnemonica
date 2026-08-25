@@ -40,19 +40,22 @@ const tests = ( opts ) => {
 			// +24 (increased due to dotted parent() tests adding types and instances)
 			// assert.equal( 215, typesFlowCheckerInvocations.length );
 			// +2 (subtype lookup caching test types)
-			assert.equal( 241, typesFlowCheckerInvocations.length );
+			// +6 (hott-laws.js witness types defined at load)
+			assert.equal( 247, typesFlowCheckerInvocations.length );
 
 			// +3 (increased due to explicit .lazy() API adding extra creations)
 			// +12 (increased due to dotted parent() tests adding instances)
 			// +1 (subtype lookup caching test instances)
-			assert.equal( 129, typesPreCreationInvocations.length );
+			// +3 (hott-laws.js root/mid/leaf constructed at load)
+			assert.equal( 132, typesPreCreationInvocations.length );
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
 			// +6 (increased due to explicit .lazy() API adding extra creations)
 			// +24 (increased due to dotted parent() tests adding instances)
 			// +2 (subtype lookup caching test instances)
-			assert.equal( 224, typesPostCreationInvocations.length );
+			// +6 (hott-laws.js root/mid/leaf constructed at load, chain levels fire per level)
+			assert.equal( 230, typesPostCreationInvocations.length );
 		} );
 	} );
 

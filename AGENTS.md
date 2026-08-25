@@ -116,60 +116,18 @@ The core API is `define(TypeName, constructHandler, config?)` in `src/index.ts`.
 
 ### The `lookup()` Function
 
-For user-facing semantics, see [`README.md`](./README.md) and [`docs/typed-lookup.md`](./docs/typed-lookup.md). The contributor-relevant detail is the implementation pattern: `TypeRegistry` starts empty, and `lookup()` uses overloads so augmented keys return the typed constructor while unaugmented keys fall back to `TypeClass | undefined`.
+For user-facing semantics, see [`README.md`](./README.md) and [`docs/typed-lookup.md`](./docs/typed-lookup.md). The contributor-relevant detail is the implementation pattern in `src/index.ts` (read it there — do not quote it into docs):
 
-```typescript
-// In mnemonica core (src/index.ts)
-export interface TypeRegistry {
-	// Intentionally empty. Augment via declaration merging.
-}
-
-export function lookup<const K extends keyof TypeRegistry>(
-	this: unknown,
-	TypeNestedPath: K
-): TypeRegistry[K];
-// explicit-source form: lookup(source, path) — resolves against the
-// registry carried by a builder/collection value
-export function lookup<Reg extends object, const K extends keyof Reg & string>(
-	source: { lookup: TypeLookup<Reg> },
-	TypeNestedPath: K
-): LookupResult<Reg, K>;
-export function lookup(this: unknown, TypeNestedPath: string): TypeClass | undefined;
-export function lookup(
-	source: { lookup: (path: string) => TypeClass | undefined },
-	TypeNestedPath: string
-): TypeClass | undefined;
-export function lookup (
-	this: unknown,
-	arg1: unknown,
-	arg2?: unknown
-): unknown {
-	// explicit-source form wins when (source, path) are passed
-	if (typeof arg1 !== 'string' && typeof arg2 === 'string') {
-		const source = arg1 as { lookup: (path: string) => TypeClass | undefined };
-		const sourceResult = source.lookup(arg2);
-		return sourceResult;
-	}
-	// Runtime delegates to types.lookup(); type safety is compile-time only.
-	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
-	const lookupResult = (types as { lookup: (path: string) => TypeClass | undefined }).lookup(arg1 as string);
-	return lookupResult;
-}
-```
-
-Tactica generates the augmentation:
-
-```typescript
-// In .tactica/registry.ts (generated)
-declare module 'mnemonica' {
-	interface TypeRegistry {
-		'UserType': TypeConstructor<UserTypeInstance>;
-		'Parent.SubType': TypeConstructor<SubTypeInstance>;
-	}
-}
-```
-
-Runtime behavior is identical whether `TypeRegistry` is augmented or not; the only difference is the compile-time return type.
+- `TypeRegistry` starts intentionally empty; users (or Tactica) augment it
+  via declaration merging.
+- Overloads make augmented keys return the typed constructor while
+  unaugmented keys fall back to `TypeClass | undefined`.
+- The explicit-source forms `lookup(source, path)` resolve against the
+  registry carried by a builder/collection value instead of the global
+  interface.
+- At runtime `lookup()` delegates to `types.lookup()`; type safety is
+  compile-time only, so behavior is identical whether or not `TypeRegistry`
+  is augmented.
 
 > **Roadmap.** Nested `lookup()` (a type-safe `.lookup()` method
 > on constructors that preserves the prototype chain) is designed but not
@@ -346,6 +304,19 @@ When a task uses a TODO list, the list is part of the deliverable:
    item done just to tidy the list.
 3. **When the task concludes, wipe the TODO list.** A concluded task leaves
    no list behind; the next task starts fresh.
+
+## Reports and Memory Hygiene
+
+`reports/` files and session-state notes are the memory that survives context
+compaction — keep them while they describe **current or open** state. But:
+
+- **Delete a report once it is fulfilled or superseded.** Completed plans,
+  resolved audits, and finished-phase summaries are garbage; they burn context
+  on every re-read. Delete the file, then fix any links that referenced it.
+- **Never write changelog or dated history into AGENTS.md** (no "Phase 1
+  rewrite (2026-08-22)", no History sections, no "verified live" entries).
+  AGENTS.md describes the present only. When reality changes, update the
+  section in place — do not append narrative.
 
 ## Common Patterns
 
