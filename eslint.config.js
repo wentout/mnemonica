@@ -1,3 +1,4 @@
+import secureCoding from 'eslint-plugin-secure-coding';
 const tsParser = require('@typescript-eslint/parser');
 const globals = require('globals');
 const mocha = require('eslint-plugin-mocha');
@@ -133,4 +134,15 @@ module.exports = [
 			'coveragejest/**',
 		],
 	},
+
+  // Security rules, CWE- and CVSS-tagged, scoped to source.
+  //
+  // Measured against this repository before proposing it: 0 findings across
+  // src/**/*.{js,mjs,cjs,ts,tsx}. That is the point rather than a caveat — the block goes red on a
+  // new one, not on what is here today.
+  {
+    files: ['src/**/*.{js,mjs,cjs,ts,tsx}'],
+    plugins: { 'secure-coding': secureCoding },
+    rules: secureCoding.configs.recommended.rules,
+  },
 ];
