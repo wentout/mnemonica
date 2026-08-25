@@ -259,7 +259,7 @@ This is not pseudocode — it is a working pattern for production HTTP request h
 
 You don't need to know Homotopy Type Theory to use mnemonica. You do need it to appreciate *why* the design is what it is. Five concepts matter here — the monad laws, path uniqueness, and the Trie structure have precise correspondences; univalence, HITs, synthetic topology, and fibrations are productive analogies.
 
-**The short version:** Mnemonica is **inspired by** HoTT, not a formal implementation of it. The Trie behaves monadically; the prototype chain IS the identity-path; nominal typing captures the univalence intuition. See [`docs/hott-primer.md`](./docs/hott-primer.md) for the full treatment with formal definitions and status table.
+**The short version:** Mnemonica is **inspired by** HoTT, not a formal implementation of it. The Trie behaves monadically; the prototype chain IS the identity-path; nominal typing captures the univalence intuition. See [`docs/hott-primer.md`](./docs/hott-primer.md) for the full treatment with formal definitions and status table, and [`docs/hott-correspondence.md`](./docs/hott-correspondence.md) for the citable version with CI-verified witnesses.
 
 ---
 
@@ -294,6 +294,7 @@ The full API reference — every signature, config option, hook data shape, the 
 | What the prototype chain under your instance looks like | [`docs/prototype-chain.md`](./docs/prototype-chain.md) |
 | Runtime field enforcement with typeomatica | [`docs/typeomatica.md`](./docs/typeomatica.md) |
 | HoTT framing, with an honesty table | [`docs/hott-primer.md`](./docs/hott-primer.md) |
+| HoTT correspondence, citable and CI-verified | [`docs/hott-correspondence.md`](./docs/hott-correspondence.md) |
 | Why lineage is infrastructure for empathetic AI | [`docs/empathy-in-ai.md`](./docs/empathy-in-ai.md) |
 
 How construction flows, in one line:
