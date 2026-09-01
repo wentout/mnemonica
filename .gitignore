@@ -18,3 +18,4 @@ test/decorate-builder.js.map
 reports
 plans
 .kilo
+.playwright-mcp

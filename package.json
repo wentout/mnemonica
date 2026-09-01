@@ -1,6 +1,6 @@
 {
   "name": "mnemonica",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "AI-agent ready instance inheritance system for JavaScript/TypeScript via prototype chains",
   "type": "commonjs",
   "main": "./build/index.js",
@@ -16,7 +16,8 @@
       "browser": "./module/index.js",
       "require": "./build/index.js",
       "default": "./build/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "README.md",

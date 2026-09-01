@@ -296,6 +296,7 @@ The full API reference — every signature, config option, hook data shape, the 
 | HoTT framing, with an honesty table | [`docs/hott-primer.md`](./docs/hott-primer.md) |
 | HoTT correspondence, citable and CI-verified | [`docs/hott-correspondence.md`](./docs/hott-correspondence.md) |
 | Why lineage is infrastructure for empathetic AI | [`docs/empathy-in-ai.md`](./docs/empathy-in-ai.md) |
+| The toolchain around the library: tracing, live-craft, test debugging | [`docs/tooling.md`](./docs/tooling.md) |
 
 How construction flows, in one line:
 
@@ -314,8 +315,9 @@ The object carries none of the internal props as own properties — they live in
 - **[`typeomatica`](https://www.npmjs.com/package/typeomatica)** — Runtime field-type enforcement via Proxy, with the `@Strict` decorator. See [`docs/typeomatica.md`](./docs/typeomatica.md).
 - **[`@mnemonica/dive`](https://www.npmjs.com/package/@mnemonica/dive)** — Execution-flow tracing: a palette of wrappers that let you see which request/flow a failure belongs to, without AsyncLocalStorage.
 - **[`@mnemonica/topologica`](https://www.npmjs.com/package/@mnemonica/topologica)** — Module loader that self-defines directory trees of mnemonica types.
-- **nestjs-adapter** — NestJS integration (dive-powered flow tracing across DI boundaries); in active development.
-- **mnemographica** — VS Code extension that explores a project's `.tactica` output as tree views (definitions, usages, flow, generations) with go-to-definition navigation.
+- **nestjs-adapter** (`@mnemonica/nestjs`) — NestJS integration (dive-powered flow tracing across DI boundaries, OTel/Jaeger spans); in active development.
+- **mnemographica** — VS Code extension: `.tactica` tree views with go-to-definition, an interactive 3D type graph, and a Live Trace sidebar fed by a running app; in active development.
+- **strategy** (`@mnemonica/strategy`) — the live bridge to a running application: trace streaming plus live-craft (define/swap constructors without a restart); in active development. See [`docs/tooling.md`](./docs/tooling.md).
 
 ---
 
@@ -328,7 +330,14 @@ npm run build           # tsc only — lint is a separate gate
 npx eslint ./src        # zero warnings allowed
 npm run test:cov        # Mocha on built JS (100% coverage required)
 npm run test:jest:cov   # Jest on TS source (100% coverage required)
+npm run debug           # step through the mocha suite under CDP (chrome://inspect)
 ```
+
+Walking the test suite under a debugger is the fastest honest tour of the
+internals — every `return` in `src/` goes through an intermediate variable
+exactly so you can hover it at a breakpoint. See
+[`docs/tooling.md`](./docs/tooling.md) for this and the rest of the
+surrounding toolchain.
 
 `tsconfig.json` and `eslint.config.js` are off-limits without explicit user approval.
 
