@@ -73,7 +73,7 @@ Load the docs that match your change type. The wrong context produces broken cod
 | Involves TypeScript types | + [`.ai/rules-type-system.md`](./.ai/rules-type-system.md) |
 | Involves proxy internals | + [`.ai/PROTOTYPE-CHAIN.md`](./.ai/PROTOTYPE-CHAIN.md) |
 | Involves errors | + [`.ai/rules-error-system.md`](./.ai/rules-error-system.md) |
-| Involves tests / coverage | + [`.ai/rules-testing.md`](./.ai/rules-testing.md) |
+| Involves tests / coverage | + [`.ai/rules-testing.md`](./.ai/rules-testing.md) + [`.ai/test-map.md`](./.ai/test-map.md) (what each mocha module verifies, with debugger-walked line traces) |
 | Involves utils / instance methods | + [`.ai/rules-instance-methods.md`](./.ai/rules-instance-methods.md) |
 | Uses tactica / `lookup` | + [`docs/typed-lookup.md`](./docs/typed-lookup.md) |
 | Docs-only change | README section you're touching only — then run `npm run lint:md` |
@@ -96,9 +96,16 @@ npx eslint ./src       # the lint gate: zero warnings allowed
 npm run test:cov       # Mocha + coverage (runs build:all internally)
 npm run test:jest:cov  # Jest on TypeScript source
 npm run watch          # watch mode
+npm run debug          # mocha suite under --inspect-brk: attach chrome://inspect
+                       # or VS Code and step through construction live — the
+                       # return-via-variable rule below exists for exactly this
 ```
 
 **Must run `npm run test:cov` before completing any task.**
+
+**The surrounding toolchain** (dive tracing, the nestjs adapter, mnemographica's
+Live Trace + 3D graph, strategy's live-craft WS channel) is mapped in
+[`docs/tooling.md`](./docs/tooling.md).
 
 **Documentation changes:** When modifying any `.md` file, `npm run lint:md` is mandatory. It checks for broken links and anchors. Run it and fix any reported issues before finishing.
 
