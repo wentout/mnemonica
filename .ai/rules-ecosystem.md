@@ -86,4 +86,5 @@ interface Runnable { run(): void; }
 ## References
 
 - [Wikipedia: PACT (interaction design)](https://en.wikipedia.org/wiki/PACT_%28interaction_design%29)
-- `reports/session-state-2026-08-20.md` — current status of each sibling package
+- The ongoing ecosystem roadmap lives in the local gitignored plans
+  directory (never published); ask for it in-session.
