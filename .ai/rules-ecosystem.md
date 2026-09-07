@@ -21,11 +21,13 @@ self-reflective, type-safe systems.
 | Package | Status | Role |
 |---------|--------|------|
 | `mnemonica` | published | Core runtime (this repo) |
-| `@mnemonica/tactica` | published | Static analyzer / type generator (`.tactica/` output) |
+| `@mnemonica/tactica` | published | Static analyzer / type generator (`.tactica/` output); framework-blind core — instrumentation vocabulary arrives via plugins (`.tactica.js` config), shipped by framework adapters |
 | `typeomatica` | published (unscoped) | Runtime type guards (`@Strict`, `BaseClass`) |
 | `@mnemonica/dive` | published | Execution-flow tracing engine |
+| `@mnemonica/otel` (otel) | published | Framework-free Node.js observability core (dive wiring, OTel providers, ALS backbone, pre-root store, unblind core) |
 | `@mnemonica/topologica` | published | Module loader |
-| `@mnemonica/nestjs` (nestjs-adapter) | pending publish | NestJS integration |
+| `@mnemonica/nestjs` (nestjs-adapter) | published | NestJS integration; ships the `@mnemonica/nestjs/tactica` plugin subpath |
+| `@mnemonica/strategy` | published | MCP/WS trace transport + log server |
 | `mnemographica` | VS Code extension | Hierarchy visualization, code navigation |
 
 ---
@@ -63,6 +65,17 @@ traces, and mnemographica's views.
 
 ---
 
+## Publish Discipline
+
+npm cannot republish an existing version. Standing rule (2026-09-06,
+Viktor): when a change must reach npm, the agent bumps `version` in BOTH
+`package.json` and `package-lock.json` (top-level and `packages[""]`) as
+part of the change — a bumped-but-unpublished version in git is how the
+owner sees a publish is due. Docs-only or otherwise internal changes stay
+at the published version; code churn alone does not imply a publish.
+
+---
+
 ## Future: PACT eslint Rule
 
 When implemented, a custom eslint rule will enforce:
@@ -86,4 +99,5 @@ interface Runnable { run(): void; }
 ## References
 
 - [Wikipedia: PACT (interaction design)](https://en.wikipedia.org/wiki/PACT_%28interaction_design%29)
-- `reports/session-state-2026-08-20.md` — current status of each sibling package
+- The ongoing ecosystem roadmap lives in the local gitignored plans
+  directory (never published); ask for it in-session.

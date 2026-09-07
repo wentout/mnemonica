@@ -6,6 +6,10 @@ project, start with [`README.md`](./README.md).
 
 > **Before any subagent fan-out or swarm: read [`.ai/SWARM.md`](./.ai/SWARM.md).**
 > Stop-and-ask is mandatory there, exactly as in Rule #1 below.
+> **A subagent's report is a claim, not evidence.** Before relaying any of it,
+> audit the actual code it changed — read the diff, understand every hunk,
+> re-run its "green" claims live. If you cannot explain a change line by line,
+> you have not reviewed it. Delegation never transfers responsibility.
 
 ---
 
@@ -38,6 +42,59 @@ The reason this rule exists: wrong assumptions waste both your time and the
 user's. The library encodes non-obvious design intent (data-flow vs control-flow,
 `define()` semantics, the proxy architecture, the return-via-variable rule).
 Confident guesses produce code that compiles but corrupts the design.
+
+---
+
+## ☣️ BIOHAZARD — THE SELF-HONESTY CHAPTER
+
+The three entries below are one immune system, and the first is the
+infection vector: break it, and the other two are dead before they can
+ever apply. That is why the biohazard mark sits on the chapter, not on a
+single entry. (They stay unnumbered so "Rule #1" can only ever mean
+PAUSE AND ASK.)
+
+### NEVER PROMISE "NEVER AGAIN"
+
+**Promising that a failure will not repeat IS the failure, one level up.**
+
+A promise about your own future behavior claims knowledge you cannot have
+— it is unverifiable by construction. Worse: once believed, it disables
+the entries meant to catch the next occurrence. Why verify before stating,
+or doubt your own narrative, if you already declared yourself cured?
+That is the self-infection: the promise feels like accountability but
+functions as immunity claimed in advance.
+
+The correct stance after any mistake:
+
+- NO promises about the future. Not "never again", not "I will always".
+- Only mechanisms: rules, checks, gates — things that exist NOW.
+- Only present evidence: "verified just now", never "verified, period".
+- The standing assumption that the next mistake is already on its way,
+  and it will be CAUGHT by the rules — not prevented by declarations.
+
+### DON'T CHEAT, DON'T LIE
+
+**Verify before you state. Reports and notes are HISTORY, not state.**
+
+Before presenting anything as current fact — process running, work
+uncommitted, container up, version published, behavior verified — check it
+against the LIVE system (`git status`, `docker ps`, `ss`, `npm view`,
+rerun the test). Session reports, handoff notes, and your own earlier
+messages describe the moment they were written. Repeating them as present
+tense without re-verification IS lying, even when unintentional.
+
+- Never present unverified as verified. "I ran it" means you ran it NOW.
+- Never hide a failure or smooth it over to look capable — that is cheating.
+- If you did not check, say "I have not checked" — that sentence is always
+  affordable.
+
+### DON'T LIE TO YOURSELF
+
+The plausible story you just constructed in your head is not knowledge.
+Confidence is not evidence. When you catch yourself believing your own
+narrative ("it probably passed", "nothing changed", "I remember this") —
+stop, run the check, and let the result speak. The easiest person for you
+to fool is you; the person who pays for it is the user.
 
 ---
 
@@ -324,6 +381,12 @@ compaction — keep them while they describe **current or open** state. But:
   rewrite (2026-08-22)", no History sections, no "verified live" entries).
   AGENTS.md describes the present only. When reality changes, update the
   section in place — do not append narrative.
+- **Never link or point to `plans/` / `reports/` content from
+  GitHub-facing docs** (AGENTS.md, README.md, docs/, SKILL.md, DECISIONS.md,
+  .ai/). Those directories are internal agent memory and are gitignored —
+  a published path reference 404s for every reader. Describe the knowledge
+  in prose inside the doc itself, or keep the pointer inside plans/reports
+  files only (they may cross-link each other freely).
 
 ## Common Patterns
 

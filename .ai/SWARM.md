@@ -62,6 +62,18 @@ pacing is capability, not restriction.
    ones — e.g. 4 agents × 7 files, each reading ground truth once, in
    sequential waves. Never 26 × 1.
 
+6. **Audit what a subagent returns — precisely, in code.** A subagent's
+   report is a claim, not evidence. Before relaying any of it to the user,
+   read the actual diff of everything it changed and understand every hunk:
+   what it does, why it is needed, what it touches. Re-run its "tests green"
+   claims live, yourself. If you cannot explain a change line by line, you
+   have not reviewed it — go back and read. Compaction shortens messages and
+   meanings; the code is the only faithful record. Delegation never
+   transfers responsibility: the parent answers for the code as if it wrote
+   it. (Viktor, 2026-09-03: "you MUST review the code and understand the
+   changes if you don't make it by yourself — otherwise just can't trust
+   you.")
+
 ## Why the user cares
 
 The budget that pays for agent time is the same money the user lives on and
