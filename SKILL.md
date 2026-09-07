@@ -92,7 +92,7 @@ Read individual rule files for detailed explanations and code examples:
 
 ### Philosophy & Design
 - [rules-philosophy.md](.ai/rules-philosophy.md) — HoTT concepts (Univalence, Path Types, Higher Inductive Types) applied to mnemonica's self-reflection model
-- [rules-ecosystem.md](.ai/rules-ecosystem.md) — PACT framework: personas, collaboration modes, integration points
+- [rules-ecosystem.md](.ai/rules-ecosystem.md) — ecosystem overview: the package map with publish statuses, the PACT lens, publish discipline
 
 ### Quality
 - [rules-testing.md](.ai/rules-testing.md) — 100% coverage, Mocha + Jest, error path patterns

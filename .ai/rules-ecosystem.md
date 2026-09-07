@@ -24,7 +24,7 @@ self-reflective, type-safe systems.
 | `@mnemonica/tactica` | published | Static analyzer / type generator (`.tactica/` output); framework-blind core — instrumentation vocabulary arrives via plugins (`.tactica.js` config), shipped by framework adapters |
 | `typeomatica` | published (unscoped) | Runtime type guards (`@Strict`, `BaseClass`) |
 | `@mnemonica/dive` | published | Execution-flow tracing engine |
-| `@mnemonica/otel` (otel) | repo ready, unpublished | Framework-free Node.js observability core (dive wiring, OTel providers, ALS backbone, pre-root store, unblind core) |
+| `@mnemonica/otel` (otel) | published | Framework-free Node.js observability core (dive wiring, OTel providers, ALS backbone, pre-root store, unblind core) |
 | `@mnemonica/topologica` | published | Module loader |
 | `@mnemonica/nestjs` (nestjs-adapter) | published | NestJS integration; ships the `@mnemonica/nestjs/tactica` plugin subpath |
 | `@mnemonica/strategy` | published | MCP/WS trace transport + log server |

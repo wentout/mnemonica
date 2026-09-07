@@ -7,11 +7,12 @@ a toolchain for **seeing** what your type graph does. This page is the map.
 |---|---|---|
 | [`@mnemonica/tactica`](https://www.npmjs.com/package/@mnemonica/tactica) | published | Static analysis + codegen: scans `define()`/`@decorate()` and emits `.tactica/` artifacts (types.ts, hierarchy/definitions/usages/flow JSON) |
 | [`@mnemonica/dive`](https://www.npmjs.com/package/@mnemonica/dive) | published | Execution-flow tracing: wrapped calls/creations as a trace ring, errors pinned to the instance that carried them — no AsyncLocalStorage |
+| [`@mnemonica/otel`](https://www.npmjs.com/package/@mnemonica/otel) | published | The framework-free observability engine: `attachHooks` (the dive ↔ mnemonica lifecycle wiring), OTel providers, the ALS async-flow backbone, the pre-root forensics store |
 | [`typeomatica`](https://www.npmjs.com/package/typeomatica) | published | Runtime field-type enforcement via Proxy ([`./typeomatica.md`](./typeomatica.md)) |
 | [`@mnemonica/topologica`](https://www.npmjs.com/package/@mnemonica/topologica) | published | Module loader that self-defines directory trees of types |
-| `@mnemonica/nestjs` (nestjs-adapter) | in active development | NestJS wiring: DTO → validated mnemonica instance, dive tracing across DI boundaries, OTel spans (Jaeger) per request and per construction |
-| mnemographica | in active development | VS Code extension: `.tactica` as tree views + interactive 3D type graph + a Live Trace sidebar fed by a running app |
-| `@mnemonica/strategy` | in active development | The live bridge: attaches to a running app (CDP, or the app's own embedded WS channel) and exposes it to agents/tooling — trace streaming, and live-craft (below) |
+| [`@mnemonica/nestjs`](https://www.npmjs.com/package/@mnemonica/nestjs) | published | NestJS wiring: DTO → validated mnemonica instance, dive tracing across DI boundaries, OTel spans (Jaeger) per request and per construction — layered over `@mnemonica/otel` |
+| [mnemographica](https://github.com/mythographica/mnemographica) | in active development | VS Code extension: `.tactica` as tree views + interactive 3D type graph + a Live Trace sidebar fed by a running app |
+| [`@mnemonica/strategy`](https://www.npmjs.com/package/@mnemonica/strategy) | published | The live bridge: attaches to a running app (CDP, or the app's own embedded WS channel) and exposes it to agents/tooling — trace streaming, and live-craft (below) |
 
 ## Two modes worth knowing about
 
