@@ -192,10 +192,11 @@ For user-facing semantics, see [`README.md`](./README.md) and [`docs/typed-looku
 - At runtime `lookup()` delegates to `types.lookup()`; type safety is
   compile-time only, so behavior is identical whether or not `TypeRegistry`
   is augmented.
-
-> **Roadmap.** Nested `lookup()` (a type-safe `.lookup()` method
-> on constructors that preserves the prototype chain) is designed but not
-> yet shipped.
+- Constructor `.lookup()` is type-safe and relative-first: the returned
+  constructor carries a path-scoped `NestedTypeLookup`, so
+  `App.lookup('User').lookup('Admin')` resolves `Admin` under `User`
+  (root fallback via the string overload). Typed examples live in
+  `test-ts/registry-holder*.ts` and `test-ts/typed-collections.ts`.
 
 ### Typed registry builders
 
