@@ -1,4 +1,5 @@
 'use strict';
+Object.defineProperty(exports, "__esModule", { value: true });
 /*
 we are checking VS Code IntelliSense here
 so it requires constant restart of
@@ -11,8 +12,8 @@ and, unfortunately sometimes
 it requires to complete VS Code restart
 as this may happen, shit happens
 */
-import { define, apply, bind, call, lookup } from '..';
-const SomeType = define('SomeType', function (gather, check) {
+const __1 = require("..");
+const SomeType = (0, __1.define)('SomeType', function (gather, check) {
     this.one = gather;
     this.check = check;
     this.q = 123;
@@ -23,7 +24,7 @@ const SomeSubType = SomeType.define('SomeSubType', function () {
     this.two = 'SomeSubType';
     this.q = 123;
 });
-const ST = lookup('SomeType');
+const ST = (0, __1.lookup)('SomeType');
 const first = new ST('SomeArg', 555);
 SomeSubType.registerHook('preCreation', () => { console.log('SomeSubType'); });
 const x = first.one;
@@ -32,12 +33,8 @@ first.q = 'one'; // hinting is correct !
 first.l = '111'; // hinting is correct !
 first.x = 543; // hinting is NOT VERY correct !
 const FinalType = SomeSubType.define('FinalType', class {
-    one;
-    q;
-    three;
-    second;
-    third = 333;
     constructor() {
+        this.third = 333;
         this.one = 'final one';
         this.three = 'FinalType';
         this.q = 123;
@@ -74,9 +71,9 @@ console.log('second: ', second);
 console.log('final: ', final);
 // tslint:disable-next-line: no-console
 console.log('{ x, y, z }: ', { x, y, z });
-const aSub = apply(first, SomeSubType);
+const aSub = (0, __1.apply)(first, SomeSubType);
 console.log(aSub);
-const bSub = bind(first, SomeSubType)();
+const bSub = (0, __1.bind)(first, SomeSubType)();
 console.log(bSub);
-const cSub = call(first, SomeSubType);
+const cSub = (0, __1.call)(first, SomeSubType);
 console.log(cSub);

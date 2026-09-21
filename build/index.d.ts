@@ -1,6 +1,6 @@
 import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, IDefinitorInstance, Constructor, DecoratedClass, TypeClass, MnemonicaModule, InstanceResult, Merge, TypeLookup, LookupResult, RegistryHolderBase, StoredConstructor } from './types';
 export declare const isClass: (fn: import("./api/types/compileNewModificatorFunctionBody").ConstructHandler) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => import("./api/utils/index").parentSub | null;
-export type { IDEF, LazyDef, TypeConstructor, TypeConstructorBase, Proto, ProtoFlat, constructorOptions, hooksOpts, hook, hooksTypes, IDefinitorInstance, InstanceResult, Merge, Constructor, DecoratedClass, TypeClass, TypeAbsorber, TypesCollection, TypeLookup, LookupResult, RegistryOf, MnemonicaModule, } from './types';
+export type { IDEF, LazyDef, TypeConstructor, TypeConstructorBase, AnyConstructor, Proto, ProtoFlat, constructorOptions, hooksOpts, hook, hooksTypes, IDefinitorInstance, InstanceResult, Merge, Constructor, DecoratedClass, TypeClass, TypeAbsorber, TypesCollection, TypeLookup, LookupResult, RegistryOf, MnemonicaModule, } from './types';
 export interface TypeRegistry {
 }
 export { getProps, setProps } from './api/types/Props';

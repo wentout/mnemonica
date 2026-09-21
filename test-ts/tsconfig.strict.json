@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"target": "ES2022",
+		"strict": true,
+		"noEmit": true,
+		"skipLibCheck": true,
+		"experimentalDecorators": true
+	},
+	"include": [
+		"typed-lookup-gates.ts",
+		"typed-collections.ts",
+		"typed-utils.ts",
+		"typed-utils-registry.ts",
+		"registry-holder.ts",
+		"registry-holder-consumer.ts",
+		"test-tactica-style-consumer.ts",
+		"test-tactica-style-definitions.ts",
+		"test-example.ts",
+		"test-decorate-typings.ts"
+	]
+}

@@ -105,10 +105,22 @@ export interface TypeConstructorBase {
 }
 
 /**
+ * Constructor gate that accepts ANY construct signature. Unlike
+ * `TypeConstructorBase`, parameters are `never[]`: under strictFunctionTypes
+ * a constructor with precise parameter types is not assignable to
+ * `new (...args: unknown[]) => …` (parameter contravariance), so `unknown[]`
+ * gates silently reject precisely-typed registry entries. `never[]`
+ * parameters contravariantly accept every constructor, while
+ * non-constructors still fail the check. Use in conditional-type gates only —
+ * a value of this type is callable with zero arguments.
+ */
+export type AnyConstructor = new (...args: never[]) => unknown;
+
+/**
  * Instance type produced by a TypeRegistry constructor.
  */
 export type InstanceOfTypeRegistry<K extends keyof TypeRegistry> =
-	TypeRegistry[K] extends new (...args: unknown[]) => infer R ? R : never;
+	TypeRegistry[K] extends new (...args: never[]) => infer R ? R : never;
 
 
 /**
@@ -151,7 +163,7 @@ export type ChildKeysOf<P extends string> = {
  * type alone.
  */
 export type PathOfInstance<T extends object> = {
-	[K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: unknown[]) => infer R
+	[K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: never[]) => infer R
 		? T extends R ? K : never
 		: never
 }[LiteralKeysOf<TypeRegistry>];
@@ -162,7 +174,7 @@ export type PathOfInstance<T extends object> = {
  * they have no parent path.
  */
 export type ParentPathOfInstance<T extends object> = {
-	[K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: unknown[]) => infer R
+	[K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: never[]) => infer R
 		? T extends R ? AllParentPrefixes<K> : never
 		: never
 }[LiteralKeysOf<TypeRegistry>];
@@ -276,7 +288,7 @@ export type GlobalRegistry = TypeRegistry & Record<string, TypeConstructorBase>;
 // Falls back to `object` so generic helpers that require an object constraint
 // do not fail when the constructor shape is not yet narrowed.
 export type ExtractConstructorInstance<C> =
-	C extends { new (...args: unknown[]): infer I }
+	C extends { new (...args: never[]): infer I }
 		? I extends object ? I : object
 		: object;
 
@@ -295,21 +307,26 @@ export type SubTypeConstructors<
 // Reconstruct a constructor with a new instance type while preserving every
 // non-`prototype`, non-`lookup` property (`define`, hooks, etc.). `lookup` is
 // replaced separately so it can be scoped to the constructor's own type path.
+// The match requires only the construct signature: tactica-emitted and
+// hand-written registry entries are bare newables (no call signature, no
+// declared `prototype`), and demanding those members collapses the lookup
+// result to `never` for precisely-typed registries. A call signature is
+// re-added only when the source constructor carries one.
 export type ReplaceConstructorInstance<
 	C,
 	NewInstance extends object
 > = C extends {
 	new (...args: infer A): unknown;
-	(...args: infer A2): unknown;
-	readonly prototype: unknown;
 }
 	? {
 		new (...args: A): NewInstance;
-		(this: NewInstance, ...args: A2): NewInstance;
 		readonly prototype: NewInstance & {
 			readonly constructor: ReplaceConstructorInstance<C, NewInstance>;
 		};
-	} & Omit<C, 'prototype' | 'lookup'>
+	} & (C extends { (...args: infer A2): unknown }
+		? { (this: NewInstance, ...args: A2): NewInstance }
+		: unknown)
+	& Omit<C, 'prototype' | 'lookup'>
 	: never;
 
 // Instance type produced by a typed lookup: the constructor's own instance
@@ -338,7 +355,7 @@ export type AugmentedConstructor<
 export type LookupResult<
 	Registry extends object,
 	Path extends keyof Registry & string
-> = Registry[Path] extends TypeConstructorBase
+> = Registry[Path] extends AnyConstructor
 	? AugmentedConstructor<Registry, Path> & {
 		lookup: NestedTypeLookup<Registry, Path>;
 	}
@@ -815,8 +832,11 @@ export type TypeDescriptorInstance = {
 	collection: CollectionDef;
 };
 
-// Constructor type for decorate function
-export type Constructor<T = object> = new (...args: unknown[]) => T;
+// Constructor type for decorate function.
+// Parameters are `never[]` for the same reason as AnyConstructor: under
+// strictFunctionTypes an `unknown[]` constraint rejects classes with precise
+// constructor parameters, so `@decorate()` could not be applied to them.
+export type Constructor<T = object> = new (...args: never[]) => T;
 
 // Name of a constructor as a string literal type.
 export type ConstructorName<T extends Constructor<object>> =
