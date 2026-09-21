@@ -1,5 +1,7 @@
-import { define, apply, utils } from '..';
-const FirstType = define('SomeType', function () {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const __1 = require("..");
+const FirstType = (0, __1.define)('SomeType', function () {
     this.first = 'FirstType';
 });
 const SecondType = FirstType.define('SecondType', function () {
@@ -8,11 +10,11 @@ const SecondType = FirstType.define('SecondType', function () {
 });
 const first = new FirstType();
 const second = new first.SecondType();
-const second2 = apply(first, SecondType);
+const second2 = (0, __1.apply)(first, SecondType);
 // Starting from v1.0.6 instance methods are no longer auto-injected.
 // Use the standalone utils.* API instead.
-utils.extract(first);
-utils.pick(first, 'first');
+__1.utils.extract(first);
+__1.utils.pick(first, 'first');
 first.SecondType;
 // @ts-expect-error - extract is not available as an instance method by default
 first.extract();

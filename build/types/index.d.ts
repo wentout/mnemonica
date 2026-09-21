@@ -40,7 +40,8 @@ export type TypeConstructor<ConstructorInstance extends object> = _Internal_TC_<
 export interface TypeConstructorBase {
     new (...args: unknown[]): object;
 }
-export type InstanceOfTypeRegistry<K extends keyof TypeRegistry> = TypeRegistry[K] extends new (...args: unknown[]) => infer R ? R : never;
+export type AnyConstructor = new (...args: never[]) => unknown;
+export type InstanceOfTypeRegistry<K extends keyof TypeRegistry> = TypeRegistry[K] extends new (...args: never[]) => infer R ? R : never;
 export type LiteralKeysOf<T> = keyof T extends infer K ? K extends string ? string extends K ? never : K : never : never;
 export type ParentPath<K extends string> = K extends `${infer P}.${string}` ? P : never;
 export type AllParentPrefixes<K extends string> = K extends `${infer P}.${string}` ? P | AllParentPrefixes<P> : never;
@@ -48,10 +49,10 @@ export type ChildKeysOf<P extends string> = {
     [K in keyof TypeRegistry]: K extends `${P}.${string}` ? K : never;
 }[keyof TypeRegistry];
 export type PathOfInstance<T extends object> = {
-    [K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: unknown[]) => infer R ? T extends R ? K : never : never;
+    [K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: never[]) => infer R ? T extends R ? K : never : never;
 }[LiteralKeysOf<TypeRegistry>];
 export type ParentPathOfInstance<T extends object> = {
-    [K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: unknown[]) => infer R ? T extends R ? AllParentPrefixes<K> : never : never;
+    [K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: never[]) => infer R ? T extends R ? AllParentPrefixes<K> : never : never;
 }[LiteralKeysOf<TypeRegistry>];
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
 export type hooksOpts<P = object, T = P> = {
@@ -113,25 +114,26 @@ export type CollectionDef = Hookable & {
 };
 export type GlobalRegistry = TypeRegistry & Record<string, TypeConstructorBase>;
 export type ExtractConstructorInstance<C> = C extends {
-    new (...args: unknown[]): infer I;
+    new (...args: never[]): infer I;
 } ? I extends object ? I : object : object;
 export type SubTypeConstructors<Registry extends object, Path extends string> = {
     [K in keyof Registry as K extends `${Path}.${infer Child}` ? Child : never]: LookupResult<Registry, K & string>;
 };
 export type ReplaceConstructorInstance<C, NewInstance extends object> = C extends {
     new (...args: infer A): unknown;
-    (...args: infer A2): unknown;
-    readonly prototype: unknown;
 } ? {
     new (...args: A): NewInstance;
-    (this: NewInstance, ...args: A2): NewInstance;
     readonly prototype: NewInstance & {
         readonly constructor: ReplaceConstructorInstance<C, NewInstance>;
     };
-} & Omit<C, 'prototype' | 'lookup'> : never;
+} & (C extends {
+    (...args: infer A2): unknown;
+} ? {
+    (this: NewInstance, ...args: A2): NewInstance;
+} : unknown) & Omit<C, 'prototype' | 'lookup'> : never;
 export type WithSubTypes<Instance extends object, Registry extends object, Path extends string> = Instance & SubTypeConstructors<Registry, Path>;
 export type AugmentedConstructor<Registry extends object, Path extends keyof Registry & string> = ReplaceConstructorInstance<Registry[Path], WithSubTypes<ExtractConstructorInstance<Registry[Path]>, Registry, Path>>;
-export type LookupResult<Registry extends object, Path extends keyof Registry & string> = Registry[Path] extends TypeConstructorBase ? AugmentedConstructor<Registry, Path> & {
+export type LookupResult<Registry extends object, Path extends keyof Registry & string> = Registry[Path] extends AnyConstructor ? AugmentedConstructor<Registry, Path> & {
     lookup: NestedTypeLookup<Registry, Path>;
 } : never;
 export interface TypeLookup<T extends object = GlobalRegistry> extends CallableFunction {
@@ -306,7 +308,7 @@ export type TypeDescriptorInstance = {
     TypeName: string;
     collection: CollectionDef;
 };
-export type Constructor<T = object> = new (...args: unknown[]) => T;
+export type Constructor<T = object> = new (...args: never[]) => T;
 export type ConstructorName<T extends Constructor<object>> = T extends {
     name: infer N;
 } ? N extends string ? N : string : string;

@@ -2,13 +2,13 @@
  * TypeScript type tests for decorate function
  * This file tests that all decorate usage patterns work correctly
  * 
- * NOTE: Patterns 3, 5, 6, 7 use decorated classes in ways that TypeScript's
+ * NOTE: Patterns 5, 6, 7 use decorated classes in ways that TypeScript's
  * type system cannot fully express. The @ts-expect-error comments document
  * where TypeScript's type checking is overly conservative, but the runtime
  * behavior is correct and the types are properly inferred for instance usage.
  */
 
-import { decorate, apply, type DecoratedClass, type Constructor, type InstanceTypeFromConstructor, type TypeAbsorber } from '..';
+import { decorate, apply, type DecoratedClass, type Constructor, type TypeAbsorber } from '..';
 
 // ============================================
 // Pattern 1: @decorate() - no arguments
@@ -41,7 +41,6 @@ class ParentClass {
 	parentField: number = 100;
 }
 
-// @ts-expect-error - TypeScript's decorator type inference doesn't track that ParentClass has been transformed to DecoratedClass
 @decorate(ParentClass)
 class ChildClass {
 	childField: string = 'child';
@@ -176,14 +175,14 @@ function useDecoratedType(cls: MyDecoratedType): void {
 }
 
 // ============================================
-// Pattern 11: InstanceTypeFromConstructor helper
+// Pattern 11: Instance type extraction from a decorated class
 // ============================================
 @decorate()
 class TestClass {
 	testField: number = 123;
 }
 
-type TestInstance = InstanceTypeFromConstructor<typeof TestClass>;
+type TestInstance = InstanceType<typeof TestClass>;
 const _testInstanceType: TestInstance = { testField: 456 };
 
 // ============================================

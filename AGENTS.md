@@ -152,6 +152,7 @@ npm run build          # tsc only — no linting happens here
 npx eslint ./src       # the lint gate: zero warnings allowed
 npm run test:cov       # Mocha + coverage (runs build:all internally)
 npm run test:jest:cov  # Jest on TypeScript source
+npm run test:ts:strict # strict-mode type-level pins (test-ts/tsconfig.strict.json)
 npm run watch          # watch mode
 npm run debug          # mocha suite under --inspect-brk: attach chrome://inspect
                        # or VS Code and step through construction live — the

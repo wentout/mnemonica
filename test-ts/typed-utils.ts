@@ -72,9 +72,10 @@ const dynamicPicked = utils.pick(user, ...dynamicKeys);
 const dynamicName: unknown = dynamicPicked.name;
 
 // ============================================================
-// instance.pick
+// instance.pick — moved to utils.pick; NOT part of the instance type
 // ============================================================
 
+// @ts-expect-error - instance methods moved to utils (see utils.pick above)
 const instancePicked = user.pick('name', 'age');
 const instancePickedAge: number = instancePicked.age;
 
@@ -87,9 +88,10 @@ const clonedName: string = cloned.name;
 const clonedAge: number = cloned.age;
 
 // ============================================================
-// instance.clone
+// instance.clone — moved to utils.clone; NOT part of the instance type
 // ============================================================
 
+// @ts-expect-error - instance methods moved to utils (see utils.clone above)
 const instanceCloned = user.clone;
 const instanceClonedName: string = instanceCloned.name;
 
@@ -103,9 +105,10 @@ const forkedName: string = forked.name;
 const forkedEmail: string = forked.email;
 
 // ============================================================
-// instance.fork
+// instance.fork — moved to utils.fork; NOT part of the instance type
 // ============================================================
 
+// @ts-expect-error - instance methods moved to utils (see utils.fork above)
 const instanceForked = user.fork();
 const instanceForkedAge: number = instanceForked.age;
 
@@ -125,10 +128,12 @@ const siblingInstanceObject: object | undefined = siblingInstance;
 const _wrongSiblingArg = siblingAccessor(123);
 
 // ============================================================
-// instance.sibling
+// instance.sibling — moved to utils.sibling; NOT part of the instance type
 // ============================================================
 
+// @ts-expect-error - instance methods moved to utils (see utils.sibling above)
 const instanceSibling = user.sibling('TypedUtilsSibling');
+// @ts-expect-error - instance methods moved to utils (see utils.sibling above)
 const instanceSiblingByProp = user.sibling.TypedUtilsSibling;
 const instanceSiblingInstance = instanceSibling ? new instanceSibling() : undefined;
 
@@ -149,9 +154,10 @@ const userParentByPath = utils.parent(user, 'TypedUtilsUser');
 const userParentByPathOptional: object | undefined = userParentByPath;
 
 // ============================================================
-// instance.parent
+// instance.parent — moved to utils.parent; NOT part of the instance type
 // ============================================================
 
+// @ts-expect-error - instance methods moved to utils (see utils.parent above)
 const instanceParent = user.parent();
 const instanceParentOptional: object | undefined = instanceParent;
 

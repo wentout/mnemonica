@@ -1,7 +1,8 @@
 'use strict';
-import { createTypesCollection, mnemonica } from 'mnemonica';
+Object.defineProperty(exports, "__esModule", { value: true });
+const mnemonica_1 = require("mnemonica");
 // --- Custom collection builder ---
-const App = createTypesCollection()
+const App = (0, mnemonica_1.createTypesCollection)()
     .define('User', function (data) {
     this.name = data.name;
 })
@@ -17,7 +18,7 @@ const admin = new user.Admin({ role: 'root' });
 const adminName = admin.name;
 const adminRole = admin.role;
 // --- Default collection builder via mnemonica object ---
-const Sys = mnemonica
+const Sys = mnemonica_1.mnemonica
     .define('User', function (data) {
     this.name = data.name;
 })
@@ -31,7 +32,7 @@ const sysAdmin = new sysUser.Admin({ role: 'super' });
 const sysAdminRole = sysAdmin.role;
 // --- Deeper chain with intermediate variables ---
 // Build a 4-level hierarchy by chaining relative `.define()` calls.
-const ProductApp = createTypesCollection()
+const ProductApp = (0, mnemonica_1.createTypesCollection)()
     .define('Product', function (data) {
     this.productId = data.productId;
 })
@@ -66,9 +67,11 @@ const itemFromRelative = new ItemFromCategory({ itemId: 'I2' });
 const variantFromRelative = new VariantFromItem({ variantId: 'V2' });
 const variantFromFull = new VariantFromFull({ variantId: 'V3' });
 // --- Custom collection decorate() ---
-const DecoratedApp = createTypesCollection()
+const DecoratedApp = (0, mnemonica_1.createTypesCollection)()
     .decorate()(class DecoratedUser {
-    name = 'Grace';
+    constructor() {
+        this.name = 'Grace';
+    }
 });
 const DecoratedUserCtor = DecoratedApp.lookup('DecoratedUser');
 const decoratedUser = new DecoratedUserCtor();

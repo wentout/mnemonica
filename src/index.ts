@@ -34,6 +34,7 @@ export type {
 	LazyDef,
 	TypeConstructor,
 	TypeConstructorBase,
+	AnyConstructor,
 	Proto,
 	ProtoFlat,
 	constructorOptions,
