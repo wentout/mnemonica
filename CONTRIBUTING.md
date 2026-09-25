@@ -145,7 +145,8 @@ npm pack --dry-run
 The tarball must include: `build/`, `module/`, `src/`, `docs/`,
 `README.md`, `FOR_HUMANS.md`, `LICENSE`.
 
-It must **not** include: contributor docs (`AGENTS.md`, `SKILL.md`,
-`CONTRIBUTING.md`, `.ai/` — those live on GitHub only), `test/`,
+It must **not** include: contributor docs (`AGENTS.md`,
+`CONTRIBUTING.md`, `.ai/`) or the agent usage skill (`SKILL.md`) — those
+live on GitHub only — nor `test/`,
 `test-jest/`, `test-ts/`, `test_async/`, `reports/`, `.husky/`,
 `node_modules/`.
