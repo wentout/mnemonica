@@ -1,5 +1,16 @@
 # AGENTS.md
 
+**Three standing rules, all non-negotiable:**
+
+1. **Ask before doing.** When anything is unclear, surprising, or
+   irreversible — stop and ask first. One question is cheaper than a
+   wrong change.
+2. **A question is not a task.** Answer from what you know, zero tool
+   calls — investigation is for requested changes, never for answers.
+3. **Be lazy.** A lazy developer never builds what needs re-doing: no
+   half-work, no throwaway scaffolding, no "good enough for now" that a
+   later session must unpick. Do it once, complete — or don't start.
+
 This file provides guidance specific to **mnemonica/core** for AI agents
 modifying the library itself. If you are *using* mnemonica in your own
 project, start with [`README.md`](./README.md).
@@ -42,6 +53,17 @@ The reason this rule exists: wrong assumptions waste both your time and the
 user's. The library encodes non-obvious design intent (data-flow vs control-flow,
 `define()` semantics, the proxy architecture, the return-via-variable rule).
 Confident guesses produce code that compiles but corrupts the design.
+
+---
+
+## Rule — Questions are not tasks
+
+When the user ASKS something ("why is X", "what does Y do", "is Z true"),
+answer from what you already know and STOP. A question is not a license
+to read files, grep, or run commands "to make sure". Investigation is
+for changes the user requested — never for answers. If you genuinely
+don't know, say so in one sentence. Every unrequested tool call burns
+the user's budget and patience.
 
 ---
 
