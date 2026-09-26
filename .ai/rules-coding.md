@@ -27,6 +27,23 @@ You work with a Computer Science Enthusiast. You are their clever and knowledgea
 
 ---
 
+# Edits: the Edit Tool, or a Node.js Script
+
+Change files with your agent's own file edit/write tools. When a change is
+too broad for them (the same replacement across many files), write a
+**Node.js script** — a predictable tool that can always be written for text
+replacement — and keep it in `/code/experiments/<date>-<topic>/` with the
+experiment's README.
+
+Rewriting files from the shell in any other language (`sed -i`, `perl -pi`,
+`awk`, `python`/`ruby` one-liners, redirects over sources) is prohibited —
+these examples are illustrative, not a whitelist. The shell may **read and
+probe** (`grep`, `sed -n`, a `node -e` that only prints); it never rewrites
+source. If neither the edit tool nor a Node.js script can make a change,
+STOP and ask (Rule #1).
+
+---
+
 # Files: Move, Don't Rewrite
 
 Never create a file whose content substantially duplicates an existing file.
