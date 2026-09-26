@@ -1,6 +1,6 @@
-import type { CreateTypesCollectionFunction, IDEF, hook, hooksTypes, constructorOptions, Proto, IDefinitorInstance, Constructor, DecoratedClass, TypeClass, MnemonicaModule, InstanceResult, Merge, TypeLookup, LookupResult, RegistryHolderBase, StoredConstructor } from './types';
+import type { CreateTypesCollectionFunction, CtorParameter, IDEF, hook, hooksTypes, constructorOptions, Proto, IDefinitorInstance, Constructor, DecoratedClass, TypeClass, MnemonicaModule, InstanceResult, Merge, TypeLookup, LookupResult, RegistryHolderBase, StoredConstructor } from './types';
 export declare const isClass: (fn: import("./api/types/compileNewModificatorFunctionBody").ConstructHandler) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => import("./api/utils/index").parentSub | null;
-export type { IDEF, LazyDef, TypeConstructor, TypeConstructorBase, AnyConstructor, Proto, ProtoFlat, constructorOptions, hooksOpts, hook, hooksTypes, IDefinitorInstance, InstanceResult, Merge, Constructor, DecoratedClass, TypeClass, TypeAbsorber, TypesCollection, TypeLookup, LookupResult, RegistryOf, MnemonicaModule, } from './types';
+export type { CtorParameter, IDEF, LazyDef, TypeConstructor, TypeConstructorBase, AnyConstructor, Proto, ProtoFlat, constructorOptions, hooksOpts, hook, hooksTypes, IDefinitorInstance, InstanceResult, Merge, Constructor, DecoratedClass, TypeClass, TypeAbsorber, TypesCollection, TypeLookup, LookupResult, RegistryOf, MnemonicaModule, } from './types';
 export interface TypeRegistry {
 }
 export { getProps, setProps } from './api/types/Props';
@@ -19,9 +19,9 @@ export declare function lookup(this: unknown, TypeNestedPath: string): TypeClass
 export declare function lookup(source: {
     lookup: (path: string) => TypeClass | undefined;
 }, TypeNestedPath: string): TypeClass | undefined;
-export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, args?: unknown[]) => InstanceResult<Merge<E, T>>;
-export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>, ...args: unknown[]) => InstanceResult<Merge<E, T>>;
-export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: IDEF<T>) => (...args: unknown[]) => InstanceResult<Merge<E, T>>;
+export declare const apply: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: CtorParameter<T>, args?: unknown[]) => InstanceResult<Merge<E, T>>;
+export declare const call: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: CtorParameter<T>, ...args: unknown[]) => InstanceResult<Merge<E, T>>;
+export declare const bind: <E extends object, T extends object, S extends Proto<E, T>>(entity: E, Ctor: CtorParameter<T>) => (...args: unknown[]) => InstanceResult<Merge<E, T>>;
 export declare const decorate: <T extends Constructor<object> | constructorOptions | undefined = undefined>(target?: T, config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
 export declare const registerHook: <T extends Constructor<T>>(Ctor: DecoratedClass<T>, hookType: hooksTypes, cb: hook) => void;
 export declare const mnemonica: MnemonicaModule;

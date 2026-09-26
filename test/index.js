@@ -1804,6 +1804,51 @@ describe('Main Test', () => {
 			});
 		});
 
+		describe('constructor .lookup() relative semantics (5-level chain)', () => {
+			// Fresh 5-level chain, single-character neutral names, so the
+			// lookup strings ARE dotted type paths. The law: Type.lookup
+			// resolves OWN DESCENDANTS (relative) or a FULL PATH from the
+			// collection root (absolute fallback). It never climbs to
+			// ancestors by short or partial name — climbing to an ancestor
+			// instance is utils.parent(instance, 'Name'), a different tool.
+			const Level1 = define('1', function () {});
+			const Level2 = Level1.define('2', function () {});
+			const Level3 = Level2.define('3', function () {});
+			const Level4 = Level3.define('4', function () {});
+			const Level5 = Level4.define('5', function () {});
+
+			it('resolves relative descendants and absolute paths from a mid-chain type', () => {
+				// own descendant by short name
+				expect(Level3.lookup('4')).to.equal(Level4);
+				// absolute dotted path, same reference
+				expect(Level3.lookup('1.2.3.4')).to.equal(Level4);
+				// relative descent through a found child
+				expect(Level3.lookup('4.5')).to.equal(Level5);
+				// the absolute fallback reaches ancestors only by full path
+				expect(Level3.lookup('1.2')).to.equal(Level2);
+				expect(Level3.lookup('1')).to.equal(Level1);
+			});
+
+			it('never climbs to ancestors or siblings by short or partial name', () => {
+				// '5' is not among type 3's OWN descendants (it is 4's
+				// child), and no ROOT named '5' exists
+				expect(Level3.lookup('5')).to.equal(undefined);
+				// an ancestor is not reachable by its short name
+				expect(Level3.lookup('2')).to.equal(undefined);
+				// self-anchored absolute ('my own path + .4') is not a mode:
+				// relative-first looks for an own subtype NAMED '3', the
+				// root fallback is absolute and no root '3' exists
+				expect(Level3.lookup('3.4')).to.equal(undefined);
+				// mid-chain partial path: no own subtype '2', no root '2'
+				expect(Level4.lookup('2.3')).to.equal(undefined);
+				// even the DIRECT PARENT does not resolve by short name —
+				// relative covers own descendants only ('5'), no root '3'
+				expect(Level4.lookup('3')).to.equal(undefined);
+				// the parent's full path from the root resolves
+				expect(Level4.lookup('1.2.3')).to.equal(Level3);
+			});
+		});
+
 		if (uncaughtExceptionTest) {
 			require('./uncaughtExceptionTest')({
 				evenMore,

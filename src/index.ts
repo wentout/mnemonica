@@ -3,6 +3,7 @@
 
 import type {
 	CreateTypesCollectionFunction,
+	CtorParameter,
 	IDEF,
 	hook,
 	hooksTypes,
@@ -30,6 +31,7 @@ export const {
 } = TypesUtils;
 
 export type {
+	CtorParameter,
 	IDEF,
 	LazyDef,
 	TypeConstructor,
@@ -290,7 +292,7 @@ export function lookup(
 
 const $run = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Ctor: IDEF<T>,
+	Ctor: CtorParameter<T>,
 	args: unknown[]
 ): {
 		[key in keyof S]: S[key]
@@ -316,7 +318,7 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 // TODO: apply instance .to type .with arguments
 export const apply = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Ctor: IDEF<T>,
+	Ctor: CtorParameter<T>,
 	args: unknown[] = []
 ): InstanceResult<Merge<E, T>> {
 	const runResult = $run<E, T, S>(
@@ -331,7 +333,7 @@ export const apply = function <E extends object, T extends object, S extends Pro
 // TODO: call type .by instance .with arguments
 export const call = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Ctor: IDEF<T>,
+	Ctor: CtorParameter<T>,
 	...args: unknown[]
 ): InstanceResult<Merge<E, T>> {
 	const runResult = $run<E, T, S>(
@@ -346,7 +348,7 @@ export const call = function <E extends object, T extends object, S extends Prot
 // TODO: bind type .with instance → (...args)
 export const bind = function <E extends object, T extends object, S extends Proto<E, T>>(
 	entity: E,
-	Ctor: IDEF<T>
+	Ctor: CtorParameter<T>
 ): (...args: unknown[]) => InstanceResult<Merge<E, T>> {
 	const result = (...args: unknown[]) => {
 		const runResult = $run<E, T, S>(

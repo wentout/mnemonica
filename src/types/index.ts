@@ -13,6 +13,14 @@ export type PropsType = Record<string, unknown>;
 // supply Args to get typed constructor params: IDEF<MyType, [string, number]>
 export type IDEF<T, Args extends unknown[] = unknown[]> = { new(): T } | { (this: T, ...args: Args): void };
 
+// Construction-function parameter for the .call/.apply/.bind family:
+// anything IDEF accepts PLUS any required-argument constructor shape.
+// The never[] rest accepts every parameter list by contravariance (every
+// parameter type is a supertype of never) while keeping the constructed
+// result typed; unknown[] would reject required params under
+// strictFunctionTypes.
+export type CtorParameter<T> = IDEF<T> | { new (...args: never[]): T };
+
 // Lazy getter type - a zero-arg factory that returns a constructor.
 // Used by the explicit .lazy() API.
 export type LazyDef<T, Args extends unknown[] = unknown[]> = () => IDEF<T, Args>;
@@ -301,7 +309,9 @@ export type SubTypeConstructors<
 	Path extends string
 > = {
 	[K in keyof Registry as K extends `${Path}.${infer Child}` ? Child : never]:
-		LookupResult<Registry, K & string>;
+		AugmentedConstructor<Registry, K & string, true> & {
+			lookup: NestedTypeLookup<Registry, K & string>;
+		};
 };
 
 // Reconstruct a constructor with a new instance type while preserving every
@@ -314,17 +324,26 @@ export type SubTypeConstructors<
 // re-added only when the source constructor carries one.
 export type ReplaceConstructorInstance<
 	C,
-	NewInstance extends object
+	NewInstance extends object,
+	CallConstructs extends boolean = false
 > = C extends {
 	new (...args: infer A): unknown;
 }
 	? {
 		new (...args: A): NewInstance;
 		readonly prototype: NewInstance & {
-			readonly constructor: ReplaceConstructorInstance<C, NewInstance>;
+			readonly constructor: ReplaceConstructorInstance<C, NewInstance, CallConstructs>;
 		};
 	} & (C extends { (...args: infer A2): unknown }
-		? { (this: NewInstance, ...args: A2): NewInstance }
+		? CallConstructs extends true
+			// SubTypeProxy-backed member: the call form constructs the child
+			// from the parent instance (the chain-tip form new R().A()), so
+			// no `this` demand — detached bare calls construct too.
+			? { (...args: A2): NewInstance }
+			// Raw looked-up constructor: the `this` guard honestly models
+			// .call(childInstance, args); a bare call here is the decorator
+			// path at runtime, not construction.
+			: { (this: NewInstance, ...args: A2): NewInstance }
 		: unknown)
 	& Omit<C, 'prototype' | 'lookup'>
 	: never;
@@ -344,10 +363,12 @@ export type WithSubTypes<
 // recursive reference from `SubTypeConstructors` resolves cleanly.
 export type AugmentedConstructor<
 	Registry extends object,
-	Path extends keyof Registry & string
+	Path extends keyof Registry & string,
+	CallConstructs extends boolean = false
 > = ReplaceConstructorInstance<
 	Registry[Path],
-	WithSubTypes<ExtractConstructorInstance<Registry[Path]>, Registry, Path>
+	WithSubTypes<ExtractConstructorInstance<Registry[Path]>, Registry, Path>,
+	CallConstructs
 >;
 
 // Result of a typed lookup: the augmented constructor plus a `lookup` method

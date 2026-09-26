@@ -10,6 +10,7 @@
 	},
 	"include": [
 		"typed-lookup-gates.ts",
+		"call-forms.ts",
 		"typed-collections.ts",
 		"typed-utils.ts",
 		"typed-utils-registry.ts",
