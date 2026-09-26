@@ -5,6 +5,9 @@ export type IDEF<T, Args extends unknown[] = unknown[]> = {
 } | {
     (this: T, ...args: Args): void;
 };
+export type CtorParameter<T> = IDEF<T> | {
+    new (...args: never[]): T;
+};
 export type LazyDef<T, Args extends unknown[] = unknown[]> = () => IDEF<T, Args>;
 export type ErrorMessageKey = 'BASE_ERROR_MESSAGE' | 'HANDLER_MUST_BE_A_FUNCTION' | 'WRONG_TYPE_DEFINITION' | 'WRONG_INSTANCE_INVOCATION' | 'WRONG_MODIFICATION_PATTERN' | 'ALREADY_DECLARED' | 'WRONG_ARGUMENTS_USED' | 'WRONG_HOOK_TYPE' | 'MISSING_HOOK_CALLBACK' | 'MISSING_CALLBACK_ARGUMENT' | 'OPTIONS_ERROR' | 'WRONG_STACK_CLEANER' | 'TYPENAME_MUST_BE_A_STRING';
 export type ErrorMessages = Record<ErrorMessageKey, string>;
@@ -117,22 +120,26 @@ export type ExtractConstructorInstance<C> = C extends {
     new (...args: never[]): infer I;
 } ? I extends object ? I : object : object;
 export type SubTypeConstructors<Registry extends object, Path extends string> = {
-    [K in keyof Registry as K extends `${Path}.${infer Child}` ? Child : never]: LookupResult<Registry, K & string>;
+    [K in keyof Registry as K extends `${Path}.${infer Child}` ? Child : never]: AugmentedConstructor<Registry, K & string, true> & {
+        lookup: NestedTypeLookup<Registry, K & string>;
+    };
 };
-export type ReplaceConstructorInstance<C, NewInstance extends object> = C extends {
+export type ReplaceConstructorInstance<C, NewInstance extends object, CallConstructs extends boolean = false> = C extends {
     new (...args: infer A): unknown;
 } ? {
     new (...args: A): NewInstance;
     readonly prototype: NewInstance & {
-        readonly constructor: ReplaceConstructorInstance<C, NewInstance>;
+        readonly constructor: ReplaceConstructorInstance<C, NewInstance, CallConstructs>;
     };
 } & (C extends {
     (...args: infer A2): unknown;
-} ? {
+} ? CallConstructs extends true ? {
+    (...args: A2): NewInstance;
+} : {
     (this: NewInstance, ...args: A2): NewInstance;
 } : unknown) & Omit<C, 'prototype' | 'lookup'> : never;
 export type WithSubTypes<Instance extends object, Registry extends object, Path extends string> = Instance & SubTypeConstructors<Registry, Path>;
-export type AugmentedConstructor<Registry extends object, Path extends keyof Registry & string> = ReplaceConstructorInstance<Registry[Path], WithSubTypes<ExtractConstructorInstance<Registry[Path]>, Registry, Path>>;
+export type AugmentedConstructor<Registry extends object, Path extends keyof Registry & string, CallConstructs extends boolean = false> = ReplaceConstructorInstance<Registry[Path], WithSubTypes<ExtractConstructorInstance<Registry[Path]>, Registry, Path>, CallConstructs>;
 export type LookupResult<Registry extends object, Path extends keyof Registry & string> = Registry[Path] extends AnyConstructor ? AugmentedConstructor<Registry, Path> & {
     lookup: NestedTypeLookup<Registry, Path>;
 } : never;
