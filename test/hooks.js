@@ -41,13 +41,21 @@ const tests = ( opts ) => {
 			// assert.equal( 215, typesFlowCheckerInvocations.length );
 			// +2 (subtype lookup caching test types)
 			// +6 (hott-laws.js witness types defined at load)
-			assert.equal( 247, typesFlowCheckerInvocations.length );
+			// +2 (async-null resolution tests adding types)
+			// +16 (async-class main-suite equivalents: 8 types)
+			// +3 (inst.Sub.call(other) adopting parent instance construction)
+			// +2 (re-defined C0ArrowProbe after its rejected arrow define)
+			assert.equal( 270, typesFlowCheckerInvocations.length );
 
 			// +3 (increased due to explicit .lazy() API adding extra creations)
 			// +12 (increased due to dotted parent() tests adding instances)
 			// +1 (subtype lookup caching test instances)
 			// +3 (hott-laws.js root/mid/leaf constructed at load)
-			assert.equal( 132, typesPreCreationInvocations.length );
+			// +2 (async-null resolution tests adding instances)
+			// +10 (async-class main-suite equivalents: instances)
+			// +1 (inst.Sub.call(other) adopting parent instance)
+			// +1 (re-defined C0ArrowProbe instance)
+			assert.equal( 146, typesPreCreationInvocations.length );
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
@@ -55,7 +63,10 @@ const tests = ( opts ) => {
 			// +24 (increased due to dotted parent() tests adding instances)
 			// +2 (subtype lookup caching test instances)
 			// +6 (hott-laws.js root/mid/leaf constructed at load, chain levels fire per level)
-			assert.equal( 230, typesPostCreationInvocations.length );
+			// +12 (async-class main-suite equivalents: instances, per level)
+			// +4 (inst.Sub.call(other) adopting parent + child levels)
+			// +2 (re-defined C0ArrowProbe type + instance levels)
+			assert.equal( 248, typesPostCreationInvocations.length );
 		} );
 	} );
 

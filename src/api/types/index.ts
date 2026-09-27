@@ -72,7 +72,10 @@ const {
 import * as hooksApi from '../hooks';
 import { TypeProxy } from './TypeProxy';
 
-import compileNewModificatorFunctionBody, { ConstructHandler } from './compileNewModificatorFunctionBody';
+import compileNewModificatorFunctionBody, {
+	classifyConstructHandler,
+	ConstructHandler
+} from './compileNewModificatorFunctionBody';
 
 import TypesUtils, { CreationHandler } from '../utils';
 const {
@@ -405,6 +408,18 @@ const createFromDirectHandler = function (
 		) &&
 		(typeof handler.prototype === 'object')
 	) ? handler.prototype : getDefaultPrototype();
+
+	// reject the unsupported handler shapes (generators, sync arrows,
+	// shorthand methods, bound functions) BEFORE the type is created, so
+	// a rejected define leaves nothing registered. Skipped when the name
+	// is taken: the TypeDescriptor below throws the canonical
+	// ALREADY_DECLARED, which wins over the shape error
+	if ( !target.has( name ) ) {
+		classifyConstructHandler(
+			name,
+			handler as ConstructHandler
+		);
+	}
 
 	const result = new TypeDescriptor(
 		defineOrigin,

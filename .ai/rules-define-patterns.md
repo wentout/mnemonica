@@ -3,7 +3,7 @@ name: mnemonica-define-patterns
 description: |
   Patterns for defining types and subtypes with mnemonica's define() function.
   Use when the user asks about define(), creating types, subtype inheritance,
-  strictChain, blockErrors, awaitReturn, or type configuration options.
+  strictChain, blockErrors, unchain, or type configuration options.
 metadata:
   tags: [mnemonica, define, types, subtypes, inheritance]
 ---
@@ -150,7 +150,7 @@ Root constructors **may** be exported when tactica has generated standalone inst
 | `strictChain` | `true` | Enforce subtype creation only from direct parent |
 | `blockErrors` | `true` | Block construction if error exists in prototype chain |
 | `submitStack` | `false` | Collect stack trace as `__stack__` property |
-| `awaitReturn` | `true` | `await new Constructor()` must return a value |
+| `unchain` | `false` | `await new Constructor()` must resolve to its instance; `true` drops the chain on a non-object result |
 | `asClass` | auto-detected | Force class mode detection |
 
 ## Instance Method Opt-In

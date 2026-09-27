@@ -251,8 +251,10 @@ export type constructorOptions = {
 	// during the process of instance creation
 	submitStack?: boolean,
 	// await new Constructor()
-	// must return value
-	awaitReturn?: boolean,
+	// with false (default) the construction must resolve to its instance;
+	// with true a non-object resolution DROPS the chain and that value is
+	// the result ("unchain on await")
+	unchain?: boolean,
 	// Force class mode (auto-detected by default)
 	asClass?: boolean,
 };

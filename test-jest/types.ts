@@ -255,6 +255,8 @@ export interface AsyncChainTestOptions {
 	UserTypeConstructor: TestTypeClass;
 	AsyncWOReturn: new () => Promise<unknown>;
 	AsyncWOReturnNAR: new () => Promise<unknown>;
+	AsyncReturnsNull: new () => Promise<unknown>;
+	AsyncReturnsNullNAR: new () => Promise<unknown>;
 }
 
 export interface EnvironmentTestOptions {

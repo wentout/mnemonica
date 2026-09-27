@@ -9,6 +9,7 @@ export interface ClassConstructHandler extends NewableFunction {
 export interface CreationHandler extends CallableFunction {
     (this: object, answer: unknown): unknown;
 }
+export declare const classifyConstructHandler: (FunctionName: string, ConstructHandler: ConstructHandler) => void;
 type ModificationBody = new (...args: unknown[]) => object;
 declare const compileNewModificatorFunctionBody: (FunctionName: string, asClass?: boolean) => (ConstructHandler: ConstructHandler, CreationHandler: CreationHandler, SymbolConstructorName: symbol) => () => ModificationBody;
 export default compileNewModificatorFunctionBody;

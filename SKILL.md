@@ -170,7 +170,7 @@ almost always one of:
 | Declare / find types | `define`, `lazy`, `lookup`, `createTypesCollection` | [FOR_HUMANS.md](./FOR_HUMANS.md) API reference |
 | Construct on an existing object | `apply`, `call`, `bind` | [FOR_HUMANS.md](./FOR_HUMANS.md) |
 | React to construction | `registerHook(Type, 'preCreation' \| 'postCreation' \| 'creationError', cb)` | [FOR_HUMANS.md](./FOR_HUMANS.md) |
-| Async constructors | `await new Type(…)`, `awaitReturn` | [docs/async-constructors.md](./docs/async-constructors.md) |
+| Async constructors | `await new Type(…)`, `unchain` | [docs/async-constructors.md](./docs/async-constructors.md) |
 | Type config | `strictChain`, `blockErrors`, … | [FOR_HUMANS.md](./FOR_HUMANS.md) |
 | Read lineage / data | `getProps`, `utils.extract`, `pick`, `parent`, `fork` | [docs/UTILS.md](./docs/UTILS.md) |
 | What sits under an instance | — | [docs/prototype-chain.md](./docs/prototype-chain.md) |

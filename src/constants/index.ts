@@ -73,10 +73,12 @@ const defaultOptions = {
 	},
 
 	// await new Constructor()
-	// must return value
+	// with unchain:false the construction must resolve to its instance;
+	// with unchain:true a non-object resolution DROPS the chain and that
+	// value is the result ("unchain on await")
 	// optional ./issues/106
-	get awaitReturn () {
-		return true;
+	get unchain () {
+		return false;
 	},
 
 } as Record<string, unknown>;

@@ -294,7 +294,20 @@ const AsyncWOReturn = define('AsyncWOReturn', async function () {
 });
 
 const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () { }, {
-	awaitReturn : false
+	unchain : true
+});
+
+// null resolution: a legitimate value. Default config -> the readable
+// mnemonica error; unchain:true -> resolves null as-is (never the
+// internal TypeError from reading `.constructor` of null)
+const AsyncReturnsNull = define('AsyncReturnsNull', async function () {
+	return null;
+});
+
+const AsyncReturnsNullNAR = define('AsyncReturnsNullNAR', async function () {
+	return null;
+}, {
+	unchain : true
 });
 
 const constructNested = function () {
@@ -687,6 +700,8 @@ describe('Main Test', () => {
 		UserTypeConstructor,
 		AsyncWOReturn,
 		AsyncWOReturnNAR,
+		AsyncReturnsNull,
+		AsyncReturnsNullNAR,
 	});
 
 	require('./decorate-builder.check')();

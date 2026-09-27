@@ -290,7 +290,7 @@ The full API reference — every signature, config option, hook data shape, the 
 | Instance utilities (`utils.extract`, `pick`, `parent`, `fork`, `exception`, …) | [`docs/UTILS.md`](./docs/UTILS.md) |
 | Typed `lookup()`/`define()` — builder, bridge, tactica | [`docs/typed-lookup.md`](./docs/typed-lookup.md) |
 | `@decorate()` class-based definitions | [`docs/decorate.md`](./docs/decorate.md) |
-| Async constructors (`await new`, `awaitReturn`, error stacks) | [`docs/async-constructors.md`](./docs/async-constructors.md) |
+| Async constructors (`await new`, `unchain`, error stacks) | [`docs/async-constructors.md`](./docs/async-constructors.md) |
 | What the prototype chain under your instance looks like | [`docs/prototype-chain.md`](./docs/prototype-chain.md) |
 | Runtime field enforcement with typeomatica | [`docs/typeomatica.md`](./docs/typeomatica.md) |
 | HoTT framing, with an honesty table | [`docs/hott-primer.md`](./docs/hott-primer.md) |

@@ -44,6 +44,23 @@ STOP and ask (Rule #1).
 
 ---
 
+# No Local-Only Pointers in Shipped Files
+
+Never write a pointer to a local-only place into any **shipped** file —
+`src/`, the test suites (`test/`, `test-jest/`, `test_async/`,
+`test_yields/`), `docs/`, `.ai/`, `README.md`, `SKILL.md`, `FOR_HUMANS.md`,
+`AGENTS.md`, `DECISIONS.md`. Local-only places include `reports/`, `plans/`,
+`/code/experiments/`, and any other absolute local path: those directories
+are internal agent memory and are gitignored, so a published reference 404s
+for every reader (and misleads agents in other checkouts).
+
+Where the reference carried knowledge, keep the knowledge as plain prose in
+place — drop only the pointer. Cross-links inside `reports/` and `plans/`
+files themselves stay legal (they may reference each other freely), and
+un-shipped agent files (`.ai/AI_Diary.md`, session notes) may point anywhere.
+
+---
+
 # Files: Move, Don't Rewrite
 
 Never create a file whose content substantially duplicates an existing file.

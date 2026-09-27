@@ -405,12 +405,10 @@ compaction — keep them while they describe **current or open** state. But:
   rewrite (2026-08-22)", no History sections, no "verified live" entries).
   AGENTS.md describes the present only. When reality changes, update the
   section in place — do not append narrative.
-- **Never link or point to `plans/` / `reports/` content from
-  GitHub-facing docs** (AGENTS.md, README.md, docs/, SKILL.md, DECISIONS.md,
-  .ai/). Those directories are internal agent memory and are gitignored —
-  a published path reference 404s for every reader. Describe the knowledge
-  in prose inside the doc itself, or keep the pointer inside plans/reports
-  files only (they may cross-link each other freely).
+- **No pointers to local-only places in shipped files** — the full rule
+  (covers `reports/`, `plans/`, `/code/experiments/`, any absolute local
+  path, and which files are shipped) lives in
+  [`.ai/rules-coding.md`](./.ai/rules-coding.md).
 
 ## Common Patterns
 

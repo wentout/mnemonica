@@ -89,7 +89,7 @@ export type constructorOptions = {
     strictChain?: boolean;
     blockErrors?: boolean;
     submitStack?: boolean;
-    awaitReturn?: boolean;
+    unchain?: boolean;
     asClass?: boolean;
 };
 export type SubtypesMap = Map<string, TypeClass>;

@@ -26,6 +26,8 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 		UserTypeConstructor,
 		AsyncWOReturn,
 		AsyncWOReturnNAR,
+		AsyncReturnsNull,
+		AsyncReturnsNullNAR,
 	} = opts;
 
 	describe('async construct should return something', () => {
@@ -45,7 +47,7 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 			expect(thrown).toBeInstanceOf(errors.WRONG_MODIFICATION_PATTERN);
 			expect(thrown!.message).toBeDefined();
 			expect(typeof thrown!.message).toEqual('string');
-			expect(thrown!.message).toEqual('wrong modification pattern : should inherit from AsyncWOReturn: seems async AsyncWOReturn has no return statement');
+			expect(thrown!.message).toEqual('wrong modification pattern : async constructor AsyncWOReturn must `return this` (it resolved to undefined)');
 		});
 
 	});
@@ -289,7 +291,7 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 			expect(wrongAsyncTypeErr).toBeInstanceOf(errors.WRONG_MODIFICATION_PATTERN);
 			expect(wrongAsyncTypeErr!.message).toBeDefined();
 
-			expect(wrongAsyncTypeErr!.message).toEqual('wrong modification pattern : should inherit from WrongAsyncType but got UserType');
+			expect(wrongAsyncTypeErr!.message).toEqual('wrong modification pattern : async constructor WrongAsyncType must resolve to its own instance (`return this`), got UserType');
 		});
 
 	});
@@ -562,6 +564,295 @@ export const asyncChainTests = (opts: AsyncChainTestOptions) => {
 
 		it('parent instance should not be instanceof AsyncChildType', () => {
 			expect(asyncParentInstance).not.toBeInstanceOf(AsyncChildType);
+		});
+
+	});
+
+	// appended at the END on purpose: the stack-trace pins above match
+	// 'async.chain.ts:1' (a 1xx line) — inserting earlier shifts line
+	// numbers and breaks them
+	describe('async construct resolving to null', () => {
+
+		let thrown: Error | undefined;
+		beforeAll(async () => {
+			try {
+				await new AsyncReturnsNull();
+			} catch (error) {
+				thrown = error as Error;
+			}
+		});
+
+		it('should throw the readable mnemonica error, never the internal TypeError', () => {
+			expect(thrown).toBeInstanceOf(Error);
+			expect(thrown).toBeInstanceOf(AsyncReturnsNull);
+			expect(thrown).toBeInstanceOf(errors.WRONG_MODIFICATION_PATTERN);
+			expect(thrown!.message).toEqual('wrong modification pattern : async constructor AsyncReturnsNull must `return this` (it resolved to null)');
+		});
+
+	});
+
+	describe('async construct resolving to null with unchain:true', () => {
+
+		let resolved: unknown;
+		beforeAll(async () => {
+			try {
+				resolved = await new AsyncReturnsNullNAR();
+			} catch (error) {
+				resolved = error;
+			}
+		});
+
+		it('should resolve null as-is', () => {
+			expect(resolved).toBeNull();
+		});
+
+	});
+
+	// the async-class cases of test_async/ as main-suite equivalents
+	// (test_async/ stays its own script, off test:cov — these give the
+	// coverage gate the same shapes), plus the new cases: an async class
+	// resolving to ANOTHER object, and async class subtypes via the call
+	// form and inst.Sub.call(other)
+	describe('async class constructors (main suite)', () => {
+
+		const AsyncClassParent = define('AsyncClassParent', class {
+			parentField = 'parent-field';
+			constructor() {
+				return new Promise((resolve) => {
+					setTimeout(() => resolve(this), 10);
+				});
+			}
+		});
+
+		const AsyncClassChild = AsyncClassParent.define('AsyncClassChild', class {
+			childField = 'child-field';
+			constructor() {
+				return new Promise((resolve) => {
+					setTimeout(() => resolve(this), 10);
+				});
+			}
+		});
+
+		const AsyncClassWOReturn = define('AsyncClassWOReturn', class {
+			constructor() {
+				return new Promise((resolve) => {
+					setTimeout(() => resolve(), 10);
+				});
+			}
+		});
+
+		const AsyncClassWOReturnNAR = define('AsyncClassWOReturnNAR', class {
+			constructor() {
+				return new Promise((resolve) => {
+					setTimeout(() => resolve(), 10);
+				});
+			}
+		}, {
+			unchain: true
+		});
+
+		const AsyncClassReturnsOther = define('AsyncClassReturnsOther', class {
+			constructor() {
+				return new Promise((resolve) => {
+					setTimeout(() => resolve({ foreign: true }), 10);
+				});
+			}
+		});
+
+		class AsyncClassBase {
+			baseField = 'base-field';
+		}
+
+		class AsyncClassExtends extends AsyncClassBase {
+			extField = 'ext-field';
+			constructor() {
+				super();
+				return new Promise((resolve) => {
+					setTimeout(() => resolve(this), 10);
+				});
+			}
+		}
+
+		const AsyncClassPreExtended = define('AsyncClassPreExtended', AsyncClassExtends);
+
+		const AsyncClassRooted = define('AsyncClassRooted', class {
+			rootField = 'root-field';
+			constructor() {
+				return new Promise((resolve) => {
+					setTimeout(() => resolve(this), 10);
+				});
+			}
+		});
+
+		const AsyncClassRootedSub = AsyncClassRooted.define('AsyncClassRootedSub', AsyncClassExtends);
+
+		// shared across the sub-describes below
+		let asyncClassParentInstance: unknown;
+
+		describe('async class fields and inheritance', () => {
+
+			let asyncClassChildInstance: unknown;
+			let asyncClassCallFormInstance: unknown;
+
+			beforeAll(async () => {
+				asyncClassParentInstance = await new AsyncClassParent();
+				const parent = asyncClassParentInstance as { AsyncClassChild: new () => Promise<unknown> };
+				asyncClassChildInstance = await parent.AsyncClassChild();
+				// the call form (no new) on an async class subtype
+				asyncClassCallFormInstance = await parent.AsyncClassChild();
+			});
+
+			it('parent instance should have class field', () => {
+				expect((asyncClassParentInstance as { parentField: string }).parentField).toEqual('parent-field');
+			});
+
+			it('child instance should have parent and child class fields', () => {
+				const child = asyncClassChildInstance as { parentField: string, childField: string };
+				expect(child.parentField).toEqual('parent-field');
+				expect(child.childField).toEqual('child-field');
+			});
+
+			it('child instance should be instanceof parent and child types', () => {
+				expect(asyncClassChildInstance).toBeInstanceOf(AsyncClassParent);
+				expect(asyncClassChildInstance).toBeInstanceOf(AsyncClassChild);
+				expect(asyncClassParentInstance).not.toBeInstanceOf(AsyncClassChild);
+			});
+
+			it('call form should produce an equal instance', () => {
+				expect(asyncClassCallFormInstance).toBeInstanceOf(AsyncClassChild);
+				expect((asyncClassCallFormInstance as { childField: string }).childField).toEqual('child-field');
+			});
+
+		});
+
+		describe('async class subtype via inst.Sub.call(other)', () => {
+
+			let asyncClassCalledInstance: unknown;
+
+			beforeAll(async () => {
+				// the era semantics: other must be a PARENT-type instance
+				// (a plain object is rejected: "should inherit from X but
+				// made on Object" — pinned in test-jest/index.ts) — the form
+				// adopts the given parent's data into a new child
+				const otherParent = await new AsyncClassParent() as { adopted?: string };
+				otherParent.adopted = 'adopted-field';
+				const parent = asyncClassParentInstance as {
+					AsyncClassChild: { call: (self: object) => Promise<unknown> }
+				};
+				asyncClassCalledInstance = await parent.AsyncClassChild.call(otherParent);
+			});
+
+			it('should construct the subtype on the given parent instance', () => {
+				const inst = asyncClassCalledInstance as { childField: string, adopted: string };
+				expect(asyncClassCalledInstance).toBeInstanceOf(AsyncClassChild);
+				expect(inst.childField).toEqual('child-field');
+				expect(inst.adopted).toEqual('adopted-field');
+			});
+
+		});
+
+		describe('async class construct should return something', () => {
+
+			let thrown: Error | undefined;
+			beforeAll(async () => {
+				try {
+					await new AsyncClassWOReturn();
+				} catch (error) {
+					thrown = error as Error;
+				}
+			});
+
+			it('should throw without return statement for class', () => {
+				expect(thrown).toBeInstanceOf(Error);
+				expect(thrown).toBeInstanceOf(AsyncClassWOReturn);
+				expect(thrown).toBeInstanceOf(errors.WRONG_MODIFICATION_PATTERN);
+				expect((thrown as Error).message).toEqual('wrong modification pattern : async constructor AsyncClassWOReturn must `return this` (it resolved to undefined)');
+			});
+
+		});
+
+		describe('async class construct should NOT return something', () => {
+			let resolved: unknown;
+			beforeAll(async () => {
+				try {
+					resolved = await new AsyncClassWOReturnNAR();
+				} catch (error) {
+					resolved = error;
+				}
+			});
+
+			it('should NOT throw without return statement for class', () => {
+				expect(resolved).toBeUndefined();
+			});
+		});
+
+		describe('async class resolving to another object', () => {
+
+			let thrown: Error | undefined;
+			beforeAll(async () => {
+				try {
+					await new AsyncClassReturnsOther();
+				} catch (error) {
+					thrown = error as Error;
+				}
+			});
+
+			it('should throw the should-inherit-from error naming the foreign object', () => {
+				expect(thrown).toBeInstanceOf(Error);
+				expect(thrown).toBeInstanceOf(AsyncClassReturnsOther);
+				expect(thrown).toBeInstanceOf(errors.WRONG_MODIFICATION_PATTERN);
+				expect((thrown as Error).message).toEqual('wrong modification pattern : async constructor AsyncClassReturnsOther must resolve to its own instance (`return this`), got Object');
+			});
+
+		});
+
+		describe('pre-existing class hierarchy passed to define()', () => {
+
+			let asyncClassPreExtInstance: unknown;
+
+			beforeAll(async () => {
+				asyncClassPreExtInstance = await new AsyncClassPreExtended();
+			});
+
+			it('instance should have base and extended class fields', () => {
+				const inst = asyncClassPreExtInstance as { baseField: string, extField: string };
+				expect(inst.baseField).toEqual('base-field');
+				expect(inst.extField).toEqual('ext-field');
+			});
+
+			it('instance should be instanceof the mnemonica type and the original classes', () => {
+				expect(asyncClassPreExtInstance).toBeInstanceOf(AsyncClassPreExtended);
+				expect(asyncClassPreExtInstance).toBeInstanceOf(AsyncClassExtends);
+				expect(asyncClassPreExtInstance).toBeInstanceOf(AsyncClassBase);
+			});
+
+		});
+
+		describe('root type defines subtype with pre-existing class hierarchy', () => {
+
+			let asyncClassRootInstance: unknown;
+			let asyncClassRootedSubInstance: unknown;
+
+			beforeAll(async () => {
+				asyncClassRootInstance = await new AsyncClassRooted();
+				const rooted = asyncClassRootInstance as { AsyncClassRootedSub: new () => Promise<unknown> };
+				asyncClassRootedSubInstance = await rooted.AsyncClassRootedSub();
+			});
+
+			it('sub instance should have root, base and extended fields', () => {
+				const inst = asyncClassRootedSubInstance as { rootField: string, baseField: string, extField: string };
+				expect(inst.rootField).toEqual('root-field');
+				expect(inst.baseField).toEqual('base-field');
+				expect(inst.extField).toEqual('ext-field');
+			});
+
+			it('sub instance should be instanceof root and sub, root not instanceof sub', () => {
+				expect(asyncClassRootedSubInstance).toBeInstanceOf(AsyncClassRooted);
+				expect(asyncClassRootedSubInstance).toBeInstanceOf(AsyncClassRootedSub);
+				expect(asyncClassRootInstance).toBeInstanceOf(AsyncClassRooted);
+				expect(asyncClassRootInstance).not.toBeInstanceOf(AsyncClassRootedSub);
+			});
+
 		});
 
 	});

@@ -85,14 +85,21 @@ const tests = (opts) => {
 			(Normally constructors don't return a value, but they can choose
 			 to do so to override the normal object creation process.)
 			*/
-			const NullishReturn = define('NullishReturn', () => {
+			// a sync arrow handler is rejected at define time; the
+			// JS-return-semantics pin below uses a REGULAR function —
+			// primitive returns are dropped by `new` either way
+			const NullishReturn = define('NullishReturn', function () {
 				return null;
 			});
 
 			const nullR = new NullishReturn('NullishReturn');
 			expect(nullR).instanceOf(NullishReturn);
-			expect(nullR instanceof Object).equal(false);
-			expect(nullR).not.instanceOf(Object);
+			// with a regular function the instance is a normal chain
+			// member (instanceof Object like every mnemonica instance).
+			// The pin is the JS return semantics: a primitive (null)
+			// return is dropped by `new`, the constructed instance stands
+			expect(nullR instanceof Object).equal(true);
+			expect(nullR).instanceOf(Object);
 
 		});
 		describe('.isClass, .findSubTypeFromParent', () => {
@@ -103,6 +110,57 @@ const tests = (opts) => {
 			expect(part).is.equal(null);
 			const nullish = findSubTypeFromParent(undefined, 'missing');
 			expect(nullish).is.equal(null);
+		});
+		describe('handler classification at define time', () => {
+			// generators, sync arrows, shorthand methods and bound
+			// functions are rejected AT DEFINE TIME with readable errors;
+			// async forms stay on the async path
+			let arrowError;
+			let genError;
+			let asyncGenError;
+			try {
+				define('C0ArrowProbe', () => { });
+			} catch (error) {
+				arrowError = error;
+			}
+			try {
+				define('C0GenProbe', function* () {
+					yield 1;
+				});
+			} catch (error) {
+				genError = error;
+			}
+			try {
+				define('C0AsyncGenProbe', async function* () {
+					yield 1;
+				});
+			} catch (error) {
+				asyncGenError = error;
+			}
+			it('sync arrow should throw the readable arrow error', () => {
+				expect(arrowError).instanceOf(Error);
+				expect(arrowError).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+				expect(arrowError.message)
+					.equal('wrong modification pattern : C0ArrowProbe: constructor must be a regular function or a class (arrow functions, methods and bound functions are not supported)');
+			});
+			it('sync generator should throw the not-supported error', () => {
+				expect(genError).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+				expect(genError.message)
+					.equal('wrong modification pattern : C0GenProbe: generator functions are not supported as a constructor');
+			});
+			it('async generator should throw the not-supported error', () => {
+				expect(asyncGenError).instanceOf(errors.WRONG_MODIFICATION_PATTERN);
+				expect(asyncGenError.message)
+					.equal('wrong modification pattern : C0AsyncGenProbe: generator functions are not supported as a constructor');
+			});
+			it('a rejected define leaves nothing registered — a corrected re-define succeeds', () => {
+				const fixed = define('C0ArrowProbe', function () {
+					this.fixed = true;
+					return this;
+				});
+				const instance = new fixed();
+				expect(instance.fixed).equal(true);
+			});
 		});
 		describe('interface test', () => {
 

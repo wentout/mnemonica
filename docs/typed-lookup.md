@@ -17,6 +17,16 @@ TypeScript, however, cannot see a type graph built by runtime calls. There are
 > types work out of the box. Add the one-line bridge the moment you want free
 > `lookup()` typed. Reach for Tactica when you need `@decorate()`, or when a
 > large codebase already uses free `define()` calls everywhere.
+>
+> **The third thing only Tactica solves — async-vs-sync detection.** An async
+> constructor returns a Promise at runtime, but `new` is typed as the finished
+> instance on BOTH builder and free-define paths, and neither TypeScript's
+> checks nor the runtime can see the difference (an async class constructor
+> returning a Promise is invisible to both). Only an AST reader sees it:
+> Tactica detects `async function`/async-class handlers from the source and
+> can type `new` as `Promise<X>` (see [`async-constructors.md`](./async-constructors.md)).
+> Together with `@decorate()` and declaration merging, this is the third
+> capability the builder pattern fundamentally cannot provide.
 
 ---
 

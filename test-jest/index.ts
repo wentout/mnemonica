@@ -311,7 +311,20 @@ const AsyncWOReturn = define('AsyncWOReturn', async function () {
 });
 
 const AsyncWOReturnNAR = define('AsyncWOReturnNAR', async function () { }, {
-	awaitReturn: false
+	unchain: true
+});
+
+// null resolution: a legitimate value. Default config -> the readable
+// mnemonica error; unchain:true -> resolves null as-is (never the
+// internal TypeError from reading `.constructor` of null)
+const AsyncReturnsNull = define('AsyncReturnsNull', async function () {
+	return null;
+});
+
+const AsyncReturnsNullNAR = define('AsyncReturnsNullNAR', async function () {
+	return null;
+}, {
+	unchain: true
 });
 
 const constructNested = function (this: { NestedConstruct: new () => unknown }) {
@@ -2115,6 +2128,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		UserTypeConstructor,
 		AsyncWOReturn,
 		AsyncWOReturnNAR,
+		AsyncReturnsNull,
+		AsyncReturnsNullNAR,
 	});
 
 	// Include environment tests
@@ -2250,7 +2265,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					strictChain: 'not a boolean', // wrong type
 					blockErrors: 123, // wrong type
 					submitStack: 'not a boolean',
-					awaitReturn: 'not a boolean'
+					unchain: 'not a boolean'
 				});
 				const instance = new TypeWithBadConfig();
 				expect(instance).toBeDefined();
@@ -2474,7 +2489,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					strictChain: false,
 					blockErrors: true,
 					submitStack: false,
-					awaitReturn: true
+					unchain: false
 				});
 				
 				// The collection should work with the provided values
