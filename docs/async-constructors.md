@@ -20,7 +20,36 @@ const instance = await new AsyncType('tada');
 console.log(instance.data); // 'tada'
 ```
 
-The `awaitReturn` option (default: `true`) ensures `await new Constructor()` returns the resolved instance. If you set `awaitReturn: false`, the raw Promise is returned instead.
+The `unchain` option (default: `false`) requires `await new Constructor()` to resolve to its instance. With `unchain: true`, a non-object resolution (`undefined`, a primitive, `null`) drops the chain — that value is the result.
+
+---
+
+## The `return this` rule
+
+An async constructor must resolve to the instance it was given as `this`.
+Fields assigned to `this` are invisible to the chain unless the constructor
+returns it — `return this`, or a Promise resolving to it (promises resolve to
+their final depth by the ECMAScript standard).
+
+When the resolution breaks the rule, the error names the cause and the fix:
+
+```
+// resolved to undefined / a primitive / null (with unchain: false):
+wrong modification pattern : async constructor AsyncType must `return this` (it resolved to undefined)
+
+// resolved to a different object:
+wrong modification pattern : async constructor AsyncType must resolve to its own instance (`return this`), got Object
+```
+
+With `unchain: true` the first case is not an error at all — the non-object
+value IS the result (see Configuration below). `null` is a legitimate value
+either way: `undefined` says "no construction after this", `null` says "the
+chain ends here, but an object is possible".
+
+> **Write async constructors as `async function`.** Only that form supports
+> the `this`-substitution dance. Arrow functions never see the instance
+> (their `this` is lexical); the shape rules below reject the sync forms at
+> define time, and the `no-arrow-this` ESLint plugin is the early guard.
 
 ---
 
@@ -228,25 +257,25 @@ Each async subtype returns a Promise that resolves to the next instance in the c
 
 ---
 
-## Configuration: `awaitReturn`
+## Configuration: `unchain`
 
 | Option | Default | Behavior |
 |--------|---------|----------|
-| `awaitReturn` | `true` | `await new AsyncType()` returns the resolved instance |
-| `awaitReturn` | `false` | `await new AsyncType()` returns the raw Promise |
+| `unchain` | `false` (default) | `await new AsyncType()` must resolve to the instance |
+| `unchain` | `true` | a non-object resolution drops the chain — the value itself is the result |
 
 ```js
 const AsyncType = define('AsyncType', async function () {
 	await sleep(100);
 	this.done = true;
-	return this;
-}, { awaitReturn: false });
+	// no return: resolves to undefined
+}, { unchain: true });
 
 const result = await new AsyncType();
-// result is a Promise, not the instance
+// result is undefined — the chain is dropped, no error
 ```
 
-Use `awaitReturn: false` only if you need to handle the Promise manually (e.g., for custom `.then()` chains).
+Use `unchain: true` when a data-flow chain is meant to end in a plain value — step back and re-construct from `.parent` if an object is needed.
 
 ---
 
@@ -282,14 +311,36 @@ The error's composite stack keeps its three sections for async failures too. The
 
 | Pattern | Works? | Notes |
 |---------|--------|-------|
-| `define('Name', async function () { ... })` | ✅ | Standard async constructor |
+| `define('Name', async function () { ... })` | ✅ | Standard async constructor — must `return this` |
 | `define('Name', MyAsyncClass)` | ✅ | Native async class wrapped via `class extends` |
-| `await new AsyncType()` | ✅ | Returns resolved instance (with `awaitReturn: true`) |
+| `await new AsyncType()` | ✅ | Returns resolved instance (with `unchain: false`, the default) |
+| `await new AsyncType()` with `unchain: true` | ✅ | A non-object resolution drops the chain — the value is the result |
 | `await parent.AsyncSubType()` | ✅ | Correct subtype invocation pattern |
 | `await new AsyncSubType()` | ❌ | Fails `strictChain` — no parent instance |
 | Native `instanceof` through chain | ⚠️ | Follows mnemonica's graph, not native class hierarchy |
 | `super()` returning Promise | ✅ | Standard JS; mnemonica's wrapper preserves it |
+| `define('Name', () => { ... })` — arrow, method, bound fn | ❌ | Define-time error: must be a regular function or a class |
+| `define('Name', function* () { ... })` — generators | ❌ | Define-time error: not supported as a constructor |
+| Generators CONSUMING constructions (`yield new X()`) | ✅ | The yielded value is the instance; async generators even resolve un-awaited construction promises |
 
 ---
 
-> **Key takeaway:** Async constructors in mnemonica work because mnemonica treats the constructor's return value — Promise or not — as the instance seed. The `class extends` wrapper ensures `super()` propagates the Promise, and mnemonica's async pipeline resolves it into a properly chained instance. Use `parent.AsyncChild()` for subtypes, not standalone `new AsyncChild()`.
+## Detection limits — why mnemonica does not support all function machinery
+
+mnemonica classifies construct handlers with two cheap runtime facts only —
+`constructor.name` and own `prototype` — and no `fn.toString()` (overhead,
+and fragile under transpilers). That buys:
+
+| Detection | Reliability |
+|-----------|-------------|
+| class vs function (`isClass`) | Partial — syntax-based, unaware of transpiled/polyfilled output |
+| async vs sync (`constructor.name === 'AsyncFunction'`) | ✅ any async form (function, arrow, method) |
+| `async function` vs `async () =>` | ❌ indistinguishable — accepted: async arrows take the async path; write `async function`, use the `no-arrow-this` ESLint plugin |
+| sync arrow / method / bound function (no own `prototype`) | ✅ rejected at define time — the three forms are indistinguishable, all rejected with one readable error |
+| generators / async generators | ✅ rejected at define time as constructor handlers; as CONSUMERS (`yield new X()`, `for await`) they fully work |
+| async getters/setters | ❌ not distinguished — a getter returning an async function looks like a value |
+| transpiled / polyfilled code | Partial — downleveling can rename constructors and erase generator identities (demonstrated: ts-jest at ES6 target turns `async function*` into a plain function); the runtime signals degrade gracefully to the readable errors above |
+
+---
+
+> **Key takeaway:** Async constructors in mnemonica work because mnemonica treats the constructor's return value — Promise or not — as the instance seed. The `class extends` wrapper ensures `super()` propagates the Promise, and mnemonica's async pipeline resolves it into a properly chained instance. Use `parent.AsyncChild()` for subtypes, not standalone `new AsyncChild()`. Write async constructors as `async function` and `return this`.

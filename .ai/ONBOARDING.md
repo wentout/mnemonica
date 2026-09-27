@@ -160,7 +160,7 @@ mnemonica supports async constructors natively:
 const AsyncType = define('AsyncType', async function () {
 	await sleep(100);
 	this.done = true;
-	return this; // MUST return with awaitReturn: true (default)
+	return this; // MUST return this (unchain: false is the default)
 });
 
 const instance = await new AsyncType();

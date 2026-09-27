@@ -1,7 +1,7 @@
 ---
 name: mnemonica-async-constructors
 description: |
-  Async constructor patterns in mnemonica: awaitReturn, super() return-value
+  Async constructor patterns in mnemonica: unchain, super() return-value
   propagation, native async class wrapping, async subtype chains, and the
   parent.AsyncChild() invocation pattern. Use when the user asks about async
   constructors, Promise return from new, await new Constructor(), async subtype
@@ -23,20 +23,32 @@ const AsyncType = define('AsyncType', async function (data) {
 const instance = await new AsyncType('tada');
 ```
 
-## awaitReturn Config
+## unchain Config
 
-When `awaitReturn: true` (default), `await new Constructor()` must return a value.
-If the constructor returns `undefined`, an error is thrown.
+When `unchain: false` (default), `await new Constructor()` must resolve to its instance.
+If the construction resolves to a non-object (`undefined`, a primitive, `null`), a readable error is thrown:
+"async constructor X must `return this` (it resolved to <value>)".
+Resolving to a DIFFERENT object throws: "async constructor X must resolve to its own instance (`return this`), got Y".
 
 ```typescript
 const AsyncType = define('AsyncType', async function () {
-	return this; // MUST return a value
-}, { awaitReturn: true });
+	return this; // MUST return this
+}, { unchain: false });
 
 const AsyncTypeNoReturn = define('AsyncTypeNoReturn', async function () {
-	// No return needed
-}, { awaitReturn: false });
+	// No return needed — the chain is dropped, no error
+}, { unchain: true });
 ```
+
+## Handler Shapes (define-time classification)
+
+Handlers are classified once at define time from `constructor.name` + own
+`prototype` only (no `toString()` — overhead, fragile under transpilers):
+
+- generators / async generators → define-time error: "<Name>: generator functions are not supported as a constructor"
+- sync arrows, shorthand methods, bound functions (Function with no own prototype) → define-time error: "<Name>: constructor must be a regular function or a class (arrow functions, methods and bound functions are not supported)"
+- async forms (`async function`, async arrows, async methods) are NOT separable — they take the async path. Write async constructors as `async function` (only that form supports the `this`-substitution dance); the `no-arrow-this` ESLint plugin is the early guard.
+- generators as CONSUMERS work fully: `yield new X()` yields the instance; async generators even resolve un-awaited construction promises (`test_yields/`).
 
 ## The super() Return-Value Pattern
 
@@ -199,7 +211,7 @@ try {
 |---------|--------|-------|
 | `define('Name', async function () { ... })` | ✅ | Standard async constructor |
 | `define('Name', MyAsyncClass)` | ✅ | Native async class wrapped via `class extends` |
-| `await new AsyncType()` | ✅ | Returns resolved instance (with `awaitReturn: true`) |
+| `await new AsyncType()` | ✅ | Returns resolved instance (with `unchain: false`, the default) |
 | `await parent.AsyncSubType()` | ✅ | Correct subtype invocation pattern |
 | `await new AsyncSubType()` | ❌ | Fails `strictChain` — no parent instance |
 | Native `instanceof` through chain | ⚠️ | Follows mnemonica's graph, not native class hierarchy |
@@ -250,12 +262,12 @@ it covered are preserved in the historical appendix at the end of this file.
 ### Acronyms
 
 - **WOReturn** = **W**ith**O**ut **Return** — Promise resolves to `undefined` instead of `this`
-- **NAR** = **N**o **A**wait **R**eturn** — `awaitReturn: false` disables the guard
+- **NAR** = **N**o **A**wait **R**eturn** — `unchain: true` disables the guard
 
 ### Coverage Items
 
 1. **WOReturn guard for classes** — async class constructor returning Promise without `this` throws `WRONG_MODIFICATION_PATTERN`
-2. **NAR bypass** — `awaitReturn: false` allows the same without throwing
+2. **NAR bypass** — `unchain: true` allows the same without throwing
 3. **Field inheritance through mnemonica chain** — parent/child fields preserved across async constructors
 4. **Pre-existing class hierarchy at top-level** — `define('Type', ExtendedClass)` preserves fields and `instanceof` against original classes
 5. **Pre-existing class hierarchy as sub-type** — sub instance gets root fields + class hierarchy fields, but standard JS `instanceof` against original classes is broken (mnemonica `instanceof` still works)
@@ -303,7 +315,7 @@ child.childField;  // 'child-field'
 ```
 
 An async constructor that resolves `undefined` throws by default;
-`awaitReturn: false` disables the guard:
+`unchain: true` disables the guard:
 
 ```js
 const AsyncInitWOReturn = define('AsyncInitWOReturn', class {
@@ -320,7 +332,7 @@ define('AsyncInitWOReturnNAR', class {
 			setTimeout(() => resolve(), 10);
 		});
 	}
-}, { awaitReturn: false }); // resolves undefined → no throw
+}, { unchain: true }); // resolves undefined → no throw
 ```
 
 A pre-existing class hierarchy can serve as the construct handler, at the

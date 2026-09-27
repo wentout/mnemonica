@@ -248,26 +248,32 @@ const makeAwaiter = function ( this: InstanceCreatorContext, type: TypeDef, then
 	self.inheritedInstance = (self.inheritedInstance as Promise<object>)
 		.then( ( instance: unknown ) => {
 
-			if ( typeof instance !== 'object' ) {
-				if ( self.config.awaitReturn ) {
-					const msg = `should inherit from ${type.TypeName}: ` +
-						`seems async ${type.TypeName} has no return statement`;
+			// null has typeof 'object' in JS, but for the unchain decision it
+			// is a VALUE like any other non-object: with unchain:true it
+			// resolves as-is; with the default it takes the readable
+			// mnemonica error below — never the internal TypeError from
+			// reading `.constructor` of null
+			if ( typeof instance !== 'object' || instance === null ) {
+				if ( self.config.unchain ) {
+					return instance;
+				} else {
+					const msg = `async constructor ${type.TypeName} must \`return this\` ` +
+						`(it resolved to ${String( instance )})`;
 					throw new WRONG_MODIFICATION_PATTERN(
 						msg,
-						self.stack 
+						self.stack
 					);
-				} else {
-					return instance;
 				}
 			}
 
-			if ( instance === null || !( instance instanceof self.type ) ) {
-				 
+			if ( !( instance instanceof self.type ) ) {
+
 				const icn = (instance as object).constructor.name;
-				const msg = `should inherit from ${type.TypeName} but got ${icn}`;
+				const msg = `async constructor ${type.TypeName} must resolve to its own instance ` +
+					`(\`return this\`), got ${icn}`;
 				throw new WRONG_MODIFICATION_PATTERN(
 					msg,
-					self.stack 
+					self.stack
 				);
 			}
 

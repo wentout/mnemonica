@@ -1,6 +1,9 @@
 'use strict';
 
 import { hop } from '../../utils/hop';
+import { ErrorsTypes } from '../../descriptors/errors';
+
+const { WRONG_MODIFICATION_PATTERN, } = ErrorsTypes;
 /*
 
 // it is not that easy
@@ -46,6 +49,37 @@ export interface ClassConstructHandler extends NewableFunction {
 export interface CreationHandler extends CallableFunction {
 	(this: object, answer: unknown): unknown;
 }
+
+// Classify the construct handler ONCE at define time from two cheap
+// facts only — constructor.name and own prototype — NO toString()
+// (overhead, fragile under transpilers). Async forms are NOT
+// separable beyond 'AsyncFunction' (async arrows and async methods
+// take the async path, accepted by design); a sync Function without
+// its own prototype is a sync arrow, a shorthand method or a bound
+// function — the three are indistinguishable here and all are
+// rejected with the readable error (the docs: write constructors as
+// regular functions or classes).
+export const classifyConstructHandler = ( FunctionName: string, ConstructHandler: ConstructHandler ) => {
+	const handlerKind = ConstructHandler.constructor.name;
+	const hasOwnPrototype = hop(
+		ConstructHandler,
+		'prototype'
+	);
+
+	if (
+		handlerKind === 'GeneratorFunction' ||
+		handlerKind === 'AsyncGeneratorFunction'
+	) {
+		const msg = `${FunctionName}: generator functions are not supported as a constructor`;
+		throw new WRONG_MODIFICATION_PATTERN( msg );
+	}
+
+	if ( handlerKind === 'Function' && !hasOwnPrototype ) {
+		const msg = `${FunctionName}: constructor must be a regular function or a class ` +
+			'(arrow functions, methods and bound functions are not supported)';
+		throw new WRONG_MODIFICATION_PATTERN( msg );
+	}
+};
 
 const getClassConstructor = (
 	ConstructHandler: ClassConstructHandler,

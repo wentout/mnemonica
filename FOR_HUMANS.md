@@ -507,10 +507,10 @@ const AsyncType = define('AsyncType', async function (this: UserData, data: stri
   return Object.assign(this, { data });
 });
 
-// With explicit awaitReturn option (no return required)
+// With explicit unchain option (no return required)
 const AsyncTypeNoReturn = define('AsyncType', async function () {
   // No return needed
-}, { awaitReturn: false });
+}, { unchain: true });
 ```
 
 ---
@@ -1200,7 +1200,7 @@ define('SomeType', function () {}, {
   strictChain: true,        // Only allow sub-instances from current type
   blockErrors: true,        // Disallow construction if error in prototype chain
   submitStack: false,       // Collect stack trace as __stack__ property
-  awaitReturn: true,        // Ensure await new Constructor() returns value
+  unchain: false,            // Ensure await new Constructor() resolves to the instance
   ModificationConstructor: fn,  // Custom modification constructor
   asClass: false            // Force class mode (auto-detected by default)
 });
@@ -1213,7 +1213,7 @@ define('SomeType', function () {}, {
 | `strictChain` | `boolean` | `true` | If `true`, only direct subtypes can be instantiated. If `false`, allows using subtypes from parent chains. |
 | `blockErrors` | `boolean` | `true` | If `true`, prevents construction when errors exist in the prototype chain. |
 | `submitStack` | `boolean` | `false` | If `true`, collects stack trace and stores as `__stack__` property on instances. |
-| `awaitReturn` | `boolean` | `true` | For async constructors, ensures `await new Constructor()` returns the instance. |
+| `unchain` | `boolean` | `false` | For async constructors: `false` (default) requires the construction to resolve to its instance; `true` drops the chain on a non-object result — that value is the result. |
 | `asClass` | `boolean` | `auto` | Force class mode detection. Usually auto-detected from constructor syntax. |
 | `ModificationConstructor` | `Function` | - | Custom constructor function for internal instance modification. |
 
