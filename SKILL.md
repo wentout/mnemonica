@@ -148,7 +148,17 @@ almost always one of:
 2. `.tactica/` is not in `tsconfig.json` `include`;
 3. a constructor is imported from a model file instead of `lookup()`;
 4. a subtype is constructed from a constructor, not from its parent
-   instance (`new user.Admin(…)`).
+   instance (`new user.Admin(…)`);
+5. the results of free `define()` are exported as the API with no
+   `TypeRegistry` merge — the project builds until TypeScript 6
+   declaration emit, then fails with
+   `TS2883: … cannot be named without a reference to 'GlobalRegistry'`.
+   This is the same disease as (3): constructors must come from
+   `lookup()`, not from exported define() results. Never fix it with
+   casts, re-exports, or annotations — pick a lineage (tactica,
+   hand-written merge, or builder) or ask the user. Full reasoning and
+   the proof: [`docs/typed-lookup.md`](./docs/typed-lookup.md)
+   ("Declaration emit on TypeScript 6").
 
 ## Constructing subtypes
 

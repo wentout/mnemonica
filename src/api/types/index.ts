@@ -265,9 +265,9 @@ TypeDescriptor.prototype.lookup = function (
 	// collection, e.g. AdminType.lookup('UserType.AdminType'),
 	// which is what the TypeLookup<Registry> type contract promises
 	const collection = this.collection as CollectionDef;
-	// the typed-lookup overload materializes LookupResult, which does not
-	// claim the runtime-installed TypeClass members — narrow it back
-	const rootResult = collection.lookup(TypeNestedPath) as unknown as TypeClass | undefined;
+	// CollectionDef.lookup is the runtime contract (CollectionLookup), so a
+	// plain string path yields TypeClass | undefined with no cast
+	const rootResult = collection.lookup(TypeNestedPath);
 	return rootResult;
 };
 

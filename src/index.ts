@@ -19,9 +19,9 @@ import type {
 	InstanceResult,
 	Merge,
 	TypeLookup,
-	LookupResult,
 	RegistryHolderBase,
-	StoredConstructor
+	RegistryEntry,
+	LookedUpConstructor
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -55,6 +55,12 @@ export type {
 	LookupResult,
 	RegistryOf,
 	MnemonicaModule,
+	// Deliberate public vocabulary for builder-mode consumers (TS 6
+	// declaration emit names ONLY entry exports; these three stand in
+	// for the internal registry/lookup machinery):
+	RegistryEntry,
+	LookedUpConstructor,
+	LookedUpInstance,
 } from './types';
 
 /**
@@ -75,6 +81,12 @@ export type {
  * Once augmented, `lookup('MyType')` and `utils.parent(instance, 'MyType')`
  * resolve keys against this registry. Unaugmented keys fall back to the broad
  * `TypeClass | undefined` return type.
+ *
+ * Internal on purpose: if you are here from a TS2883 error
+ * ("cannot be named without a reference to 'GlobalRegistry'"), the project
+ * exports free define() results without merging them into this registry.
+ * The error is the guard rail, not a missing export — see
+ * docs/typed-lookup.md, "Declaration emit on TypeScript 6".
  */
 export interface TypeRegistry {
 	// Intentionally empty. Augment this interface via declaration merging
@@ -136,7 +148,7 @@ export function define <
 ): IDefinitorInstance<
 	F,
 	InstanceResult<F>,
-	Reg & Record<ChildPath, StoredConstructor<F, ChildPath>>,
+	Reg & Record<ChildPath, RegistryEntry<F, ChildPath>>,
 	ChildPath
 >;
 export function define <
@@ -264,7 +276,7 @@ export function lookup<Reg extends object, const K extends keyof Reg & string>(
 	// resolves against the registry carried by a builder/collection value
 	source: { lookup: TypeLookup<Reg> },
 	TypeNestedPath: K
-): LookupResult<Reg, K>;
+): LookedUpConstructor<Reg, K>;
 export function lookup(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 export function lookup(
 	source: { lookup: (path: string) => TypeClass | undefined },

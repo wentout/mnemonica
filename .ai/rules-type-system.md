@@ -5,7 +5,9 @@ description: |
   type vs interface rule, and generic constraints. Use when adding or modifying
   TypeScript definitions in mnemonica, when defining new types with define(),
   or when the user asks about type merging, type constructors, kind systems,
-  TypeRegistry, or generic type patterns in mnemonica.
+  TypeRegistry, or generic type patterns in mnemonica. Also use before touching
+  the public type exports, or on a consumer's TS2883 "cannot be named without a
+  reference to 'GlobalRegistry' / an internal registry helper" error.
 metadata:
   tags: [mnemonica, typescript, generics, type-system, kind-system]
 ---
@@ -115,6 +117,37 @@ const AdminType = UserType.define('AdminType', function (this: AdminType) {
     this.role = 'admin';
 });
 ```
+
+## Symptom: "just re-export `GlobalRegistry` / the internal registry helpers"
+
+If a consumer-side error like
+
+```
+error TS2883: The inferred type of 'Widget' cannot be named without a reference
+to 'GlobalRegistry' from '…/mnemonica/build/types'. This is likely not portable.
+```
+
+— or the reflex to add internal names to the public `export type { … }` list in
+`src/index.ts` — appears: STOP. The error is not a missing export; it is the
+compiler telling the consumer uses mnemonica the wrong way (exported free
+`define()` results with no `TypeRegistry` merge). Re-exporting internals
+silences the only thing that says so — and `npm run test:ts:consumers` exists
+precisely to keep that failure in place (the n1/n2 fixtures must KEEP failing
+with TS2883).
+
+The full proof (the mnemonica table, the plain-TypeScript table, the three
+right fixes, and why agents fall into this) is maintained ONCE, for users and
+agents alike, in [`docs/typed-lookup.md`](../docs/typed-lookup.md)
+("Declaration emit on TypeScript 6"). Read it there; do not duplicate it here,
+and do not change core's public exports to make a consumer's error go away.
+
+### Core-side vocabulary rule
+
+The builder public vocabulary is exactly three names, re-exported from
+`src/index.ts` on purpose: `RegistryEntry`, `LookedUpConstructor`,
+`LookedUpInstance` (see `src/types/index.ts`). When the builder result types
+change, those three stay nameable from the entry — anything else that starts
+leaking into consumer declaration emit is a design bug, not an export to add.
 
 ## Generic Public Utilities
 

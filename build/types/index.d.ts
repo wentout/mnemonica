@@ -109,9 +109,12 @@ export type TypeDef = {
     stack?: string;
     [Symbol.hasInstance]: (instance: object) => boolean;
 };
+export interface CollectionLookup extends CallableFunction {
+    (this: unknown, TypeNestedPath: string): TypeClass | undefined;
+}
 export type CollectionDef = Hookable & {
     define: TypeAbsorber;
-    lookup: TypeLookup;
+    lookup: CollectionLookup;
     subtypes: SubtypesMap;
     [key: string]: unknown;
 };
@@ -120,9 +123,7 @@ export type ExtractConstructorInstance<C> = C extends {
     new (...args: never[]): infer I;
 } ? I extends object ? I : object : object;
 export type SubTypeConstructors<Registry extends object, Path extends string> = {
-    [K in keyof Registry as K extends `${Path}.${infer Child}` ? Child : never]: AugmentedConstructor<Registry, K & string, true> & {
-        lookup: NestedTypeLookup<Registry, K & string>;
-    };
+    [K in keyof Registry as K extends `${Path}.${infer Child}` ? Child : never]: LookedUpConstructor<Registry, K & string, true>;
 };
 export type ReplaceConstructorInstance<C, NewInstance extends object, CallConstructs extends boolean = false> = C extends {
     new (...args: infer A): unknown;
@@ -139,21 +140,23 @@ export type ReplaceConstructorInstance<C, NewInstance extends object, CallConstr
     (this: NewInstance, ...args: A2): NewInstance;
 } : unknown) & Omit<C, 'prototype' | 'lookup'> : never;
 export type WithSubTypes<Instance extends object, Registry extends object, Path extends string> = Instance & SubTypeConstructors<Registry, Path>;
-export type AugmentedConstructor<Registry extends object, Path extends keyof Registry & string, CallConstructs extends boolean = false> = ReplaceConstructorInstance<Registry[Path], WithSubTypes<ExtractConstructorInstance<Registry[Path]>, Registry, Path>, CallConstructs>;
-export type LookupResult<Registry extends object, Path extends keyof Registry & string> = Registry[Path] extends AnyConstructor ? AugmentedConstructor<Registry, Path> & {
+export type AugmentedConstructor<Registry extends object, Path extends keyof Registry & string, CallConstructs extends boolean = false> = ReplaceConstructorInstance<Registry[Path], LookedUpInstance<Registry, Path>, CallConstructs>;
+export type LookedUpInstance<Registry extends object, Path extends string> = WithSubTypes<ExtractConstructorInstance<Registry[Path & keyof Registry]>, Registry, Path>;
+export type LookedUpConstructor<Registry extends object, Path extends keyof Registry & string, CallConstructs extends boolean = false> = AugmentedConstructor<Registry, Path, CallConstructs> & {
     lookup: NestedTypeLookup<Registry, Path>;
-} : never;
+};
+export type LookupResult<Registry extends object, Path extends keyof Registry & string> = Registry[Path] extends AnyConstructor ? LookedUpConstructor<Registry, Path> : never;
 export interface TypeLookup<T extends object = GlobalRegistry> extends CallableFunction {
-    <const K extends keyof T & string>(this: unknown, TypeNestedPath: K): LookupResult<T, K>;
+    <const K extends keyof T & string>(this: unknown, TypeNestedPath: K): LookedUpConstructor<T, K>;
     (this: unknown, TypeNestedPath: string): TypeClass | undefined;
 }
 export type RegistryOf<T> = T extends IDefinitorInstance<object, InstanceResult<object>, infer Registry, string> ? Registry : T extends TypesCollection<infer Registry, object, string> ? Registry : T extends MnemonicaModule<infer Registry> ? Registry : never;
 export type RelativeKeys<Registry extends object, Path extends string> = Path extends '' ? keyof Registry & string : (keyof Registry extends infer K ? K extends `${Path}.${infer Child}` ? Child : never : never);
 export type FullKey<Registry extends object, Path extends string, K extends string> = Path extends '' ? K : Extract<keyof Registry & string, `${Path}.${K}`>;
 export type NestedTypeLookup<Registry extends object, Path extends string = ''> = (Path extends '' ? {
-    <const K extends keyof Registry & string>(this: unknown, TypeNestedPath: K): LookupResult<Registry, K>;
+    <const K extends keyof Registry & string>(this: unknown, TypeNestedPath: K): LookedUpConstructor<Registry, K>;
 } : {
-    <const K extends RelativeKeys<Registry, Path> & string>(this: unknown, TypeNestedPath: K): LookupResult<Registry, Extract<keyof Registry & string, `${Path}.${K}`>>;
+    <const K extends RelativeKeys<Registry, Path> & string>(this: unknown, TypeNestedPath: K): LookedUpConstructor<Registry, Extract<keyof Registry & string, `${Path}.${K}`>>;
 }) & {
     (this: unknown, TypeNestedPath: string): TypeClass | undefined;
 };
@@ -245,12 +248,13 @@ export type Props = InstanceInternalProps & {
 export type InstanceResult<N extends object> = {
     [K in keyof N]: N[K];
 };
-export type StoredConstructor<F extends object, Path extends string = ''> = _Internal_TC_<F> & RegistryHolderBase<{}, F, Path>;
+export interface RegistryEntry<F extends object, Path extends string = ''> extends _Internal_TC_<F>, RegistryHolderBase<{}, F, Path> {
+}
 export interface RegistryHolderBase<T extends object = {}, Parent extends object = object, Path extends string = ''> {
     define<SubType extends object>(this: RegistryHolderBase<T, Parent, Path>, TypeOrTypeName: CallableFunction, constructHandlerOrConfig?: IDEF<SubType> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<SubType>;
-    define<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler?: IDEF<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, StoredConstructor<F, ChildPath>>, ChildPath>;
+    define<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler?: IDEF<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath>>, ChildPath>;
     lazy<SubType extends object>(this: RegistryHolderBase<T, Parent, Path>, getter: LazyDef<SubType>, config?: constructorOptions): IDefinitorInstance<SubType>;
-    lazy<const Name extends string, N extends object, F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: LazyDef<N>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, StoredConstructor<F, ChildPath>>, ChildPath>;
+    lazy<const Name extends string, N extends object, F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: LazyDef<N>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath>>, ChildPath>;
 }
 export interface RegistryHolder<T extends object = {}, Parent extends object = object, Path extends string = ''> extends RegistryHolderBase<T, Parent, Path> {
     lookup: NestedTypeLookup<T, Path>;
@@ -280,7 +284,7 @@ export interface LazyAbsorber extends CallableFunction {
 }
 export interface TypesCollection<T extends object = {}, Parent extends object = object, Path extends string = ''> extends RegistryHolder<T, Parent, Path>, Hookable {
     subtypes: SubtypesMap;
-    decorate(config?: constructorOptions): <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, T & Record<ConstructorName<U>, StoredConstructor<InstanceType<U>, ConstructorName<U>>>>;
+    decorate(config?: constructorOptions): <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, T & Record<ConstructorName<U>, RegistryEntry<InstanceType<U>, ConstructorName<U>>>>;
     [key: string]: unknown;
 }
 export interface Hookable {

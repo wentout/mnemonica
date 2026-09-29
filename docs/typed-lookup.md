@@ -94,6 +94,16 @@ const user = new User({ name: 'Ada' });
 const admin = new user.Admin({ role: 'root' });
 ```
 
+The types that make this work are a small deliberate public vocabulary —
+the only names a declaration file (`.d.ts`) built on mnemonica ever needs:
+
+- `RegistryEntry<Shape, Path>` — what the builder stores per defined path
+  and what typed lookups read back;
+- `LookedUpConstructor<Registry, Path>` — the type of a `lookup()` result:
+  a constructor whose instances carry their registered subtypes, plus a
+  `lookup()` scoped to its own path;
+- `LookedUpInstance<Registry, Path>` — the instance side of the same idea.
+
 ### Custom collections
 
 `createTypesCollection()` works the same way and is fully isolated from the default collection.
@@ -167,6 +177,97 @@ const admin2 = new Admin({ role: 'root' }); // fails: no parent instance
 ```
 
 Direct `new` on a constructor returned by `.define()` works for **root types** only. For subtypes the parent instance is required (or use `apply(parentInstance, Ctor, args)`). With `strictChain: true` (the default) the parent must be the immediate type; with `strictChain: false` ancestor instances further up the chain are also accepted.
+
+---
+
+## Declaration emit on TypeScript 6 (the TS2883 symptom)
+
+Builder mode compiles cleanly with `declaration: true` on TypeScript 6:
+the exported builder value, `lookup()` results, and instances built
+through them emit declarations that name only the public vocabulary
+above. This is checked by the `test:ts:consumers` suite in the mnemonica
+repository.
+
+The compiler error below is **not** a missing export, and adding one is
+never the fix:
+
+```
+error TS2883: The inferred type of 'Widget' cannot be named without a reference
+to 'GlobalRegistry' from '…/mnemonica/build/types'. This is likely not portable.
+A type annotation is necessary.
+```
+
+### What the error really means
+
+The project exports the result of the free `define()` (or of
+`Type.define()`) and uses it as its API:
+
+```typescript
+export const Widget = define('Widget', function (this: WidgetInstance) { … });
+export const Gadget = Widget.define('Gadget', function (this: GadgetInstance) { … });
+```
+
+That path has no `TypeRegistry` augmentation, so everything types through
+the catch-all half of the internal `GlobalRegistry`
+(`TypeRegistry & Record<string, TypeConstructorBase>`). The internal
+registry names stay private on purpose: under TypeScript 6 a project that
+emits declarations cannot name them, and the build fails. That failure
+is the guard rail. Exporting the internals would make the wrong pattern
+compile everywhere, and every project after yours copies it.
+
+### Why this is proven impossible, not just discouraged
+
+A free `define()` + free `lookup()` pair cannot be typed without
+declaration merging and without casts — in TypeScript as a language, not
+only in mnemonica. A type never depends on which calls ran: a free
+function's return type depends only on its arguments' types, so
+`lookup('Widget')` sees the literal `'Widget'` and nothing else. The
+only global string→type map TypeScript has is an interface you merge
+into — `TypeRegistry`.
+
+Checked against mnemonica (TypeScript 6, no augmentation; `Gadget`
+defined in a separate statement from `Widget`, as projects write it):
+
+| form | typed without casts? |
+|---|---|
+| `new Widget(…)`, `new Gadget(…)` — the define() return values | yes |
+| `new widget.Gadget(…)` — construction from a parent instance | **no** — `Property 'Gadget' does not exist on type 'InstanceResult<…>'` |
+| `Widget.lookup('Gadget')` → instance fields | **no** — the instance is an unresolved internal type |
+| free `lookup('Widget')` → instance fields | **no** — the instance is `object` |
+
+So the "working" naive path can only use the define() return values — it
+throws away construction from a parent instance, which is what mnemonica
+exists for — or it casts (`as unknown as`), which the mnemonica agent
+guidelines forbid.
+
+Checked in plain TypeScript, no mnemonica — three ways to connect a free
+`define()` and `lookup()`:
+
+| mechanism | lookup free? | typed without casts? |
+|---|---|---|
+| truly free functions over an implicit registry | yes | **no** — the lookup result is `unknown` |
+| assertion function narrowing an explicit registry (`asserts reg is R & {…}`) | no — the registry is an argument | only after the define call, in the same control flow; `unknown` anywhere else |
+| chained values, each define returning a grown registry type (the builder shape) | no — the value is threaded | yes |
+
+Every cast-free option gives up "free". That is why the three typing
+paths exist, and why tactica exists for the free lineage: it generates
+the declaration merge the language requires, derived from the handlers
+so it cannot drift.
+
+### The fixes that ARE right
+
+- **Tactica:** run `npx tactica`, include `.tactica/` in the tsconfig, and
+  export `lookup('Widget')` results — never the define() results.
+- **Hand-written augmentation:** merge the entries into `TypeRegistry`
+  yourself (`test-ts/typed-utils-registry.ts` in the mnemonica repository
+  is the pattern) and export `lookup()` results. Works, but the
+  hand-written types can drift from the handlers.
+- **Builder mode:** chain `.define()` on `mnemonica`; the exported
+  builder value IS the API (registry threading), and declaration emit
+  works on TypeScript 6.
+
+If none of these fits, ask before changing anything. Never fix this
+symptom with casts, re-exports, or type annotations on the exports.
 
 ---
 

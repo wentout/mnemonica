@@ -244,6 +244,11 @@ Public types involved:
   `.define()`.
 - `RegistryOf<T>` — extracts the accumulated `Registry` from any of the above,
   for the bridge.
+- `RegistryEntry<F, Path>`, `LookedUpConstructor<Registry, Path>`,
+  `LookedUpInstance<Registry, Path>` — the deliberate public vocabulary for
+  consumer declaration emit (TS 6): registry values, lookup results, and
+  lookup-path instances. Names a consumer's `.d.ts` may reference; see
+  docs/typed-lookup.md "Declaration emit on TypeScript 6".
 
 Quick builder example:
 
@@ -361,6 +366,13 @@ This applies to **all** `return` statements where the expression is anything oth
 ## TypeScript Type Rules
 
 **Never use bare `Function`, `CallableFunction`, or `NewableFunction` as types** — always define a purpose-specific interface that extends them. See [`.ai/rules-code-style.md`](./.ai/rules-code-style.md) for examples and allowed exceptions.
+
+**Never re-export `GlobalRegistry` or the internal registry helpers to fix a consumer's
+TS2883 error** ("cannot be named without a reference to …"). That error means
+the consumer exports free `define()` results instead of using `lookup()` with
+a `TypeRegistry` merge — the fix belongs in the consumer, and the export would
+hide the misuse for every agent after you. The proof and the right fixes are in
+[`.ai/rules-type-system.md`](./.ai/rules-type-system.md#symptom-just-re-export-globalregistry--the-internal-registry-helpers).
 
 ## Preserving Design Comments and Memory Notes
 
