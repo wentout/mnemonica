@@ -78,7 +78,7 @@ TypeScript, however, cannot see the type graph created by runtime `define()` cal
 
 At runtime all paths are identical. The only difference is where TypeScript looks up the types. The runtime is the source of truth; the type-system path is a projection chosen by the developer.
 
-See [`docs/typed-lookup.md`](./docs/typed-lookup.md) — the canonical guide, with multi-file threading, common mistakes, and a cheat sheet.
+See [`docs/typed-lookup.md`](./docs/typed-lookup.md) — the canonical guide, with multi-file threading, common mistakes, a cheat sheet, and the TypeScript 6 declaration-emit rules (builder mode emits clean declarations; the TS2883 error on exported free `define()` results is the guard rail, not a missing export).
 
 ---
 

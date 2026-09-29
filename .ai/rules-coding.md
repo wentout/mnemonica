@@ -173,3 +173,20 @@ If you skip these steps:
 They are not your debugger. They are a Scientist.
 Your job is to implement correctly the FIRST time.
 Read thoroughly. Analyze completely. Then code.
+
+## Git Commands Requiring Credentials — NEVER RUN
+
+Any git command that can prompt for a password/SSH-passphrase input is
+FORBIDDEN: `git pull`, `git fetch`, `git push`, `git clone` of private
+repos, `git submodule update`. The credential window appears BEHIND the
+user's Guake terminal, grabs keyboard focus system-wide, and the user
+cannot type anywhere or even reach the window — the machine is stuck
+until the agent process is killed.
+
+Rules:
+- Never run credential-requiring git commands. Read-only local git
+  (log, show, diff, status, stash list) is fine.
+- For remote state, use the GitHub API via FetchURL
+  (`api.github.com/repos/<org>/<repo>/...`) instead of fetch/pull.
+- If a git command hangs silently, suspect a credential prompt — stop
+  the task (TaskStop) and use the API route instead.

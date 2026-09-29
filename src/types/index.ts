@@ -280,10 +280,18 @@ export type TypeDef = {
 	[Symbol.hasInstance]: (instance: object) => boolean;
 };
 
+// Runtime lookup contract of a collection: a dotted path in, a registered
+// TypeClass (or undefined) out. Internal code uses this, not the public
+// TypeLookup — with the default GlobalRegistry (a string index) a plain
+// `string` path would match TypeLookup's typed overload and need a cast back.
+export interface CollectionLookup extends CallableFunction {
+	(this: unknown, TypeNestedPath: string): TypeClass | undefined;
+}
+
 // Collection definition
 export type CollectionDef = Hookable & {
 	define: TypeAbsorber;
-	lookup: TypeLookup;
+	lookup: CollectionLookup;
 	subtypes: SubtypesMap;
 	[key: string]: unknown;
 };
@@ -292,6 +300,10 @@ export type CollectionDef = Hookable & {
 // Global registry shape used as the default for TypeLookup. It combines any
 // augmented TypeRegistry entries with a broad string index signature so the
 // generic TypeLookup constraint is satisfied.
+// Internal on purpose: if you are here from a TS2883 error ("cannot be
+// named without a reference to 'GlobalRegistry'"), the consumer exports free
+// define() results without a TypeRegistry merge — see docs/typed-lookup.md,
+// "Declaration emit on TypeScript 6". Do not re-export this.
 export type GlobalRegistry = TypeRegistry & Record<string, TypeConstructorBase>;
 
 // Extract the instance type returned by a mnemonica-compatible constructor.
@@ -311,9 +323,7 @@ export type SubTypeConstructors<
 	Path extends string
 > = {
 	[K in keyof Registry as K extends `${Path}.${infer Child}` ? Child : never]:
-		AugmentedConstructor<Registry, K & string, true> & {
-			lookup: NestedTypeLookup<Registry, K & string>;
-		};
+		LookedUpConstructor<Registry, K & string, true>;
 };
 
 // Reconstruct a constructor with a new instance type while preserving every
@@ -369,9 +379,33 @@ export type AugmentedConstructor<
 	CallConstructs extends boolean = false
 > = ReplaceConstructorInstance<
 	Registry[Path],
-	WithSubTypes<ExtractConstructorInstance<Registry[Path]>, Registry, Path>,
+	LookedUpInstance<Registry, Path>,
 	CallConstructs
 >;
+
+// Instance type produced by a typed lookup (public vocabulary): the
+// constructor's own instance shape plus child-constructor properties for
+// every registered subtype. Referencing this name — instead of the internal
+// WithSubTypes alias — keeps consumer declaration emit portable (TS names
+// alias instantiations in emit; only entry-exported names are nameable).
+export type LookedUpInstance<
+	Registry extends object,
+	Path extends string
+> = WithSubTypes<ExtractConstructorInstance<Registry[Path & keyof Registry]>, Registry, Path>;
+
+// Lookup result type (public vocabulary): the augmented constructor plus a
+// lookup method scoped to the constructor's own type path. Non-conditional
+// on purpose: a conditional alias resolves during inference and its
+// expansion (internal helpers) would leak into consumer declaration emit.
+// CallConstructs mirrors the SubTypeProxy distinction (true drops the this
+// demand for instance-carried child constructors).
+export type LookedUpConstructor<
+	Registry extends object,
+	Path extends keyof Registry & string,
+	CallConstructs extends boolean = false
+> = AugmentedConstructor<Registry, Path, CallConstructs> & {
+	lookup: NestedTypeLookup<Registry, Path>;
+};
 
 // Result of a typed lookup: the augmented constructor plus a `lookup` method
 // scoped to the constructor's own type path for relative subtype lookups.
@@ -379,13 +413,11 @@ export type LookupResult<
 	Registry extends object,
 	Path extends keyof Registry & string
 > = Registry[Path] extends AnyConstructor
-	? AugmentedConstructor<Registry, Path> & {
-		lookup: NestedTypeLookup<Registry, Path>;
-	}
+	? LookedUpConstructor<Registry, Path>
 	: never;
 
 export interface TypeLookup<T extends object = GlobalRegistry> extends CallableFunction {
-	<const K extends keyof T & string>(this: unknown, TypeNestedPath: K): LookupResult<T, K>;
+	<const K extends keyof T & string>(this: unknown, TypeNestedPath: K): LookedUpConstructor<T, K>;
 	(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 }
 
@@ -429,13 +461,13 @@ export type NestedTypeLookup<
 	Path extends string = ''
 > = (Path extends ''
 	? {
-		<const K extends keyof Registry & string>(this: unknown, TypeNestedPath: K): LookupResult<Registry, K>;
+		<const K extends keyof Registry & string>(this: unknown, TypeNestedPath: K): LookedUpConstructor<Registry, K>;
 	}
 	: {
 		<const K extends RelativeKeys<Registry, Path> & string>(
 			this: unknown,
 			TypeNestedPath: K
-		): LookupResult<Registry, Extract<keyof Registry & string, `${Path}.${K}`>>;
+		): LookedUpConstructor<Registry, Extract<keyof Registry & string, `${Path}.${K}`>>;
 	}) & {
 		(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 	};
@@ -591,14 +623,16 @@ export type InstanceResult<
   N extends object,
 > = { [K in keyof N]: N[K] };
 
-// Lightweight constructor type stored inside a typed registry map.
+// The registry VALUE as public vocabulary: what a builder chain stores per
+// defined path and what typed lookups read back. Interface (not alias) so
+// consumer declaration emit names it instead of expanding the intersection.
 // It preserves the dotted `Path` so that `.define()` on a looked-up constructor
 // computes the correct child path, but it omits the full `GlobalRegistry`
 // generic to keep hover tooltips readable.
-export type StoredConstructor<
+export interface RegistryEntry<
 	F extends object,
 	Path extends string = ''
-> = _Internal_TC_<F> & RegistryHolderBase<{}, F, Path>;
+> extends _Internal_TC_<F>, RegistryHolderBase<{}, F, Path> {}
 
 // Registry holder base - provides the accumulating .define() method.
 // `Parent` tracks the instance type of the last defined constructor, so chained
@@ -632,7 +666,7 @@ export interface RegistryHolderBase<
 	): IDefinitorInstance<
 		F,
 		InstanceResult<F>,
-		T & Record<ChildPath, StoredConstructor<F, ChildPath>>,
+		T & Record<ChildPath, RegistryEntry<F, ChildPath>>,
 		ChildPath
 	>;
 
@@ -657,7 +691,7 @@ export interface RegistryHolderBase<
 	): IDefinitorInstance<
 		F,
 		InstanceResult<F>,
-		T & Record<ChildPath, StoredConstructor<F, ChildPath>>,
+		T & Record<ChildPath, RegistryEntry<F, ChildPath>>,
 		ChildPath
 	>;
 }
@@ -790,7 +824,7 @@ export interface TypesCollection<
 		config?: constructorOptions
 	): <U extends Constructor<object>>(cstr: U) => DecoratedClass<
 		U,
-		T & Record<ConstructorName<U>, StoredConstructor<InstanceType<U>, ConstructorName<U>>>
+		T & Record<ConstructorName<U>, RegistryEntry<InstanceType<U>, ConstructorName<U>>>
 	>;
 
 	[key: string]: unknown;
