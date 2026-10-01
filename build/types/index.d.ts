@@ -210,8 +210,16 @@ export type Parsed<T extends object> = {
     self: T;
     proto: object;
     joint: Record<string, unknown>;
-    parent: object | undefined;
+    parent: object | null;
 };
+export interface EmptyParsed {
+    name: undefined;
+    props: {};
+    self: null;
+    proto: undefined;
+    joint: {};
+    parent: undefined;
+}
 export interface SiblingAccessor {
     (SiblingTypeName: string): TypeClass | undefined;
     [key: string]: TypeClass | undefined;
@@ -351,7 +359,9 @@ export interface UtilsCollection {
     collectConstructors: (instance: object, flat?: boolean) => (CallableFunction | string)[];
     merge<A extends object, B extends object>(a: A, b: B, ...args: unknown[]): InstanceResult<Merge<B, A>>;
     parse<T extends object>(self: T): Parsed<T>;
-    parent<T extends object>(instance: T): object | undefined;
+    parse(self: null): EmptyParsed;
+    deepParse<T extends object>(instance: T): Array<Parsed<T>>;
+    parent<T extends object>(instance: T): object | null;
     parent<T extends object, K extends ParentPathOfInstance<T> & string>(instance: T, path: K): InstanceOfTypeRegistry<K> | undefined;
     parent<T extends object>(instance: T, path: string): object | undefined;
     toJSON<T extends object>(instance: T): string;

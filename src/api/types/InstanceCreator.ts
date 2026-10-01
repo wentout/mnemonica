@@ -194,8 +194,20 @@ const postProcessing = function ( this: InstanceCreatorContext, continuationOf?:
 		}
 
 		const prev = parent(self.inheritedInstance) as object | null;
-		if (!prev || (prev && !prev.constructor)) {
-			const msg = 'should inherit from some instance';
+		if (!prev) {
+			// no-parent-is-null: prev is null for a ROOT inherited instance
+			// and for a broken chain. The raw __parent__ record tells them
+			// apart — a root's is the internal sentinel (has a constructor:
+			// the lineage is wrong, name the expected parent); a broken
+			// chain's is constructor-less or unreachable (reading it throws:
+			// "some instance")
+			const madeOnName = prevParentChainHeadName(self.inheritedInstance);
+			let msg: string;
+			if ( madeOnName === undefined ) {
+				msg = 'should inherit from some instance';
+			} else {
+				msg = `should inherit from ${self.type.parentType!.TypeName} but made on ${inheritedConstructor.name}`;
+			}
 			self.throwModificationError( new WRONG_MODIFICATION_PATTERN(
 				msg,
 				stack 
@@ -217,6 +229,17 @@ const postProcessing = function ( this: InstanceCreatorContext, continuationOf?:
 
 	self.invokePostHooks();
 
+};
+
+const prevParentChainHeadName = function ( inherited: object ): string | undefined {
+	try {
+		const inheritedProps = _getProps( inherited ) as Props;
+		const chainHead = inheritedProps.__parent__ as { constructor: { name: string } };
+		const chainHeadConstructorName = chainHead.constructor.name;
+		return chainHeadConstructorName;
+	} catch {
+		return undefined;
+	}
 };
 
 const addThen = function ( this: InstanceCreatorContext, then: ThenSpec ) {

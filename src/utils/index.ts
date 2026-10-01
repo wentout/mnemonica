@@ -15,6 +15,7 @@ import { fork } from './fork';
 import { clone } from './clone';
 import { toJSON } from './toJSON';
 import { parse } from './parse';
+import { deepParse } from './deepParse';
 import { merge } from './merge';
 
 const utilsUnWrapped = {
@@ -31,6 +32,7 @@ const utilsUnWrapped = {
 	toJSON,
 
 	parse,
+	deepParse,
 	merge,
 
 	collectConstructors,

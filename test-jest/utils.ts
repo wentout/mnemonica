@@ -10,6 +10,7 @@ const {
 	define,
 	errors,
 	getProps,
+	createTypesCollection,
 } = mnemonica;
 
 // Import raw utilities (not wrapped by wrapThis) to test them directly
@@ -18,6 +19,8 @@ import { sibling } from '../src/utils/sibling';
 import { fork } from '../src/utils/fork';
 import { clone } from '../src/utils/clone';
 import { extract } from '../src/utils/extract';
+import { toJSON } from '../src/utils/toJSON';
+import { deepParse } from '../src/utils/deepParse';
 
 describe('utils/exception', () => {
 
@@ -281,3 +284,146 @@ describe('utils/sibling', () => {
 
 	});
 
+describe('utils/toJSON', () => {
+
+	const ToJsonType = define('ToJsonTestTypeJest', function (this: { str: string; num: number }) {
+		this.str = 'value';
+		this.num = 123;
+	});
+	const toJsonInstance = new ToJsonType();
+
+	it('round-trips normal fields', () => {
+		const parsedRoundTrip = JSON.parse(toJSON(toJsonInstance)) as { str: string; num: number };
+		expect(parsedRoundTrip.str).toEqual('value');
+		expect(parsedRoundTrip.num).toEqual(123);
+	});
+
+	it('produces {} for no fields at all', () => {
+		const EmptyToJsonType = define('EmptyToJsonTestTypeJest', function () {});
+		const emptyToJsonInstance = new EmptyToJsonType();
+		expect(toJSON(emptyToJsonInstance)).toEqual('{}');
+	});
+
+	it('omits null and undefined fields — only-null becomes {}', () => {
+		const NullishToJsonType = define('NullishToJsonTestTypeJest', function (this: { nil: null; undef: undefined }) {
+			this.nil = null;
+			this.undef = undefined;
+		});
+		const nullishToJsonInstance = new NullishToJsonType();
+		expect(toJSON(nullishToJsonInstance)).toEqual('{}');
+	});
+
+	it('escapes keys — a quote in a key stays valid JSON', () => {
+		const QuotedToJsonType = define('QuotedToJsonTestTypeJest', function (this: Record<string, string>) {
+			this['quoted"key'] = 'quoted value';
+		});
+		const quotedToJsonInstance = new QuotedToJsonType();
+		const quotedParsed = JSON.parse(toJSON(quotedToJsonInstance)) as Record<string, string>;
+		expect(quotedParsed['quoted"key']).toEqual('quoted value');
+	});
+
+	it('replaces an unstringifiable (circular) value with the description object', () => {
+		const CircularToJsonType = define('CircularToJsonTestTypeJest', function (this: { self?: unknown }) {
+			this.self = this;
+		});
+		const circularToJsonInstance = new CircularToJsonType();
+		const circularParsed = JSON.parse(toJSON(circularToJsonInstance)) as {
+			self: { description: string; message: string };
+		};
+		expect(circularParsed.self.description)
+			.toEqual('This value type is not supported by JSON.stringify');
+		expect(typeof circularParsed.self.message).toEqual('string');
+	});
+
+	it('replaces a function value (stringify returns undefined) with the description object', () => {
+		const FnToJsonType = define('FnToJsonTestTypeJest', function (this: { fn: () => void }) {
+			this.fn = function () {};
+		});
+		const fnToJsonInstance = new FnToJsonType();
+		const fnParsed = JSON.parse(toJSON(fnToJsonInstance)) as {
+			fn: { description: string };
+		};
+		expect(fnParsed.fn.description)
+			.toEqual('This value type is not supported by JSON.stringify');
+	});
+
+});
+
+describe('utils/deepParse', () => {
+
+	const DPLevel1 = define('DeepParseLevel1Jest', function () {});
+	const DPLevel2 = DPLevel1.define('DeepParseLevel2Jest', function () {});
+	const DPLevel3 = DPLevel2.define('DeepParseLevel3Jest', function () {});
+
+	it('walks from the instance to the root in order', () => {
+		const dpRoot = new DPLevel1();
+		const dpMid = new dpRoot.DeepParseLevel2Jest();
+		const dpLeaf = new dpMid.DeepParseLevel3Jest();
+
+		const levels = deepParse(dpLeaf);
+		expect(levels.length).toEqual(3);
+		expect(levels[0].name).toEqual('DeepParseLevel3Jest');
+		expect(levels[1].name).toEqual('DeepParseLevel2Jest');
+		expect(levels[2].name).toEqual('DeepParseLevel1Jest');
+		expect(levels[0].self).toBe(dpLeaf);
+		expect(levels[2].parent).toBeNull();
+	});
+
+	it('hops real parent instances, skipping the prototype layers', () => {
+		const dpRoot = new DPLevel1();
+		const dpLeaf = new (new dpRoot.DeepParseLevel2Jest()).DeepParseLevel3Jest();
+
+		const levels = deepParse(dpLeaf);
+		expect(levels[1].self).toBe(levels[0].parent);
+		expect(levels[2].self).toBe(levels[1].parent);
+	});
+
+	it('works for a single-level (root) instance', () => {
+		const dpRoot = new DPLevel1();
+		const levels = deepParse(dpRoot);
+		expect(levels.length).toEqual(1);
+		expect(levels[0].name).toEqual('DeepParseLevel1Jest');
+	});
+
+	it('walks chains in a non-default collection', () => {
+		const collection = createTypesCollection();
+		const CRoot = collection.define('DeepParseCCRootJest', function () {});
+		CRoot.define('DeepParseCCSubJest', function () {});
+		const ccRoot = new CRoot();
+		const ccLeaf = new ccRoot.DeepParseCCSubJest();
+
+		const levels = deepParse(ccLeaf);
+		expect(levels.length).toEqual(2);
+		expect(levels[0].name).toEqual('DeepParseCCSubJest');
+		expect(levels[1].name).toEqual('DeepParseCCRootJest');
+		expect(levels[1].self).toBe(ccRoot);
+	});
+
+	it('gives a fork a sibling subtree under the SAME parent instance', () => {
+		const dpRoot = new DPLevel1();
+		const dpMid = new dpRoot.DeepParseLevel2Jest();
+		const dpForked = fork(dpMid).call(dpMid);
+
+		const forkLevels = deepParse(dpForked);
+		const midLevels = deepParse(dpMid);
+		expect(forkLevels.length).toEqual(midLevels.length);
+		expect(forkLevels[0].name).toEqual('DeepParseLevel2Jest');
+		expect(forkLevels[1].name).toEqual('DeepParseLevel1Jest');
+		expect(forkLevels[0].self).not.toBe(dpMid);
+		expect(forkLevels[1].self).toBe(midLevels[1].self);
+	});
+
+	it('keeps repeated type names as separate levels (strictChain: false)', () => {
+		const Repeated = define('RepeatedNameJest', function () {}, { strictChain: false });
+		Repeated.define('RepeatedNameJest', function () {});
+		const first = new Repeated();
+		const again = new first.RepeatedNameJest();
+
+		const levels = deepParse(again);
+		expect(levels.length).toEqual(2);
+		expect(levels[0].name).toEqual('RepeatedNameJest');
+		expect(levels[1].name).toEqual('RepeatedNameJest');
+		expect(levels[0].self).not.toBe(levels[1].self);
+	});
+
+});

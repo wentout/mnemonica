@@ -1,8 +1,8 @@
 # test-map.md — the mocha suite, walked and mapped
 
-What each core mocha test does and which library lines it uses. Produced
-2026-09-01 by actually step-walking the suite under CDP (`npm run debug`),
-not by reading alone: the traces below are recorded `Debugger.stepInto`
+What each core mocha test does and which library lines it uses. Produced by
+actually step-walking the suite under CDP (`npm run debug`), not by reading
+alone: the traces below are recorded `Debugger.stepInto`
 paths through `new UserType(USER_DATA)` and a `@decorate()`-driven
 `define()`. 652 tests pass in ~1s.
 

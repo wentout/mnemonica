@@ -105,16 +105,17 @@ export interface SiblingAccessor {
 | `utils.pick(instance, 'a', 'b')` | `{ a: T['a'], b: T['b'] } & {}` | Literal keys → typed subset. Dynamic `string[]` → `Record<string, unknown>`. |
 | `utils.clone(instance)` | `T` | Same instance type. |
 | `utils.fork(instance)` | `(this: object, ...args: unknown[]) => T` | Returns a fork constructor. |
-| `utils.parent(instance, path?)` | `object \| undefined` | Structural only; nominal path typing needs `TypeRegistry`. |
+| `utils.parent(instance, path?)` | `object \| null` (no path); `object \| undefined` (path: searched, not found) | Structural only; nominal path typing needs `TypeRegistry`. |
 | `utils.sibling(instance)` | `SiblingAccessor` | Look up sibling constructors by string name or property access. |
 | `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>>` | `A` wins; `B` fills non-overlapping keys. |
 | `utils.parse(instance)` | `Parsed<T>` | One-level prototype-chain snapshot. |
+| `utils.deepParse(instance)` | `Parsed<T>[]` | Ordered parse() levels from the instance (index 0) to its root. |
 | `utils.toJSON(instance)` | `string` | Generic so the instance type is captured at the call site. |
 | `utils.collectConstructors(instance, asSequence?)` | `string[]` when `asSequence: true`, otherwise a `{ [name]: true }` lookup object | Prototype-chain constructor names, up to `Mnemonica`. |
 | `new utils.exception(instance, error, ...args)` | `Error` | **Must be called with `new`.** Error instance of the instance's type; data via `getProps()`. |
 
 The complete `utils` collection is: `extract`, `pick`, `parent`, `sibling`,
-`exception`, `fork`, `clone`, `toJSON`, `parse`, `merge`,
+`exception`, `fork`, `clone`, `toJSON`, `parse`, `deepParse`, `merge`,
 `collectConstructors`.
 
 ---
@@ -156,15 +157,24 @@ utils.extract(merged); // OK
 
 ## `utils.parse(instance)` in detail
 
-`parse` returns a one-level snapshot of the instance's prototype chain:
+`parse` returns a one-level snapshot of the instance's prototype chain.
+`parse(null)` is the one non-object input it accepts: the empty shape
+(`EmptyParsed` — empty `props`/`joint`, `self: null`, `parent: undefined`),
+"nothing was given". `undefined` and every other non-object throw
+`WRONG_MODIFICATION_PATTERN`, same as `utils.parent(null)`.
 
 - `name` — constructor name of the immediate prototype.
 - `props` — `Extracted<T>` from the instance itself.
 - `self` — the original instance reference (`T`).
 - `proto` — `Object.getPrototypeOf(instance)`.
 - `joint` — enumerable properties copied from `proto`.
-- `parent` — `Object.getPrototypeOf(proto)` (the next link up; currently not
-  recursively parsed).
+- `parent` — the parent INSTANCE: the same object `utils.parent(instance)`
+  returns (the `__parent__` of the construction props), not a prototype
+  layer. `null` for a root instance — a root's `__parent__` points at
+  mnemonica's internal root sentinel, which `parse` reports as no parent,
+  and no parent is `null` (the end of the chain).
+  Not recursively parsed — walking the whole lineage level by level is
+  `utils.deepParse`'s job (below).
 
 ```typescript
 const parsed = utils.parse(user);
@@ -173,6 +183,28 @@ const propsName: string | undefined = parsed.props.name;
 const self: typeof user = parsed.self;
 const parent: object | undefined = parsed.parent;
 ```
+
+---
+
+## `utils.deepParse(instance)` in detail
+
+The lineage walker: from the instance to its root through the REAL parent
+instances — `parse().parent` hops directly from instance to instance, so
+the per-type prototype layers never appear. Returns the ordered list of
+parsed levels: index 0 is the instance itself, the last level is its root
+(`parent: null`).
+
+```typescript
+const levels = utils.deepParse(embed);
+// [Parsed<Embed>, Parsed<Chunk>, Parsed<Doc>] — leaf first, root last
+levels[0].self === embed;             // true
+levels[1].self === utils.parent(embed); // true — the real parent instance
+```
+
+A `strictChain: false` lineage may repeat a type name at several levels —
+each occurrence is its own level. `utils.fork()` produces a sibling: the
+forked instance's chain has the same shape, and its parent level IS the
+same instance the forked-from chain shares.
 
 ---
 
@@ -267,7 +299,13 @@ mnemonica throws `WRONG_MODIFICATION_PATTERN`
   type without a user-augmented `TypeRegistry`. This is the same limitation as
   `lookup()`: TypeScript cannot retroactively learn the type graph created
   by `define()` calls. See [`./typed-lookup.md`](./typed-lookup.md).
-- `utils.parse()` returns `parent` as `object | undefined` because deep recursive
-  parsing is not implemented at runtime.
-- `utils.toJSON()` always returns `string`; the generic parameter only preserves
+- `utils.parse()` returns `parent` as `object | null` — the parent instance,
+  `null` for a root (see `utils.parent` above); deep recursive parsing is
+  `utils.deepParse`.
+- `utils.toJSON()` always returns `string` — always VALID JSON: the fields
+  are collected into a plain object and serialized ONCE, so keys are escaped
+  by the serializer itself and an empty field set is `'{}'`.
+  `null`/`undefined` fields are omitted; a field value JSON cannot represent
+  (a circular structure, a function) is replaced by the description object
+  `{ description, stack, message }`. The generic parameter only preserves
   the instance type at the call site for consistency with the other utilities.

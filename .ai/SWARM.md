@@ -6,7 +6,7 @@ Subagents are not free. Each one starts with **zero context** and re-reads
 ground truth independently. Fanning out N agents means the same files are
 loaded N times — the token cost of the task is multiplied by N, not added.
 
-**Real incident (2026-08-21):** a 26-agent documentation-audit swarm burned
+**Real incident:** a 26-agent documentation-audit swarm burned
 ~20% of the weekly limit in about 30 minutes — a tornado through a small
 town. The two agents that completed did good work; the other 24 were
 rejected at spawn when the account hit its usage limit. The audit they were
@@ -70,9 +70,8 @@ pacing is capability, not restriction.
    have not reviewed it — go back and read. Compaction shortens messages and
    meanings; the code is the only faithful record. Delegation never
    transfers responsibility: the parent answers for the code as if it wrote
-   it. (Viktor, 2026-09-03: "you MUST review the code and understand the
-   changes if you don't make it by yourself — otherwise just can't trust
-   you.")
+   it. "You MUST review the code and understand the changes if you don't make
+   it by yourself — otherwise just can't trust you."
 
 ## Why the user cares
 

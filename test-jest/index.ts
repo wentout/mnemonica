@@ -2170,11 +2170,82 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	// Additional coverage tests for uncovered lines
 	describe('Additional Coverage Tests', () => {
 		const { parse } = require('../src/utils/parse');
+		const { parent } = require('../src/utils/parent');
 		const { ErrorsTypes } = require('../src/descriptors/errors');
+
+		describe('parse parent instance', () => {
+			it('parent is the same object utils.parent returns, root is undefined', () => {
+				const RootType = define('ParseParentRoot', function (this: { root: boolean }) {
+					this.root = true;
+				});
+				RootType.define('ParseParentChild', function (this: { child: boolean }) {
+					this.child = true;
+				});
+				const rootInstance = new RootType();
+				const childInstance = new rootInstance.ParseParentChild();
+
+				const parsedRoot = parse(rootInstance);
+				expect(parsedRoot.parent).toBeNull();
+
+				const parsedChild = parse(childInstance);
+				expect(parsedChild.parent).toBe(parent(childInstance));
+				expect(parsedChild.parent).toBe(rootInstance);
+			});
+
+			it('utils.parent reports null for roots, undefined for not-found paths', () => {
+				const RootType3 = define('ParseParentRoot3', function (this: { root: boolean }) {
+					this.root = true;
+				});
+				RootType3.define('ParseParentChild3', function (this: { child: boolean }) {
+					this.child = true;
+				});
+				const rootInstance3 = new RootType3();
+				const childInstance3 = new rootInstance3.ParseParentChild3();
+
+				expect(parent(rootInstance3)).toBeNull();
+				expect(parent({})).toBeNull();
+				// the path form searches: not-found stays undefined
+				expect(parent(rootInstance3, 'ParseParentRoot3')).toBeUndefined();
+				expect(parent(childInstance3, 'ParseParentChild3')).toBeUndefined();
+				// found paths return the parent instance
+				expect(parent(childInstance3, 'ParseParentRoot3')).toBe(rootInstance3);
+			});
+
+			it('props-less objects parse with no parent', () => {
+				const parsedPlain = parse({});
+				expect(parsedPlain.name).toEqual('Object');
+				expect(parsedPlain.parent).toBeNull();
+			});
+
+			it('parse of the parent works and names the parent type', () => {
+				const RootType2 = define('ParseParentRoot2', function (this: { root: boolean }) {
+					this.root = true;
+				});
+				RootType2.define('ParseParentChild2', function (this: { child: boolean }) {
+					this.child = true;
+				});
+				const rootInstance2 = new RootType2();
+				const childInstance2 = new rootInstance2.ParseParentChild2();
+
+				const reparsed = parse(parse(childInstance2).parent as object);
+				expect(reparsed.name).toEqual('ParseParentRoot2');
+				expect(reparsed.parent).toBeNull();
+			});
+		});
 	
 		describe('parse error conditions', () => {
-			it('should throw WRONG_MODIFICATION_PATTERN for null', () => {
-				expect(() => parse(null)).toThrow(ErrorsTypes.WRONG_MODIFICATION_PATTERN);
+			it('should return the empty shape for null — nothing was given', () => {
+				const nullParsed = parse(null);
+				expect(nullParsed).toEqual({
+					name: undefined,
+					props: {},
+					self: null,
+					proto: undefined,
+					joint: {},
+					parent: undefined
+				});
+				expect(nullParsed.parent).toBeUndefined();
+				expect(nullParsed.self).toBeNull();
 			});
 	
 			it('should throw WRONG_MODIFICATION_PATTERN for undefined', () => {

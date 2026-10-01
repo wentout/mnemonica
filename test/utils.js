@@ -9,6 +9,7 @@ const {
 	define,
 	errors,
 	getProps,
+	createTypesCollection,
 } = mnemonica;
 
 // Import raw utilities directly for testing
@@ -17,6 +18,8 @@ const { sibling } = require('../build/utils/sibling');
 const { fork } = require('../build/utils/fork');
 const { clone } = require('../build/utils/clone');
 const { extract } = require('../build/utils/extract');
+const { toJSON } = require('../build/utils/toJSON');
+const { deepParse } = require('../build/utils/deepParse');
 
 const tests = () => {
 
@@ -293,6 +296,160 @@ const tests = () => {
 				assert.notEqual(cloned, subInstance);
 				assert.deepEqual(cloned.extract(), subInstance.extract());
 			});
+		});
+
+	});
+
+	describe('utils/toJSON', () => {
+
+		const ToJsonType = define('ToJsonTestTypeMocha', function () {
+			this.str = 'value';
+			this.num = 123;
+		});
+		const toJsonInstance = new ToJsonType();
+
+		it('should round-trip normal fields', () => {
+			const parsedRoundTrip = JSON.parse( toJSON( toJsonInstance ) );
+			assert.equal( parsedRoundTrip.str, 'value' );
+			assert.equal( parsedRoundTrip.num, 123 );
+		});
+
+		it('should produce {} for no fields at all', () => {
+			const EmptyToJsonType = define('EmptyToJsonTestTypeMocha', function () {});
+			const emptyToJsonInstance = new EmptyToJsonType();
+			assert.equal( toJSON( emptyToJsonInstance ), '{}' );
+		});
+
+		it('should omit null and undefined fields — only-null becomes {}', () => {
+			const NullishToJsonType = define('NullishToJsonTestTypeMocha', function () {
+				this.nil = null;
+				this.undef = undefined;
+			});
+			const nullishToJsonInstance = new NullishToJsonType();
+			assert.equal( toJSON( nullishToJsonInstance ), '{}' );
+		});
+
+		it('should escape keys — a quote in a key stays valid JSON', () => {
+			const QuotedToJsonType = define('QuotedToJsonTestTypeMocha', function () {
+				this[ 'quoted"key' ] = 'quoted value';
+			});
+			const quotedToJsonInstance = new QuotedToJsonType();
+			const quotedResult = toJSON( quotedToJsonInstance );
+			const quotedParsed = JSON.parse( quotedResult );
+			assert.equal( quotedParsed[ 'quoted"key' ], 'quoted value' );
+		});
+
+		it('should replace an unstringifiable (circular) value with the description object', () => {
+			const CircularToJsonType = define('CircularToJsonTestTypeMocha', function () {
+				this.self = this;
+			});
+			const circularToJsonInstance = new CircularToJsonType();
+			const circularParsed = JSON.parse( toJSON( circularToJsonInstance ) );
+			assert.equal(
+				circularParsed.self.description,
+				'This value type is not supported by JSON.stringify'
+			);
+			assert.isString( circularParsed.self.message );
+		});
+
+		it('should replace a function value (stringify returns undefined) with the description object', () => {
+			const FnToJsonType = define('FnToJsonTestTypeMocha', function () {
+				this.fn = function () {};
+			});
+			const fnToJsonInstance = new FnToJsonType();
+			const fnParsed = JSON.parse( toJSON( fnToJsonInstance ) );
+			assert.equal(
+				fnParsed.fn.description,
+				'This value type is not supported by JSON.stringify'
+			);
+		});
+
+	});
+
+
+	describe('utils/deepParse', () => {
+
+		const DPLevel1 = define('DeepParseLevel1Mocha', function () {});
+		const DPLevel2 = DPLevel1.define('DeepParseLevel2Mocha', function () {});
+		DPLevel2.define('DeepParseLevel3Mocha', function () {});
+
+		it('should walk from the instance to the root in order', () => {
+			const dpRoot = new DPLevel1();
+			const dpMid = new dpRoot.DeepParseLevel2Mocha();
+			const dpLeaf = new dpMid.DeepParseLevel3Mocha();
+
+			const levels = deepParse( dpLeaf );
+			assert.equal( levels.length, 3 );
+			assert.equal( levels[ 0 ].name, 'DeepParseLevel3Mocha' );
+			assert.equal( levels[ 1 ].name, 'DeepParseLevel2Mocha' );
+			assert.equal( levels[ 2 ].name, 'DeepParseLevel1Mocha' );
+			// index 0 IS the instance itself
+			assert.equal( levels[ 0 ].self, dpLeaf );
+			// the root's parent is null — the walk stops there
+			assert.strictEqual( levels[ 2 ].parent, null );
+		});
+
+		it('should hop real parent instances, skipping the prototype layers', () => {
+			const dpRoot = new DPLevel1();
+			const dpLeaf = new ( new dpRoot.DeepParseLevel2Mocha() ).DeepParseLevel3Mocha();
+
+			const levels = deepParse( dpLeaf );
+			// each next level's self IS the previous level's parent —
+			// the per-type prototype hops never appear
+			assert.equal( levels[ 1 ].self, levels[ 0 ].parent );
+			assert.equal( levels[ 2 ].self, levels[ 1 ].parent );
+		});
+
+		it('should work for a single-level (root) instance', () => {
+			const dpRoot = new DPLevel1();
+			const levels = deepParse( dpRoot );
+			assert.equal( levels.length, 1 );
+			assert.equal( levels[ 0 ].name, 'DeepParseLevel1Mocha' );
+		});
+
+		it('should walk chains in a non-default collection', () => {
+			const collection = createTypesCollection();
+			const CRoot = collection.define( 'DeepParseCCRootMocha', function () {} );
+			CRoot.define( 'DeepParseCCSubMocha', function () {} );
+			const ccRoot = new CRoot();
+			const ccLeaf = new ccRoot.DeepParseCCSubMocha();
+
+			const levels = deepParse( ccLeaf );
+			assert.equal( levels.length, 2 );
+			assert.equal( levels[ 0 ].name, 'DeepParseCCSubMocha' );
+			assert.equal( levels[ 1 ].name, 'DeepParseCCRootMocha' );
+			assert.equal( levels[ 1 ].self, ccRoot );
+		});
+
+		it('should give a fork a NEW parent, not the forked-from instance', () => {
+			const dpRoot = new DPLevel1();
+			const dpMid = new dpRoot.DeepParseLevel2Mocha();
+			const dpForked = fork( dpMid ).call( dpMid );
+
+			const forkLevels = deepParse( dpForked );
+			const midLevels = deepParse( dpMid );
+			// same shape — the fork is a sibling subtree: a NEW leaf under
+			// the SAME parent instance (the plan's question C: siblings
+			// share their parent instances)
+			assert.equal( forkLevels.length, midLevels.length );
+			assert.equal( forkLevels[ 0 ].name, 'DeepParseLevel2Mocha' );
+			assert.equal( forkLevels[ 1 ].name, 'DeepParseLevel1Mocha' );
+			assert.notEqual( forkLevels[ 0 ].self, dpMid );
+			assert.equal( forkLevels[ 1 ].self, midLevels[ 1 ].self );
+		});
+
+		it('should keep repeated type names as separate levels (strictChain: false)', () => {
+			const Repeated = define( 'RepeatedNameMocha', function () {}, { strictChain : false } );
+			// the same name one level down — allowed without strictChain
+			Repeated.define( 'RepeatedNameMocha', function () {} );
+			const first = new Repeated();
+			const again = new first.RepeatedNameMocha();
+
+			const levels = deepParse( again );
+			assert.equal( levels.length, 2 );
+			assert.equal( levels[ 0 ].name, 'RepeatedNameMocha' );
+			assert.equal( levels[ 1 ].name, 'RepeatedNameMocha' );
+			assert.notEqual( levels[ 0 ].self, levels[ 1 ].self );
 		});
 
 	});

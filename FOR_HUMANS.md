@@ -878,7 +878,12 @@ contiguously upwards: each leading segment must be the direct parent of the
 instance matched by the next one. The return value is the instance matched by
 the **last** segment. This disambiguates lineages where the same type name
 appears more than once (possible with `strictChain: false` re-construction).
-If no contiguous match exists, the result is `undefined`.
+If no contiguous match exists, the result is `undefined` — searched, not found.
+
+**No parent is `null`**: a root instance's `__parent__` points at mnemonica's
+internal root sentinel (an object with no construction props of its own), and
+`utils.parent` reports `null` for it — object-typed, the end of the chain.
+`undefined` is reserved for the path form's "searched, not found".
 
 The structural return type is `object | undefined`; a specific nominal parent
 type requires a `TypeRegistry` augmentation (see [`docs/typed-lookup.md`](./docs/typed-lookup.md)).
