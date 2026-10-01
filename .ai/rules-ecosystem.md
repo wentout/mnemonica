@@ -67,8 +67,7 @@ traces, and mnemographica's views.
 
 ## Publish Discipline
 
-npm cannot republish an existing version. Standing rule (2026-09-06,
-Viktor): when a change must reach npm, the agent bumps `version` in BOTH
+npm cannot republish an existing version. Standing rule: when a change must reach npm, the agent bumps `version` in BOTH
 `package.json` and `package-lock.json` (top-level and `packages[""]`) as
 part of the change — a bumped-but-unpublished version in git is how the
 owner sees a publish is due. Docs-only or otherwise internal changes stay

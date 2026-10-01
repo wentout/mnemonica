@@ -33,6 +33,7 @@ const expectations = {
 	'b1-builder-chain.ts' : true,
 	'b2-lookup.ts'        : true,
 	'b3-instance.ts'      : true,
+	'b4-collection.ts'    : true,
 	'b5-registry-bridge.ts' : true,
 	'm1-free-merge.ts'    : true,
 	'n1-naive-define.ts'  : false,

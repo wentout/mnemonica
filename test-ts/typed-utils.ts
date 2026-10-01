@@ -147,7 +147,7 @@ const reverseSiblingByCall = reverseSiblingAccessor('TypedUtilsUser');
 // ============================================================
 
 const userParent = utils.parent(user);
-const userParentOptional: object | undefined = userParent;
+const userParentOptional: object | null = userParent;
 
 // with path argument
 const userParentByPath = utils.parent(user, 'TypedUtilsUser');
@@ -202,7 +202,7 @@ const parsed = utils.parse(user);
 const parsedName: string = parsed.name;
 const parsedPropsName: string = parsed.props.name;
 const parsedSelf: typeof user = parsed.self;
-const parsedParent: object | undefined = parsed.parent;
+const parsedParent: object | null = parsed.parent;
 
 // ============================================================
 // utils.toJSON

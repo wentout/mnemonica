@@ -15,13 +15,13 @@ import {
 // seek for firts parent instance
 // of instance prototype chain
 // with constructors of path
-export function parent <T extends object> (instance: T): object | undefined;
+export function parent <T extends object> (instance: T): object | null;
 export function parent <T extends object, K extends ParentPathOfInstance<T> & string> (
 	instance: T,
 	path: K
 ): InstanceOfTypeRegistry<K> | undefined;
 export function parent (instance: object, path: string): object | undefined;
-export function parent <T extends object> (instance: T, path?: string): object | undefined {
+export function parent <T extends object> (instance: T, path?: string): object | null | undefined {
 
 	// at this situation this check is enough
 	if ( instance !== Object( instance ) ) {
@@ -30,14 +30,29 @@ export function parent <T extends object> (instance: T, path?: string): object |
 
 	const props = _getProps(instance) as Props;
 
+	// no construction props at all — nothing to seek from. NO PARENT IS
+	// null (object-typed, the end of a chain — like Object.getPrototypeOf
+	// at the top); undefined is reserved for the path form's "searched,
+	// not found" — and a props-less object cannot match any path either
 	if ( !props ) {
-		return;
+		const result = path ? undefined : null;
+		return result;
 	}
 
 	const { __parent__: p } = props;
 
+	// a root instance's __parent__ points at mnemonica's internal root
+	// sentinel (an object with no construction props of its own) — that
+	// means there is no parent: null, not the sentinel itself
+	const parentInstance: object | null = p && _getProps( p ) ? p : null;
+
 	if ( !path ) {
-		return p;
+		return parentInstance;
+	}
+
+	if ( !parentInstance ) {
+		// searched (the chain exists) — nothing found
+		return;
 	}
 
 	const segments = path.split('.');
@@ -49,7 +64,7 @@ export function parent <T extends object> (instance: T, path?: string): object |
 	// each leading segment must be the direct parent
 	// of the instance matched by the next one,
 	// and the instance itself is never a candidate
-	let current = p as object;
+	let current = parentInstance;
 	for ( ;; ) {
 
 		const { constructor: { name } } = current as { constructor: { name: string } };

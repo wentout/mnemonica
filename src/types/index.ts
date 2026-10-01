@@ -558,15 +558,34 @@ export type Extracted<T extends object> = {
 // It is a one-level snapshot of the instance's prototype chain.
 // `props` contains the instance's enumerable user properties;
 // `joint` contains enumerable properties copied from the immediate prototype;
-// `parent` is the next link up the chain (currently not recursively parsed).
+// `parent` is the parent INSTANCE — the same object utils.parent(instance)
+// returns; null for no parent. Not recursively parsed — walking the whole
+// lineage level by level is what utils.deepParse does — this function stays
+// the one-level primitive.
+// The three "no parent" readings, stated once:
+//   parent == null        — no parent at all (covers both below);
+//   parent === null       — the end of a REAL chain (a root instance);
+//   parent === undefined  — nothing was given (utils.parse(null)).
 export type Parsed<T extends object> = {
 	name: string;
 	props: Extracted<T>;
 	self: T;
 	proto: object;
 	joint: Record<string, unknown>;
-	parent: object | undefined;
+	parent: object | null;
 };
+
+// EmptyParsed: the shape utils.parse(null) returns — the one non-object
+// input parse accepts. "Nothing was given": every field is its empty value,
+// and parent is undefined (see the readings above).
+export interface EmptyParsed {
+	name: undefined;
+	props: {};
+	self: null;
+	proto: undefined;
+	joint: {};
+	parent: undefined;
+}
 
 // Sibling type accessor
 export interface SiblingAccessor {
@@ -969,7 +988,9 @@ export interface UtilsCollection {
 		...args: unknown[]
 	): InstanceResult<Merge<B, A>>;
 	parse<T extends object>(self: T): Parsed<T>;
-	parent<T extends object>(instance: T): object | undefined;
+	parse(self: null): EmptyParsed;
+	deepParse<T extends object>(instance: T): Array<Parsed<T>>;
+	parent<T extends object>(instance: T): object | null;
 	parent<T extends object, K extends ParentPathOfInstance<T> & string>(
 		instance: T,
 		path: K

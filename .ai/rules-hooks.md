@@ -42,5 +42,9 @@ registerHook(MyType, 'preCreation', (opts) => {
 1. Collection `preCreation`
 2. Type `preCreation`
 3. Constructor invocation
-4. If error: Collection `creationError`, Type `creationError`
-5. If success: Collection `postCreation`, Type `postCreation`
+4. If error: Type `creationError`, then Collection `creationError`
+5. If success: Type `postCreation`, then Collection `postCreation`
+
+Pre-hooks run collection → type; post-hooks and error hooks run
+type → collection (`invokePostHooks` in `src/api/types/InstanceCreator.ts`
+calls the type first) — the collection wraps the type on both sides.
