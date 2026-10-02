@@ -44,6 +44,9 @@ const wrapThis = ( method: WrappableMethod ) => {
 		const instanceContext = instance !== undefined ? instance : this;
 		let wrapResult: unknown;
 		if ( new.target ) {
+			// wrapThis forwards `new` to the util; WrappableMethod (a plain
+			// function type) declares no construct signature, so the cast
+			// bridges that construct call
 			wrapResult = new (method as unknown as new (...a: unknown[]) => unknown)(
 				instanceContext,
 				...args

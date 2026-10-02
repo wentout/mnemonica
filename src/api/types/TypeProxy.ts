@@ -146,6 +146,9 @@ const subTypeApply = (
 			cstr,
 			cfg
 		);
+		// decorator contract: define() returns the constructor wrapping cstr
+		// (construction still runs through cstr); the class binding is
+		// replaced by that constructor, so it is presented as T
 		const result = defineResult as unknown as T;
 		return result;
 	};

@@ -53,7 +53,7 @@ export const invokeHook = function ( this: Hookable, hookType: string, opts: hoo
 
 		const flowChecker = flowCheckers.get( this );
 		if ( typeof flowChecker === 'function' ) {
-			(flowChecker as unknown as (opts: object) => unknown)({
+			flowChecker({
 				...hookArgs,
 				invocationResults,
 				hookType,
