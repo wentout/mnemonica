@@ -105,9 +105,15 @@ TypeProxy.prototype.set = function (this: TypeProxyInstance, _target: unknown, n
 	// is about setting a prototype to Type
 	if (name === 'prototype') {
 		checkProto(value);
-		Object.assign(
+		// the FULL-descriptor copy, not Object.assign: an enumerable-only
+		// copy silently drops non-enumerable props — assigning a class
+		// prototype object lost its methods — and INVOKES getters, freezing
+		// them to a value instead of keeping them getters. Object.assign
+		// does copy enumerable symbol-keyed props; what it loses is the
+		// non-enumerables and the getters
+		Object.defineProperties(
 			type.proto,
-			value
+			Object.getOwnPropertyDescriptors( value )
 		);
 		return true;
 	}

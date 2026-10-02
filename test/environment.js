@@ -869,10 +869,10 @@ const tests = (opts) => {
 				const MyProtoCheckType = define(MyProtoCheckFn);
 
 				expect(MyProtoCheckType.proto.asdf).equal(MyProtoCheckFn.prototype.asdf);
-				// there is no real prototype replacement
-				// just Object.assign
-				// so changing prototype after define does not affect full type proto
-				// but only affects props that are passed to assign operation
+				// there is no real prototype replacement — a full-descriptor
+				// copy onto the existing proto (non-enumerables and getters
+				// included) — so changing prototype after define does not
+				// affect the whole proto, only the passed descriptors land
 				MyProtoCheckType.prototype = { asdf : 321 };
 				expect(MyProtoCheckType.proto.asdf).equal(321);
 				expect(MyProtoCheckType.prototype.asdf).equal(321);
@@ -896,10 +896,10 @@ const tests = (opts) => {
 				const MyProtoCheckType = define(MyProtoCheckCLS);
 
 				expect(MyProtoCheckType.proto.asdf).equal(MyProtoCheckCLS.prototype.asdf);
-				// there is no real prototype replacement
-				// just Object.assign
-				// so changing prototype after define does not affect full type proto
-				// but only affects props that are passed to assign operation
+				// there is no real prototype replacement — a full-descriptor
+				// copy onto the existing proto (non-enumerables and getters
+				// included) — so changing prototype after define does not
+				// affect the whole proto, only the passed descriptors land
 				MyProtoCheckType.prototype = { asdf : 321 };
 				expect(MyProtoCheckType.proto.asdf).equal(321);
 				expect(MyProtoCheckType.prototype.asdf).equal(321);
@@ -927,6 +927,34 @@ const tests = (opts) => {
 				expect(myProtoCheckInstance.fdsa).equal(123);
 
 
+			});
+
+			it('prototype assignment keeps class methods and getters (descriptor copy)', () => {
+				class ProtoAssignRootCls {
+					rootMark () {
+						return 'root';
+					}
+				}
+				const AssignRoot = define(ProtoAssignRootCls);
+				const donor = class DonorCls {
+					donorMethod () {
+						return 'donor';
+					}
+				};
+				AssignRoot.prototype = donor.prototype;
+				// non-enumerable class methods survive the assignment…
+				expect(AssignRoot.proto.donorMethod).to.be.a('function');
+				// …and reach instances (class-handler descriptor copy)
+				expect(new AssignRoot().donorMethod()).to.equal('donor');
+
+				AssignRoot.prototype = {
+					get pinnedGetter () {
+						return 42;
+					}
+				};
+				const desc = Object.getOwnPropertyDescriptor(AssignRoot.proto, 'pinnedGetter');
+				expect(typeof desc.get).to.equal('function');
+				expect(new AssignRoot().pinnedGetter).to.equal(42);
 			});
 		});
 

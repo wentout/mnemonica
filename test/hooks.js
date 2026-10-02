@@ -46,7 +46,8 @@ const tests = ( opts ) => {
 			// +3 (inst.Sub.call(other) adopting parent instance construction)
 			// +2 (re-defined C0ArrowProbe after its rejected arrow define)
 			// +2 (strictChain sentinel-path pin types in parse.js)
-			assert.equal( 272, typesFlowCheckerInvocations.length );
+			// +4 (define-paths pin types in environment.js)
+			assert.equal( 276, typesFlowCheckerInvocations.length );
 
 			// +3 (increased due to explicit .lazy() API adding extra creations)
 			// +12 (increased due to dotted parent() tests adding instances)
@@ -58,7 +59,8 @@ const tests = ( opts ) => {
 			// +1 (re-defined C0ArrowProbe instance)
 			// +1 (strictChain sentinel-path pin: the refused construction
 			//     still fires preCreation before the check throws)
-			assert.equal( 147, typesPreCreationInvocations.length );
+			// +2 (define-paths pins: two fresh constructions)
+			assert.equal( 149, typesPreCreationInvocations.length );
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
@@ -71,7 +73,8 @@ const tests = ( opts ) => {
 			// +2 (re-defined C0ArrowProbe type + instance levels)
 			// +2 (new pin types' levels in parse.js/utils.js: the
 			//     strictChain sentinel-path pin and the toJSON pins)
-			assert.equal( 250, typesPostCreationInvocations.length );
+			// +4 (define-paths pins: fresh construction levels)
+			assert.equal( 254, typesPostCreationInvocations.length );
 		} );
 	} );
 

@@ -945,6 +945,33 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 
 
 			});
+
+			it('prototype assignment keeps class methods and getters (descriptor copy)', () => {
+				class ProtoAssignRootCls {
+					rootMark () {
+						return 'root';
+					}
+				}
+				const AssignRoot = define(ProtoAssignRootCls);
+				const donor = class DonorCls {
+					donorMethod () {
+						return 'donor';
+					}
+				};
+				(AssignRoot as { prototype: object }).prototype = donor.prototype;
+				expect((AssignRoot.proto as { donorMethod?: unknown }).donorMethod).toBeInstanceOf(Function);
+				const instance = new (AssignRoot as new () => { donorMethod(): string })();
+				expect(instance.donorMethod()).toEqual('donor');
+
+				(AssignRoot as { prototype: object }).prototype = {
+					get pinnedGetter () {
+						return 42;
+					}
+				};
+				const desc = Object.getOwnPropertyDescriptor(AssignRoot.proto, 'pinnedGetter');
+				expect(typeof desc?.get).toEqual('function');
+				expect(new (AssignRoot as new () => { pinnedGetter: number })().pinnedGetter).toEqual(42);
+			});
 		});
 
 		describe('should throw with wrong definition', () => {
