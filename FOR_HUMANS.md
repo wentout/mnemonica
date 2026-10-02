@@ -1007,6 +1007,7 @@ explicit `<T>` cast is required for ordinary use.
 | `utils.sibling(instance)` | `SiblingAccessor` |
 | `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>>` |
 | `utils.parse(instance)` | `Parsed<T>` |
+| `utils.lineage(instances, options?)` | `LineageGraph` |
 | `utils.toJSON(instance)` | `string` |
 | `utils.collectConstructors(instance, asSequence?)` | `string[]` when `asSequence: true`, otherwise a `{ [name]: true }` lookup object |
 

@@ -16,6 +16,7 @@ import { clone } from './clone';
 import { toJSON } from './toJSON';
 import { parse } from './parse';
 import { deepParse } from './deepParse';
+import { lineage } from './lineage';
 import { merge } from './merge';
 
 const utilsUnWrapped = {
@@ -33,6 +34,7 @@ const utilsUnWrapped = {
 
 	parse,
 	deepParse,
+	lineage,
 	merge,
 
 	collectConstructors,

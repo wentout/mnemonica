@@ -81,6 +81,12 @@ const defaultOptions = {
 		return false;
 	},
 
+	// the collection's name for lineage exports (lethe type.collection);
+	// unnamed collections export as 'defaultTypes'
+	get name () {
+		return '';
+	},
+
 } as Record<string, unknown>;
 
 export const constants = {
