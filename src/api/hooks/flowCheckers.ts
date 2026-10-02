@@ -8,7 +8,9 @@ const {
 	// FLOW_CHECKER_REDEFINITION,
 } = ErrorsTypes;
 
-export const flowCheckers = new WeakMap<Hookable, () => unknown>();
+// the stored checker receives the hook invocation record — same contract
+// Hookable.registerFlowChecker declares for its callback
+export const flowCheckers = new WeakMap<Hookable, (opts: object) => unknown>();
 export const registerFlowChecker = function (this: Hookable, cb: () => unknown ) {
 
 	if ( typeof cb !== 'function' ) {

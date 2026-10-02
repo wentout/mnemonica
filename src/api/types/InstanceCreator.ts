@@ -257,7 +257,7 @@ const addThen = function ( this: InstanceCreatorContext, then: ThenSpec ) {
 				// was chained :
 				true
 				// self.existentInstance
-			) as unknown as Promise<object>;
+			);
 			return self.inheritedInstance;
 		} );
 
@@ -473,7 +473,7 @@ const runAsyncHandling = function ( self: InstanceCreatorContext, type: TypeDef 
 	return undefined;
 };
 
-export const InstanceCreator = function (
+const instanceCreatorImpl = function (
 	this: InstanceCreatorContext,
 	type: TypeDef,
 	existentInstance: object,
@@ -522,7 +522,12 @@ export const InstanceCreator = function (
 	// Phase 7: Return
 	return self.inheritedInstance;
 
-} as unknown as _Internal_TC_<typeof InstanceCreatorPrototype>;
+};
+
+// always invoked with `new` (the TypeProxy construct trap, makeAwaiter's
+// addThen); a function expression carries no construct signature, so it is
+// named once as the constructor interface it is used through
+export const InstanceCreator = instanceCreatorImpl as _Internal_TC_<typeof InstanceCreatorPrototype>;
 
 Object.assign(
 	InstanceCreator.prototype,

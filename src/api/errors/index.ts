@@ -46,7 +46,11 @@ export const getStack = function (
 	title: string,
 	stackAddition: string[],
 	tillFunction?: StackBoundary
-) {
+	// always returns the assembled frame array (captured lines, cleaned,
+	// with the title and additions pushed), whichever capture branch ran —
+	// the stack property assignments above narrow this.stack to string[]
+	// on every path reaching the return
+): string[] {
 
 	if ( Error.captureStackTrace ) {
 		Error.captureStackTrace(

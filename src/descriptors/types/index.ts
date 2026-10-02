@@ -258,7 +258,10 @@ odp(
 				TypeNestedPath: string
 			) {
 				const lookupResult = lookup.call(
-					this.subtypes as unknown as TypesMap,
+					// a collection's subtypes map IS the runtime TypesMap (the
+					// MNEMOSYNE/SymbolParentType props are installed at
+					// construction), so the single cast only names that view
+					this.subtypes as TypesMap,
 					TypeNestedPath
 				);
 				return lookupResult;

@@ -95,7 +95,7 @@ export type TypesMap = Map<string, object> & {
 	[MNEMOSYNE]?: CollectionDef;
 };
 
-const TypeDescriptor = function (
+const typeDescriptorCreator = function (
 	this: TypeDescriptorInstance,
 	defineOrigin: TypeAbsorber,
 	types: TypesMap,
@@ -188,7 +188,13 @@ const TypeDescriptor = function (
 	const result = types.get(TypeName);
 	return result;
 
-} as unknown as _Internal_TC_<TypeDescriptorInstance>;
+};
+
+// the creator is only ever invoked with `new` (the createFrom* call sites
+// below); a function expression carries no construct signature, so it is
+// named once as the constructor interface it is used through — the
+// prototype contract is attached immediately below
+const TypeDescriptor = typeDescriptorCreator as _Internal_TC_<TypeDescriptorInstance>;
 
 Object.assign(
 	TypeDescriptor.prototype,
@@ -283,13 +289,14 @@ odp(
 			const result = function (options?: object) {
 				const decorator = function (cstr: CallableFunction) {
 					const { name } = cstr;
+					// define() returns the registered constructor itself —
+					// the full TypeClass is a richer honest type than any cast
 					const defineResult = self.define(
 						name,
 						cstr,
 						options
 					);
-					const decoratedResult = defineResult as unknown as CallableFunction;
-					return decoratedResult;
+					return defineResult;
 				};
 				return decorator;
 			};
@@ -428,6 +435,9 @@ const createFromDirectHandler = function (
 		makeConstructHandler,
 		proto,
 		config
+		// new TypeDescriptor() returns the TypeProxy it registers in the
+		// subtypes map — a Proxy materializing the TypeClass surface
+		// dynamically — so the public constructor contract is named here
 	) as unknown as TypeClass;
 	return result;
 };
@@ -505,6 +515,8 @@ const createFromLazyGetter = function (
 		makeConstructHandler,
 		proto,
 		config
+		// same TypeProxy return as createFromDirectHandler: the public
+		// TypeClass contract is materialized dynamically by the Proxy
 	) as unknown as TypeClass;
 	return result;
 };
@@ -648,8 +660,11 @@ export const lookup = function (
 	if (!type) {
 		return undefined;
 	}
+	// a type's subtypes map IS the runtime TypesMap (SymbolParentType and
+	// MNEMOSYNE are installed at definition time), so the single cast only
+	// names that view
 	const result = lookup.call(
-		type.subtypes as unknown as TypesMap,
+		type.subtypes as TypesMap,
 		NextNestedPath
 	);
 	return result;

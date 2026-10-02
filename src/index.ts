@@ -13,6 +13,7 @@ import type {
 	Constructor,
 	DecoratedClass,
 	TypeClass,
+	TypeConstructorBase,
 	TypeAbsorber,
 	LazyAbsorber,
 	MnemonicaModule,
@@ -180,16 +181,21 @@ export function define <
 	// explicit-source form: define(source, name, handler, config?)
 	// the source may be a TypesCollection (object) or a TypeProxy (function),
 	// so detection is: has a callable .define AND the next arg is a string name
+	const sourceCandidate = TypeNameOrSource as { define?: unknown };
 	const mayBeSource = (
 		(typeof TypeNameOrSource === 'object' && TypeNameOrSource !== null) ||
 		typeof TypeNameOrSource === 'function'
-	) && typeof (TypeNameOrSource as { define?: unknown }).define === 'function';
+	) && typeof sourceCandidate.define === 'function';
 	if (mayBeSource && typeof constructHandlerOrName === 'string') {
-		const source = TypeNameOrSource as unknown as { define: TypeAbsorber };
+		// .define was verified callable above; the cast only adds its signature
+		const source = sourceCandidate as { define: TypeAbsorber };
 		const sourceDefineResult = source.define(
 			constructHandlerOrName,
 			configOrHandler as IDEF<T>,
 			config
+			// facade return: the overload promises R (the caller's constructor
+			// view); the delegated define produces that same runtime
+			// constructor under a different generic instantiation
 		) as unknown as R;
 		return sourceDefineResult;
 	}
@@ -201,6 +207,9 @@ export function define <
 			TypeNameOrSource as string,
 			constructHandlerOrName as IDEF<T>,
 			configOrHandler as constructorOptions
+			// facade return: the overload promises R (the caller's constructor
+			// view); the delegated define produces that same runtime
+			// constructor under a different generic instantiation
 		) as unknown as R;
 	return defineResult;
 }
@@ -247,7 +256,7 @@ export function lazy(
 		typeof arg1 === 'function'
 	) && typeof (arg1 as { lazy?: unknown }).lazy === 'function';
 	if (mayBeSource) {
-		const source = arg1 as unknown as { lazy: LazyAbsorber };
+		const source = arg1 as { lazy: LazyAbsorber };
 		const sourceLazyResult = source.lazy(
 			arg2 as string | (() => IDEF<object>),
 			arg3 as (() => IDEF<object>) | constructorOptions,
@@ -313,14 +322,16 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 	// debugger;
 	// @ts-expect-error - extracting TypeName from function
 	const { TypeName } = Ctor;
+	// the returned SubTypeProxy is a plain function at runtime — constructable —
+	// so TypeConstructorBase (the named minimal constructor shape) is its
+	// honest static type here
 	const Cstr = prepareSubtypeForConstruction(
 		TypeName,
 		entity
-	) as unknown as { new(...ars: unknown[]): unknown };
+	) as TypeConstructorBase;
 	// TODO: check lines below and if Constructor is not mnemonized ...
 	if (Cstr === undefined) {
-		const ErrorCtor = WRONG_MODIFICATION_PATTERN as unknown as new (msg: string) => Error;
-		throw new ErrorCtor(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
+		throw new WRONG_MODIFICATION_PATTERN(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
 	}
 	const runResult = new Cstr(...args);
 	// @ts-expect-error - returning result as merged proto type
@@ -338,7 +349,9 @@ export const apply = function <E extends object, T extends object, S extends Pro
 		Ctor,
 		args
 	);
-	const result = runResult as unknown as InstanceResult<Merge<E, T>>;
+	// S extends Proto<E, T>, which is the same merged entity+ctor shape
+	// apply/call/bind promise — the named public result type
+	const result = runResult as InstanceResult<Merge<E, T>>;
 	return result;
 };
 
@@ -353,7 +366,8 @@ export const call = function <E extends object, T extends object, S extends Prot
 		Ctor,
 		args
 	);
-	const result = runResult as unknown as InstanceResult<Merge<E, T>>;
+	// same merge narrowing as apply() above
+	const result = runResult as InstanceResult<Merge<E, T>>;
 	return result;
 };
 
@@ -368,7 +382,8 @@ export const bind = function <E extends object, T extends object, S extends Prot
 			Ctor,
 			args
 		);
-		const typedResult = runResult as unknown as InstanceResult<Merge<E, T>>;
+		// same merge narrowing as apply() above
+		const typedResult = runResult as InstanceResult<Merge<E, T>>;
 		return typedResult;
 	};
 	return result;
@@ -384,8 +399,11 @@ export const decorate = function <
 		? target as constructorOptions
 		: config;
 
+	// decorate(SomeType, config?) expects a constructor already carrying
+	// .define (a previously defined type) — declared on the value so the
+	// decorator body below needs no cast
 	const parentType = (target instanceof Function)
-		? target as Constructor<object>
+		? target as Constructor<object> & { define: TypeAbsorber }
 		: undefined;
 
 	const decorator = function <U extends Constructor<object>>(cstr: U): DecoratedClass<U> {
@@ -395,16 +413,17 @@ export const decorate = function <
 				name,
 				cstr as IDEF<object>,
 				opts
+				// decorator contract: define() returns the constructor that
+				// wraps cstr; the decorator replaces the class binding with
+				// it, so the result is presented as DecoratedClass<U>
 			) as unknown as DecoratedClass<U>;
 			return decoratorResult;
 		}
-		const parent = parentType as unknown as {
-			define: TypeAbsorber;
-		};
-		const defineResult = parent.define(
+		const defineResult = parentType.define(
 			name,
 			cstr as IDEF<object>,
 			opts
+			// same decorator contract as the branch above
 		) as unknown as DecoratedClass<U>;
 		return defineResult;
 	};
