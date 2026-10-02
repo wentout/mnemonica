@@ -456,8 +456,22 @@ const createFromLazyGetter = function (
 		TypeName
 	);
 
+	// reject the unsupported handler shapes at DEFINE time too — the lazy
+	// path used to check only typeof/name, so a getter returning an arrow,
+	// a method, a bound function or a generator defined fine and failed
+	// (or misbehaved) at construction. Same readable errors as the direct
+	// path; checkDuplicate runs first so a taken name still wins with the
+	// canonical ALREADY_DECLARED
+	classifyConstructHandler(
+		TypeName,
+		type as ConstructHandler
+	);
+
 	const asClass = isClass(type);
 
+	// classifyConstructHandler above rejects only no-own-prototype
+	// functions; a function with an own NON-OBJECT prototype (prototype = 123)
+	// still passes and needs the default-prototype fallback
 	const proto = (
 		hop(
 			type,
@@ -468,6 +482,14 @@ const createFromLazyGetter = function (
 
 	const makeConstructHandler = () => {
 		const constructHandler = getter();
+
+		// and on EVERY construction: the getter may return a new function
+		// each time, so the shape check cannot be cached from define time.
+		// This is what makes lazy slower than a direct define
+		classifyConstructHandler(
+			TypeName,
+			constructHandler as ConstructHandler
+		);
 
 		odp(
 			constructHandler,

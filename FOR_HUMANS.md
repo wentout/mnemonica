@@ -556,6 +556,13 @@ const MyType = define('MyType', function (data) {
 Defines a type whose constructor is resolved through a zero-arg getter. Useful
 for breaking circular dependencies or deferring constructor selection until
 definition time. The resulting type behaves like a type created with `define()`.
+The handler-shape rules apply to the getter's result exactly as they do to a
+direct `define()` handler — generators, sync arrows, shorthand methods and
+bound functions are rejected with the same readable errors — and they are
+enforced BOTH at definition time AND on every construction (the getter may
+return a new function each time). That per-construction check is what makes
+`lazy` slower than a direct `define()`; getters should also be pure, since
+they run eagerly at definition time and again per construction.
 
 ```js
 const { lazy } = require('mnemonica');

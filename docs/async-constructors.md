@@ -50,6 +50,11 @@ chain ends here, but an object is possible".
 > the `this`-substitution dance. Arrow functions never see the instance
 > (their `this` is lexical); the shape rules below reject the sync forms at
 > define time, and the `no-arrow-this` ESLint plugin is the early guard.
+> The same rules apply to `lazy` getters — on the getter's result, at
+> definition time AND on every construction (the getter may return a new
+> function each time, so the check cannot be cached). That per-construction
+> check is what makes `lazy` slower than a direct `define()`; keep getters
+> pure — they run eagerly at definition time and again per construction.
 
 ---
 
@@ -321,6 +326,7 @@ The error's composite stack keeps its three sections for async failures too. The
 | `super()` returning Promise | ✅ | Standard JS; mnemonica's wrapper preserves it |
 | `define('Name', () => { ... })` — arrow, method, bound fn | ❌ | Define-time error: must be a regular function or a class |
 | `define('Name', function* () { ... })` — generators | ❌ | Define-time error: not supported as a constructor |
+| `lazy(getter)` returning any of the rejected forms | ❌ | Same errors, at define time AND at every construction |
 | Generators CONSUMING constructions (`yield new X()`) | ✅ | The yielded value is the instance; async generators even resolve un-awaited construction promises |
 
 ---

@@ -9,6 +9,7 @@ const hop = (o, p) => Object.prototype.hasOwnProperty.call(o, p);
 const {
 	define,
 	lazy,
+	lookup,
 	defaultTypes: types,
 	defaultCollection,
 	SymbolDefaultTypesCollection,
@@ -358,6 +359,116 @@ const tests = (opts) => {
 			it('sub instance made with named class  prototype methods', () => {
 				expect(snc1.getTypeValue()).is.equal('subclass');
 				expect(snc2.getTypeValue()).is.equal('subclass');
+			});
+
+			describe('class subtype methods: direct define matches lazy', () => {
+
+				const MethodsRoot = UserType.define('MethodsRootFixPin', class MethodsRootFixPin {
+					rootMethod () {
+						return 'root';
+					}
+				});
+				MethodsRoot.define('DirectSubFixPin', class DirectSubFixPin {
+					directMethod () {
+						return 'direct';
+					}
+				});
+				MethodsRoot.lazy('LazySubFixPin', () => class LazySubFixPin {
+					lazyMethod () {
+						return 'lazy';
+					}
+				});
+
+				it('direct Type.define class subtype keeps its own prototype methods', () => {
+					const sub = new ( new user.MethodsRootFixPin() ).DirectSubFixPin();
+					expect(sub.directMethod()).is.equal('direct');
+				});
+
+				it('lazy class subtype keeps its own prototype methods (reference)', () => {
+					const sub = new ( new user.MethodsRootFixPin() ).LazySubFixPin();
+					expect(sub.lazyMethod()).is.equal('lazy');
+				});
+
+				it('parent method is reachable via the chain in both forms', () => {
+					expect(new ( new user.MethodsRootFixPin() ).DirectSubFixPin().rootMethod()).is.equal('root');
+					expect(new ( new user.MethodsRootFixPin() ).LazySubFixPin().rootMethod()).is.equal('root');
+				});
+
+				it('extends-base methods behave the same in both forms (chain substitution is deliberate)', () => {
+					class FixPinBase {
+						baseMethod () {
+							return 'base';
+						}
+					}
+					MethodsRoot.define('DirectExtendsFixPin', class DirectExtendsFixPin extends FixPinBase {
+						ownMethod () {
+							return 'own';
+						}
+					});
+					MethodsRoot.lazy('LazyExtendsFixPin', () => class LazyExtendsFixPin extends FixPinBase {
+						ownMethod () {
+							return 'own';
+						}
+					});
+					const root = new user.MethodsRootFixPin();
+					const direct = new root.DirectExtendsFixPin();
+					const lazySub = new root.LazyExtendsFixPin();
+					expect(direct.ownMethod()).is.equal('own');
+					expect(lazySub.ownMethod()).is.equal('own');
+					// the prototype substitution replaces the extends-linkage
+					// in BOTH forms — the base methods are equally unreachable
+					expect(typeof direct.baseMethod).is.equal(typeof lazySub.baseMethod);
+				});
+
+			});
+
+			describe('lazy handler-shape classification', () => {
+
+				it('a sync arrow from the getter throws the readable error at define', () => {
+					expect(() => UserType.lazy('LazyArrowPin', () => () => {}))
+						.to.throw(/LazyArrowPin: constructor must be a regular function or a class/);
+				});
+
+				it('a shorthand method from the getter throws the readable error at define', () => {
+					const holder = { method () {} };
+					expect(() => UserType.lazy('LazyMethodPin', () => holder.method))
+						.to.throw(/LazyMethodPin: constructor must be a regular function or a class/);
+				});
+
+				it('a bound function from the getter throws the readable error at define', () => {
+					const regularFn = function () {};
+					expect(() => UserType.lazy('LazyBoundPin', () => regularFn.bind(null)))
+						.to.throw(/LazyBoundPin: constructor must be a regular function or a class/);
+				});
+
+				it('a generator from the getter throws the readable error at define', () => {
+					expect(() => UserType.lazy('LazyGenPin', () => function* () {}))
+						.to.throw(/LazyGenPin: generator functions are not supported as a constructor/);
+				});
+
+				it('after the throw lookup finds nothing and a corrected re-define succeeds', () => {
+					expect(() => UserType.lazy('LazyRePin', () => () => {})).to.throw();
+					expect(lookup('LazyRePin')).is.equal(undefined);
+					const fixed = UserType.lazy('LazyRePin', () => function () {});
+					expect(fixed).to.exist;
+				});
+
+				it('a getter returning valid first and rejected later fails at that construction', () => {
+					let calls = 0;
+					UserType.lazy('LazyLatePin', () => {
+						calls++;
+						// define time consumes the first (valid) result; the
+						// first construction gets the rejected form
+						return calls < 2 ? function () {} : () => {};
+					});
+					const instance = new (user.constructor)({
+						email    : 'late@example.com',
+						password : 123
+					});
+					expect(() => new instance.LazyLatePin())
+						.to.throw(/LazyLatePin: constructor must be a regular function or a class/);
+				});
+
 			});
 
 			it('instance made with sub-named class props', () => {
