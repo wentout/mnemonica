@@ -3432,12 +3432,26 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			});
 
 			describe('lazy coverage - getter returns function without prototype', () => {
-				it('should cover getDefaultPrototype branch in createFromLazyGetter', () => {
-					const NoProtoLazyType = lazy('NoProtoLazyType', () => {
+				it('a no-own-prototype getter result is rejected with the readable error', () => {
+					// the handler-shape classification now rejects arrows at
+					// define time, so the old getDefaultPrototype fallback for
+					// them is gone — the readable error is the behavior
+					expect(() => lazy('NoProtoLazyType', () => {
 						const ArrowCtor = () => {};
 						return ArrowCtor;
+					})).toThrow(/NoProtoLazyType: constructor must be a regular function or a class/);
+				});
+
+				it('a getter returning a function with a non-object prototype takes the default', () => {
+					const NonObjectProtoTypeResult = lazy(() => {
+						function NonObjectProtoType () {}
+						NonObjectProtoType.prototype = 123 as unknown as object;
+						return NonObjectProtoType;
 					});
-					expect(NoProtoLazyType.TypeName).toBe('NoProtoLazyType');
+					expect(NonObjectProtoTypeResult).toBeDefined();
+					expect(NonObjectProtoTypeResult.TypeName).toBe('NonObjectProtoType');
+					const instance = new (NonObjectProtoTypeResult as new () => object)();
+					expect(instance).toBeDefined();
 				});
 			});
 

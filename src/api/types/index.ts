@@ -64,6 +64,7 @@ const {
 	WRONG_TYPE_DEFINITION,
 	TYPENAME_MUST_BE_A_STRING,
 	HANDLER_MUST_BE_A_FUNCTION,
+	OPTIONS_ERROR,
 } = ErrorsTypes;
 
 // invokeHook
@@ -95,7 +96,7 @@ export type TypesMap = Map<string, object> & {
 	[MNEMOSYNE]?: CollectionDef;
 };
 
-const TypeDescriptor = function (
+const typeDescriptorCreator = function (
 	this: TypeDescriptorInstance,
 	defineOrigin: TypeAbsorber,
 	types: TypesMap,
@@ -124,11 +125,20 @@ const TypeDescriptor = function (
 
 	const title = `${TYPE_TITLE_PREFIX}${TypeName}`;
 
+	// 'name' is a COLLECTION option only: a user passing it here meant to
+	// name the collection, not the type — say so readably
+	if ( config !== undefined && typeof config === 'object' && 'name' in config ) {
+		const nameError = '\"name\" is a collection option ' +
+			'(createTypesCollection({ name })) — it cannot be set on a type';
+		throw new OPTIONS_ERROR( nameError );
+	}
 	config = Object.assign(
 		{},
 		(collection as Record<symbol, unknown>)[ SymbolConfig ],
 		config
 	);
+	// never inherited into the type's config either
+	Reflect.deleteProperty( config, 'name' );
 
 	const type = Object.assign(
 		this,
@@ -188,7 +198,13 @@ const TypeDescriptor = function (
 	const result = types.get(TypeName);
 	return result;
 
-} as unknown as _Internal_TC_<TypeDescriptorInstance>;
+};
+
+// the creator is only ever invoked with `new` (the createFrom* call sites
+// below); a function expression carries no construct signature, so it is
+// named once as the constructor interface it is used through — the
+// prototype contract is attached immediately below
+const TypeDescriptor = typeDescriptorCreator as _Internal_TC_<TypeDescriptorInstance>;
 
 Object.assign(
 	TypeDescriptor.prototype,
@@ -283,13 +299,14 @@ odp(
 			const result = function (options?: object) {
 				const decorator = function (cstr: CallableFunction) {
 					const { name } = cstr;
+					// define() returns the registered constructor itself —
+					// the full TypeClass is a richer honest type than any cast
 					const defineResult = self.define(
 						name,
 						cstr,
 						options
 					);
-					const decoratedResult = defineResult as unknown as CallableFunction;
-					return decoratedResult;
+					return defineResult;
 				};
 				return decorator;
 			};
@@ -428,6 +445,9 @@ const createFromDirectHandler = function (
 		makeConstructHandler,
 		proto,
 		config
+		// new TypeDescriptor() returns the TypeProxy it registers in the
+		// subtypes map — a Proxy materializing the TypeClass surface
+		// dynamically — so the public constructor contract is named here
 	) as unknown as TypeClass;
 	return result;
 };
@@ -456,8 +476,22 @@ const createFromLazyGetter = function (
 		TypeName
 	);
 
+	// reject the unsupported handler shapes at DEFINE time too — the lazy
+	// path used to check only typeof/name, so a getter returning an arrow,
+	// a method, a bound function or a generator defined fine and failed
+	// (or misbehaved) at construction. Same readable errors as the direct
+	// path; checkDuplicate runs first so a taken name still wins with the
+	// canonical ALREADY_DECLARED
+	classifyConstructHandler(
+		TypeName,
+		type as ConstructHandler
+	);
+
 	const asClass = isClass(type);
 
+	// classifyConstructHandler above rejects only no-own-prototype
+	// functions; a function with an own NON-OBJECT prototype (prototype = 123)
+	// still passes and needs the default-prototype fallback
 	const proto = (
 		hop(
 			type,
@@ -468,6 +502,14 @@ const createFromLazyGetter = function (
 
 	const makeConstructHandler = () => {
 		const constructHandler = getter();
+
+		// and on EVERY construction: the getter may return a new function
+		// each time, so the shape check cannot be cached from define time.
+		// This is what makes lazy slower than a direct define
+		classifyConstructHandler(
+			TypeName,
+			constructHandler as ConstructHandler
+		);
 
 		odp(
 			constructHandler,
@@ -491,6 +533,12 @@ const createFromLazyGetter = function (
 		return handlerResult;
 	};
 
+	// 'name' is a COLLECTION option only (same rejection as the direct path)
+	if ( config !== undefined && typeof config === 'object' && 'name' in config ) {
+		const nameError = '\"name\" is a collection option ' +
+			'(createTypesCollection({ name })) — it cannot be set on a type';
+		throw new OPTIONS_ERROR( nameError );
+	}
 	config = Object.assign(
 		{},
 		config
@@ -505,6 +553,8 @@ const createFromLazyGetter = function (
 		makeConstructHandler,
 		proto,
 		config
+		// same TypeProxy return as createFromDirectHandler: the public
+		// TypeClass contract is materialized dynamically by the Proxy
 	) as unknown as TypeClass;
 	return result;
 };
@@ -648,8 +698,11 @@ export const lookup = function (
 	if (!type) {
 		return undefined;
 	}
+	// a type's subtypes map IS the runtime TypesMap (SymbolParentType and
+	// MNEMOSYNE are installed at definition time), so the single cast only
+	// names that view
 	const result = lookup.call(
-		type.subtypes as unknown as TypesMap,
+		type.subtypes as TypesMap,
 		NextNestedPath
 	);
 	return result;

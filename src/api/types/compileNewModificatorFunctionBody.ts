@@ -161,6 +161,9 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 		const innerResult = function (): ModificationBody {
 			let ModificationBody: ModificationBody;
 			if ( asClass ) {
+				// this branch runs only when isClass() verified at define
+				// time that the handler is a class — the cast names the class
+				// view (construct signature) of that same function value
 				ModificationBody = getClassConstructor(
 					ConstructHandler as unknown as ClassConstructHandler,
 					CreationHandler
@@ -169,6 +172,9 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 				// const ReNamedConstructHandler = {} as unknown;
 				// ReNamedConstructHandler[FunctionName] = ConstructHandler;
 				// ModificationBody = getFunctionConstructor(ReNamedConstructHandler[FunctionName], CreationHandler);
+				// the compiled body is invoked with `new` by the pipeline;
+				// a function expression carries no construct signature, so
+				// the `new`-able view of the same value is named here
 				ModificationBody = getFunctionConstructor(
 					ConstructHandler,
 					CreationHandler

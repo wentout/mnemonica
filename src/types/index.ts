@@ -587,6 +587,56 @@ export interface EmptyParsed {
 	parent: undefined;
 }
 
+// --- lineage (the lethe cross-language export) -----------------------------
+
+// A JSON-safe value in the lethe lineage graph: instances export as $ref,
+// non-JSON values as tagged placeholders — never an error.
+export type LineageValue =
+	| null
+	| boolean
+	| string
+	| number
+	| LineageValue[]
+	| { $ref: string }
+	| { '$mnemonica': 'unsupported'; kind: string }
+	| { [ key: string ]: LineageValue };
+
+// Where a level's type was DECLARED — not just its name (names collide
+// across levels and collections).
+export interface LineageTypeRef {
+	collection: string;
+	path: string;
+}
+
+export interface LineageNode {
+	type: LineageTypeRef;
+	// the fields this level set itself — shadowed values stay with their
+	// writer
+	own: { [ key: string ]: LineageValue };
+	// the parent's id, null at the root
+	parent: string | null;
+	// construction args — present only when lineage() gets { args: true }
+	args?: LineageValue;
+	// opt-in metadata (e.g. __timestamp__) — present only when
+	// lineage() gets { props: [...] }
+	props?: { [ key: string ]: LineageValue };
+}
+
+// The lethe lineage graph: version "1", heads in argument order, every
+// reachable instance deduplicated at any depth.
+export interface LineageGraph {
+	version: '1';
+	heads: string[];
+	nodes: { [ id: string ]: LineageNode };
+}
+
+export interface LineageOptions {
+	/** include construction args as node.args */
+	args?: boolean;
+	/** opt-in getProps keys exported as node.props (e.g. [ '__timestamp__' ]) */
+	props?: string[];
+}
+
 // Sibling type accessor
 export interface SiblingAccessor {
 	(SiblingTypeName: string): TypeClass | undefined;
@@ -990,6 +1040,7 @@ export interface UtilsCollection {
 	parse<T extends object>(self: T): Parsed<T>;
 	parse(self: null): EmptyParsed;
 	deepParse<T extends object>(instance: T): Array<Parsed<T>>;
+	lineage(instances: object[], options?: LineageOptions): LineageGraph;
 	parent<T extends object>(instance: T): object | null;
 	parent<T extends object, K extends ParentPathOfInstance<T> & string>(
 		instance: T,

@@ -220,6 +220,40 @@ export interface EmptyParsed {
     joint: {};
     parent: undefined;
 }
+export type LineageValue = null | boolean | string | number | LineageValue[] | {
+    $ref: string;
+} | {
+    '$mnemonica': 'unsupported';
+    kind: string;
+} | {
+    [key: string]: LineageValue;
+};
+export interface LineageTypeRef {
+    collection: string;
+    path: string;
+}
+export interface LineageNode {
+    type: LineageTypeRef;
+    own: {
+        [key: string]: LineageValue;
+    };
+    parent: string | null;
+    args?: LineageValue;
+    props?: {
+        [key: string]: LineageValue;
+    };
+}
+export interface LineageGraph {
+    version: '1';
+    heads: string[];
+    nodes: {
+        [id: string]: LineageNode;
+    };
+}
+export interface LineageOptions {
+    args?: boolean;
+    props?: string[];
+}
 export interface SiblingAccessor {
     (SiblingTypeName: string): TypeClass | undefined;
     [key: string]: TypeClass | undefined;
@@ -361,6 +395,7 @@ export interface UtilsCollection {
     parse<T extends object>(self: T): Parsed<T>;
     parse(self: null): EmptyParsed;
     deepParse<T extends object>(instance: T): Array<Parsed<T>>;
+    lineage(instances: object[], options?: LineageOptions): LineageGraph;
     parent<T extends object>(instance: T): object | null;
     parent<T extends object, K extends ParentPathOfInstance<T> & string>(instance: T, path: K): InstanceOfTypeRegistry<K> | undefined;
     parent<T extends object>(instance: T, path: string): object | undefined;

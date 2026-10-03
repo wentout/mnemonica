@@ -51,7 +51,7 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 	// NOTE: the public getProps is required here (not _getProps) because the
 	// error data sits in the additions slot of the record — _getProps returns
 	// the raw record only and would miss it.
-	const errorProps = getProps( error ) as unknown as ErrorProps | undefined;
+	const errorProps = getProps( error ) as ErrorProps | undefined;
 
 	const exceptionReason = (
 		errorProps !== undefined &&
