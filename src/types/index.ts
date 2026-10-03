@@ -202,6 +202,46 @@ export type hooksOpts<P = object, T = P> = {
 	creator?: { throwModificationError(error: Error): void };
 };
 
+// Hook options typed per hookType — the compile-time face of the runtime
+// hookData built in InstanceCreator (invokePreHooks / invokePostHooks).
+// P = existent (parent) instance, T = inherited (created) instance.
+// preCreation fires BEFORE the created instance exists, so its opts carry
+// no inheritedInstance and no creator — accessing them is a compile error.
+export type typedHookOpts<HT extends hooksTypes, P extends object, T extends object> =
+	HT extends 'preCreation'
+		? {
+			TypeName: string;
+			type: TypeDef;
+			args: unknown[];
+			existentInstance: P;
+		}
+		: {
+			TypeName: string;
+			type: TypeDef;
+			args: unknown[];
+			existentInstance: P;
+			inheritedInstance: T;
+			creator: { throwModificationError(error: Error): void };
+		};
+
+// Typed hook callback — the cb of a registerHook call bound to a known type:
+// the callback's opts are inferred from the hookType and the parent/instance
+// pair the hook is registered on. Collection-wide (global) handlers stay on
+// the untyped `hook` above by design.
+export type typedHook<HT extends hooksTypes, P extends object = object, T extends object = object> = {
+	(opts: typedHookOpts<HT, P, T>): unknown;
+} & CallableFunction;
+
+// Constructor surface the free registerHook() accepts: any constructor of T
+// instances with a registerHook method. Deliberately NOT DecoratedClass<T> —
+// inference through DecoratedClass's InstanceType<T> conditional picks a wrong
+// T candidate, and inferring from a generic registerHook member resets T to
+// its default; here T is inferred from Constructor<T>'s return position and
+// the precise cb typing comes from the free function's own cb parameter.
+export type HookableConstructor<T extends object> = Constructor<T> & {
+	registerHook(hookType: hooksTypes, cb: CallableFunction): void;
+};
+
 // Callback passed into ModificationConstructor to attach internal props to the prototype
 export interface AddPropsCallback extends CallableFunction {
 	(proto: object): void;
@@ -406,6 +446,24 @@ export type LookedUpConstructor<
 > = AugmentedConstructor<Registry, Path, CallConstructs> & {
 	lookup: NestedTypeLookup<Registry, Path>;
 };
+
+// Typed registerHook surface for lookup results whose registry entries are
+// bare constructors (tactica-emitted or hand-written TypeRegistry entries):
+// their lookup results would otherwise lack registerHook entirely. The
+// created-instance type is recovered from the entry's construct/call return.
+// Constructors that already carry a typed registerHook (builder-created
+// RegistryEntry values) pass through unchanged.
+export type WithHookRegister<C> = C extends { registerHook: CallableFunction }
+	? C
+	: C extends { new (...args: never[]): infer R }
+		? R extends object
+			? C & { registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, object, R>): void }
+			: C
+		: C extends { (...args: never[]): infer R }
+			? R extends object
+				? C & { registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, object, R>): void }
+				: C
+			: C;
 
 // Result of a typed lookup: the augmented constructor plus a `lookup` method
 // scoped to the constructor's own type path for relative subtype lookups.
@@ -698,10 +756,19 @@ export type InstanceResult<
 // It preserves the dotted `Path` so that `.define()` on a looked-up constructor
 // computes the correct child path, but it omits the full `GlobalRegistry`
 // generic to keep hover tooltips readable.
+// `Parent` is the instance type of the type's parent (object for root types),
+// threaded so looked-up constructors type their registerHook callbacks'
+// existentInstance.
 export interface RegistryEntry<
 	F extends object,
-	Path extends string = ''
-> extends _Internal_TC_<F>, RegistryHolderBase<{}, F, Path> {}
+	Path extends string = '',
+	Parent extends object = object
+> extends _Internal_TC_<F>, RegistryHolderBase<{}, F, Path> {
+	// typed hook registration — preserved through ReplaceConstructorInstance's
+	// member preservation, so lookup() results of builder-typed registries
+	// get registerHook with inferred opts
+	registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
+}
 
 // Registry holder base - provides the accumulating .define() method.
 // `Parent` tracks the instance type of the last defined constructor, so chained
@@ -735,8 +802,9 @@ export interface RegistryHolderBase<
 	): IDefinitorInstance<
 		F,
 		InstanceResult<F>,
-		T & Record<ChildPath, RegistryEntry<F, ChildPath>>,
-		ChildPath
+		T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>,
+		ChildPath,
+		Parent
 	>;
 
 	// Explicit lazy getter: .lazy(() => Constructor, config?)
@@ -760,8 +828,9 @@ export interface RegistryHolderBase<
 	): IDefinitorInstance<
 		F,
 		InstanceResult<F>,
-		T & Record<ChildPath, RegistryEntry<F, ChildPath>>,
-		ChildPath
+		T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>,
+		ChildPath,
+		Parent
 	>;
 }
 
@@ -781,11 +850,14 @@ export interface RegistryHolder<
 // R = wrapped result instance type
 // Registry = typed registry map for lookup()
 // Path = dotted type path of this constructor (empty for root types)
+// Parent = instance type of the parent type (object for root types);
+//          threaded into registerHook's existentInstance typing
 export interface IDefinitorInstance<
 	N extends object,
 	R extends InstanceResult<N> = InstanceResult<N>,
 	Registry extends object = GlobalRegistry,
-	Path extends string = ''
+	Path extends string = '',
+	Parent extends object = object,
 >
 	extends RegistryHolderBase<Registry, N, Path> {
 
@@ -808,7 +880,7 @@ export interface IDefinitorInstance<
 
 	decorate: (config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, Registry>;
 
-	registerHook(hookType: hooksTypes, cb: hook): void;
+	registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, N>): void;
 
 	subtypes: SubtypesMap;
 
@@ -1064,7 +1136,10 @@ export interface MnemonicaModule<Registry extends object = {}>
 		target?: T,
 		config?: constructorOptions
 	) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, Registry>;
-	registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
+	registerHook: <
+		T extends object,
+		HT extends hooksTypes = hooksTypes
+	>(Constructor: IDEF<T>, hookType: HT, cb: typedHook<HT, object, T>) => void;
 
 	// Descriptors
 	defaultTypes: TypesCollection<Registry>;

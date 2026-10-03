@@ -5,7 +5,6 @@ import type {
 	CreateTypesCollectionFunction,
 	CtorParameter,
 	IDEF,
-	hook,
 	hooksTypes,
 	constructorOptions,
 	Proto,
@@ -22,7 +21,10 @@ import type {
 	TypeLookup,
 	RegistryHolderBase,
 	RegistryEntry,
-	LookedUpConstructor
+	LookedUpConstructor,
+	WithHookRegister,
+	typedHook,
+	HookableConstructor
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -62,6 +64,10 @@ export type {
 	RegistryEntry,
 	LookedUpConstructor,
 	LookedUpInstance,
+	typedHook,
+	typedHookOpts,
+	WithHookRegister,
+	HookableConstructor,
 } from './types';
 
 /**
@@ -149,8 +155,9 @@ export function define <
 ): IDefinitorInstance<
 	F,
 	InstanceResult<F>,
-	Reg & Record<ChildPath, RegistryEntry<F, ChildPath>>,
-	ChildPath
+	Reg & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>,
+	ChildPath,
+	Parent
 >;
 export function define <
 	T extends object,
@@ -279,13 +286,13 @@ export function lazy(
 export function lookup<const K extends keyof TypeRegistry>(
 	this: unknown,
 	TypeNestedPath: K
-): TypeRegistry[K];
+): WithHookRegister<TypeRegistry[K]>;
 export function lookup<Reg extends object, const K extends keyof Reg & string>(
 	// explicit-source form: lookup(source, path)
 	// resolves against the registry carried by a builder/collection value
 	source: { lookup: TypeLookup<Reg> },
 	TypeNestedPath: K
-): LookedUpConstructor<Reg, K>;
+): WithHookRegister<LookedUpConstructor<Reg, K>>;
 export function lookup(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 export function lookup(
 	source: { lookup: (path: string) => TypeClass | undefined },
@@ -431,10 +438,13 @@ export const decorate = function <
 };
 
 
-export const registerHook = function <T extends Constructor<T>>(
-	Ctor: DecoratedClass<T>,
-	hookType: hooksTypes,
-	cb: hook
+export const registerHook = function <
+	T extends object,
+	HT extends hooksTypes = hooksTypes,
+>(
+	Ctor: HookableConstructor<T>,
+	hookType: HT,
+	cb: typedHook<HT, object, T>
 ): void {
 	Ctor.registerHook(
 		hookType,
