@@ -17,6 +17,7 @@ const hop = (o: unknown, p: string) => Object.prototype.hasOwnProperty.call(o, p
 const {
 	define,
 	lazy,
+	lookup,
 	defaultTypes: types,
 	defaultCollection,
 	SymbolDefaultTypesCollection,
@@ -368,6 +369,134 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 			it('sub instance made with named class  prototype methods', () => {
 				expect(snc1.getTypeValue()).toEqual('subclass');
 				expect(snc2.getTypeValue()).toEqual('subclass');
+			});
+
+			describe('class subtype methods: direct define matches lazy', () => {
+
+				const MethodsRoot = UserType.define('MethodsRootFixPinJest', class MethodsRootFixPinJest {
+					rootMethod () {
+						return 'root';
+					}
+				});
+				MethodsRoot.define('DirectSubFixPinJest', class DirectSubFixPinJest {
+					directMethod () {
+						return 'direct';
+					}
+				});
+				MethodsRoot.lazy('LazySubFixPinJest', () => class LazySubFixPinJest {
+					lazyMethod () {
+						return 'lazy';
+					}
+				});
+
+				it('direct Type.define class subtype keeps its own prototype methods', () => {
+					const userInstance = user as unknown as {
+						MethodsRootFixPinJest: new () => {
+							DirectSubFixPinJest: new () => { directMethod(): string };
+						};
+					};
+					const sub = new (new userInstance.MethodsRootFixPinJest()).DirectSubFixPinJest();
+					expect(sub.directMethod()).toEqual('direct');
+				});
+
+				it('lazy class subtype keeps its own prototype methods (reference)', () => {
+					const userInstance = user as unknown as {
+						MethodsRootFixPinJest: new () => {
+							LazySubFixPinJest: new () => { lazyMethod(): string };
+						};
+					};
+					const sub = new (new userInstance.MethodsRootFixPinJest()).LazySubFixPinJest();
+					expect(sub.lazyMethod()).toEqual('lazy');
+				});
+
+				it('parent method is reachable via the chain in both forms', () => {
+					const userInstance = user as unknown as {
+						MethodsRootFixPinJest: new () => {
+							DirectSubFixPinJest: new () => { rootMethod(): string };
+							LazySubFixPinJest: new () => { rootMethod(): string };
+						};
+					};
+					const root = new userInstance.MethodsRootFixPinJest();
+					expect(new root.DirectSubFixPinJest().rootMethod()).toEqual('root');
+					expect(new root.LazySubFixPinJest().rootMethod()).toEqual('root');
+				});
+
+				it('extends-base methods behave the same in both forms (chain substitution is deliberate)', () => {
+					class FixPinBase {
+						baseMethod () {
+							return 'base';
+						}
+					}
+					MethodsRoot.define('DirectExtendsFixPinJest', class DirectExtendsFixPinJest extends FixPinBase {
+						ownMethod () {
+							return 'own';
+						}
+					});
+					MethodsRoot.lazy('LazyExtendsFixPinJest', () => class LazyExtendsFixPinJest extends FixPinBase {
+						ownMethod () {
+							return 'own';
+						}
+					});
+					const userInstance = user as unknown as {
+						MethodsRootFixPinJest: new () => {
+							DirectExtendsFixPinJest: new () => { ownMethod(): string; baseMethod?: unknown };
+							LazyExtendsFixPinJest: new () => { ownMethod(): string; baseMethod?: unknown };
+						};
+					};
+					const root = new userInstance.MethodsRootFixPinJest();
+					const direct = new root.DirectExtendsFixPinJest();
+					const lazySub = new root.LazyExtendsFixPinJest();
+					expect(direct.ownMethod()).toEqual('own');
+					expect(lazySub.ownMethod()).toEqual('own');
+					expect(typeof direct.baseMethod).toEqual(typeof lazySub.baseMethod);
+				});
+
+			});
+
+			describe('lazy handler-shape classification', () => {
+
+				it('a sync arrow from the getter throws the readable error at define', () => {
+					expect(() => UserType.lazy('LazyArrowPinJest', () => () => {}))
+						.toThrow(/LazyArrowPinJest: constructor must be a regular function or a class/);
+				});
+
+				it('a shorthand method from the getter throws the readable error at define', () => {
+					const holder = { method () {} };
+					expect(() => UserType.lazy('LazyMethodPinJest', () => holder.method))
+						.toThrow(/LazyMethodPinJest: constructor must be a regular function or a class/);
+				});
+
+				it('a bound function from the getter throws the readable error at define', () => {
+					const regularFn = function () {};
+					expect(() => UserType.lazy('LazyBoundPinJest', () => regularFn.bind(null)))
+						.toThrow(/LazyBoundPinJest: constructor must be a regular function or a class/);
+				});
+
+				it('a generator from the getter throws the readable error at define', () => {
+					expect(() => UserType.lazy('LazyGenPinJest', () => function* () {}))
+						.toThrow(/LazyGenPinJest: generator functions are not supported as a constructor/);
+				});
+
+				it('after the throw lookup finds nothing and a corrected re-define succeeds', () => {
+					expect(() => UserType.lazy('LazyRePinJest', () => () => {})).toThrow();
+					expect(lookup('LazyRePinJest')).toBeUndefined();
+					const fixed = UserType.lazy('LazyRePinJest', () => function () {});
+					expect(fixed).toBeDefined();
+				});
+
+				it('a getter returning valid first and rejected later fails at that construction', () => {
+					let calls = 0;
+					UserType.lazy('LazyLatePinJest', () => {
+						calls++;
+						return calls < 2 ? function () {} : () => {};
+					});
+					const instance = new (user.constructor as new (data: object) => {
+						LazyLatePinJest: new () => object;
+					})({ email: 'late@example.com', password: 123 });
+					expect(() => new instance.LazyLatePinJest())
+						.toThrow(/LazyLatePinJest: constructor must be a regular function or a class/);
+				});
+
 			});
 
 			it('instance made with sub-named class props', () => {
@@ -815,6 +944,33 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				expect(myProtoCheckInstance.fdsa).toEqual(123);
 
 
+			});
+
+			it('prototype assignment keeps class methods and getters (descriptor copy)', () => {
+				class ProtoAssignRootCls {
+					rootMark () {
+						return 'root';
+					}
+				}
+				const AssignRoot = define(ProtoAssignRootCls);
+				const donor = class DonorCls {
+					donorMethod () {
+						return 'donor';
+					}
+				};
+				(AssignRoot as { prototype: object }).prototype = donor.prototype;
+				expect((AssignRoot.proto as { donorMethod?: unknown }).donorMethod).toBeInstanceOf(Function);
+				const instance = new (AssignRoot as new () => { donorMethod(): string })();
+				expect(instance.donorMethod()).toEqual('donor');
+
+				(AssignRoot as { prototype: object }).prototype = {
+					get pinnedGetter () {
+						return 42;
+					}
+				};
+				const desc = Object.getOwnPropertyDescriptor(AssignRoot.proto, 'pinnedGetter');
+				expect(typeof desc?.get).toEqual('function');
+				expect(new (AssignRoot as new () => { pinnedGetter: number })().pinnedGetter).toEqual(42);
 			});
 		});
 

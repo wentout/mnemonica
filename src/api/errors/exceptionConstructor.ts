@@ -88,7 +88,7 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 	// if the wrapped error already carries error data (packaged by a previous
 	// processing round), the exception inherits it — the same way the
 	// prototype chain used to expose it before props moved off the objects
-	const wrappedErrorProps = getProps( error ) as unknown as ErrorProps | undefined;
+	const wrappedErrorProps = getProps( error ) as ErrorProps | undefined;
 	const inheritedProps: ErrorProps = {};
 	if ( wrappedErrorProps !== undefined ) {
 		if ( wrappedErrorProps.exceptionReason !== undefined ) {
@@ -127,15 +127,17 @@ const exceptionConsctructHandler = function ( this: Error, opts: { [ index: stri
 
 	const title = `\n<-- lifecycle of [ ${TypeName} ] traced -->`;
 
-	getStack.call(
+	// getStack assembles the frame array and returns the very reference it
+	// installs on exception.stack — capture the return instead of re-reading
+	// the (string-typed) Error.stack property
+	const capturedStack = getStack.call(
 		exception,
 		title,
 		[],
-		prepareException 
+		prepareException
 	);
 
-	 
-	stack.push( ...(exception.stack as unknown as string[]) );
+	stack.push( ...capturedStack );
 
 	stack.push( '<-- with the following error -->' );
 

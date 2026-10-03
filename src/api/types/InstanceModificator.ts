@@ -16,15 +16,30 @@ export const makeInstanceModificator = ( self: InstanceCreatorContext ): Mnemoni
 		existentInstance,
 		ModificatorType,
 		proto,
+		config,
 	} = self;
+
+	// Class-handler prototypes need the FULL-descriptor copy: class body
+	// methods are non-enumerable, and an enumerable-only Object.assign copy
+	// silently dropped them — Type.define('X', class { m() {} }) lost m on
+	// the subtype while lazy kept it. Function-handler prototypes keep the
+	// historical enumerable-only copy: their non-enumerable props (legacy
+	// opt-in instance methods, exception wiring) were never copied, and
+	// pins depend on that (exception instances expose no bound methods)
+	const ModificatorTypePrototype = config.asClass
+		? Object.defineProperties(
+			{},
+			Object.getOwnPropertyDescriptors( proto )
+		)
+		: Object.assign(
+			{},
+			proto
+		);
 
 	const result = ModificationConstructor.call(
 		existentInstance,
 		ModificatorType,
-		Object.assign(
-			{},
-			proto
-		),
+		ModificatorTypePrototype,
 		( __proto_proto__: unknown ) => {
 			self.__proto_proto__ = __proto_proto__ as object;
 			_addProps.call( self );

@@ -556,6 +556,13 @@ const MyType = define('MyType', function (data) {
 Defines a type whose constructor is resolved through a zero-arg getter. Useful
 for breaking circular dependencies or deferring constructor selection until
 definition time. The resulting type behaves like a type created with `define()`.
+The handler-shape rules apply to the getter's result exactly as they do to a
+direct `define()` handler — generators, sync arrows, shorthand methods and
+bound functions are rejected with the same readable errors — and they are
+enforced BOTH at definition time AND on every construction (the getter may
+return a new function each time). That per-construction check is what makes
+`lazy` slower than a direct `define()`; getters should also be pure, since
+they run eagerly at definition time and again per construction.
 
 ```js
 const { lazy } = require('mnemonica');
@@ -733,7 +740,9 @@ Creates a new **isolated** types collection. Types defined in one collection are
 - **Plugins / libraries** — ship self-contained mnemonica types without colliding with the host app's types
 - **Multi-tenant contexts** — truly separate type namespaces per tenant
 
-> **Important:** Collections have **no names** and **no global registry**. Once you create one, you must pass the pointer around yourself. If you lose the reference, the collection and its types are unreachable. This is boilerplate you pay for isolation.
+> **Important:** Collections have **no global registry**. Once you create one, you must pass the pointer around yourself. If you lose the reference, the collection and its types are unreachable. This is boilerplate you pay for isolation.
+>
+> Every collection **does** carry a name — for lineage exports (`utils.lineage` reports `type.collection`). Name it explicitly with `createTypesCollection({ name: 'payments' })`; unnamed collections get an automatic unique one (`collection_1`, `collection_2`, … in creation order; the default collection exports as `'defaultTypes'`). `name` is a collection option only — `define('T', fn, { name: 'x' })` is rejected with a readable error.
 
 ```js
 const { createTypesCollection } = require('mnemonica');
@@ -1000,6 +1009,7 @@ explicit `<T>` cast is required for ordinary use.
 | `utils.sibling(instance)` | `SiblingAccessor` |
 | `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>>` |
 | `utils.parse(instance)` | `Parsed<T>` |
+| `utils.lineage(instances, options?)` | `LineageGraph` |
 | `utils.toJSON(instance)` | `string` |
 | `utils.collectConstructors(instance, asSequence?)` | `string[]` when `asSequence: true`, otherwise a `{ [name]: true }` lookup object |
 

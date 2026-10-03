@@ -1,6 +1,6 @@
 {
 	"name": "mnemonica",
-	"version": "1.3.7",
+	"version": "1.3.8",
 	"description": "AI-agent ready instance inheritance system for JavaScript/TypeScript via prototype chains",
 	"type": "commonjs",
 	"main": "./build/index.js",
@@ -120,7 +120,9 @@
 		"oxlint": "^0.16.12",
 		"ts-jest": "^29.4.14",
 		"typeomatica": "^0.3.63",
-		"typescript": "^6.0.3"
+		"typescript": "^6.0.3",
+		"@mnemonica/lethe": "^0.1.0",
+		"ajv": "^8.17.1"
 	},
 	"engines": {
 		"node": ">=18 <26"

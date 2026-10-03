@@ -8,6 +8,7 @@ const mnemonica = require('../src/index') as MnemonicaModule;
 
 const {
 	define,
+	lazy,
 	errors,
 	getProps,
 	createTypesCollection,
@@ -21,6 +22,13 @@ import { clone } from '../src/utils/clone';
 import { extract } from '../src/utils/extract';
 import { toJSON } from '../src/utils/toJSON';
 import { deepParse } from '../src/utils/deepParse';
+import { lineage } from '../src/utils/lineage';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Ajv2020 = require('ajv/dist/2020');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const letheSchema = require('@mnemonica/lethe/lineage.schema.json');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const letheFixture = require('@mnemonica/lethe/testdata/lineage/fixture.json');
 
 describe('utils/exception', () => {
 
@@ -424,6 +432,212 @@ describe('utils/deepParse', () => {
 		expect(levels[0].name).toEqual('RepeatedNameJest');
 		expect(levels[1].name).toEqual('RepeatedNameJest');
 		expect(levels[0].self).not.toBe(levels[1].self);
+	});
+
+});
+
+describe('utils/lineage (the lethe export)', () => {
+
+	const canonical = (value: unknown): string => {
+		if (Array.isArray(value)) {
+			return '[' + value.map(canonical).join(',') + ']';
+		}
+		if (value !== null && typeof value === 'object') {
+			const keys = Object.keys(value as Record<string, unknown>).sort();
+			return '{' + keys.map((k) => JSON.stringify(k) + ':' + canonical((value as Record<string, unknown>)[k])).join(',') + '}';
+		}
+		return JSON.stringify(value);
+	};
+
+	// the lethe id-mapping: heads first, then per node the own fields
+	// (a $ref target at first encounter), then the parent, depth first
+	const remap = (graph: ReturnType<typeof lineage>, placeholders: string[]): string => {
+		const idToPlaceholder = new Map<string, string>();
+		let nextIndex = 0;
+		const mapId = (id: string) => {
+			if (!idToPlaceholder.has(id)) {
+				idToPlaceholder.set(id, placeholders[nextIndex++]);
+			}
+			return idToPlaceholder.get(id)!;
+		};
+		const walk = (id: string) => {
+			mapId(id);
+			const node = graph.nodes[id];
+			const collect = (value: unknown) => {
+				if (Array.isArray(value)) {
+					value.forEach(collect);
+					return;
+				}
+				if (value !== null && typeof value === 'object') {
+					const record = value as Record<string, unknown>;
+					if (typeof record.$ref === 'string') {
+						if (!idToPlaceholder.has(record.$ref)) {
+							walk(record.$ref);
+						}
+						return;
+					}
+					if (record.$mnemonica !== undefined) return;
+					Object.keys(record).forEach((key) => collect(record[key]));
+				}
+			};
+			collect(node.own);
+			if (node.parent !== null && !idToPlaceholder.has(node.parent)) {
+				walk(node.parent);
+			}
+		};
+		graph.heads.forEach(walk);
+		const rename = (value: unknown): unknown => {
+			if (typeof value === 'string' && idToPlaceholder.has(value)) {
+				return idToPlaceholder.get(value);
+			}
+			if (Array.isArray(value)) return value.map(rename);
+			if (value !== null && typeof value === 'object') {
+				const out: Record<string, unknown> = {};
+				Object.keys(value as Record<string, unknown>).forEach((k) => {
+					const mappedKey = idToPlaceholder.has(k) ? idToPlaceholder.get(k)! : k;
+					out[mappedKey] = rename((value as Record<string, unknown>)[k]);
+				});
+				return out;
+			}
+			return value;
+		};
+		return canonical(rename(JSON.parse(JSON.stringify(graph))));
+	};
+
+	const buildFixture = () => {
+		const fixtureCollection = createTypesCollection({ name: 'fixture' });
+		const FixtureUser = fixtureCollection.define('User', function (this: { Name: string }, name: string) {
+			this.Name = name;
+		});
+		const FixtureAdmin = FixtureUser.define('Admin', function (this: { Role: string; Attached: unknown }, role: string) {
+			this.Role = role;
+			this.Attached = null;
+		});
+		FixtureAdmin.define('SuperAdmin', function (this: { Level: number }, level: number) {
+			this.Level = level;
+		});
+		const fixtureRoot = new FixtureUser('ada');
+		const adminOne = new fixtureRoot.Admin('root');
+		const adminTwo = new fixtureRoot.Admin('operator');
+		const superAdmin = new adminOne.SuperAdmin(7);
+		adminOne.Attached = fixtureRoot;
+		return { superAdmin, adminTwo };
+	};
+
+	it('reproduces the lethe fixture byte-for-byte', () => {
+		const { superAdmin, adminTwo } = buildFixture();
+		const graph = lineage([superAdmin as object, adminTwo as object]);
+		const bytes = remap(graph, ['s', 'a1', 'u', 'a2']);
+		expect(bytes).toEqual(canonical(letheFixture));
+	});
+
+	it('every export validates against the lethe schema', () => {
+		const { superAdmin, adminTwo } = buildFixture();
+		const ajv = new Ajv2020({ allErrors: true, strict: true });
+		const validate = ajv.compile(letheSchema);
+		const graph = lineage([superAdmin as object, adminTwo as object]);
+		expect(validate(JSON.parse(JSON.stringify(graph)))).toBe(true);
+	});
+
+	it('dedups shared ancestors at any depth and $refs instance fields', () => {
+		const { superAdmin, adminTwo } = buildFixture();
+		const graph = lineage([superAdmin as object, adminTwo as object]);
+		expect(Object.keys(graph.nodes).length).toEqual(4);
+		expect(graph.version).toEqual('1');
+		const nodes = Object.keys(graph.nodes).map((id) => graph.nodes[id]);
+		const shared = nodes.find((node) => node.type.path === 'User')!;
+		expect(shared.parent).toBeNull();
+		const adminOneNode = nodes.find(
+			(node) => node.type.path === 'User.Admin' && node.own.Attached !== null
+		)!;
+		const userId = Object.keys(graph.nodes).find((id) => graph.nodes[id].type.path === 'User')!;
+		expect((adminOneNode.own.Attached as { $ref: string }).$ref).toEqual(userId);
+	});
+
+	it('unsupported values become tagged placeholders, never errors', () => {
+		const WeirdRoot = define('LineageWeirdRootJest', function (this: Record<string, unknown>) {
+			this.fn = function () {};
+			this.nan = NaN;
+			this.inf = Infinity;
+			this.ninf = -Infinity;
+			this.sym = Symbol('s');
+			this.nested = { deep: [function () {}] };
+		});
+		const cyclic = { name: 'cycle-holder' } as Record<string, unknown>;
+		cyclic.self = cyclic;
+		const weird = new WeirdRoot() as Record<string, unknown>;
+		weird.cycleField = cyclic;
+		const graph = lineage([weird]);
+		const node = graph.nodes[graph.heads[0]];
+		expect(node.own.fn).toEqual({ '$mnemonica': 'unsupported', kind: 'func' });
+		expect(node.own.nan).toEqual({ '$mnemonica': 'unsupported', kind: 'nan' });
+		expect(node.own.inf).toEqual({ '$mnemonica': 'unsupported', kind: '+inf' });
+		expect(node.own.ninf).toEqual({ '$mnemonica': 'unsupported', kind: '-inf' });
+		expect(node.own.sym).toEqual({ '$mnemonica': 'unsupported', kind: 'invalid' });
+		expect(node.own.nested).toEqual({ deep: [{ '$mnemonica': 'unsupported', kind: 'func' }] });
+		expect((node.own.cycleField as Record<string, unknown>).name).toEqual('cycle-holder');
+		expect((node.own.cycleField as Record<string, unknown>).self).toEqual({ '$mnemonica': 'unsupported', kind: 'cycle' });
+	});
+
+	it('args and props are opt-in', () => {
+		const ArgsRoot = define('LineageArgsRootJest', function (this: { a: number; b: number }, a: number, b: number) {
+			this.a = a;
+			this.b = b;
+		});
+		const withOpts = lineage([new ArgsRoot(1, 2) as object], { args: true, props: ['__timestamp__'] });
+		const withNode = withOpts.nodes[withOpts.heads[0]];
+		expect(withNode.args).toEqual([1, 2]);
+		expect(typeof (withNode.props as Record<string, unknown>).__timestamp__).toEqual('number');
+		const plain = lineage([new ArgsRoot(1, 2) as object]);
+		const plainNode = plain.nodes[plain.heads[0]];
+		expect(plainNode.args).toBeUndefined();
+		expect(plainNode.props).toBeUndefined();
+	});
+
+	it('collection names: default is defaultTypes, unnamed customs are unique, the root parent is null', () => {
+		const defaultGraph = lineage([new (define('LineageDefaultRootJest', function (this: { x: number }) {
+			this.x = 1;
+		}))() as object]);
+		const defaultNode = defaultGraph.nodes[defaultGraph.heads[0]];
+		expect(defaultNode.type.collection).toEqual('defaultTypes');
+		expect(defaultNode.type.path).toEqual('LineageDefaultRootJest');
+		expect(defaultNode.parent).toBeNull();
+
+		const firstUnnamed = createTypesCollection();
+		const secondUnnamed = createTypesCollection();
+		const FirstT = firstUnnamed.define('LineageUnnamedOneJest', function (this: { x: number }) {
+			this.x = 1;
+		});
+		const SecondT = secondUnnamed.define('LineageUnnamedTwoJest', function (this: { x: number }) {
+			this.x = 2;
+		});
+		const firstGraph = lineage([new FirstT() as object]);
+		const secondGraph = lineage([new SecondT() as object]);
+		const firstName = firstGraph.nodes[firstGraph.heads[0]].type.collection;
+		const secondName = secondGraph.nodes[secondGraph.heads[0]].type.collection;
+		expect(firstName).toMatch(/^collection_\d+$/);
+		expect(secondName).toMatch(/^collection_\d+$/);
+		expect(firstName).not.toEqual(secondName);
+
+		const named = createTypesCollection({ name: 'fixture' });
+		const NamedT = named.define('LineageNamedRootJest', function (this: { x: number }) {
+			this.x = 1;
+		});
+		const namedGraph = lineage([new NamedT() as object]);
+		expect(namedGraph.nodes[namedGraph.heads[0]].type.collection).toEqual('fixture');
+	});
+
+	it('define() rejects a type-level name with a readable error', () => {
+		expect(() => define('LineageNameRejectJest', function () {}, { name: 'nope' }))
+			.toThrow(/"name" is a collection option/);
+		const RejectRoot = define('LineageNameRejectRootJest', function () {});
+		expect(() => RejectRoot.define('LineageNameRejectSubJest', function () {}, { name: 'nope' }))
+			.toThrow(/"name" is a collection option/);
+		expect(() => lazy('LineageNameRejectLazyJest', () => function () {}, { name: 'nope' }))
+			.toThrow(/"name" is a collection option/);
+		const unnamedCheck = createTypesCollection();
+		const UnnamedT = unnamedCheck.define('LineageConfigCleanJest', function () {});
+		expect('name' in UnnamedT.config).toBe(false);
 	});
 
 });

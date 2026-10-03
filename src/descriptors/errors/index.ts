@@ -10,6 +10,9 @@ const { ErrorMessages, } = constants;
 
 // ErrorsTypes is dynamically built - using MnemonicaErrorConstructor to indicate these are constructable
 export const ErrorsTypes: { [ index: string ]: MnemonicaErrorConstructor } = {
+	// BASE_MNEMONICA_ERROR is a class: its construct signature matches the
+	// interface, only the (unused) call signature is missing — the map is
+	// only ever `new`-ed, so the bridge is safe
 	BASE_MNEMONICA_ERROR : BASE_MNEMONICA_ERROR as unknown as MnemonicaErrorConstructor
 };
 

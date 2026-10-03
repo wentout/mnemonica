@@ -257,7 +257,7 @@ const addThen = function ( this: InstanceCreatorContext, then: ThenSpec ) {
 				// was chained :
 				true
 				// self.existentInstance
-			) as unknown as Promise<object>;
+			);
 			return self.inheritedInstance;
 		} );
 
@@ -389,17 +389,21 @@ const runSetup = function (
 		} 
 	);
 
+	const title = `\n<-- creation of [ ${TypeName} ] traced -->`;
+	// stack is always an ARRAY — it is unshifted into and spread later.
+	// The title alone marks the creation without the captured frames;
+	// getStack below replaces it with the captured frames when submitStack
+	// asks for them, and runAsyncHandling captures them for async
+	// constructions that are still title-only by then
+	self.stack = [ title ];
 	if ( submitStack || chained ) {
 		const stackAddition: string[] = chained ? self.getExistentAsyncStack( existentInstance ) as string[] : [];
-		const title = `\n<-- creation of [ ${TypeName} ] traced -->`;
 		if ( submitStack ) {
 			getStack.call(
 				self,
 				title,
-				stackAddition 
+				stackAddition
 			);
-		} else {
-			self.stack = title as unknown as string[];
 		}
 	}
 };
@@ -444,13 +448,14 @@ const runAsyncHandling = function ( self: InstanceCreatorContext, type: TypeDef 
 		// (makeAwaiter .catch → throwModificationError), the call site has
 		// already unwound, and a fresh capture would hold nothing but
 		// rejection-processing frames. Skipped when runSetup already captured
-		// one (submitStack).
-		if ( !Array.isArray( self.stack ) ) {
+		// one (submitStack) — and, with runSetup's [ title ] placeholder
+		// array, when the stack holds MORE than the title alone.
+		if ( !Array.isArray( self.stack ) || self.stack.length < 2 ) {
 			const title = `\n<-- creation of [ ${type.TypeName} ] traced -->`;
 			getStack.call(
 				self,
 				title,
-				[] 
+				[]
 			);
 		}
 		const waiter = self.makeAwaiter( type );
@@ -468,7 +473,7 @@ const runAsyncHandling = function ( self: InstanceCreatorContext, type: TypeDef 
 	return undefined;
 };
 
-export const InstanceCreator = function (
+const instanceCreatorImpl = function (
 	this: InstanceCreatorContext,
 	type: TypeDef,
 	existentInstance: object,
@@ -517,7 +522,12 @@ export const InstanceCreator = function (
 	// Phase 7: Return
 	return self.inheritedInstance;
 
-} as unknown as _Internal_TC_<typeof InstanceCreatorPrototype>;
+};
+
+// always invoked with `new` (the TypeProxy construct trap, makeAwaiter's
+// addThen); a function expression carries no construct signature, so it is
+// named once as the constructor interface it is used through
+export const InstanceCreator = instanceCreatorImpl as _Internal_TC_<typeof InstanceCreatorPrototype>;
 
 Object.assign(
 	InstanceCreator.prototype,

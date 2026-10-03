@@ -110,13 +110,14 @@ export interface SiblingAccessor {
 | `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>>` | `A` wins; `B` fills non-overlapping keys. |
 | `utils.parse(instance)` | `Parsed<T>` | One-level prototype-chain snapshot. |
 | `utils.deepParse(instance)` | `Parsed<T>[]` | Ordered parse() levels from the instance (index 0) to its root. |
+| `utils.lineage(instances, options?)` | `LineageGraph` | The lethe lineage export — the cross-language graph format. |
 | `utils.toJSON(instance)` | `string` | Generic so the instance type is captured at the call site. |
 | `utils.collectConstructors(instance, asSequence?)` | `string[]` when `asSequence: true`, otherwise a `{ [name]: true }` lookup object | Prototype-chain constructor names, up to `Mnemonica`. |
 | `new utils.exception(instance, error, ...args)` | `Error` | **Must be called with `new`.** Error instance of the instance's type; data via `getProps()`. |
 
 The complete `utils` collection is: `extract`, `pick`, `parent`, `sibling`,
-`exception`, `fork`, `clone`, `toJSON`, `parse`, `deepParse`, `merge`,
-`collectConstructors`.
+`exception`, `fork`, `clone`, `toJSON`, `parse`, `deepParse`, `lineage`,
+`merge`, `collectConstructors`.
 
 ---
 
@@ -205,6 +206,44 @@ A `strictChain: false` lineage may repeat a type name at several levels —
 each occurrence is its own level. `utils.fork()` produces a sibling: the
 forked instance's chain has the same shape, and its parent level IS the
 same instance the forked-from chain shares.
+
+---
+
+## `utils.lineage(instances, options?)` in detail
+
+The lineage export — the lethe format, the contract that crosses process
+and language boundaries (`@mnemonica/lethe`). What survives when live
+instances are forgotten: which types were declared, who built what from
+whom, which data belonged to which level.
+
+```typescript
+const graph = utils.lineage([chunk1, chunk2]);
+// { version: "1", heads: [id, id], nodes: { [id]: { type, own, parent } } }
+```
+
+- `heads` — the exported instances' ids, in argument order.
+- `nodes` — every reachable instance, deduplicated at any depth, keyed by
+  id. Each node carries `type: { collection, path }` (where the type was
+  declared — names collide), `own` (the fields this level set itself), and
+  `parent` (the parent's id, `null` at the root).
+- A field holding another mnemonica instance exports as `{ $ref: id }` and
+  the referenced instance joins `nodes` with its own chain. Values JSON
+  cannot carry (functions, symbols, NaN, infinities, cycles) export as
+  tagged placeholders `{ $mnemonica: "unsupported", kind: … }` — never an
+  error.
+- Instance ids are implementation-specific — a per-realm random prefix
+  plus a counter, held in a WeakMap (nothing retained). They are stable
+  within one realm and never compared across processes or languages; the
+  cross-language comparison maps them 1:1 in first-encounter order (see
+  the lethe testdata README).
+- `options.args` includes construction args as `node.args`;
+  `options.props: ['__timestamp__', …]` opts metadata into `node.props`.
+- A collection's name for `type.collection` comes from its config
+  (`createTypesCollection({ name: 'fixture' })`) and belongs to the
+  COLLECTION only — `define(..., { name })` is rejected (`"name" is a
+  collection option`). The first collection (the default one) exports as
+  `'defaultTypes'`; every later unnamed collection gets an automatic
+  unique name — `collection_1`, `collection_2`, … in creation order.
 
 ---
 

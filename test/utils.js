@@ -7,6 +7,7 @@ const { withInstanceMethods } = require('./instance-methods-helper');
 
 const {
 	define,
+	lazy,
 	errors,
 	getProps,
 	createTypesCollection,
@@ -20,6 +21,10 @@ const { clone } = require('../build/utils/clone');
 const { extract } = require('../build/utils/extract');
 const { toJSON } = require('../build/utils/toJSON');
 const { deepParse } = require('../build/utils/deepParse');
+const { lineage } = require('../build/utils/lineage');
+const Ajv2020 = require('ajv/dist/2020');
+const letheSchema = require('@mnemonica/lethe/lineage.schema.json');
+const letheFixture = require('@mnemonica/lethe/testdata/lineage/fixture.json');
 
 const tests = () => {
 
@@ -450,6 +455,238 @@ const tests = () => {
 			assert.equal( levels[ 0 ].name, 'RepeatedNameMocha' );
 			assert.equal( levels[ 1 ].name, 'RepeatedNameMocha' );
 			assert.notEqual( levels[ 0 ].self, levels[ 1 ].self );
+		});
+
+	});
+
+	describe('utils/lineage (the lethe export)', () => {
+
+		// canonical form: sorted keys, no whitespace — the fixture bytes
+		const canonical = (value) => {
+			if (Array.isArray(value)) {
+				const arrayString = `[${  value.map(canonical).join(',')  }]`;
+				return arrayString;
+			}
+			if (value !== null && typeof value === 'object') {
+				const keys = Object.keys(value).sort();
+				const objectString = `{${  keys.map((k) => `${JSON.stringify(k)  }:${  canonical(value[ k ])}`).join(',')  }}`;
+				return objectString;
+			}
+			const primitiveString = JSON.stringify(value);
+			return primitiveString;
+		};
+
+		// the lethe id-mapping: heads first, then per node the own fields
+		// (a $ref target at first encounter), then the parent, depth first
+		const remap = (graph, placeholders) => {
+			const idToPlaceholder = new Map();
+			let nextIndex = 0;
+			const mapId = (id) => {
+				if (!idToPlaceholder.has(id)) {
+					idToPlaceholder.set(id, placeholders[ nextIndex++ ]);
+				}
+				const mappedId = idToPlaceholder.get(id);
+				return mappedId;
+			};
+			const walk = (id) => {
+				mapId(id);
+				const node = graph.nodes[ id ];
+				const collect = (value) => {
+					if (Array.isArray(value)) {
+						value.forEach(collect);
+						return;
+					}
+					if (value !== null && typeof value === 'object') {
+						if (typeof value.$ref === 'string') {
+							if (!idToPlaceholder.has(value.$ref)) {
+								walk(value.$ref);
+							}
+							return;
+						}
+						if (value.$mnemonica !== undefined) return;
+						Object.keys(value).forEach((key) => collect(value[ key ]));
+					}
+				};
+				collect(node.own);
+				if (node.parent !== null && !idToPlaceholder.has(node.parent)) {
+					walk(node.parent);
+				}
+			};
+			graph.heads.forEach(walk);
+			const rename = (value) => {
+				if (typeof value === 'string' && idToPlaceholder.has(value)) {
+					const renamedString = idToPlaceholder.get(value);
+					return renamedString;
+				}
+				if (Array.isArray(value)) {
+					const renamedArray = value.map(rename);
+					return renamedArray;
+				}
+				if (value !== null && typeof value === 'object') {
+					const out = {};
+					Object.keys(value).forEach((k) => {
+						const mappedKey = idToPlaceholder.has(k) ? idToPlaceholder.get(k) : k;
+						out[ mappedKey ] = rename(value[ k ]);
+					});
+					return out;
+				}
+				return value;
+			};
+			const remappedString = canonical(rename(JSON.parse(JSON.stringify(graph))));
+			return remappedString;
+		};
+
+		// the recipe from @mnemonica/lethe testdata README
+		const buildFixture = () => {
+			const fixtureCollection = createTypesCollection({ name : 'fixture' });
+			const FixtureUser = fixtureCollection.define('User', function (name) {
+				this.Name = name;
+			});
+			const FixtureAdmin = FixtureUser.define('Admin', function (role) {
+				this.Role = role;
+				this.Attached = null;
+			});
+			FixtureAdmin.define('SuperAdmin', function (level) {
+				this.Level = level;
+			});
+			const fixtureRoot = new FixtureUser('ada');
+			const adminOne = new fixtureRoot.Admin('root');
+			const adminTwo = new fixtureRoot.Admin('operator');
+			const superAdmin = new adminOne.SuperAdmin(7);
+			adminOne.Attached = fixtureRoot;
+			const fixturePair = { superAdmin, adminTwo };
+			return fixturePair;
+		};
+
+		it('reproduces the lethe fixture byte-for-byte', () => {
+			const { superAdmin, adminTwo } = buildFixture();
+			const graph = lineage([ superAdmin, adminTwo ]);
+			const bytes = remap(graph, [ 's', 'a1', 'u', 'a2' ]);
+			const expected = canonical(letheFixture);
+			assert.equal(bytes, expected);
+		});
+
+		it('every export validates against the lethe schema', () => {
+			const { superAdmin, adminTwo } = buildFixture();
+			const ajv = new Ajv2020({ allErrors : true, strict : true });
+			const validate = ajv.compile(letheSchema);
+			const graph = lineage([ superAdmin, adminTwo ]);
+			assert.isTrue(validate(JSON.parse(JSON.stringify(graph))),
+				validate.errors ? JSON.stringify(validate.errors) : 'valid');
+		});
+
+		it('dedups shared ancestors at any depth and $refs instance fields', () => {
+			const { superAdmin, adminTwo } = buildFixture();
+			const graph = lineage([ superAdmin, adminTwo ]);
+			assert.equal(Object.keys(graph.nodes).length, 4);
+			assert.equal(graph.version, '1');
+			const byPath = {};
+			Object.keys(graph.nodes).forEach((id) => {
+				byPath[ graph.nodes[ id ].type.path ] = graph.nodes[ id ];
+			});
+			const shared = byPath[ 'User' ];
+			assert.strictEqual(shared.parent, null);
+			// two Admin nodes exist (a1, a2) — pick the one whose Attached is set
+			const adminOneNode = Object.keys(graph.nodes).map((id) => graph.nodes[ id ])
+				.find(
+					(node) => node.type.path === 'User.Admin' && node.own.Attached !== null
+				);
+			assert.equal(adminOneNode.own.Attached.$ref, Object.keys(graph.nodes).find(
+				(id) => graph.nodes[ id ].type.path === 'User'
+			));
+		});
+
+		it('unsupported values become tagged placeholders, never errors', () => {
+			const WeirdRoot = define('LineageWeirdRoot', function () {
+				this.fn = function () {};
+				this.nan = NaN;
+				this.inf = Infinity;
+				this.ninf = -Infinity;
+				this.sym = Symbol('s');
+				this.nested = { deep : [ function () {} ] };
+			});
+			const cyclic = { name : 'cycle-holder' };
+			cyclic.self = cyclic;
+			const weird = new WeirdRoot();
+			weird.cycleField = cyclic;
+			const graph = lineage([ weird ]);
+			const node = graph.nodes[ graph.heads[ 0 ] ];
+			assert.deepEqual(node.own.fn, { '$mnemonica' : 'unsupported', kind : 'func' });
+			assert.deepEqual(node.own.nan, { '$mnemonica' : 'unsupported', kind : 'nan' });
+			assert.deepEqual(node.own.inf, { '$mnemonica' : 'unsupported', kind : '+inf' });
+			assert.deepEqual(node.own.ninf, { '$mnemonica' : 'unsupported', kind : '-inf' });
+			assert.deepEqual(node.own.sym, { '$mnemonica' : 'unsupported', kind : 'invalid' });
+			assert.deepEqual(node.own.nested, { deep : [ { '$mnemonica' : 'unsupported', kind : 'func' } ] });
+			assert.deepEqual(node.own.cycleField.name, 'cycle-holder');
+			assert.deepEqual(node.own.cycleField.self, { '$mnemonica' : 'unsupported', kind : 'cycle' });
+		});
+
+		it('args and props are opt-in', () => {
+			const ArgsRoot = define('LineageArgsRoot', function (a, b) {
+				this.a = a;
+				this.b = b;
+			});
+			const withOpts = lineage([ new ArgsRoot(1, 2) ], { args : true, props : [ '__timestamp__' ] });
+			const withNode = withOpts.nodes[ withOpts.heads[ 0 ] ];
+			assert.deepEqual(withNode.args, [ 1, 2 ]);
+			assert.equal(typeof withNode.props.__timestamp__, 'number');
+			const plain = lineage([ new ArgsRoot(1, 2) ]);
+			const plainNode = plain.nodes[ plain.heads[ 0 ] ];
+			assert.isUndefined(plainNode.args);
+			assert.isUndefined(plainNode.props);
+		});
+
+		it('collection names: default is defaultTypes, unnamed customs are unique, the root parent is null', () => {
+			const defaultGraph = lineage([ new (define('LineageDefaultRoot', function () {
+				this.x = 1;
+			}))() ]);
+			const defaultNode = defaultGraph.nodes[ defaultGraph.heads[ 0 ] ];
+			assert.equal(defaultNode.type.collection, 'defaultTypes');
+			assert.equal(defaultNode.type.path, 'LineageDefaultRoot');
+			assert.strictEqual(defaultNode.parent, null);
+
+			const firstUnnamed = createTypesCollection();
+			const secondUnnamed = createTypesCollection();
+			const FirstT = firstUnnamed.define('LineageUnnamedOne', function () {
+				this.x = 1;
+			});
+			const SecondT = secondUnnamed.define('LineageUnnamedTwo', function () {
+				this.x = 2;
+			});
+			const firstGraph = lineage([ new FirstT() ]);
+			const secondGraph = lineage([ new SecondT() ]);
+			const firstName = firstGraph.nodes[ firstGraph.heads[ 0 ] ].type.collection;
+			const secondName = secondGraph.nodes[ secondGraph.heads[ 0 ] ].type.collection;
+			assert.match(firstName, /^collection_\d+$/);
+			assert.match(secondName, /^collection_\d+$/);
+			assert.notEqual(firstName, secondName);
+
+			const named = createTypesCollection({ name : 'fixture' });
+			const NamedT = named.define('LineageNamedRoot', function () {
+				this.x = 1;
+			});
+			const namedGraph = lineage([ new NamedT() ]);
+			assert.equal(namedGraph.nodes[ namedGraph.heads[ 0 ] ].type.collection, 'fixture');
+		});
+
+		it('define() rejects a type-level name with a readable error', () => {
+			assert.throws(
+				() => define('LineageNameReject', function () {}, { name : 'nope' }),
+				/"name" is a collection option/
+			);
+			const RejectRoot = define('LineageNameRejectRoot', function () {});
+			assert.throws(
+				() => RejectRoot.define('LineageNameRejectSub', function () {}, { name : 'nope' }),
+				/"name" is a collection option/
+			);
+			assert.throws(
+				() => lazy('LineageNameRejectLazy', () => function () {}, { name : 'nope' }),
+				/"name" is a collection option/
+			);
+			// and the collection's name is not inherited into the type config
+			const unnamedCheck = createTypesCollection();
+			const UnnamedT = unnamedCheck.define('LineageConfigClean', function () {});
+			assert.notProperty(UnnamedT.config, 'name');
 		});
 
 	});

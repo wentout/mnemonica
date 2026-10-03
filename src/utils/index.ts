@@ -16,6 +16,7 @@ import { clone } from './clone';
 import { toJSON } from './toJSON';
 import { parse } from './parse';
 import { deepParse } from './deepParse';
+import { lineage } from './lineage';
 import { merge } from './merge';
 
 const utilsUnWrapped = {
@@ -33,6 +34,7 @@ const utilsUnWrapped = {
 
 	parse,
 	deepParse,
+	lineage,
 	merge,
 
 	collectConstructors,
@@ -44,6 +46,9 @@ const wrapThis = ( method: WrappableMethod ) => {
 		const instanceContext = instance !== undefined ? instance : this;
 		let wrapResult: unknown;
 		if ( new.target ) {
+			// wrapThis forwards `new` to the util; WrappableMethod (a plain
+			// function type) declares no construct signature, so the cast
+			// bridges that construct call
 			wrapResult = new (method as unknown as new (...a: unknown[]) => unknown)(
 				instanceContext,
 				...args

@@ -258,7 +258,10 @@ odp(
 				TypeNestedPath: string
 			) {
 				const lookupResult = lookup.call(
-					this.subtypes as unknown as TypesMap,
+					// a collection's subtypes map IS the runtime TypesMap (the
+					// MNEMOSYNE/SymbolParentType props are installed at
+					// construction), so the single cast only names that view
+					this.subtypes as TypesMap,
 					TypeNestedPath
 				);
 				return lookupResult;
@@ -373,9 +376,29 @@ const typesCollectionProxyHandler = {
 	}
 };
 
+// every collection exports under exactly one name (lethe type.collection):
+// the first collection — the default one — is 'defaultTypes'; later
+// unnamed collections get 'collection_1', 'collection_2', … in creation
+// order (the scheme tactica writes for mnemographica). No two collections
+// may ever export the same name.
+let defaultCollectionNamed = false;
+let unnamedCollections = 0;
+
 const createTypesCollection = (config: Record<string, unknown> = {}) => {
 
 	const typesCollection = new TypesCollection(config);
+	const collectionConfig = (typesCollection as { [ SymbolConfig ]?: Record<string, unknown> })[
+		SymbolConfig
+	];
+	if ( collectionConfig && !collectionConfig.name ) {
+		if ( !defaultCollectionNamed ) {
+			collectionConfig.name = 'defaultTypes';
+			defaultCollectionNamed = true;
+		} else {
+			unnamedCollections += 1;
+			collectionConfig.name = `collection_${unnamedCollections}`;
+		}
+	}
 	const typesCollectionProxy = new Proxy(
 		typesCollection,
 		typesCollectionProxyHandler
