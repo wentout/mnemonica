@@ -8,6 +8,7 @@ const mnemonica = require('../src/index') as MnemonicaModule;
 
 const {
 	define,
+	lazy,
 	errors,
 	getProps,
 	createTypesCollection,
@@ -593,14 +594,50 @@ describe('utils/lineage (the lethe export)', () => {
 		expect(plainNode.props).toBeUndefined();
 	});
 
-	it('unnamed collections export as defaultTypes; the root parent is null', () => {
-		const graph = lineage([new (define('LineageDefaultRootJest', function (this: { x: number }) {
+	it('collection names: default is defaultTypes, unnamed customs are unique, the root parent is null', () => {
+		const defaultGraph = lineage([new (define('LineageDefaultRootJest', function (this: { x: number }) {
 			this.x = 1;
 		}))() as object]);
-		const node = graph.nodes[graph.heads[0]];
-		expect(node.type.collection).toEqual('defaultTypes');
-		expect(node.type.path).toEqual('LineageDefaultRootJest');
-		expect(node.parent).toBeNull();
+		const defaultNode = defaultGraph.nodes[defaultGraph.heads[0]];
+		expect(defaultNode.type.collection).toEqual('defaultTypes');
+		expect(defaultNode.type.path).toEqual('LineageDefaultRootJest');
+		expect(defaultNode.parent).toBeNull();
+
+		const firstUnnamed = createTypesCollection();
+		const secondUnnamed = createTypesCollection();
+		const FirstT = firstUnnamed.define('LineageUnnamedOneJest', function (this: { x: number }) {
+			this.x = 1;
+		});
+		const SecondT = secondUnnamed.define('LineageUnnamedTwoJest', function (this: { x: number }) {
+			this.x = 2;
+		});
+		const firstGraph = lineage([new FirstT() as object]);
+		const secondGraph = lineage([new SecondT() as object]);
+		const firstName = firstGraph.nodes[firstGraph.heads[0]].type.collection;
+		const secondName = secondGraph.nodes[secondGraph.heads[0]].type.collection;
+		expect(firstName).toMatch(/^collection_\d+$/);
+		expect(secondName).toMatch(/^collection_\d+$/);
+		expect(firstName).not.toEqual(secondName);
+
+		const named = createTypesCollection({ name: 'fixture' });
+		const NamedT = named.define('LineageNamedRootJest', function (this: { x: number }) {
+			this.x = 1;
+		});
+		const namedGraph = lineage([new NamedT() as object]);
+		expect(namedGraph.nodes[namedGraph.heads[0]].type.collection).toEqual('fixture');
+	});
+
+	it('define() rejects a type-level name with a readable error', () => {
+		expect(() => define('LineageNameRejectJest', function () {}, { name: 'nope' }))
+			.toThrow(/"name" is a collection option/);
+		const RejectRoot = define('LineageNameRejectRootJest', function () {});
+		expect(() => RejectRoot.define('LineageNameRejectSubJest', function () {}, { name: 'nope' }))
+			.toThrow(/"name" is a collection option/);
+		expect(() => lazy('LineageNameRejectLazyJest', () => function () {}, { name: 'nope' }))
+			.toThrow(/"name" is a collection option/);
+		const unnamedCheck = createTypesCollection();
+		const UnnamedT = unnamedCheck.define('LineageConfigCleanJest', function () {});
+		expect('name' in UnnamedT.config).toBe(false);
 	});
 
 });

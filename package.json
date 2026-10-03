@@ -121,7 +121,7 @@
 		"ts-jest": "^29.4.14",
 		"typeomatica": "^0.3.63",
 		"typescript": "^6.0.3",
-		"@mnemonica/lethe": "file:../lethe",
+		"@mnemonica/lethe": "^0.1.0",
 		"ajv": "^8.17.1"
 	},
 	"engines": {

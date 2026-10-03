@@ -64,6 +64,7 @@ const {
 	WRONG_TYPE_DEFINITION,
 	TYPENAME_MUST_BE_A_STRING,
 	HANDLER_MUST_BE_A_FUNCTION,
+	OPTIONS_ERROR,
 } = ErrorsTypes;
 
 // invokeHook
@@ -124,11 +125,20 @@ const typeDescriptorCreator = function (
 
 	const title = `${TYPE_TITLE_PREFIX}${TypeName}`;
 
+	// 'name' is a COLLECTION option only: a user passing it here meant to
+	// name the collection, not the type — say so readably
+	if ( config !== undefined && typeof config === 'object' && 'name' in config ) {
+		const nameError = '\"name\" is a collection option ' +
+			'(createTypesCollection({ name })) — it cannot be set on a type';
+		throw new OPTIONS_ERROR( nameError );
+	}
 	config = Object.assign(
 		{},
 		(collection as Record<symbol, unknown>)[ SymbolConfig ],
 		config
 	);
+	// never inherited into the type's config either
+	Reflect.deleteProperty( config, 'name' );
 
 	const type = Object.assign(
 		this,
@@ -523,6 +533,12 @@ const createFromLazyGetter = function (
 		return handlerResult;
 	};
 
+	// 'name' is a COLLECTION option only (same rejection as the direct path)
+	if ( config !== undefined && typeof config === 'object' && 'name' in config ) {
+		const nameError = '\"name\" is a collection option ' +
+			'(createTypesCollection({ name })) — it cannot be set on a type';
+		throw new OPTIONS_ERROR( nameError );
+	}
 	config = Object.assign(
 		{},
 		config

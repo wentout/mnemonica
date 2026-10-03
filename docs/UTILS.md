@@ -239,8 +239,11 @@ const graph = utils.lineage([chunk1, chunk2]);
 - `options.args` includes construction args as `node.args`;
   `options.props: ['__timestamp__', …]` opts metadata into `node.props`.
 - A collection's name for `type.collection` comes from its config
-  (`createTypesCollection({ name: 'fixture' })`); unnamed collections
-  export as `'defaultTypes'`.
+  (`createTypesCollection({ name: 'fixture' })`) and belongs to the
+  COLLECTION only — `define(..., { name })` is rejected (`"name" is a
+  collection option`). The first collection (the default one) exports as
+  `'defaultTypes'`; every later unnamed collection gets an automatic
+  unique name — `collection_1`, `collection_2`, … in creation order.
 
 ---
 

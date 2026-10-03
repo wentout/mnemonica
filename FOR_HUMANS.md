@@ -740,7 +740,9 @@ Creates a new **isolated** types collection. Types defined in one collection are
 - **Plugins / libraries** — ship self-contained mnemonica types without colliding with the host app's types
 - **Multi-tenant contexts** — truly separate type namespaces per tenant
 
-> **Important:** Collections have **no names** and **no global registry**. Once you create one, you must pass the pointer around yourself. If you lose the reference, the collection and its types are unreachable. This is boilerplate you pay for isolation.
+> **Important:** Collections have **no global registry**. Once you create one, you must pass the pointer around yourself. If you lose the reference, the collection and its types are unreachable. This is boilerplate you pay for isolation.
+>
+> Every collection **does** carry a name — for lineage exports (`utils.lineage` reports `type.collection`). Name it explicitly with `createTypesCollection({ name: 'payments' })`; unnamed collections get an automatic unique one (`collection_1`, `collection_2`, … in creation order; the default collection exports as `'defaultTypes'`). `name` is a collection option only — `define('T', fn, { name: 'x' })` is rejected with a readable error.
 
 ```js
 const { createTypesCollection } = require('mnemonica');

@@ -179,12 +179,13 @@ export const lineage = ( instances: object[], options?: LineageOptions ): Lineag
 		}
 
 		const { __collection__: collection } = baseProps;
+		// every collection carries a name by construction (the default
+		// collection is 'defaultTypes', unnamed customs are auto-named), so
+		// no fallback is needed here
 		const collectionConfig = ( collection as unknown as { [ SymbolConfig ]?: { name?: string } } )[
 			SymbolConfig
-		];
-		const collectionName = ( collectionConfig && collectionConfig.name )
-			? collectionConfig.name
-			: 'defaultTypes';
+		]!;
+		const collectionName: string = collectionConfig.name!;
 
 		const node: LineageNode = {
 			type : {

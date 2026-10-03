@@ -7,6 +7,7 @@ const { withInstanceMethods } = require('./instance-methods-helper');
 
 const {
 	define,
+	lazy,
 	errors,
 	getProps,
 	createTypesCollection,
@@ -635,14 +636,57 @@ const tests = () => {
 			assert.isUndefined(plainNode.props);
 		});
 
-		it('unnamed collections export as defaultTypes; the root parent is null', () => {
-			const graph = lineage([ new (define('LineageDefaultRoot', function () {
+		it('collection names: default is defaultTypes, unnamed customs are unique, the root parent is null', () => {
+			const defaultGraph = lineage([ new (define('LineageDefaultRoot', function () {
 				this.x = 1;
 			}))() ]);
-			const node = graph.nodes[ graph.heads[ 0 ] ];
-			assert.equal(node.type.collection, 'defaultTypes');
-			assert.equal(node.type.path, 'LineageDefaultRoot');
-			assert.strictEqual(node.parent, null);
+			const defaultNode = defaultGraph.nodes[ defaultGraph.heads[ 0 ] ];
+			assert.equal(defaultNode.type.collection, 'defaultTypes');
+			assert.equal(defaultNode.type.path, 'LineageDefaultRoot');
+			assert.strictEqual(defaultNode.parent, null);
+
+			const firstUnnamed = createTypesCollection();
+			const secondUnnamed = createTypesCollection();
+			const FirstT = firstUnnamed.define('LineageUnnamedOne', function () {
+				this.x = 1;
+			});
+			const SecondT = secondUnnamed.define('LineageUnnamedTwo', function () {
+				this.x = 2;
+			});
+			const firstGraph = lineage([ new FirstT() ]);
+			const secondGraph = lineage([ new SecondT() ]);
+			const firstName = firstGraph.nodes[ firstGraph.heads[ 0 ] ].type.collection;
+			const secondName = secondGraph.nodes[ secondGraph.heads[ 0 ] ].type.collection;
+			assert.match(firstName, /^collection_\d+$/);
+			assert.match(secondName, /^collection_\d+$/);
+			assert.notEqual(firstName, secondName);
+
+			const named = createTypesCollection({ name : 'fixture' });
+			const NamedT = named.define('LineageNamedRoot', function () {
+				this.x = 1;
+			});
+			const namedGraph = lineage([ new NamedT() ]);
+			assert.equal(namedGraph.nodes[ namedGraph.heads[ 0 ] ].type.collection, 'fixture');
+		});
+
+		it('define() rejects a type-level name with a readable error', () => {
+			assert.throws(
+				() => define('LineageNameReject', function () {}, { name : 'nope' }),
+				/"name" is a collection option/
+			);
+			const RejectRoot = define('LineageNameRejectRoot', function () {});
+			assert.throws(
+				() => RejectRoot.define('LineageNameRejectSub', function () {}, { name : 'nope' }),
+				/"name" is a collection option/
+			);
+			assert.throws(
+				() => lazy('LineageNameRejectLazy', () => function () {}, { name : 'nope' }),
+				/"name" is a collection option/
+			);
+			// and the collection's name is not inherited into the type config
+			const unnamedCheck = createTypesCollection();
+			const UnnamedT = unnamedCheck.define('LineageConfigClean', function () {});
+			assert.notProperty(UnnamedT.config, 'name');
 		});
 
 	});
