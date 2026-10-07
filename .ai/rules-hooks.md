@@ -89,8 +89,7 @@ Implementation vocabulary (all in `src/types/index.ts`):
   resets `T` to its default. `T` must be inferable from plain return/
   contravariant positions only.
 
-**Global handlers stay untyped by design** (decided, ROADMAP "Typed
-observability"): collection-wide hooks and `uncaughtException` take
+**Global handlers stay untyped by design:** collection-wide hooks and `uncaughtException` take
 `hooksOpts` with `object` fields — a union of all registered types would break
 any 300+ type repo. Narrow there with `instanceof lookup('User')`.
 
