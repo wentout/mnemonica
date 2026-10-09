@@ -11,11 +11,10 @@ const {
 } = constants;
 
 
-import { ErrorsTypes } from '../../descriptors/errors';
-const { BASE_MNEMONICA_ERROR } = ErrorsTypes;
-
+// the base class itself (ErrorsTypes holds this same class): instanceof
+// against it narrows to the class's own instance type
 import {
-	cleanupStack, getStack 
+	BASE_MNEMONICA_ERROR, cleanupStack, getStack
 } from './';
 
 import TypesUtils from '../utils';

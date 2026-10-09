@@ -16,6 +16,8 @@
 		"typed-utils-registry.ts",
 		"registry-holder.ts",
 		"registry-holder-consumer.ts",
+		"typed-hooks.ts",
+		"typed-creation-error.ts",
 		"test-tactica-style-consumer.ts",
 		"test-tactica-style-definitions.ts",
 		"test-example.ts",

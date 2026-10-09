@@ -1735,7 +1735,9 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(getProps(overMore).__proto_proto__).not.toBe(getProps(overMoreFork).__proto_proto__);
 
 				expect(getProps(evenMore).__proto_proto__).not.toBe(getProps(evenMoreFork).__proto_proto__);
-				expect(getProps(evenMore).__timestamp__).not.toBe(getProps(evenMoreFork).__timestamp__);
+				// millisecond timestamps: a fast runner creates both in the same ms,
+				// so a fork is only guaranteed to be no older than its original
+				expect(Number(getProps(evenMoreFork).__timestamp__)).toBeGreaterThanOrEqual(Number(getProps(evenMore).__timestamp__));
 
 				expect(evenMore).not.toBe(evenMoreFork);
 				expect(evenMoreForkFork).not.toBe(evenMoreFork);
@@ -1769,12 +1771,16 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			it('instance.ConstructorName.call(null) should work', () => {
 				expect(overMoreCallEvenMoreNull).toBeInstanceOf(overMore.EvenMore);
 				expect(overMoreCallEvenMoreNull + 1).toEqual(1);
+				expect(overMoreCallEvenMoreNull.valueOf()).toEqual(null);
+				expect(overMoreCallEvenMoreNull.toString()).toEqual('null');
 			});
 
 			it('instance.ConstructorName.call(new Number) should work', () => {
 				expect(overMoreCallEvenMoreNumber).toBeInstanceOf(overMore.EvenMore);
 				expect(overMoreCallEvenMoreNumber).toBeInstanceOf(Number);
 				expect(overMoreCallEvenMoreNumber + 2).toEqual(7);
+				expect(overMoreCallEvenMoreNumber.valueOf()).toEqual(5);
+				expect(overMoreCallEvenMoreNumber.toString()).toEqual('5');
 			});
 
 			it('instance.ConstructorName.call(new String) should work', () => {
@@ -1782,12 +1788,16 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(overMoreCallEvenMoreString).toBeInstanceOf(overMore.EvenMore);
 				expect(overMoreCallEvenMoreString).toBeInstanceOf(String);
 				expect(overMoreCallEvenMoreString + 2).toEqual('52');
+				expect(overMoreCallEvenMoreString.valueOf()).toEqual('5');
+				expect(overMoreCallEvenMoreString.toString()).toEqual('5');
 			});
 
 			it('instance.ConstructorName.call(new Boolean) should work', () => {
 				expect(overMoreCallEvenMoreBoolean).toBeInstanceOf(overMore.EvenMore);
 				expect(overMoreCallEvenMoreBoolean).toBeInstanceOf(Boolean);
 				expect(overMoreCallEvenMoreBoolean + 1).toEqual(2);
+				expect(overMoreCallEvenMoreBoolean.valueOf()).toEqual(true);
+				expect(overMoreCallEvenMoreBoolean.toString()).toEqual('true');
 			});
 
 			it('instance.ConstructorName.call(process) should work', () => {

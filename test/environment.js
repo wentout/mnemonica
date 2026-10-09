@@ -261,7 +261,7 @@ const tests = (opts) => {
 			expect(getProps(Object.create(null))).is.equal(undefined);
 		});
 
-		describe('named constructor define', async () => {
+		describe('named constructor define', () => {
 
 			const NamedFunction = UserType.define(async function NamedFunction () {
 				this.type = 'function';
@@ -319,7 +319,12 @@ const tests = (opts) => {
 				expect(__subtypes__.has('NamedClass')).is.equal(true);
 			});
 
-			const nf = await new user.NamedFunction();
+			// mocha does not await a describe callback: an `await` here would
+			// register every test below it after loading, at the root suite
+			let nf;
+			before(async () => {
+				nf = await new user.NamedFunction();
+			});
 			it('instance made through named function instanceof & props', () => {
 				expect(nf).instanceOf(NamedFunction);
 			});

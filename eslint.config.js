@@ -65,6 +65,16 @@ const commonRules = {
 	'new-cap': 'off',
 	'yoda': 'warn',
 	'mnemonica/return-intermediate': 'error',
+	// Bare Function/CallableFunction/NewableFunction are banned as TYPES —
+	// a named interface that extends them is the rule
+	// (.ai/rules-code-style.md "Function Type Rules"). TSTypeReference covers
+	// every banned position (params, returns, properties, index signatures,
+	// unions, conditionals, constraints) while interface heritage
+	// (TSInterfaceHeritage) and runtime value positions stay untouched.
+	'no-restricted-syntax': ['error', {
+		selector: "TSTypeReference[typeName.type='Identifier'][typeName.name=/^(Function|CallableFunction|NewableFunction)$/]",
+		message: 'Use a named interface that extends Function/CallableFunction/NewableFunction (see .ai/rules-code-style.md "Function Type Rules")',
+	}],
 };
 
 const commonLanguageOptions = {

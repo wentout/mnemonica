@@ -149,6 +149,31 @@ The builder public vocabulary is exactly three names, re-exported from
 change, those three stay nameable from the entry — anything else that starts
 leaking into consumer declaration emit is a design bug, not an export to add.
 
+The typed-hooks vocabulary (`typedHook`, `typedHookOpts`, `WithHookRegister`,
+`HookableConstructor`) is deliberately exported too, but for a different
+reason: consumers write callbacks and registry entries against them by hand
+(tactica Option B registries, hook registration). They are callback/entry
+vocabulary, not registry machinery — the TS2883 guard above is about the
+latter.
+
+## Typed hooks — Parent threading and lookup inference
+
+`IDefinitorInstance` carries a 5th generic `Parent extends object = object`
+(the parent instance type; `object` for roots). `RegistryHolderBase.define()`
+and `.lazy()` pass their holder `Parent` into both the returned constructor
+and the stored `RegistryEntry<F, ChildPath, Parent>`, so a looked-up chained
+subtype types `registerHook`'s `existentInstance` as its real parent.
+
+For bare augmented entries (tactica-emitted or hand-written `TypeRegistry`
+constructors) the free `lookup()` wraps its result in `WithHookRegister<C>`:
+`C extends { registerHook: CallableFunction }` passes through untouched
+(builder entries already carry the typed member); otherwise the
+created-instance type is recovered from `C`'s construct/call return
+(`new (...args: never[]) => infer R`, the same trick as `Constructor`) and a
+typed `registerHook` is intersected in. Keep the passthrough branch — double
+`registerHook` declarations with different instantiations do not merge
+cleanly.
+
 ## Generic Public Utilities
 
 The standalone utilities in `utils` infer their type parameters from the instance

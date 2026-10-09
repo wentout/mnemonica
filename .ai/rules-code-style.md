@@ -76,11 +76,13 @@ const obj = {
 
 ## Function Type Rules
 
-**Never use bare `Function`, `CallableFunction`, or `NewableFunction` as parameter or return types.** Define a purpose-specific interface that extends them:
+**Never use bare `Function`, `CallableFunction`, or `NewableFunction` as a type** — not as a parameter, return, property, `this`, index-signature, intersection or conditional type, and not as a union member either. The only allowed place for them is after `extends` in a named interface. Enforced by `no-restricted-syntax` on `TSTypeReference` in `eslint.config.js`: the selector bans type positions only — `extends` clauses and runtime `instanceof Function` stay legal.
 
 ```typescript
-// ✗ Wrong
+// ✗ Wrong — every one of these
 function foo (handler: Function) { }
+function bar (TypeOrTypeName: string | CallableFunction) { }
+type Hooked = { registerHook: CallableFunction };
 
 // ✓ Correct
 interface ConstructHandler extends CallableFunction {
@@ -88,8 +90,21 @@ interface ConstructHandler extends CallableFunction {
 	prototype: object;
 }
 function foo (handler: ConstructHandler) { }
+function bar (TypeOrTypeName: string | ConstructHandler) { }
 ```
 
-Allowed exceptions (do not change without approval):
-- `src/types/index.ts` — central type definitions use `CallableFunction`/`NewableFunction` as base types for exported interfaces
-- `src/api/types/compileNewModificatorFunctionBody.ts` — `ConstructHandler`/`CreationHandler` interfaces already defined there
+Why: a type answers *what* (a noun, data, structural); an interface answers
+*how* (a verb, an algorithm, nominal). A constructor is an interface — it
+consumes a type (its args) and produces a type (the instance), and
+mnemonica is exactly that: data transformation, one set of fields turned
+into another. A bare `CallableFunction` erases both sides: it says "some
+callable thing", a structural shape with no name, so nothing records what
+the algorithm consumes or produces. A named interface that *extends*
+`CallableFunction` is declared as made from Callable, not equal to it — it
+keeps its own nominal identity and spells out its input and output types.
+That precision is what tactica, the generated `.tactica` files and every
+tool reading them inherit.
+
+When one parameter accepts several kinds, name each kind (`…Callable`,
+`…Newable`) or the pair (`…NewableOrCallable`) — never fall back to the
+bare base type. There are no file-level exceptions.

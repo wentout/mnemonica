@@ -70,15 +70,6 @@ export const collectConstructors = (self: object, asSequence = false) => {
 			addToSequence('Object: null prototype');
 			break;
 		}
-		/*
-		TODO: show full chain and test it !!!
-		else {
-			// proto may be either empty object or null
-			// so typeof will always be 'object'
-			// eslint-disable-next-line no-lonely-if
-			addToSequence('... plain object ...');
-		}
-		*/
 		// so here we go deeper to the chain
 	}
 	return constructors;

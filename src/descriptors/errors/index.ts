@@ -10,10 +10,9 @@ const { ErrorMessages, } = constants;
 
 // ErrorsTypes is dynamically built - using MnemonicaErrorConstructor to indicate these are constructable
 export const ErrorsTypes: { [ index: string ]: MnemonicaErrorConstructor } = {
-	// BASE_MNEMONICA_ERROR is a class: its construct signature matches the
-	// interface, only the (unused) call signature is missing — the map is
-	// only ever `new`-ed, so the bridge is safe
-	BASE_MNEMONICA_ERROR : BASE_MNEMONICA_ERROR as unknown as MnemonicaErrorConstructor
+	// the base class takes the whole message (not an addition) as its
+	// first argument — it has no fixed message of its own
+	BASE_MNEMONICA_ERROR : BASE_MNEMONICA_ERROR
 };
 
 Object.entries( ErrorMessages ).forEach( entry => {
@@ -23,7 +22,7 @@ Object.entries( ErrorMessages ).forEach( entry => {
 		ErrorConstructorName,
 		message 
 	);
-	ErrorsTypes[ ErrorConstructorName ] = ErrorCtor as MnemonicaErrorConstructor;
+	ErrorsTypes[ ErrorConstructorName ] = ErrorCtor;
 } );
 
 

@@ -1,7 +1,7 @@
-import type { MnemonicaConstructor } from '../../types';
+import type { InstanceConstructor, MnemonicaConstructor } from '../../types';
 import { ConstructHandler } from '../types/compileNewModificatorFunctionBody';
 export declare const CreationHandler: (this: object & {
-    constructor: NewableFunction;
+    constructor: InstanceConstructor;
 }, constructionAnswer: unknown) => unknown;
 export type asyncStack = {
     __stack__?: string;

@@ -25,6 +25,69 @@ export type CtorParameter<T> = IDEF<T> | { new (...args: never[]): T };
 // Used by the explicit .lazy() API.
 export type LazyDef<T, Args extends unknown[] = unknown[]> = () => IDEF<T, Args>;
 
+// define() handler in callable (plain function) form: the runtime invokes
+// it with the fresh instance as `this` and the construction arguments as
+// args. Parameters are never[] so every handler parameter list stays
+// assignable by contravariance (the AnyConstructor trick); no `this`
+// annotation so handlers declaring their own `this: Instance` assign too.
+export interface DefineCallable extends CallableFunction {
+	(...args: never[]): unknown;
+}
+
+// define() handler in newable (class) form: the runtime constructs it with
+// the construction arguments; the constructed object becomes the instance.
+// never[] parameters accept every constructor parameter list, same
+// contravariance reason as DefineCallable.
+export interface DefineNewable extends NewableFunction {
+	new (...args: never[]): object;
+}
+
+// A define() handler in either form — the pair named once for the
+// define()/lookup()/decorate overload unions.
+export type DefineNewableOrCallable = DefineNewable | DefineCallable;
+
+// The constructor reference every instance/prototype carries as
+// `.constructor`. Signature-free on purpose: the Object interface types
+// `.constructor` as bare Function (no construct signature of its own), and
+// that reference must stay assignable here.
+export interface InstanceConstructor extends NewableFunction {}
+
+// A hook callback as seen by a REGISTERING surface that only forwards it
+// (HookableConstructor's registerHook, the WithHookRegister member check):
+// it consumes whatever opts the caller's typed hook carries and returns
+// unknown. never[] parameters keep every hook shape assignable by
+// contravariance, including generic typedHook<HT> instantiations (a
+// parameter typed as the plain `hook` interface would reject those).
+export interface AnyHookCallback extends CallableFunction {
+	(...args: never[]): unknown;
+}
+
+// A utility method as exposed on the `utils` collection — the
+// index-signature fallback for utilities beyond the declared set. Plain
+// callables: any argument list, unknown result.
+export interface UtilFunction extends CallableFunction {
+	(...args: never[]): unknown;
+}
+
+// The minimal source shape the free lookup() resolves against: any value
+// carrying a lookup method with the untyped fallback signature
+// (a TypesCollection, a type constructor, or the mnemonica module object).
+export interface LookupSource {
+	lookup(path: string): TypeClass | undefined;
+}
+
+// The modification-error sink handed through the creator object: consumes
+// the construction error, produces nothing (the construction aborts).
+export interface ThrowModificationError extends CallableFunction {
+	(error: Error): void;
+}
+
+// The bound fork invoker that instance.fork() returns: consumes fork
+// arguments, produces a fresh instance of the forked type.
+export interface ForkInvoker<T extends object> extends CallableFunction {
+	(this: object, ...forkArgs: unknown[]): T;
+}
+
 // Error message types - all error messages are strings
 export type ErrorMessageKey =
 	| 'BASE_ERROR_MESSAGE'
@@ -50,13 +113,21 @@ export interface hook extends CallableFunction {
 	(opts: hooksOpts): unknown;
 }
 
-// Error constructor from constructError - constructable function with prototype
-export interface MnemonicaErrorConstructor {
-	new(addition?: string, stack?: string | string[]): Error;
-	(name: string): Error;
-	prototype: {
-		constructor: MnemonicaErrorConstructor;
-	};
+// Flow checker callback registered via registerFlowChecker: invoked with
+// the hook invocation record after each hook run; its return value is
+// collected into the invocation results but otherwise unused.
+export interface FlowChecker extends CallableFunction {
+	(opts: object): unknown;
+}
+
+// An error class made by constructError(name, message) — the lib.es5
+// ErrorConstructor idiom, `new`-only (a class cannot be called without it).
+// Each class carries one fixed message (constants ErrorMessages); `addition`
+// is the per-throw detail, appended as `${message} : ${addition}`; `stack`
+// lines, when given, are prepended to the captured stack.
+export interface MnemonicaErrorConstructor extends NewableFunction {
+	new (addition?: string, stack?: string[]): MnemonicaError;
+	readonly prototype: MnemonicaError;
 }
 
 // Errors types map - indexable record of error constructors
@@ -80,6 +151,29 @@ export interface ErrorProps {
 }
 
 /**
+ * What a failed construction of `T` throws. TypeScript has no checked
+ * exceptions, so `new T()` is typed by its happy path only; this names the
+ * other path for the `catch` side.
+ *
+ * - `T & Error` — the errored instance (`blockErrors: true`, the default):
+ *   the failed construction still produces a `T` layer, and the original
+ *   error is linked in as the end of its prototype chain, so the thrown
+ *   value is `instanceof T` AND `instanceof Error`. Its data is read via
+ *   `getProps(error)` (`ErrorProps`).
+ * - `Error` — the original error, propagated unwrapped
+ *   (`blockErrors: false`), or a mnemonica error thrown before construction.
+ *
+ * Async constructors reject with the same values.
+ *
+ * @example
+ * function report (failed: CreationError<Widget>) {
+ *   if (failed instanceof Widget) { failed.size; failed.message; }
+ * }
+ * try { new Widget(1); } catch (e) { if (e instanceof Error) report(e); }
+ */
+export type CreationError<T extends object> = ( T & Error ) | Error;
+
+/**
  * Internal Type Constructor.
  * "Type" here is used in the Computer Science sense — an interface/contract
  * describing what a constructor must satisfy (both `new`-able and callable).
@@ -87,6 +181,7 @@ export interface ErrorProps {
  * shape, distinct from user-facing TypeConstructor below.
  */
 export interface _Internal_TC_<ConstructorInstance extends object> {
+	/** @throws {CreationError<ConstructorInstance>} when construction fails */
 	new(...args: unknown[]): ConstructorInstance;
 	(this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
 	readonly prototype: ConstructorInstance & {
@@ -200,6 +295,50 @@ export type hooksOpts<P = object, T = P> = {
 	existentInstance: P;
 	inheritedInstance?: T;
 	creator?: { throwModificationError(error: Error): void };
+};
+
+// Hook options typed per hookType — the compile-time face of the runtime
+// hookData built in InstanceCreator (invokePreHooks / invokePostHooks).
+// P = existent (parent) instance, T = inherited (created) instance.
+// preCreation fires BEFORE the created instance exists, so its opts carry
+// no inheritedInstance and no creator — accessing them is a compile error.
+export type typedHookOpts<HT extends hooksTypes, P extends object, T extends object> =
+	HT extends 'preCreation'
+		? {
+			TypeName: string;
+			type: TypeDef;
+			args: unknown[];
+			existentInstance: P;
+		}
+		: {
+			TypeName: string;
+			type: TypeDef;
+			args: unknown[];
+			existentInstance: P;
+			inheritedInstance: T;
+			creator: { throwModificationError(error: Error): void };
+		};
+
+// Typed hook callback — the cb of a registerHook call bound to a known type:
+// the callback's opts are inferred from the hookType and the parent/instance
+// pair the hook is registered on. Collection-wide (global) handlers stay on
+// the untyped `hook` above by design.
+export interface typedHook<
+	HT extends hooksTypes,
+	P extends object = object,
+	T extends object = object
+> extends CallableFunction {
+	(opts: typedHookOpts<HT, P, T>): unknown;
+}
+
+// Constructor surface the free registerHook() accepts: any constructor of T
+// instances with a registerHook method. Deliberately NOT DecoratedClass<T> —
+// inference through DecoratedClass's InstanceType<T> conditional picks a wrong
+// T candidate, and inferring from a generic registerHook member resets T to
+// its default; here T is inferred from Constructor<T>'s return position and
+// the precise cb typing comes from the free function's own cb parameter.
+export type HookableConstructor<T extends object> = Constructor<T> & {
+	registerHook(hookType: hooksTypes, cb: AnyHookCallback): void;
 };
 
 // Callback passed into ModificationConstructor to attach internal props to the prototype
@@ -406,6 +545,24 @@ export type LookedUpConstructor<
 > = AugmentedConstructor<Registry, Path, CallConstructs> & {
 	lookup: NestedTypeLookup<Registry, Path>;
 };
+
+// Typed registerHook surface for lookup results whose registry entries are
+// bare constructors (tactica-emitted or hand-written TypeRegistry entries):
+// their lookup results would otherwise lack registerHook entirely. The
+// created-instance type is recovered from the entry's construct/call return.
+// Constructors that already carry a typed registerHook (builder-created
+// RegistryEntry values) pass through unchanged.
+export type WithHookRegister<C> = C extends { registerHook: AnyHookCallback }
+	? C
+	: C extends { new (...args: never[]): infer R }
+		? R extends object
+			? C & { registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, object, R>): void }
+			: C
+		: C extends { (...args: never[]): infer R }
+			? R extends object
+				? C & { registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, object, R>): void }
+				: C
+			: C;
 
 // Result of a typed lookup: the augmented constructor plus a `lookup` method
 // scoped to the constructor's own type path for relative subtype lookups.
@@ -698,10 +855,19 @@ export type InstanceResult<
 // It preserves the dotted `Path` so that `.define()` on a looked-up constructor
 // computes the correct child path, but it omits the full `GlobalRegistry`
 // generic to keep hover tooltips readable.
+// `Parent` is the instance type of the type's parent (object for root types),
+// threaded so looked-up constructors type their registerHook callbacks'
+// existentInstance.
 export interface RegistryEntry<
 	F extends object,
-	Path extends string = ''
-> extends _Internal_TC_<F>, RegistryHolderBase<{}, F, Path> {}
+	Path extends string = '',
+	Parent extends object = object
+> extends _Internal_TC_<F>, RegistryHolderBase<{}, F, Path> {
+	// typed hook registration — preserved through ReplaceConstructorInstance's
+	// member preservation, so lookup() results of builder-typed registries
+	// get registerHook with inferred opts
+	registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
+}
 
 // Registry holder base - provides the accumulating .define() method.
 // `Parent` tracks the instance type of the last defined constructor, so chained
@@ -715,9 +881,9 @@ export interface RegistryHolderBase<
 	// Legacy overload: define(constructHandler, config?)
 	define<SubType extends object>(
 		this: RegistryHolderBase<T, Parent, Path>,
-		TypeOrTypeName: CallableFunction,
-		constructHandlerOrConfig?: IDEF<SubType> | object | boolean | CallableFunction,
-		configOrUndefined?: constructorOptions | CallableFunction | boolean
+		TypeOrTypeName: DefineNewableOrCallable,
+		constructHandlerOrConfig?: IDEF<SubType> | object | boolean | DefineNewableOrCallable,
+		configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean
 	): IDefinitorInstance<SubType>;
 
 	// Modern overload: define(TypeName, constructHandler, config?)
@@ -735,8 +901,9 @@ export interface RegistryHolderBase<
 	): IDefinitorInstance<
 		F,
 		InstanceResult<F>,
-		T & Record<ChildPath, RegistryEntry<F, ChildPath>>,
-		ChildPath
+		T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>,
+		ChildPath,
+		Parent
 	>;
 
 	// Explicit lazy getter: .lazy(() => Constructor, config?)
@@ -760,8 +927,9 @@ export interface RegistryHolderBase<
 	): IDefinitorInstance<
 		F,
 		InstanceResult<F>,
-		T & Record<ChildPath, RegistryEntry<F, ChildPath>>,
-		ChildPath
+		T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>,
+		ChildPath,
+		Parent
 	>;
 }
 
@@ -781,11 +949,14 @@ export interface RegistryHolder<
 // R = wrapped result instance type
 // Registry = typed registry map for lookup()
 // Path = dotted type path of this constructor (empty for root types)
+// Parent = instance type of the parent type (object for root types);
+//          threaded into registerHook's existentInstance typing
 export interface IDefinitorInstance<
 	N extends object,
 	R extends InstanceResult<N> = InstanceResult<N>,
 	Registry extends object = GlobalRegistry,
-	Path extends string = ''
+	Path extends string = '',
+	Parent extends object = object,
 >
 	extends RegistryHolderBase<Registry, N, Path> {
 
@@ -796,6 +967,7 @@ export interface IDefinitorInstance<
 	// the line below declares a `new ...` invocation,
 	// so makes interface constructible
 	// new(...args: unknown[]): { [key in keyof R]: R[key] };
+	/** @throws {CreationError<R>} when construction fails */
 	new(...args: unknown[]): R;
 
 	
@@ -808,7 +980,7 @@ export interface IDefinitorInstance<
 
 	decorate: (config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, Registry>;
 
-	registerHook(hookType: hooksTypes, cb: hook): void;
+	registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, N>): void;
 
 	subtypes: SubtypesMap;
 
@@ -830,9 +1002,9 @@ export interface IDefinitorInstance<
 export interface TypeAbsorber extends CallableFunction {
 	<T extends object>(
 		this: unknown,
-		TypeOrTypeName: string | CallableFunction,
-		constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction,
-		configOrUndefined?: constructorOptions | CallableFunction | boolean
+		TypeOrTypeName: string | DefineNewableOrCallable,
+		constructHandlerOrConfig?: IDEF<T> | object | boolean | DefineNewableOrCallable,
+		configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean
 	): IDefinitorInstance<T>;
 }
 
@@ -851,9 +1023,9 @@ export interface LazyAbsorber extends CallableFunction {
 	): IDefinitorInstance<T>;
 	<T extends object>(
 		this: unknown,
-		arg1: string | LazyDef<T>,
-		arg2: LazyDef<T> | constructorOptions,
-		arg3?: constructorOptions
+		TypeNameOrGetter: string | LazyDef<T>,
+		getterOrConfig: LazyDef<T> | constructorOptions,
+		namedFormConfig?: constructorOptions
 	): IDefinitorInstance<T>;
 	<T extends object>(
 		this: unknown,
@@ -871,9 +1043,9 @@ export interface LazyAbsorber extends CallableFunction {
 	<T extends object>(
 		this: unknown,
 		source: RegistryHolderBase<object, object, string>,
-		arg1: string | LazyDef<T>,
-		arg2: LazyDef<T> | constructorOptions,
-		arg3?: constructorOptions
+		TypeNameOrGetter: string | LazyDef<T>,
+		getterOrConfig: LazyDef<T> | constructorOptions,
+		namedFormConfig?: constructorOptions
 	): IDefinitorInstance<T>;
 }
 
@@ -904,7 +1076,7 @@ export interface Hookable {
 	hooks: Record<string, Set<hook>>;
 	invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
 	registerHook(hookType: hooksTypes, cb: hook): void;
-	registerFlowChecker(cb: (opts: object) => unknown): void;
+	registerFlowChecker(cb: FlowChecker): void;
 }
 
 // createTypesCollection function type
@@ -931,15 +1103,15 @@ export interface MnemonicaConstructor extends NewableFunction {
 // Type descriptor instance — internal shape of TypeDescriptor objects
 export interface TypeDescriptorDefine extends CallableFunction {
 	(
-		TypeOrTypeName: string | CallableFunction,
-		constructHandlerOrConfig?: CallableFunction | object,
+		TypeOrTypeName: string | DefineNewableOrCallable,
+		constructHandlerOrConfig?: DefineNewableOrCallable | object,
 		config?: object
 	): TypeClass;
 }
 
 export interface TypeDescriptorLazy extends CallableFunction {
 	(
-		getter: CallableFunction,
+		getter: LazyDef<object>,
 		config?: object
 	): TypeClass;
 }
@@ -1029,9 +1201,9 @@ export interface UtilsCollection {
 	pick<T extends object, K extends keyof T>(instance: T, ...args: (K | K[])[]): { [P in K]: T[P] } & {};
 	pick<T extends object>(instance: T, ...args: (string | string[])[]): Record<string, unknown>;
 	clone<T extends object>(instance: T): T;
-	fork<T extends object>(instance: T): (this: object, ...forkArgs: unknown[]) => T;
+	fork<T extends object>(instance: T): ForkInvoker<T>;
 	sibling(instance: object): SiblingAccessor;
-	collectConstructors: (instance: object, flat?: boolean) => (CallableFunction | string)[];
+	collectConstructors: (instance: object, flat?: boolean) => (DefineNewableOrCallable | string)[];
 	merge<A extends object, B extends object>(
 		a: A,
 		b: B,
@@ -1048,7 +1220,7 @@ export interface UtilsCollection {
 	): InstanceOfTypeRegistry<K> | undefined;
 	parent<T extends object>(instance: T, path: string): object | undefined;
 	toJSON<T extends object>(instance: T): string;
-	[key: string]: CallableFunction;
+	[key: string]: UtilFunction;
 }
 
 // Main mnemonica module interface - represents the exported module object.
@@ -1064,7 +1236,10 @@ export interface MnemonicaModule<Registry extends object = {}>
 		target?: T,
 		config?: constructorOptions
 	) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, Registry>;
-	registerHook: <T extends object>(Constructor: IDEF<T>, hookType: hooksTypes, cb: hook) => void;
+	registerHook: <
+		T extends object,
+		HT extends hooksTypes = hooksTypes
+	>(Constructor: IDEF<T>, hookType: HT, cb: typedHook<HT, object, T>) => void;
 
 	// Descriptors
 	defaultTypes: TypesCollection<Registry>;
@@ -1100,7 +1275,7 @@ export interface MnemonicaModule<Registry extends object = {}>
 	getProps: (instance: object) => PropsType | undefined;
 	setProps: (instance: object, values: object) => string[] | false;
 	findSubTypeFromParent: (instance: object | undefined, subType: string) => object | null;
-	isClass: (fn: CallableFunction) => boolean;
+	isClass: (fn: DefineNewableOrCallable) => boolean;
 
 	// createTypesCollection
 	createTypesCollection: CreateTypesCollectionFunction;

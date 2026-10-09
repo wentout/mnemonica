@@ -1,6 +1,7 @@
 'use strict';
 
 import type {
+	ThrowModificationError,
 	hooksOpts, TypeDef 
 } from '../../types';
 
@@ -21,7 +22,7 @@ export class HookInvocation {
 	private readonly existentInstance: object;
 	private readonly args: unknown[];
 	private inheritedInstance?: object;
-	private _throwModificationError?: (error: Error) => void;
+	private _throwModificationError?: ThrowModificationError;
 
 	constructor (
 		type: TypeDef,

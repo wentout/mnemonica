@@ -419,6 +419,18 @@ ResponseData.registerHook('postCreation', ({ type, existentInstance, inheritedIn
 });
 ```
 
+In TypeScript, a hook registered **on a type** gets the callback's data typed by
+inference — no narrowing, no casts: `inheritedInstance` is typed as the type's
+own instance, `existentInstance` as the parent instance (for a subtype, the
+actual parent type; for a root type, `object`). A `preCreation` callback is
+typed accordingly: the instance does not exist yet, so its opts carry no
+`inheritedInstance` and no `creator` — touching them is a compile error. The
+same inference works on lazy types, on `lookup()` results (including
+tactica-augmented registries), and on the free `registerHook(Type, ...)`.
+Collection-wide hooks (`collection.registerHook(...)`) stay **untyped by
+design** — their callback sees `hooksOpts` with `object` fields; narrow with
+`instanceof lookup('SomeType')` there.
+
 No middleware stack to thread through. No context object to pass around. The pipeline is the prototype chain.
 
 ---
@@ -464,12 +476,14 @@ import {
   LazyDef,             // Zero-arg getter returning a constructor (for lazy())
   constructorOptions,  // Type config options (strictChain, blockErrors, etc.)
   hooksTypes,          // 'preCreation' | 'postCreation' | 'creationError'
-  hook,                // Hook callback type
+  hook,                // Hook callback type (untyped — collection-wide handlers)
+  typedHook,           // Hook callback typed by hookType + parent/instance pair
+  typedHookOpts,       // Hook options object typed per hookType
   TypeClass,           // Base type constructor returned by define()
 } from 'mnemonica';
 ```
 
-Additional types available: `Constructor`, `TypeConstructor`, `TypeConstructorBase`, `Proto`, `ProtoFlat`, `InstanceResult`, `Merge`, `IDefinitorInstance`, `DecoratedClass`, `hooksOpts`, `TypesCollection`, `TypeLookup`, `LookupResult`, `RegistryOf`, `MnemonicaModule`, `TypeAbsorber`, and the `TypeRegistry` interface (for augmentation). See [`src/types/index.ts`](./src/types/index.ts) for full definitions.
+Additional types available: `Constructor`, `TypeConstructor`, `TypeConstructorBase`, `Proto`, `ProtoFlat`, `InstanceResult`, `Merge`, `IDefinitorInstance`, `DecoratedClass`, `hooksOpts`, `WithHookRegister`, `HookableConstructor`, `TypesCollection`, `TypeLookup`, `LookupResult`, `RegistryOf`, `MnemonicaModule`, `TypeAbsorber`, and the `TypeRegistry` interface (for augmentation). See [`src/types/index.ts`](./src/types/index.ts) for full definitions.
 
 ### Generic Type Patterns
 
@@ -677,13 +691,22 @@ class MyClass {
 
 #### `registerHook(Constructor, hookType, callback)`
 
-Registers a hook for a specific constructor.
+Registers a hook for a specific constructor. In TypeScript the callback's opts
+are inferred from the constructor's instance type (and the parent instance for
+a subtype's `existentInstance`):
 
 ```js
 const { registerHook } = require('mnemonica');
 
 registerHook(MyType, 'preCreation', (hookData) => {
   console.log('Creating:', hookData.TypeName);
+});
+```
+
+```typescript
+// typed: opts.inheritedInstance is a MyType instance
+registerHook(MyType, 'postCreation', (opts) => {
+  console.log(opts.inheritedInstance.someField);
 });
 ```
 
@@ -700,11 +723,13 @@ For advanced TypeScript usage, the following types are exported from `mnemonica`
 | `TypeConstructor<T>` | Registry-stored constructor type | What an augmented `TypeRegistry` maps paths to |
 | `TypeClass` | Base type constructor | `const MyType: TypeClass = define(...)` |
 | `DecoratedClass<T>` | Decorated class type | `@decorate() class MyClass {}` (see [`docs/decorate.md`](./docs/decorate.md)) |
-| `IDefinitorInstance<N, S>` | Constructor with subtypes | Returned by `define()` with `.define()` method |
+| `IDefinitorInstance<N, R, Registry, Path, Parent>` | Constructor with subtypes | Returned by `define()` with `.define()` method; `Parent` types hook callbacks' `existentInstance` |
 | `constructorOptions` | Configuration options | `{ strictChain: true, blockErrors: true }` |
 | `hooksTypes` | Hook type literals | `'preCreation' \| 'postCreation' \| 'creationError'` |
-| `hook` | Hook callback type | `(opts: hooksOpts) => void` |
-| `hooksOpts` | Hook options object | Passed to hook callbacks |
+| `hook` | Hook callback type (untyped) | Collection-wide handlers: `(opts: hooksOpts) => void` |
+| `hooksOpts` | Hook options object | Passed to hook callbacks; fields are `object` |
+| `typedHook` | Hook callback typed per hookType | Type-level `registerHook` callbacks: opts inferred from the type |
+| `typedHookOpts` | Hook options per hookType | `preCreation` carries no `inheritedInstance`/`creator` |
 | `TypesCollection` | Types collection interface | What `createTypesCollection()` returns |
 | `RegistryOf<T>` | Registry extractor | The one-line bridge: `interface TypeRegistry extends RegistryOf<typeof App> {}` |
 | `TypeRegistry` | Global registry interface | Augmented by hand, by the bridge, or by tactica |
@@ -768,6 +793,7 @@ interface TypesCollection {
   lookup: (path: string) => TypeClass | undefined;
   
   // Register a hook for all types in this collection
+  // (untyped by design: opts fields are object — narrow with instanceof lookup(...))
   registerHook(hookType: hooksTypes, callback: hook): void;
   
   // Invoke hooks manually (advanced usage)
@@ -1154,6 +1180,42 @@ errors.MISSING_HOOK_CALLBACK
 errors.MISSING_CALLBACK_ARGUMENT
 errors.OPTIONS_ERROR
 errors.WRONG_STACK_CLEANER
+```
+
+Each error class carries one fixed message; the string passed to `new` is
+an addition, shown as `message : addition`.
+
+#### When Construction Fails
+
+`new Widget()` is typed by its happy path only — TypeScript has no checked
+exceptions — but construction can throw, sync or async alike. What is thrown:
+
+- **the errored instance** (`blockErrors: true`, the default): the failed
+  construction still produces a `Widget` layer, and the original error is
+  linked in as the end of its prototype chain — the thrown value is
+  `instanceof Widget` **and** `instanceof Error`; its data is in
+  `getProps(error)`;
+- **the original error**, unwrapped (`blockErrors: false`), or a mnemonica
+  error thrown before construction started.
+
+An async constructor rejects with the same values. `CreationError<T>` names
+both cases for the `catch` side, and `instanceof` narrows them:
+
+```ts
+import type { CreationError } from 'mnemonica';
+
+const report = (failed: CreationError<Widget>) => {
+  if (failed instanceof WidgetType) {
+    failed.size;     // the errored instance: a Widget …
+    failed.message;  // … and an Error
+  }
+};
+
+try {
+  new WidgetType();
+} catch (e) {
+  if (e instanceof Error) report(e);
+}
 ```
 
 #### Exception Instances

@@ -1,6 +1,9 @@
 'use strict';
 
-import type { Hookable } from '../../types';
+import type {
+	Hookable,
+	FlowChecker
+} from '../../types';
 
 import { ErrorsTypes } from '../../descriptors/errors';
 const {
@@ -10,8 +13,8 @@ const {
 
 // the stored checker receives the hook invocation record — same contract
 // Hookable.registerFlowChecker declares for its callback
-export const flowCheckers = new WeakMap<Hookable, (opts: object) => unknown>();
-export const registerFlowChecker = function (this: Hookable, cb: () => unknown ) {
+export const flowCheckers = new WeakMap<Hookable, FlowChecker>();
+export const registerFlowChecker = function (this: Hookable, cb: FlowChecker ) {
 
 	if ( typeof cb !== 'function' ) {
 		throw new MISSING_CALLBACK_ARGUMENT;

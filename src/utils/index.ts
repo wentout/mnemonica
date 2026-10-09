@@ -68,7 +68,7 @@ export const utils = {
 
 	...Object.entries( utilsUnWrapped )
 		.reduce(
-			( methods: { [ index: string ]: CallableFunction }, util ) => {
+			( methods: { [ index: string ]: WrappableMethod }, util ) => {
 				const [ name, fn ] = util;
 				methods[ name ] = wrapThis( fn );
 				return methods;
