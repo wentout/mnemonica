@@ -31,6 +31,9 @@ import {
 	TypeAbsorber,
 	ModificationConstructorFactory,
 	MnemonicaConstructorFactory,
+	DefineNewableOrCallable,
+	DefineNewable,
+	LazyDef,
 } from '../../types';
 
 // Lazy getter: a function that, when called, returns the actual constructor function.
@@ -213,8 +216,8 @@ Object.assign(
 
 TypeDescriptor.prototype.define = function (
 	this: TypeDescriptorInstance,
-	TypeOrTypeName: string | CallableFunction,
-	constructHandlerOrConfig?: CallableFunction | object,
+	TypeOrTypeName: string | DefineNewableOrCallable,
+	constructHandlerOrConfig?: DefineNewableOrCallable | object,
 	config?: object
 ) {
 	const result = define.call(
@@ -229,20 +232,20 @@ TypeDescriptor.prototype.define = function (
 
 TypeDescriptor.prototype.lazy = function (
 	this: TypeDescriptorInstance,
-	arg1: string | CallableFunction,
-	arg2?: CallableFunction | object,
-	arg3?: object
+	TypeNameOrGetter: string | LazyDef<object>,
+	getterOrConfig?: LazyDef<object> | object,
+	namedFormConfig?: object
 ) {
 	let name: string | undefined;
 	let getter: LazyTypeGetter;
 	let config: object | undefined;
-	if (typeof arg1 === 'string') {
-		name = arg1;
-		getter = arg2 as LazyTypeGetter;
-		config = arg3;
+	if (typeof TypeNameOrGetter === 'string') {
+		name = TypeNameOrGetter;
+		getter = getterOrConfig as LazyTypeGetter;
+		config = namedFormConfig;
 	} else {
-		getter = arg1 as LazyTypeGetter;
-		config = arg2 as object;
+		getter = TypeNameOrGetter as LazyTypeGetter;
+		config = getterOrConfig as object;
 	}
 	let result: TypeClass;
 	if (name) {
@@ -297,7 +300,7 @@ odp(
 		get (this: TypeDescriptorInstance) {
 			const self = this;
 			const result = function (options?: object) {
-				const decorator = function (cstr: CallableFunction) {
+				const decorator = function (cstr: DefineNewable) {
 					const { name } = cstr;
 					// define() returns the registered constructor itself —
 					// the full TypeClass is a richer honest type than any cast
@@ -569,8 +572,8 @@ const createFromLazyGetter = function (
 export const define = function (
 	this: unknown,
 	subtypes: TypesMap,
-	TypeOrTypeName: string | CallableFunction,
-	constructHandlerOrConfig?: CallableFunction | object,
+	TypeOrTypeName: string | DefineNewableOrCallable,
+	constructHandlerOrConfig?: DefineNewableOrCallable | object,
 	config?: object
 ): TypeClass {
 
@@ -638,21 +641,21 @@ export const define = function (
 export const lazy = function (
 	this: unknown,
 	subtypes: TypesMap,
-	arg1: string | LazyTypeGetter | undefined,
-	arg2?: LazyTypeGetter | object,
-	arg3?: object
+	TypeNameOrGetter: string | LazyTypeGetter | undefined,
+	getterOrConfig?: LazyTypeGetter | object,
+	namedFormConfig?: object
 ): TypeClass {
 
 	let name: string | undefined;
 	let getter: LazyTypeGetter;
 	let config: object | undefined;
-	if (typeof arg1 === 'string') {
-		name = arg1;
-		getter = arg2 as LazyTypeGetter;
-		config = arg3;
+	if (typeof TypeNameOrGetter === 'string') {
+		name = TypeNameOrGetter;
+		getter = getterOrConfig as LazyTypeGetter;
+		config = namedFormConfig;
 	} else {
-		getter = arg1 as LazyTypeGetter;
-		config = arg2 as object;
+		getter = TypeNameOrGetter as LazyTypeGetter;
+		config = getterOrConfig as object;
 	}
 
 	if (typeof getter !== 'function') {

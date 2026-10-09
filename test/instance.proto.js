@@ -286,6 +286,8 @@ const tests = ( opts ) => {
 			expect( overMoreCallEvenMoreNull ).instanceof( overMore.EvenMore );
 			expect( overMoreCallEvenMoreNull ).instanceof( evenMore );
 			expect( overMoreCallEvenMoreNull + 1 ).equal( 1 );
+			expect( overMoreCallEvenMoreNull.valueOf() ).equal( null );
+			expect( overMoreCallEvenMoreNull.toString() ).equal( 'null' );
 		} );
 
 		it( 'instance.ConstructorName.call(new Number) should work', () => {
@@ -293,6 +295,8 @@ const tests = ( opts ) => {
 			expect( overMoreCallEvenMoreNumber ).instanceof( evenMore );
 			expect( overMoreCallEvenMoreNumber ).instanceof( Number );
 			expect( overMoreCallEvenMoreNumber + 2 ).equal( 7 );
+			expect( overMoreCallEvenMoreNumber.valueOf() ).equal( 5 );
+			expect( overMoreCallEvenMoreNumber.toString() ).equal( '5' );
 		} );
 
 		it( 'instance.ConstructorName.call(new String) should work', () => {
@@ -301,6 +305,8 @@ const tests = ( opts ) => {
 			expect( overMoreCallEvenMoreString ).instanceof( evenMore );
 			expect( overMoreCallEvenMoreString ).instanceof( String );
 			expect( overMoreCallEvenMoreString + 2 ).equal( '52' );
+			expect( overMoreCallEvenMoreString.valueOf() ).equal( '5' );
+			expect( overMoreCallEvenMoreString.toString() ).equal( '5' );
 		} );
 
 		it( 'instance.ConstructorName.call(new Boolean) should work', () => {
@@ -308,6 +314,8 @@ const tests = ( opts ) => {
 			expect( overMoreCallEvenMoreBoolean ).instanceof( evenMore );
 			expect( overMoreCallEvenMoreBoolean ).instanceof( Boolean );
 			expect( overMoreCallEvenMoreBoolean + 1 ).equal( 2 );
+			expect( overMoreCallEvenMoreBoolean.valueOf() ).equal( true );
+			expect( overMoreCallEvenMoreBoolean.toString() ).equal( 'true' );
 		} );
 
 		it( 'instance.ConstructorName.call(process) should work', () => {

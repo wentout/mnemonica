@@ -76,7 +76,7 @@ const obj = {
 
 ## Function Type Rules
 
-**Never use bare `Function`, `CallableFunction`, or `NewableFunction` as a type** — not as a parameter, return, property, `this`, index-signature, intersection or conditional type, and not as a union member either. The only allowed place for them is after `extends` in a named interface:
+**Never use bare `Function`, `CallableFunction`, or `NewableFunction` as a type** — not as a parameter, return, property, `this`, index-signature, intersection or conditional type, and not as a union member either. The only allowed place for them is after `extends` in a named interface. Enforced by `no-restricted-syntax` on `TSTypeReference` in `eslint.config.js`: the selector bans type positions only — `extends` clauses and runtime `instanceof Function` stay legal.
 
 ```typescript
 // ✗ Wrong — every one of these

@@ -9,17 +9,41 @@ export type CtorParameter<T> = IDEF<T> | {
     new (...args: never[]): T;
 };
 export type LazyDef<T, Args extends unknown[] = unknown[]> = () => IDEF<T, Args>;
+export interface DefineCallable extends CallableFunction {
+    (...args: never[]): unknown;
+}
+export interface DefineNewable extends NewableFunction {
+    new (...args: never[]): object;
+}
+export type DefineNewableOrCallable = DefineNewable | DefineCallable;
+export interface InstanceConstructor extends NewableFunction {
+}
+export interface AnyHookCallback extends CallableFunction {
+    (...args: never[]): unknown;
+}
+export interface UtilFunction extends CallableFunction {
+    (...args: never[]): unknown;
+}
+export interface LookupSource {
+    lookup(path: string): TypeClass | undefined;
+}
+export interface ThrowModificationError extends CallableFunction {
+    (error: Error): void;
+}
+export interface ForkInvoker<T extends object> extends CallableFunction {
+    (this: object, ...forkArgs: unknown[]): T;
+}
 export type ErrorMessageKey = 'BASE_ERROR_MESSAGE' | 'HANDLER_MUST_BE_A_FUNCTION' | 'WRONG_TYPE_DEFINITION' | 'WRONG_INSTANCE_INVOCATION' | 'WRONG_MODIFICATION_PATTERN' | 'ALREADY_DECLARED' | 'WRONG_ARGUMENTS_USED' | 'WRONG_HOOK_TYPE' | 'MISSING_HOOK_CALLBACK' | 'MISSING_CALLBACK_ARGUMENT' | 'OPTIONS_ERROR' | 'WRONG_STACK_CLEANER' | 'TYPENAME_MUST_BE_A_STRING';
 export type ErrorMessages = Record<ErrorMessageKey, string>;
 export interface hook extends CallableFunction {
     (opts: hooksOpts): unknown;
 }
-export interface MnemonicaErrorConstructor {
-    new (addition?: string, stack?: string | string[]): Error;
-    (name: string): Error;
-    prototype: {
-        constructor: MnemonicaErrorConstructor;
-    };
+export interface FlowChecker extends CallableFunction {
+    (opts: object): unknown;
+}
+export interface MnemonicaErrorConstructor extends NewableFunction {
+    new (addition?: string, stack?: string[]): MnemonicaError;
+    readonly prototype: MnemonicaError;
 }
 export type ErrorsTypesMap = Record<string, MnemonicaErrorConstructor>;
 export type MnemonicaError = Error;
@@ -32,6 +56,7 @@ export interface ErrorProps {
     surplus?: unknown[];
     error?: unknown;
 }
+export type CreationError<T extends object> = (T & Error) | Error;
 export interface _Internal_TC_<ConstructorInstance extends object> {
     new (...args: unknown[]): ConstructorInstance;
     (this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
@@ -83,11 +108,11 @@ export type typedHookOpts<HT extends hooksTypes, P extends object, T extends obj
         throwModificationError(error: Error): void;
     };
 };
-export type typedHook<HT extends hooksTypes, P extends object = object, T extends object = object> = {
+export interface typedHook<HT extends hooksTypes, P extends object = object, T extends object = object> extends CallableFunction {
     (opts: typedHookOpts<HT, P, T>): unknown;
-} & CallableFunction;
+}
 export type HookableConstructor<T extends object> = Constructor<T> & {
-    registerHook(hookType: hooksTypes, cb: CallableFunction): void;
+    registerHook(hookType: hooksTypes, cb: AnyHookCallback): void;
 };
 export interface AddPropsCallback extends CallableFunction {
     (proto: object): void;
@@ -167,7 +192,7 @@ export type LookedUpConstructor<Registry extends object, Path extends keyof Regi
     lookup: NestedTypeLookup<Registry, Path>;
 };
 export type WithHookRegister<C> = C extends {
-    registerHook: CallableFunction;
+    registerHook: AnyHookCallback;
 } ? C : C extends {
     new (...args: never[]): infer R;
 } ? R extends object ? C & {
@@ -326,7 +351,7 @@ export interface RegistryEntry<F extends object, Path extends string = '', Paren
     registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
 }
 export interface RegistryHolderBase<T extends object = {}, Parent extends object = object, Path extends string = ''> {
-    define<SubType extends object>(this: RegistryHolderBase<T, Parent, Path>, TypeOrTypeName: CallableFunction, constructHandlerOrConfig?: IDEF<SubType> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<SubType>;
+    define<SubType extends object>(this: RegistryHolderBase<T, Parent, Path>, TypeOrTypeName: DefineNewableOrCallable, constructHandlerOrConfig?: IDEF<SubType> | object | boolean | DefineNewableOrCallable, configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean): IDefinitorInstance<SubType>;
     define<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler?: IDEF<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>, ChildPath, Parent>;
     lazy<SubType extends object>(this: RegistryHolderBase<T, Parent, Path>, getter: LazyDef<SubType>, config?: constructorOptions): IDefinitorInstance<SubType>;
     lazy<const Name extends string, N extends object, F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: LazyDef<N>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>, ChildPath, Parent>;
@@ -347,15 +372,15 @@ export interface IDefinitorInstance<N extends object, R extends InstanceResult<N
     collection?: CollectionDef;
 }
 export interface TypeAbsorber extends CallableFunction {
-    <T extends object>(this: unknown, TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: IDEF<T> | object | boolean | CallableFunction, configOrUndefined?: constructorOptions | CallableFunction | boolean): IDefinitorInstance<T>;
+    <T extends object>(this: unknown, TypeOrTypeName: string | DefineNewableOrCallable, constructHandlerOrConfig?: IDEF<T> | object | boolean | DefineNewableOrCallable, configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean): IDefinitorInstance<T>;
 }
 export interface LazyAbsorber extends CallableFunction {
     <T extends object>(this: unknown, getter: LazyDef<T>, config?: constructorOptions): IDefinitorInstance<T>;
     <T extends object>(this: unknown, TypeName: string, getter: LazyDef<T>, config?: constructorOptions): IDefinitorInstance<T>;
-    <T extends object>(this: unknown, arg1: string | LazyDef<T>, arg2: LazyDef<T> | constructorOptions, arg3?: constructorOptions): IDefinitorInstance<T>;
+    <T extends object>(this: unknown, TypeNameOrGetter: string | LazyDef<T>, getterOrConfig: LazyDef<T> | constructorOptions, namedFormConfig?: constructorOptions): IDefinitorInstance<T>;
     <T extends object>(this: unknown, source: RegistryHolderBase<object, object, string>, getter: LazyDef<T>, config?: constructorOptions): IDefinitorInstance<T>;
     <T extends object>(this: unknown, source: RegistryHolderBase<object, object, string>, TypeName: string, getter: LazyDef<T>, config?: constructorOptions): IDefinitorInstance<T>;
-    <T extends object>(this: unknown, source: RegistryHolderBase<object, object, string>, arg1: string | LazyDef<T>, arg2: LazyDef<T> | constructorOptions, arg3?: constructorOptions): IDefinitorInstance<T>;
+    <T extends object>(this: unknown, source: RegistryHolderBase<object, object, string>, TypeNameOrGetter: string | LazyDef<T>, getterOrConfig: LazyDef<T> | constructorOptions, namedFormConfig?: constructorOptions): IDefinitorInstance<T>;
 }
 export interface TypesCollection<T extends object = {}, Parent extends object = object, Path extends string = ''> extends RegistryHolder<T, Parent, Path>, Hookable {
     subtypes: SubtypesMap;
@@ -366,7 +391,7 @@ export interface Hookable {
     hooks: Record<string, Set<hook>>;
     invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
     registerHook(hookType: hooksTypes, cb: hook): void;
-    registerFlowChecker(cb: (opts: object) => unknown): void;
+    registerFlowChecker(cb: FlowChecker): void;
 }
 export type CreateTypesCollectionFunction = <T extends object = {}, Parent extends object = object>(config?: constructorOptions) => TypesCollection<T, Parent>;
 export type TypeClass = IDefinitorInstance<object>;
@@ -377,10 +402,10 @@ export interface MnemonicaConstructor extends NewableFunction {
     [key: symbol]: unknown;
 }
 export interface TypeDescriptorDefine extends CallableFunction {
-    (TypeOrTypeName: string | CallableFunction, constructHandlerOrConfig?: CallableFunction | object, config?: object): TypeClass;
+    (TypeOrTypeName: string | DefineNewableOrCallable, constructHandlerOrConfig?: DefineNewableOrCallable | object, config?: object): TypeClass;
 }
 export interface TypeDescriptorLazy extends CallableFunction {
-    (getter: CallableFunction, config?: object): TypeClass;
+    (getter: LazyDef<object>, config?: object): TypeClass;
 }
 export interface TypeDescriptorLookup extends CallableFunction {
     (TypeNestedPath: string): TypeClass | undefined;
@@ -421,9 +446,9 @@ export interface UtilsCollection {
     } & {};
     pick<T extends object>(instance: T, ...args: (string | string[])[]): Record<string, unknown>;
     clone<T extends object>(instance: T): T;
-    fork<T extends object>(instance: T): (this: object, ...forkArgs: unknown[]) => T;
+    fork<T extends object>(instance: T): ForkInvoker<T>;
     sibling(instance: object): SiblingAccessor;
-    collectConstructors: (instance: object, flat?: boolean) => (CallableFunction | string)[];
+    collectConstructors: (instance: object, flat?: boolean) => (DefineNewableOrCallable | string)[];
     merge<A extends object, B extends object>(a: A, b: B, ...args: unknown[]): InstanceResult<Merge<B, A>>;
     parse<T extends object>(self: T): Parsed<T>;
     parse(self: null): EmptyParsed;
@@ -433,7 +458,7 @@ export interface UtilsCollection {
     parent<T extends object, K extends ParentPathOfInstance<T> & string>(instance: T, path: K): InstanceOfTypeRegistry<K> | undefined;
     parent<T extends object>(instance: T, path: string): object | undefined;
     toJSON<T extends object>(instance: T): string;
-    [key: string]: CallableFunction;
+    [key: string]: UtilFunction;
 }
 export interface MnemonicaModule<Registry extends object = {}> extends RegistryHolder<Registry, object> {
     apply: ApplyFunction;
@@ -467,7 +492,7 @@ export interface MnemonicaModule<Registry extends object = {}> extends RegistryH
     getProps: (instance: object) => PropsType | undefined;
     setProps: (instance: object, values: object) => string[] | false;
     findSubTypeFromParent: (instance: object | undefined, subType: string) => object | null;
-    isClass: (fn: CallableFunction) => boolean;
+    isClass: (fn: DefineNewableOrCallable) => boolean;
     createTypesCollection: CreateTypesCollectionFunction;
     [key: string]: unknown;
 }

@@ -7,7 +7,11 @@ import type {
 	TypeClass,
 	IDEF,
 	hooksOpts,
-	hook
+	hook,
+	StackBoundary,
+	DefineNewable,
+	DefineNewableOrCallable,
+	FlowChecker
 } from '../../types';
 
 import { constants } from '../../constants';
@@ -151,9 +155,9 @@ odp(
 		get (this: { subtypes: Map<string, object> }) {
 			const { subtypes } = this;
 			const result = function (
-				this: CallableFunction,
-				TypeOrTypeName: string | CallableFunction,
-				constructHandlerOrConfig?: CallableFunction | object,
+				this: StackBoundary,
+				TypeOrTypeName: string | DefineNewableOrCallable,
+				constructHandlerOrConfig?: DefineNewableOrCallable | object,
 				config?: object
 			) {
 				// pass `result` itself as the stack-capture boundary (StackBoundary):
@@ -181,21 +185,21 @@ odp(
 		get (this: { subtypes: Map<string, object> }) {
 			const { subtypes } = this;
 			const result = function (
-				this: CallableFunction,
-				arg1: string | CallableFunction,
-				arg2?: CallableFunction | object,
-				arg3?: object
+				this: StackBoundary,
+				TypeNameOrGetter: string | LazyTypeGetter,
+				getterOrConfig?: LazyTypeGetter | object,
+				namedFormConfig?: object
 			) {
 				let name: string | undefined;
 				let getter: LazyTypeGetter;
 				let config: object | undefined;
-				if (typeof arg1 === 'string') {
-					name = arg1;
-					getter = arg2 as LazyTypeGetter;
-					config = arg3;
+				if (typeof TypeNameOrGetter === 'string') {
+					name = TypeNameOrGetter;
+					getter = getterOrConfig as LazyTypeGetter;
+					config = namedFormConfig;
 				} else {
-					getter = arg1 as LazyTypeGetter;
-					config = arg2 as object;
+					getter = TypeNameOrGetter as LazyTypeGetter;
+					config = getterOrConfig as object;
 				}
 				let lazyResult: TypeClass;
 				// same as in `define` above: pass `result` itself as the
@@ -231,7 +235,7 @@ odp(
 		get (this: TypesCollection) {
 			const self = this;
 			const result = function (config?: object) {
-				const decorator = function (cstr: CallableFunction) {
+				const decorator = function (cstr: DefineNewable) {
 					const { name } = cstr;
 					const defineResult = self.define(
 						name,
@@ -317,7 +321,7 @@ odp(
 	'registerFlowChecker',
 	{
 		get (this: TypesCollection) {
-			const result = (flowCheckerCallback: () => unknown) => {
+			const result = (flowCheckerCallback: FlowChecker) => {
 				const checkerResult = registerFlowChecker.call(
 					typesCollections.get(this),
 					flowCheckerCallback

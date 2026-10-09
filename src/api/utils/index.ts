@@ -16,13 +16,19 @@ const { WRONG_TYPE_DEFINITION, } = ErrorsTypes;
 import {
 	_getProps, Props
 } from '../types/Props';
-import type { MnemonicaConstructor } from '../../types';
+import type {
+	InstanceConstructor,
+	MnemonicaConstructor
+} from '../../types';
 
 import compileNewModificatorFunctionBody, { ConstructHandler } from '../types/compileNewModificatorFunctionBody';
 
 // CreationHandler - handles constructor return values
 // Moved to api/types/index.ts as per refactoring plan
-export const CreationHandler = function (this: object & { constructor: NewableFunction }, constructionAnswer: unknown) {
+export const CreationHandler = function (
+	this: object & { constructor: InstanceConstructor },
+	constructionAnswer: unknown
+) {
 	return constructionAnswer;
 };
 
@@ -274,23 +280,59 @@ const makeErrorModificatorType = (
 };
 
 
-// TODO: .valueOf(), .toString() ???
+// a null or primitive-wrapper parent reflects its primitive to the instance
+// built over it: coercion (+inst, `${inst}`) through Symbol.toPrimitive, and
+// explicit inst.valueOf() / inst.toString() — the wrapper's own prototype
+// methods throw when `this` is the instance rather than the wrapper, and an
+// Object.create(null) parent has none at all
+const reflectPrimitive = (thisArg: object, primitive: null | string | number | boolean) => {
+	odp(
+		thisArg,
+		Symbol.toPrimitive,
+		{
+			get () {
+				const result = () => {
+					return primitive;
+				};
+				return result;
+			}
+		}
+	);
+	odp(
+		thisArg,
+		'valueOf',
+		{
+			get () {
+				const result = () => {
+					return primitive;
+				};
+				return result;
+			}
+		}
+	);
+	odp(
+		thisArg,
+		'toString',
+		{
+			get () {
+				const result = () => {
+					const stringResult = String( primitive );
+					return stringResult;
+				};
+				return result;
+			}
+		}
+	);
+};
+
 const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 	let thisArg: object = _thisArg as object;
 
 	if (_thisArg === null) {
 		thisArg = Object.create(null);
-		odp(
+		reflectPrimitive(
 			thisArg,
-			Symbol.toPrimitive,
-			{
-				get () {
-					const result = () => {
-						return _thisArg;
-					};
-					return result;
-				}
-			}
+			null
 		);
 	}
 
@@ -299,18 +341,12 @@ const reflectPrimitiveWrappers = (_thisArg: unknown) => {
 		_thisArg instanceof Boolean ||
 		_thisArg instanceof String
 	) {
-		odp(
+		// read once, before the wrapper gets its own valueOf below;
+		// a wrapper's primitive never changes
+		const primitive = (_thisArg as String | Number | Boolean).valueOf();
+		reflectPrimitive(
 			thisArg,
-			Symbol.toPrimitive,
-			{
-				get () {
-					const result = () => {
-						const valueResult = (_thisArg as String | Number | Boolean).valueOf();
-						return valueResult;
-					};
-					return result;
-				}
-			}
+			primitive
 		);
 	}
 

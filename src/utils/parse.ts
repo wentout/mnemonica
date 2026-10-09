@@ -15,6 +15,7 @@ const {
 
 import { extract } from './extract';
 import type {
+	InstanceConstructor,
 	EmptyParsed, Parsed
 } from '../types';
 
@@ -41,7 +42,7 @@ export function parse<T extends object> ( self: T | null ): Parsed<T> | EmptyPar
 		return nullResult;
 	}
 
-	if ( !self || !( self as { constructor?: CallableFunction } ).constructor ) {
+	if ( !self || !( self as { constructor?: InstanceConstructor } ).constructor ) {
 		throw new WRONG_MODIFICATION_PATTERN;
 	}
 

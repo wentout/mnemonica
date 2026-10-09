@@ -24,7 +24,10 @@ import type {
 	LookedUpConstructor,
 	WithHookRegister,
 	typedHook,
-	HookableConstructor
+	HookableConstructor,
+	DefineNewableOrCallable,
+	LookupSource,
+	LazyDef
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -68,6 +71,9 @@ export type {
 	typedHookOpts,
 	WithHookRegister,
 	HookableConstructor,
+	// what a failed construction throws — the catch side of `new T()`
+	CreationError,
+	ErrorProps,
 } from './types';
 
 /**
@@ -167,9 +173,9 @@ export function define <
 	R extends IDefinitorInstance<N> = IDefinitorInstance<N>,
 >(
 	this: unknown,
-	TypeName?: string | CallableFunction | NewableFunction,
+	TypeName?: string | DefineNewableOrCallable,
 	// Allow both strict IDEF and more flexible function signatures
-	constructHandler?: IDEF<T> | CallableFunction | NewableFunction | object | boolean,
+	constructHandler?: IDEF<T> | DefineNewableOrCallable | object | boolean,
 	config?: constructorOptions,
 ): R;
 export function define <
@@ -179,9 +185,9 @@ export function define <
 	R extends IDefinitorInstance<N> = IDefinitorInstance<N>,
 >(
 	this: unknown,
-	TypeNameOrSource?: string | CallableFunction | NewableFunction | RegistryHolderBase<object, object, string>,
-	constructHandlerOrName?: IDEF<T> | CallableFunction | NewableFunction | object | boolean | string,
-	configOrHandler?: constructorOptions | IDEF<T> | CallableFunction | NewableFunction | object | boolean,
+	TypeNameOrSource?: string | DefineNewableOrCallable | RegistryHolderBase<object, object, string>,
+	constructHandlerOrName?: IDEF<T> | DefineNewableOrCallable | object | boolean | string,
+	configOrHandler?: constructorOptions | IDEF<T> | DefineNewableOrCallable | object | boolean,
 	config?: constructorOptions,
 ): R {
 
@@ -238,36 +244,36 @@ export function lazy<T extends object>(
 	// named form: lazy(TypeName, getter, config?)
 	this: unknown,
 	TypeName: string,
-	getter: () => IDEF<T>,
+	getter: LazyDef<T>,
 	config?: constructorOptions
 ): IDefinitorInstance<T>;
 export function lazy<T extends object>(
 	// unnamed form: lazy(getter, config?)
 	this: unknown,
-	getter: () => IDEF<T>,
+	getter: LazyDef<T>,
 	config?: constructorOptions
 ): IDefinitorInstance<T>;
 export function lazy(
 	this: unknown,
-	arg1: unknown,
-	arg2?: unknown,
-	arg3?: unknown,
-	arg4?: unknown
+	sourceOrTypeNameOrGetter: unknown,
+	TypeNameOrGetterOrConfig?: unknown,
+	getterOrConfig?: unknown,
+	config?: unknown
 ): unknown {
 
 	// explicit-source form: lazy(source, name?, getter, config?)
 	// the source may be a TypesCollection (object) or a TypeProxy (function),
 	// so detection is: has a callable .lazy
 	const mayBeSource = (
-		(typeof arg1 === 'object' && arg1 !== null) ||
-		typeof arg1 === 'function'
-	) && typeof (arg1 as { lazy?: unknown }).lazy === 'function';
+		(typeof sourceOrTypeNameOrGetter === 'object' && sourceOrTypeNameOrGetter !== null) ||
+		typeof sourceOrTypeNameOrGetter === 'function'
+	) && typeof (sourceOrTypeNameOrGetter as { lazy?: unknown }).lazy === 'function';
 	if (mayBeSource) {
-		const source = arg1 as { lazy: LazyAbsorber };
+		const source = sourceOrTypeNameOrGetter as { lazy: LazyAbsorber };
 		const sourceLazyResult = source.lazy(
-			arg2 as string | (() => IDEF<object>),
-			arg3 as (() => IDEF<object>) | constructorOptions,
-			arg4 as constructorOptions
+			TypeNameOrGetterOrConfig as string | LazyDef<object>,
+			getterOrConfig as LazyDef<object> | constructorOptions,
+			config as constructorOptions
 		) as unknown;
 		return sourceLazyResult;
 	}
@@ -276,9 +282,9 @@ export function lazy(
 	// Type assertion needed because TypesCollectionProxy is a Proxy
 	const lazyResult = (types as { lazy: LazyAbsorber })
 		.lazy(
-			arg1 as string | (() => IDEF<object>),
-			arg2 as (() => IDEF<object>) | constructorOptions,
-			arg3 as constructorOptions
+			sourceOrTypeNameOrGetter as string | LazyDef<object>,
+			TypeNameOrGetterOrConfig as LazyDef<object> | constructorOptions,
+			getterOrConfig as constructorOptions
 		) as unknown;
 	return lazyResult;
 }
@@ -295,25 +301,25 @@ export function lookup<Reg extends object, const K extends keyof Reg & string>(
 ): WithHookRegister<LookedUpConstructor<Reg, K>>;
 export function lookup(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 export function lookup(
-	source: { lookup: (path: string) => TypeClass | undefined },
+	source: LookupSource,
 	TypeNestedPath: string
 ): TypeClass | undefined;
 export function lookup(
 	this: unknown,
-	arg1: unknown,
-	arg2?: unknown
+	sourceOrPath: unknown,
+	TypeNestedPath?: unknown
 ): unknown {
 
 	// explicit-source form: lookup(source, path)
-	if (typeof arg1 !== 'string' && typeof arg2 === 'string') {
-		const source = arg1 as { lookup: (path: string) => TypeClass | undefined };
-		const sourceResult = source.lookup(arg2);
+	if (typeof sourceOrPath !== 'string' && typeof TypeNestedPath === 'string') {
+		const source = sourceOrPath as LookupSource;
+		const sourceResult = source.lookup(TypeNestedPath);
 		return sourceResult;
 	}
 
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
-	const lookupResult = (types as { lookup: (path: string) => TypeClass | undefined }).lookup(arg1 as string);
+	const lookupResult = (types as LookupSource).lookup(sourceOrPath as string);
 	return lookupResult;
 }
 
@@ -336,7 +342,6 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 		TypeName,
 		entity
 	) as TypeConstructorBase;
-	// TODO: check lines below and if Constructor is not mnemonized ...
 	if (Cstr === undefined) {
 		throw new WRONG_MODIFICATION_PATTERN(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
 	}

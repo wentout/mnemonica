@@ -5,10 +5,11 @@ import {
 } from '../api/types/Props';
 import { InstanceCreator } from '../api/types/InstanceCreator';
 import TypesUtils from '../api/utils/index';
+import type { ForkInvoker } from '../types';
 
 const { reflectPrimitiveWrappers } = TypesUtils;
 
-export const fork = <T extends object>(instance: T): (this: object, ...forkArgs: unknown[]) => T => {
+export const fork = <T extends object>(instance: T): ForkInvoker<T> => {
 
 	const props = getProps(instance) as Props;
 

@@ -1182,6 +1182,42 @@ errors.OPTIONS_ERROR
 errors.WRONG_STACK_CLEANER
 ```
 
+Each error class carries one fixed message; the string passed to `new` is
+an addition, shown as `message : addition`.
+
+#### When Construction Fails
+
+`new Widget()` is typed by its happy path only — TypeScript has no checked
+exceptions — but construction can throw, sync or async alike. What is thrown:
+
+- **the errored instance** (`blockErrors: true`, the default): the failed
+  construction still produces a `Widget` layer, and the original error is
+  linked in as the end of its prototype chain — the thrown value is
+  `instanceof Widget` **and** `instanceof Error`; its data is in
+  `getProps(error)`;
+- **the original error**, unwrapped (`blockErrors: false`), or a mnemonica
+  error thrown before construction started.
+
+An async constructor rejects with the same values. `CreationError<T>` names
+both cases for the `catch` side, and `instanceof` narrows them:
+
+```ts
+import type { CreationError } from 'mnemonica';
+
+const report = (failed: CreationError<Widget>) => {
+  if (failed instanceof WidgetType) {
+    failed.size;     // the errored instance: a Widget …
+    failed.message;  // … and an Error
+  }
+};
+
+try {
+  new WidgetType();
+} catch (e) {
+  if (e instanceof Error) report(e);
+}
+```
+
 #### Exception Instances
 
 When creating exceptions using `utils.exception()` (must be called with `new`):

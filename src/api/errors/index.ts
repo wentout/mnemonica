@@ -1,6 +1,9 @@
 'use strict';
 
-import type { StackBoundary } from '../../types';
+import type {
+	StackBoundary,
+	MnemonicaErrorConstructor
+} from '../../types';
 
 import { constants } from '../../constants';
 
@@ -76,7 +79,7 @@ export const getStack = function (
 
 export class BASE_MNEMONICA_ERROR extends Error {
 
-	constructor ( message = BASE_ERROR_MESSAGE, additionalStack: string[] ) {
+	constructor ( message = BASE_ERROR_MESSAGE, additionalStack?: string[] ) {
 
 		super( message );
 		const BaseStack: string = this.stack as string;
@@ -119,9 +122,9 @@ Object.defineProperty(
 );
 
 
-export const constructError = ( name: string, message: string ) => {
+export const constructError = ( name: string, message: string ): MnemonicaErrorConstructor => {
 	const NamedErrorConstructor = class extends BASE_MNEMONICA_ERROR {
-		constructor ( addition: string, stack: string[] ) {
+		constructor ( addition?: string, stack?: string[] ) {
 			const saying = addition ? `${message} : ${addition}` : `${message}`;
 			super(
 				saying,
@@ -130,23 +133,17 @@ export const constructError = ( name: string, message: string ) => {
 		}
 	};
 
-	const reNamer = {} as {
-		[ key: string ]: {
-			prototype: {
-				constructor: CallableFunction
-			}
-		},
-	};
-	reNamer[ name ] = NamedErrorConstructor;
+	// the class's prototype.constructor IS the class, so the name getter is
+	// defined on the class itself (same effect as BASE_MNEMONICA_ERROR's above)
 	Object.defineProperty(
-		reNamer[ name ].prototype.constructor,
+		NamedErrorConstructor,
 		'name',
 		{
 			get () {
 				const result = new String( name );
 				return result;
 			}
-		} 
+		}
 	);
-	return reNamer[ name ];
+	return NamedErrorConstructor;
 };
