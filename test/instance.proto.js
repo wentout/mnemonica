@@ -192,7 +192,9 @@ const tests = ( opts ) => {
 			assert.notEqual( getProps(overMore).__proto_proto__, getProps(overMoreFork).__proto_proto__ );
 
 			assert.notEqual( getProps(evenMore).__proto_proto__, getProps(evenMoreFork).__proto_proto__ );
-			assert.notEqual( getProps(evenMore).__timestamp__, getProps(evenMoreFork).__timestamp__ );
+			// millisecond timestamps: a fast runner creates both in the same ms,
+			// so a fork is only guaranteed to be no older than its original
+			assert.isAtLeast( getProps(evenMoreFork).__timestamp__, getProps(evenMore).__timestamp__ );
 
 			assert.notEqual( evenMore, evenMoreFork );
 			assert.notEqual( evenMoreForkFork, evenMoreFork );

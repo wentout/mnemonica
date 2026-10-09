@@ -1735,7 +1735,9 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(getProps(overMore).__proto_proto__).not.toBe(getProps(overMoreFork).__proto_proto__);
 
 				expect(getProps(evenMore).__proto_proto__).not.toBe(getProps(evenMoreFork).__proto_proto__);
-				expect(getProps(evenMore).__timestamp__).not.toBe(getProps(evenMoreFork).__timestamp__);
+				// millisecond timestamps: a fast runner creates both in the same ms,
+				// so a fork is only guaranteed to be no older than its original
+				expect(Number(getProps(evenMoreFork).__timestamp__)).toBeGreaterThanOrEqual(Number(getProps(evenMore).__timestamp__));
 
 				expect(evenMore).not.toBe(evenMoreFork);
 				expect(evenMoreForkFork).not.toBe(evenMoreFork);

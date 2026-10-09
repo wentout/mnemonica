@@ -47,7 +47,10 @@ const tests = ( opts ) => {
 			// +2 (re-defined C0ArrowProbe after its rejected arrow define)
 			// +2 (strictChain sentinel-path pin types in parse.js)
 			// +4 (define-paths pin types in environment.js)
-			assert.equal( 276, typesFlowCheckerInvocations.length );
+			// +22 (environment.js 'named constructor define' tests now run in
+			//     place: its async describe used to register them after load,
+			//     past this count)
+			assert.equal( 298, typesFlowCheckerInvocations.length );
 
 			// +3 (increased due to explicit .lazy() API adding extra creations)
 			// +12 (increased due to dotted parent() tests adding instances)
@@ -60,7 +63,9 @@ const tests = ( opts ) => {
 			// +1 (strictChain sentinel-path pin: the refused construction
 			//     still fires preCreation before the check throws)
 			// +2 (define-paths pins: two fresh constructions)
-			assert.equal( 149, typesPreCreationInvocations.length );
+			// +11 (environment.js 'named constructor define' tests now run
+			//     in place, before this count)
+			assert.equal( 160, typesPreCreationInvocations.length );
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
@@ -74,7 +79,9 @@ const tests = ( opts ) => {
 			// +2 (new pin types' levels in parse.js/utils.js: the
 			//     strictChain sentinel-path pin and the toJSON pins)
 			// +4 (define-paths pins: fresh construction levels)
-			assert.equal( 254, typesPostCreationInvocations.length );
+			// +22 (environment.js 'named constructor define' tests now run
+			//     in place, before this count)
+			assert.equal( 276, typesPostCreationInvocations.length );
 		} );
 	} );
 
