@@ -1768,6 +1768,12 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(overMoreCallEvenMoreUndefined.str).toEqual('re-defined EvenMore str');
 			});
 
+			it('instance.ConstructorName.call(otherParent) builds over that parent — the DAG form', () => {
+				const dagInstance = overMore.EvenMore.call(overMoreFork);
+				expect(dagInstance).toBeInstanceOf(overMore.EvenMore);
+				expect(getProps(dagInstance).__parent__).toBe(overMoreFork);
+			});
+
 			it('instance.ConstructorName.call(null) should work', () => {
 				expect(overMoreCallEvenMoreNull).toBeInstanceOf(overMore.EvenMore);
 				expect(overMoreCallEvenMoreNull + 1).toEqual(1);

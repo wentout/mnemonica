@@ -284,6 +284,13 @@ const tests = ( opts ) => {
 			expect( overMoreCallEvenMoreUndefined.str ).equal( 're-defined EvenMore str' );
 		} );
 
+		it( 'instance.ConstructorName.call(otherParent) builds over that parent — the DAG form', () => {
+			const dagInstance = overMore.EvenMore.call( overMoreFork );
+			expect( dagInstance ).instanceof( overMore.EvenMore );
+			expect( dagInstance ).instanceof( evenMore );
+			expect( getProps( dagInstance ).__parent__ ).equal( overMoreFork );
+		} );
+
 		it( 'instance.ConstructorName.call(null) should work', () => {
 			expect( overMoreCallEvenMoreNull ).instanceof( overMore.EvenMore );
 			expect( overMoreCallEvenMoreNull ).instanceof( evenMore );

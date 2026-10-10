@@ -538,6 +538,7 @@ const AsyncTypeNoReturn = define('AsyncType', async function () {
 | Define a type | `define('Name', ctor)` |
 | Define a type lazily | `lazy('Name', () => ctor)` or `Type.lazy(() => ctor)` |
 | Create from instance | `new instance.SubType(args)` |
+| Create from a *different* parent (DAG) | `instance.SubType.call(otherParent, args)` |
 | Look up a type | `lookup('Name')` or `Type.lookup('Path')` |
 | Read construction history | `getProps(instance)` |
 | Get parent instance | `utils.parent(instance)`, `utils.parent(instance, 'TypeName')` or `utils.parent(instance, 'Root.Parent')` |
