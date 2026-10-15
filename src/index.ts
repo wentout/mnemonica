@@ -46,6 +46,7 @@ export type {
 	Proto,
 	ProtoFlat,
 	constructorOptions,
+	deliveredHookOpts,
 	hooksOpts,
 	hook,
 	hooksTypes,
@@ -490,14 +491,6 @@ export const mnemonica = Object.entries({
 	},
 	{}
 ) as MnemonicaModule;
-
-import * as api from './api';
-
-export const {
-	define: _define,
-	lazy: _lazy,
-	lookup: _lookup
-} = api.types;
 
 export const {
 

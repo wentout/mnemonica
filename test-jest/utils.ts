@@ -641,3 +641,31 @@ describe('utils/lineage (the lethe export)', () => {
 	});
 
 });
+
+describe('utils collection (wrapThis)', () => {
+
+	// the wrapped collection — plain require keeps the parameter types out
+	// of the way for the intentional misuse calls below
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	const { utils } = require('../src/index');
+
+	it('utils.parse(undefined) throws instead of silently parsing the utils object', () => {
+		expect(() => utils.parse(undefined)).toThrow(errors.WRONG_MODIFICATION_PATTERN);
+	});
+
+	it('utils.parse(123) throws WRONG_MODIFICATION_PATTERN, not a plain TypeError', () => {
+		expect(() => utils.parse(123)).toThrow(errors.WRONG_MODIFICATION_PATTERN);
+	});
+
+	it('a prototype-attached util still substitutes the instance for this', () => {
+		function ThisFormHandler () {}
+		ThisFormHandler.prototype.parse = utils.parse;
+		const ThisFormType = define('ThisFormTypeJest', ThisFormHandler);
+		const instance = new ThisFormType();
+		// invoke through the typed handler prototype: same method-call
+		// substitution path, no cast on the instance
+		const parsed = ThisFormHandler.prototype.parse.call(instance);
+		expect(parsed.name).toBe('ThisFormTypeJest');
+	});
+
+});

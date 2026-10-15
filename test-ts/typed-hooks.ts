@@ -7,8 +7,9 @@
  * the callback's opts are inferred from the hookType and from the
  * parent/instance pair the hook is registered on — no narrowing, no casts.
  * preCreation fires before the created instance exists, so its opts carry
- * no inheritedInstance/creator. Collection-wide (global) handlers stay
- * untyped by design (see .ai/rules-hooks.md).
+ * no inheritedInstance/throwModificationError. Collection-level handlers
+ * (collection.registerHook) get the same per-hookType payload split with
+ * `object` instance fields (see .ai/rules-hooks.md).
  */
 
 import {
@@ -51,7 +52,7 @@ HookUser.registerHook('postCreation', (opts) => {
 	const name: string = opts.inheritedInstance.name;
 	const parent: object = opts.existentInstance;
 	const args: unknown[] = opts.args;
-	opts.creator.throwModificationError(new Error('pin'));
+	opts.throwModificationError(new Error('pin'));
 	void created;
 	void name;
 	void parent;
@@ -74,8 +75,8 @@ HookUser.registerHook('preCreation', (opts) => {
 	void parent;
 	// @ts-expect-error — preCreation opts have no inheritedInstance
 	opts.inheritedInstance;
-	// @ts-expect-error — preCreation opts have no creator
-	opts.creator;
+	// @ts-expect-error — preCreation opts have no throwModificationError
+	opts.throwModificationError;
 });
 
 // subtype: existentInstance is typed as the PARENT instance
@@ -284,4 +285,36 @@ mnemonica.registerHook(HookUser, 'postCreation', (opts) => {
 	void name;
 	// @ts-expect-error — HookUser has no 'role'
 	opts.inheritedInstance.role;
+});
+
+// --- collection-level hooks ---------------------------------------------------
+// A collection mixes every registered type, so the instance fields stay
+// `object` — but the preCreation/post payload split holds here too.
+
+const plainCollection = createTypesCollection();
+
+plainCollection.registerHook('postCreation', (opts) => {
+	// inheritedInstance is REQUIRED on post hooks — no guard, no narrowing
+	const created: object = opts.inheritedInstance;
+	const parent: object = opts.existentInstance;
+	const args: unknown[] = opts.args;
+	void created;
+	void parent;
+	void args;
+	opts.throwModificationError(new Error('pin'));
+});
+
+plainCollection.registerHook('creationError', (opts) => {
+	const errored: object = opts.inheritedInstance;
+	void errored;
+	opts.throwModificationError(new Error('pin'));
+});
+
+plainCollection.registerHook('preCreation', (opts) => {
+	const parent: object = opts.existentInstance;
+	void parent;
+	// @ts-expect-error — preCreation opts have no inheritedInstance
+	opts.inheritedInstance;
+	// @ts-expect-error — preCreation opts have no throwModificationError
+	opts.throwModificationError;
 });

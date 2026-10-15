@@ -48,7 +48,7 @@ const engineer = new alice.Employee({ role: 'Engineer' });
 //                   ^^^^^ instance-level inheritance, not class-level
 
 engineer instanceof Person;     // true — path back to root
-utils.parent(engineer);         // returns alice — Object.getPrototypeOf(engineer) === alice
+utils.parent(engineer);         // returns alice — the parent INSTANCE itself lives in the chain
 getProps(engineer);             // { __type__, __parent__, __args__, __timestamp__, ... }
 ```
 
@@ -156,7 +156,7 @@ const engineer = new Employee({ role: 'Engineer' });
 
 // Instance-level (mnemonica):
 const engineer = new alice.Employee({ role: 'Engineer' });
-// Object.getPrototypeOf(engineer) === alice  — private to this specific alice
+// utils.parent(engineer) === alice  — private to this specific alice
 ```
 
 `alice.Employee` and `bob.Employee` are distinct Trie paths. They share the `Employee` type definition but produce independent prototype chain segments. Two concurrent pipeline runs are two isolated paths — no shared prototype state, no cross-contamination between runs. The construction history of one pipeline is invisible to another.

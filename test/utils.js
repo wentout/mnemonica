@@ -691,6 +691,35 @@ const tests = () => {
 
 	});
 
+	describe('utils collection (wrapThis)', () => {
+
+		const { utils } = mnemonica;
+
+		it('utils.parse(undefined) throws instead of silently parsing the utils object', () => {
+			assert.throws(
+				() => utils.parse(undefined),
+				errors.WRONG_MODIFICATION_PATTERN
+			);
+		});
+
+		it('utils.parse(123) throws WRONG_MODIFICATION_PATTERN, not a plain TypeError', () => {
+			assert.throws(
+				() => utils.parse(123),
+				errors.WRONG_MODIFICATION_PATTERN
+			);
+		});
+
+		it('a prototype-attached util still substitutes the instance for this', () => {
+			function ThisFormHandler () {}
+			ThisFormHandler.prototype.parse = utils.parse;
+			const ThisFormType = define('ThisFormType', ThisFormHandler);
+			const instance = new ThisFormType();
+			const parsed = instance.parse();
+			assert.equal(parsed.name, 'ThisFormType');
+		});
+
+	});
+
 };
 
 module.exports = tests;

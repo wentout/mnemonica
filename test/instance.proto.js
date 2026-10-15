@@ -3,9 +3,11 @@
 const mnemonica = require( '..' );
 
 const {
-	_lookup,
 	lookup
 } = mnemonica;
+
+// _lookup is internal: reach it through the build tree, not the package
+const { lookup: _lookup } = require( '../build/api/types' );
 
 const gof = Object.getPrototypeOf;
 
@@ -241,7 +243,7 @@ const tests = ( opts ) => {
 			
 		} );
 
-		it( 'api/types/index.ts coverage (line 389) should cover lookup undefined type case', () => {
+		it( 'api/types lookup() should cover the undefined type case', () => {
 			// Create a mock subtypes map that returns undefined for the first lookup
 			const mockSubtypes = new Map();
 			// Test lookup with non-existent nested path - should return undefined

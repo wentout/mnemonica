@@ -1819,6 +1819,69 @@ describe('Main Test', () => {
 			});
 		});
 
+		describe('lazy() construction forms', () => {
+			it('named lazy with an anonymous handler constructs', () => {
+				const LazyAnon = defaultTypes.lazy('LazyAnon', () => function () {
+					this.tag = 'anon';
+				});
+				const instance = new LazyAnon();
+				expect(instance.tag).to.equal('anon');
+				expect(instance).instanceOf(LazyAnon);
+			});
+
+			it('named lazy with a differently named handler constructs under the TYPE name', () => {
+				const LazyMismatch = defaultTypes.lazy('LazyMismatch', () => function SomeOtherName () {
+					this.tag = 'mis';
+				});
+				const instance = new LazyMismatch();
+				expect(instance.tag).to.equal('mis');
+				expect(instance).instanceOf(LazyMismatch);
+				expect(String(instance.constructor.name)).to.equal('LazyMismatch');
+			});
+
+			it('chained lazy with an anonymous handler constructs from the parent instance', () => {
+				const LazyChainRoot = defaultTypes.define('LazyChainRoot', function () {});
+				const LazyChainSub = LazyChainRoot.lazy('LazyChainSub', () => function () {
+					this.tag = 'sub';
+				});
+				const root = new LazyChainRoot();
+				const instance = new root.LazyChainSub();
+				expect(instance.tag).to.equal('sub');
+				expect(instance).instanceOf(LazyChainSub);
+				expect(instance).instanceOf(LazyChainRoot);
+			});
+
+			it('unnamed lazy takes the name from the returned function', () => {
+				const LazyAutoType = defaultTypes.lazy(() => function LazyAutoName () {
+					this.tag = 'auto';
+				});
+				const instance = new LazyAutoType();
+				expect(instance.tag).to.equal('auto');
+				expect(String(instance.constructor.name)).to.equal('LazyAutoName');
+			});
+
+			it('async lazy handler constructs (awaits to the instance)', async () => {
+				const LazyAsync = defaultTypes.lazy('LazyAsync', () => async function () {
+					this.tag = 'async';
+					return this;
+				});
+				const instance = await new LazyAsync();
+				expect(instance.tag).to.equal('async');
+				expect(instance).instanceOf(LazyAsync);
+			});
+
+			it('class lazy handler constructs like a define()d class', () => {
+				const LazyClass = defaultTypes.lazy('LazyClass', () => class LazyClassInner {
+					constructor () {
+						this.tag = 'class';
+					}
+				});
+				const instance = new LazyClass();
+				expect(instance.tag).to.equal('class');
+				expect(instance).instanceOf(LazyClass);
+			});
+		});
+
 		describe('constructor .lookup() relative semantics (5-level chain)', () => {
 			// Fresh 5-level chain, single-character neutral names, so the
 			// lookup strings ARE dotted type paths. The law: Type.lookup

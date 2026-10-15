@@ -95,8 +95,8 @@ const t1 = new Turn('My order is wrong.');
 const c1 = new t1.ClarifiedNeed('missing_item');
 
 // Turn 2: the user adds detail — each turn extends the chain with a NEW type
-// (a type name appears only once per chain; ancestor types are not
-// re-constructible from deeper instances)
+// (under the default strictChain: true a type name appears only once per
+// chain; ancestor types are not re-constructible from deeper instances)
 const FollowUp = ClarifiedNeed.define('FollowUp', function (this: FollowUp, text: string) {
 	this.text = text;
 });

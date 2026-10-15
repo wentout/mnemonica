@@ -60,14 +60,16 @@ hookData shapes are unchanged.
 - For a subtype, `existentInstance` is typed as the **parent** instance
   (`Admin.registerHook(...)` sees `existentInstance: User`).
 - `preCreation` fires before the instance exists: its opts carry no
-  `inheritedInstance` and no `creator` — accessing them is a compile error.
+  `inheritedInstance` and no `throwModificationError` — accessing them is a
+  compile error.
 - `creationError` carries the errored instance, typed the same as
   postCreation's `inheritedInstance`.
 
 Implementation vocabulary (all in `src/types/index.ts`):
 
 - `typedHookOpts<HT, P, T>` — opts per hookType; `HT extends hooksTypes`
-  distributes, so the `'preCreation'` branch omits `inheritedInstance`/`creator`.
+  distributes, so the `'preCreation'` branch omits
+  `inheritedInstance`/`throwModificationError`.
 - `typedHook<HT, P, T>` — the callback type used by every typed
   `registerHook` signature.
 - `IDefinitorInstance<N, R, Registry, Path, Parent>` — the 5th generic
@@ -89,9 +91,12 @@ Implementation vocabulary (all in `src/types/index.ts`):
   resets `T` to its default. `T` must be inferable from plain return/
   contravariant positions only.
 
-**Global handlers stay untyped by design:** collection-wide hooks and `uncaughtException` take
-`hooksOpts` with `object` fields — a union of all registered types would break
-any 300+ type repo. Narrow there with `instanceof lookup('User')`.
+**Collection-level handlers are typed per hookType, with `object` fields:**
+`collection.registerHook('postCreation', ...)` splits the payload exactly
+like the per-type path (no `inheritedInstance`/`throwModificationError` on
+`preCreation`; both required on post hooks), but the instance fields stay
+`object` — a union of all registered types would break any 300+ type repo.
+Narrow there with `instanceof lookup('User')`.
 
 Pins live in `test-ts/typed-hooks.ts` (strict gate, compile-time only;
 runtime suites are untouched by this feature).

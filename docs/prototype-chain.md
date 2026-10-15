@@ -113,7 +113,7 @@ The Proxy is kept for an important reason: **subtypes can be defined after an in
 
 ## Your constructor’s `.prototype` is untouched
 
-When you call `define('AdminType', AdminConstructor)`, mnemonica takes a snapshot of `AdminConstructor.prototype`. During each construction it copies that snapshot onto a fresh `AdminType.prototype`. The original `AdminConstructor.prototype` is restored afterward. This is why you can reuse the same constructor function for several type definitions without cross-contamination.
+When you call `define('AdminType', AdminConstructor)`, mnemonica stores `AdminConstructor.prototype` as the type's proto (when it is an object) and copies its own property descriptors onto every construction's fresh `ModificatorType.prototype` — for a root type the chain also descends from that prototype object itself. Constructions run `Reflect.construct(AdminConstructor, args, this.constructor)`: your constructor executes with `new.target` set to the per-type modificator. On the `define()` path the constructor's `.prototype` is never written, swapped, or restored. This is why you can reuse the same constructor function for several type definitions without cross-contamination.
 
 ---
 

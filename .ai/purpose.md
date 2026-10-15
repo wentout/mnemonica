@@ -291,35 +291,40 @@ user.constructor.name = 'Admin';  // ✗ Ignored/Fails - protected
 
 **Why This Matters**:
 - Prototype pollution attacks that rely on name spoofing are **blocked at the assignment level**
-- `instanceof` checks **prototype object references**, not constructor names, so name changes do not affect type identity
+- `instanceof` resolves through a `Symbol.hasInstance` checker that walks the chain's **constructor names**, not prototype object references — and the names are getter-protected, so the identity holds
 - Constructor names are getter-protected and non-enumerable, making casual tampering impossible
 - Type identity is immutable once established
 
 **Threat Model**: This is defense-in-depth, not cryptographic security. A fully compromised execution environment can still use `Object.defineProperty` to redefine the getter. The protection targets casual prototype pollution and accidental corruption, not a determined attacker with full runtime access.
 
-### Security Through `Object.create(null)`
+### The `Object.create(null)` Floor
 
-Mnemonica instances are **NOT instances of Object or Function**:
+Whether a Mnemonica instance is `instanceof Object` depends on the
+constructor handler: with an ordinary function handler (whose own
+`prototype` is an object) the type builds on that prototype, so the chain
+reaches `Object.prototype`:
 
 ```typescript
 const instance = new MyType({...});
 
-instance instanceof Object;    // false
-instance instanceof Function;  // false
-Object.prototype.isPrototypeOf(instance); // false
+instance instanceof Object;    // true — ordinary function handler
 ```
 
-**How It's Achieved**:
+Only when the handler has **no own object prototype** does mnemonica fall
+back to a null-floor default:
+
 ```typescript
-// Mnemonica internally uses:
+// the fallback for handlers without an own object prototype:
 const proto = Object.create(null);  // No Object.prototype chain
 // ...type setup...
-const instance = Object.create(proto);  // Pure prototype, no Object inheritance
+const instance = Object.create(proto);
 ```
 
-**Security Benefits**:
-1. **No prototype pollution attacks** - `Object.prototype` mutations don't affect Mnemonica instances
-2. **No injection via the legacy `__proto__` accessor** - Instances don't inherit from Object
+Instances built on that floor are **NOT instances of Object or Function**,
+and the isolation properties hold there:
+
+1. **No prototype pollution attacks** - `Object.prototype` mutations don't affect such instances
+2. **No injection via the legacy `__proto__` accessor** - they don't inherit from Object
 3. **Isolated namespace** - Properties like `constructor`, `toString`, `valueOf` don't exist unless explicitly defined
 4. **Clean property enumeration** - `for...in` loops don't see inherited Object properties
 
@@ -330,11 +335,12 @@ const Admin = User.define('Admin', function(data) {
     this.permissions = data.permissions;
 });
 
-const admin = new Admin({ name: 'Bob', permissions: ['read', 'write'] });
+const user = new User({ name: 'Alice' });
+const admin = new user.Admin({ name: 'Bob', permissions: ['read', 'write'] });
 
 admin instanceof Admin;  // true - exact type match
 admin instanceof User;   // true - inheritance chain
-admin instanceof Object; // false - NOT an Object!
+admin instanceof Object; // true - the chain reaches Object.prototype (ordinary function handler)
 
 // Structural typing would say "same shape = same type"
 // Nominal typing says "different constructor = different type"
@@ -525,7 +531,9 @@ const Admin = User.define('Admin', function() {});
 const SuperAdmin = Admin.define('SuperAdmin', function() {});
 
 // Path: User ──► Admin ──► SuperAdmin
-const superAdmin = new SuperAdmin({});
+const user = new User({});
+const admin = new user.Admin({});
+const superAdmin = new admin.SuperAdmin({});
 
 // Each instance is a point in the "space of types"
 // The prototype chain is the path connecting them
@@ -551,11 +559,13 @@ const Child = Parent.define('Child', function() {});
 // Point constructors: Family, Parent, Child instances
 // Path constructors: prototype chain relationships
 
-const child = new Child({});
+const family = new Family({});
+const parent = new family.Parent({});
+const child = new parent.Child({});
 // child is a point
-// Object.getPrototypeOf(child) → Child.prototype is a path
-// Object.getPrototypeOf(Child.prototype) → Parent.prototype is another path
-// And so on...
+// the prototype chain child → parent → family is the path: each hop is a
+// per-construction layer, so the parent INSTANCE sits behind child — not
+// Child.prototype behind Parent.prototype
 ```
 
 ### The Sexy Math Joke (You Asked For It)
@@ -633,7 +643,7 @@ const props = getProps(user);
 console.log(props.__type__.TypeName);     // 'User'
 console.log(props.__args__);              // [{name: 'Alice', email: '...'}]
 console.log(props.__timestamp__);         // 1234567890
-console.log(props.__parent__);            // undefined (root type)
+console.log(props.__parent__);            // the internal root object (utils.parent maps it to null)
 ```
 
 **Important**: Use `getProps()` - properties are NOT stored in prototype chain!

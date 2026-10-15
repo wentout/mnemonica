@@ -42,7 +42,14 @@ export function parse<T extends object> ( self: T | null ): Parsed<T> | EmptyPar
 		return nullResult;
 	}
 
-	if ( !self || !( self as { constructor?: InstanceConstructor } ).constructor ) {
+	if ( typeof self !== 'object' && typeof self !== 'function' ) {
+		// every non-object except null (handled above): undefined,
+		// primitives — these used to die on a plain TypeError from
+		// Reflect.getPrototypeOf instead of the documented error
+		throw new WRONG_MODIFICATION_PATTERN;
+	}
+
+	if ( !( self as { constructor?: InstanceConstructor } ).constructor ) {
 		throw new WRONG_MODIFICATION_PATTERN;
 	}
 

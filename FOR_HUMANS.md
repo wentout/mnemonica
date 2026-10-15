@@ -149,7 +149,6 @@ The key inversion: `new` is called on the **parent instance** (`alice`), not on 
 - [Configuration Options](#configuration-options)
 - [Examples](#examples)
 - [Usage with TypeØmatica](#usage-with-typeømatica)
-- [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
 ---
@@ -424,12 +423,13 @@ inference — no narrowing, no casts: `inheritedInstance` is typed as the type's
 own instance, `existentInstance` as the parent instance (for a subtype, the
 actual parent type; for a root type, `object`). A `preCreation` callback is
 typed accordingly: the instance does not exist yet, so its opts carry no
-`inheritedInstance` and no `creator` — touching them is a compile error. The
-same inference works on lazy types, on `lookup()` results (including
-tactica-augmented registries), and on the free `registerHook(Type, ...)`.
-Collection-wide hooks (`collection.registerHook(...)`) stay **untyped by
-design** — their callback sees `hooksOpts` with `object` fields; narrow with
-`instanceof lookup('SomeType')` there.
+`inheritedInstance` and no `throwModificationError` — touching them is a
+compile error. The same inference works on lazy types, on `lookup()` results
+(including tactica-augmented registries), and on the free
+`registerHook(Type, ...)`. Collection-level hooks
+(`collection.registerHook(...)`) get the same per-hookType payload split
+with **`object` instance fields** — narrow with `instanceof
+lookup('SomeType')` there.
 
 No middleware stack to thread through. No context object to pass around. The pipeline is the prototype chain.
 
@@ -619,8 +619,11 @@ const SomeNestedType = lookup('SomeType.SomeNestedType');
 
 Path segments may be separated by `.`, `/`, or `:`, and whitespace inside the
 path is ignored — `lookup('A/B')`, `lookup('A:B')`, and `lookup(' A . B ')`
-all resolve like `lookup('A.B')`. The same path forms work everywhere a
-nested type path is accepted (`define()`, `utils.parent()`, hooks, etc.).
+all resolve like `lookup('A.B')`. These forms work wherever a nested type
+path is resolved through the collection: `define()` and `lookup()`
+(including a constructor's own `.lookup()`). Elsewhere the rules differ:
+`utils.parent(instance, path)` separates segments with `.` only, and hooks
+take no paths.
 
 **Type-safe lookup.** Without a `TypeRegistry` augmentation, `lookup()`
 returns `TypeClass | undefined`. With an augmentation — hand-written for
@@ -727,10 +730,11 @@ For advanced TypeScript usage, the following types are exported from `mnemonica`
 | `IDefinitorInstance<N, R, Registry, Path, Parent>` | Constructor with subtypes | Returned by `define()` with `.define()` method; `Parent` types hook callbacks' `existentInstance` |
 | `constructorOptions` | Configuration options | `{ strictChain: true, blockErrors: true }` |
 | `hooksTypes` | Hook type literals | `'preCreation' \| 'postCreation' \| 'creationError'` |
-| `hook` | Hook callback type (untyped) | Collection-wide handlers: `(opts: hooksOpts) => void` |
-| `hooksOpts` | Hook options object | Passed to hook callbacks; fields are `object` |
+| `hook` | Hook callback type (stored/invoked) | `(opts: deliveredHookOpts) => unknown` — the payload callbacks receive |
+| `hooksOpts` | Hook options object (invokeHook input) | Carries `creator`; HookInvocation converts it to the delivered payload |
+| `deliveredHookOpts` | Delivered hook payload | What `HookInvocation.build()` hands to callbacks; NOT split per hook — `inheritedInstance` and `throwModificationError` are both optional (a manual `invokeHook` may deliver a partial payload) |
 | `typedHook` | Hook callback typed per hookType | Type-level `registerHook` callbacks: opts inferred from the type |
-| `typedHookOpts` | Hook options per hookType | `preCreation` carries no `inheritedInstance`/`creator` |
+| `typedHookOpts` | Hook options per hookType | `preCreation` carries no `inheritedInstance`/`throwModificationError` |
 | `TypesCollection` | Types collection interface | What `createTypesCollection()` returns |
 | `RegistryOf<T>` | Registry extractor | The one-line bridge: `interface TypeRegistry extends RegistryOf<typeof App> {}` |
 | `TypeRegistry` | Global registry interface | Augmented by hand, by the bridge, or by tactica |
@@ -800,7 +804,8 @@ interface TypesCollection {
   // Invoke hooks manually (advanced usage)
   invokeHook(hookType: hooksTypes, opts: hooksOpts): void;
   
-  // Register a flow checker that runs before hooks
+  // Register a flow checker that runs after the hook callbacks,
+  // receiving their invocation results
   registerFlowChecker(callback: () => unknown): void;
   
   // Map of all types defined in this collection
@@ -1032,7 +1037,7 @@ explicit `<T>` cast is required for ordinary use.
 | `utils.pick(instance, 'a', 'b')` | `{ a: T['a'], b: T['b'] }` |
 | `utils.clone(instance)` | `T` |
 | `utils.fork(instance)` | `(this: object, ...args: unknown[]) => T` |
-| `utils.parent(instance, path?)` | `object \| undefined` |
+| `utils.parent(instance, path?)` | `object \| null` (no path); `object \| undefined` (path form) |
 | `utils.sibling(instance)` | `SiblingAccessor` |
 | `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>>` |
 | `utils.parse(instance)` | `Parsed<T>` |
@@ -1061,8 +1066,8 @@ When `new instance.SubType(args)` fires:
 new instance.SubType(args)
          │
          ▼
-  TypeProxy.construct           ← proxy trap intercepts the new call
-         │
+  Mnemosyne proxy               ← resolves SubType on the parent instance
+         │                         to the SubTypeProxy function
          ▼
   InstanceCreator               ← validates parent, resolves TypeDef
          │
@@ -1084,6 +1089,10 @@ new instance.SubType(args)
          ▼
   return newObj
 ```
+
+A direct `new Type(args)` on the constructor itself enters one step
+earlier, through the `TypeProxy.construct` trap, and lands in the same
+`InstanceCreator` pipeline.
 
 `preCreation` fires before the memory layer is created; `postCreation` fires
 after the user constructor runs. `creationError` fires when construction
@@ -1119,7 +1128,8 @@ defaultTypes.registerHook('postCreation', (hookData) => {
 
 #### `collection.registerFlowChecker(callback)`
 
-Register a flow checker that runs before hooks.
+Register a flow checker that runs after the hook callbacks of one
+invocation, receiving their invocation results.
 
 ```js
 defaultTypes.registerFlowChecker((opts) => {
@@ -1169,6 +1179,7 @@ const { errors } = require('mnemonica');
 
 // Available error types:
 errors.BASE_MNEMONICA_ERROR
+errors.BASE_ERROR_MESSAGE
 errors.WRONG_TYPE_DEFINITION
 errors.WRONG_INSTANCE_INVOCATION
 errors.WRONG_MODIFICATION_PATTERN
@@ -1264,6 +1275,18 @@ const {
   SymbolConfig,                  // Config symbol
   MNEMONICA,                     // Library name
   MNEMOSYNE                      // Collection identifier
+} = require('mnemonica');
+```
+
+```js
+const {
+  TYPE_TITLE_PREFIX,  // 'modificator of : ' — prefix of a type's title in
+                      // collected construction stacks
+  ErrorMessages,      // the message strings behind every errors.* class
+  defaultCollection,  // the default collection's subtypes Map — the root
+                      // registry of types made through free define()/lazy()
+  isClass             // the class-vs-function check that picks the
+                      // construction path (prototype descriptor writability)
 } = require('mnemonica');
 ```
 
@@ -1380,7 +1403,7 @@ For complete documentation including integration patterns, error handling, and a
 
 ## Examples
 
-Runnable scripts in the `test/` and `test-ts/` directories demonstrate edge
+Runnable scripts in the `test-patterns/` directory demonstrate edge
 cases and integration patterns. Quick runners are wired up in `package.json`:
 
 ```bash
@@ -1463,22 +1486,6 @@ const dagInstance = fork(instanceA).call(instanceB, 'args');
 const { utils: { merge } } = require('mnemonica');
 const merged = merge(instanceA, instanceB, 'args');
 ```
-
----
-
-## Roadmap
-
-### Nested `lookup()` — designed, not yet shipped
-
-A type-safe `.lookup()` method on constructors (e.g.
-`Scene2D.lookup('GraphNode2D')`), preserving the parent type in the returned
-constructor, is designed but **not yet shipped**. The runtime method already
-exists — it resolves relative first, then falls back to the collection root
-— what is missing is the type-level machinery. Until it lands, start from a
-typed root constructor (`lookup('Scene2D')` with a `TypeRegistry`
-augmentation) and construct subtypes from instances: `scene.GraphNode2D` is
-typed by the augmentation and produces the correctly chained instance. See
-[`docs/typed-lookup.md`](./docs/typed-lookup.md).
 
 ---
 

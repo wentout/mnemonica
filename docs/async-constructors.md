@@ -42,9 +42,11 @@ wrong modification pattern : async constructor AsyncType must resolve to its own
 ```
 
 With `unchain: true` the first case is not an error at all — the non-object
-value IS the result (see Configuration below). `null` is a legitimate value
-either way: `undefined` says "no construction after this", `null` says "the
-chain ends here, but an object is possible".
+value IS the result (see Configuration below): `undefined` says "no
+construction after this", `null` says "the chain ends here, but an object is
+possible". Under the default `unchain: false` the constructor must resolve to
+its own instance, and `null` throws exactly like `undefined`
+("must `return this` (it resolved to null)").
 
 > **Write async constructors as `async function`.** Only that form supports
 > the `this`-substitution dance. Arrow functions never see the instance

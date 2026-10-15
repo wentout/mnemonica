@@ -72,7 +72,7 @@ Hooks are stored per-type and per-collection (`type.hooks.preCreation` etc.); ea
 - **`postCreation`** — fired by `invokePostHooks` at the end of `postProcessing`, after the user constructor has run, validation has passed, and `__self__` is set.
 - **`creationError`** — the same `invokePostHooks` code path, selected instead of `postCreation` whenever `inheritedInstance instanceof Error`. It fires on the errored instance (see below); a hook returning `true` suppresses the throw and the errored instance becomes the construction result.
 
-The per-target flow checker lives in `flowCheckers`, a `WeakMap<Hookable, () => unknown>` (`src/api/hooks/flowCheckers.ts:11`) — keyed by the hookable object, so checkers never leak into enumeration.
+The per-target flow checker lives in `flowCheckers`, a `WeakMap<Hookable, () => unknown>` (the `flowCheckers` export in `src/api/hooks/flowCheckers.ts`) — keyed by the hookable object, so checkers never leak into enumeration.
 
 ## The error path
 
@@ -86,9 +86,11 @@ When the user constructor throws and `blockErrors` is on (the default), `runBuil
 
 If an errored instance arrives as the *parent* and `blockErrors` is on, the circuit breaker (`runBlockErrorsCheck`) builds the same kind of errored instance and throws it before pre-hooks even run. With `blockErrors: false` the original error propagates raw — that path exists for mnemonica's own exception construction.
 
-## Capturing the user prototype
+## The user prototype in the chain
 
-At `define()` time the `TypeDescriptor` stores `proto` — a snapshot of the user constructor’s `.prototype`. During construction that snapshot is copied onto the fresh `ModificatorType.prototype`. The user constructor’s original `.prototype` is restored after construction, so it is never part of the instance chain.
+At `define()` time the `TypeDescriptor` stores `proto` — the user constructor’s own `.prototype` when it is an object (otherwise the `Object.create(null)` default). Each construction copies proto’s own property descriptors onto the fresh `ModificatorType.prototype`, and for a root type the chain also descends from proto itself. Constructions run `Reflect.construct(ConstructHandler, args, this.constructor)` with `new.target` set to the per-type `ModificatorType`.
+
+On the `define()` path the constructor’s `.prototype` is never written, swapped, or restored. The same holds for the lazy path: the getter’s returned function constructs through the same compiled modificator body (`Reflect.construct` with `new.target` set to the per-type `ModificatorType`), so no `.prototype` write happens there either.
 
 This is why the same constructor function can be reused across multiple type definitions without bleeding prototype state.
 
@@ -164,7 +166,7 @@ The Proxy avoids that by doing a live lookup in the type’s `__subtypes__` Map 
 
 The final chain shape is identical for class and function definitions. The difference is only in how `ModificatorType` runs the user constructor:
 
-- **Function:** the wrapper temporarily swaps `ConstructHandler.prototype`, calls `new ConstructHandler(...)`, then restores it.
+- **Function:** the wrapper runs `Reflect.construct(ConstructHandler, args, this.constructor)` — the constructor executes with `new.target` set to the per-type `ModificatorType`.
 - **Class:** the generated class `extends ConstructHandler`, calls `super(...)`, then runs the post-construction handler.
 
 In both cases the resulting prototype chain is rewired to `instance → ModificatorType.prototype → memoryLayer → parent`.

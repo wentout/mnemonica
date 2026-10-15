@@ -44,8 +44,8 @@ When working in a codebase that uses one style: **stay consistent with that styl
 
 `decorate` exists at two levels, and both are **getters**, not plain methods:
 
-- **Collection level** — a getter on `TypesCollection.prototype` (`src/descriptors/types/index.ts:229`), so `defaultTypes.decorate(config)` and `createTypesCollection().decorate(config)` return a fresh decorator bound to that collection.
-- **Type level** — a getter on `TypeDescriptor.prototype` (`src/api/types/index.ts:275`) that binds the current descriptor at access time.
+- **Collection level** — a getter on `TypesCollection.prototype` (the `'decorate'` odp in `src/descriptors/types/index.ts`), so `defaultTypes.decorate(config)` and `createTypesCollection().decorate(config)` return a fresh decorator bound to that collection.
+- **Type level** — a getter on `TypeDescriptor.prototype` (the `'decorate'` odp in `src/api/types/index.ts`) that binds the current descriptor at access time.
 
 Because binding happens at access time, both call forms work:
 
