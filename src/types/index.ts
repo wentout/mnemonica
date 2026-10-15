@@ -108,9 +108,12 @@ export type ErrorMessageKey =
 // Error messages object type
 export type ErrorMessages = Record<ErrorMessageKey, string>;
 
-// Hook callback — passed to registerHook and invoked by invokeHook
+// Hook callback as STORED and invoked by invokeHook — its parameter is the
+// DELIVERED payload (deliveredHookOpts: HookInvocation.build()'s output).
+// The registration surface (registerHook) types callbacks per hookType via
+// typedHook instead.
 export interface hook extends CallableFunction {
-	(opts: hooksOpts): unknown;
+	(opts: deliveredHookOpts): unknown;
 }
 
 // Flow checker callback registered via registerFlowChecker: invoked with
@@ -288,6 +291,15 @@ export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
 // Hook options passed to hook callbacks
 // P = parent / existent instance (proto)
 // T = child / inherited instance (type being created)
+//
+// This is the payload at invokeHook's INPUT boundary: InstanceCreator's
+// hookData carries `creator` (the InstanceCreator itself), and so may a
+// manual invokeHook caller. HookInvocation converts creator into the bound
+// throwModificationError of the DELIVERED payload (deliveredHookOpts below)
+// — callbacks never see `creator`. Merged with optional post-hook fields on
+// purpose: invokePreHooks' input has no instance yet, and a manual
+// invokeHook caller may pass a partial payload. The CONSUMPTION side
+// (registerHook callbacks) is typed per hookType by typedHookOpts below.
 export type hooksOpts<P = object, T = P> = {
 	TypeName: string;
 	type: TypeDef;
@@ -297,11 +309,29 @@ export type hooksOpts<P = object, T = P> = {
 	creator?: { throwModificationError(error: Error): void };
 };
 
-// Hook options typed per hookType — the compile-time face of the runtime
-// hookData built in InstanceCreator (invokePreHooks / invokePostHooks).
+// The DELIVERED hook payload — what invokeHook's HookInvocation rebuild
+// actually hands to callbacks: the base quartet always; inheritedInstance
+// and the bound throwModificationError only on post hooks. Both stay
+// OPTIONAL here because a manual invokeHook caller may deliver a partial
+// payload — the registration surface (typedHookOpts) types them per
+// hookType instead.
+export type deliveredHookOpts<P = object, T = P> = {
+	TypeName: string;
+	type: TypeDef;
+	args: unknown[];
+	existentInstance: P;
+	inheritedInstance?: T;
+	throwModificationError?: ThrowModificationError;
+};
+
+// Hook options typed per hookType — the compile-time face of the DELIVERED
+// hook payload (HookInvocation's rebuild in invokeHook, which is what
+// callbacks receive; InstanceCreator's own hookData is the input side,
+// hooksOpts).
 // P = existent (parent) instance, T = inherited (created) instance.
 // preCreation fires BEFORE the created instance exists, so its opts carry
-// no inheritedInstance and no creator — accessing them is a compile error.
+// no inheritedInstance and no throwModificationError — accessing them is a
+// compile error.
 export type typedHookOpts<HT extends hooksTypes, P extends object, T extends object> =
 	HT extends 'preCreation'
 		? {
@@ -316,13 +346,16 @@ export type typedHookOpts<HT extends hooksTypes, P extends object, T extends obj
 			args: unknown[];
 			existentInstance: P;
 			inheritedInstance: T;
-			creator: { throwModificationError(error: Error): void };
+			throwModificationError: ThrowModificationError;
 		};
 
-// Typed hook callback — the cb of a registerHook call bound to a known type:
-// the callback's opts are inferred from the hookType and the parent/instance
-// pair the hook is registered on. Collection-wide (global) handlers stay on
-// the untyped `hook` above by design.
+// Typed hook callback — the cb of EVERY registerHook call: the callback's
+// opts are inferred from the hookType and the parent/instance pair the hook
+// is registered on. On a TYPE (RegistryEntry, the free registerHook) P/T are
+// the real parent/created instance types; on a COLLECTION (Hookable) they
+// stay `object` — a collection mixes every registered type, so narrowing to
+// a concrete instance is the callback's business (instanceof lookup('User'))
+// — but the preCreation/post payload split holds at both levels.
 export interface typedHook<
 	HT extends hooksTypes,
 	P extends object = object,
@@ -1075,7 +1108,12 @@ export interface TypesCollection<
 export interface Hookable {
 	hooks: Record<string, Set<hook>>;
 	invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
-	registerHook(hookType: hooksTypes, cb: hook): void;
+	// Collection-level registration: the payload split by hookType holds
+	// (preCreation has no inheritedInstance/throwModificationError; post
+	// hooks carry both, required) but P/T stay `object` — a collection
+	// mixes every registered type, so narrowing to a concrete instance
+	// happens in the callback.
+	registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT>): void;
 	registerFlowChecker(cb: FlowChecker): void;
 }
 

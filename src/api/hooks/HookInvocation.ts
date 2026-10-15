@@ -2,10 +2,10 @@
 
 import type {
 	ThrowModificationError,
-	hooksOpts, TypeDef 
+	deliveredHookOpts, TypeDef
 } from '../../types';
 
-// hooksOpts is used in build() return type
+// deliveredHookOpts is used in build() return type
 
 /**
  * Builder for hook invocation arguments.
@@ -47,8 +47,8 @@ export class HookInvocation {
 		return this;
 	}
 
-	build (): hooksOpts {
-		const result: hooksOpts = {
+	build (): deliveredHookOpts {
+		const result: deliveredHookOpts = {
 			type             : this.type,
 			TypeName         : this.TypeName,
 			existentInstance : this.existentInstance,

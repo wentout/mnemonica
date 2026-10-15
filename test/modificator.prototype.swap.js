@@ -1,18 +1,17 @@
 'use strict';
 
-// Guards the prototype-swap in
+// Guards the construction-time prototype handling in
 //   src/api/types/compileNewModificatorFunctionBody.ts  (getFunctionConstructor)
 //
-//     const _proto = ConstructHandler.prototype;
-//     ConstructHandler.prototype = this.constructor.prototype;   // <-- line 96
-//     answer = new ConstructHandler( ...args );
-//     ConstructHandler.prototype = _proto;                       // <-- line 98 (restore)
+//     answer = Reflect.construct( ConstructHandler, args, this.constructor );
 //
-// Coverage proves those lines RUN; it does not prove the contract:
+// (an earlier prototype swap — replace, construct, restore — survives there
+// only as a comment; the code never touches the user prototype.)
+// Coverage proves the mechanism RUNS; it does not prove the contract:
 //   (a) the user constructor's instance is grafted onto the mnemonica lineage
-//       (this.constructor.prototype), and
-//   (b) the user constructor function's own prototype is restored intact
-//       (the "!!! it MUST be strict replacement !!!" comment).
+//       (new.target is the per-type ModificatorType), and
+//   (b) the user constructor function's own prototype is never written —
+//       it stays intact and unpolluted.
 // This suite asserts both behaviourally.
 
 const { assert, expect } = require( 'chai' );
@@ -25,7 +24,7 @@ const {
 
 // Isolated collection: defaultTypes carries the suite's global flow-checker /
 // hook counters (see test/index.js + test/hooks.js). Defining test types there
-// would perturb those exact-count assertions. line 96 lives in the per-type
+// would perturb those exact-count assertions. The graft lives in the per-type
 // modificator compilation, so an isolated collection exercises it identically.
 const collection = createTypesCollection();
 
@@ -47,7 +46,7 @@ const ownKeysBesidesConstructor = ( fn ) =>
 
 const tests = () => {
 
-	describe( 'modificator prototype swap (compileNewModificatorFunctionBody line 96)', () => {
+	describe( 'modificator construction graft (Reflect.construct in compileNewModificatorFunctionBody)', () => {
 
 		describe( 'grafts the user constructor onto the mnemonica lineage', () => {
 
@@ -60,7 +59,7 @@ const tests = () => {
 			const child = new parent.PSwap_Child( 'ca' );
 
 			it( 'inherits the parent instance props through the chain', () => {
-				// child.p is only resolvable if the swap grafted child onto `parent`
+				// child.p is only resolvable if the graft linked child onto `parent`
 				assert.equal( child.p, 'pa' );
 				assert.equal( child.c, 'ca' );
 			} );
@@ -80,7 +79,7 @@ const tests = () => {
 
 		} );
 
-		describe( 'restores the user constructor prototype (strict replacement, line 98)', () => {
+		describe( 'leaves the user constructor prototype untouched', () => {
 
 			function UserCtor ( d ) { this.u = d; }
 			const protoRef = UserCtor.prototype;
@@ -96,7 +95,7 @@ const tests = () => {
 				assert.deepEqual( ownKeysBesidesConstructor( UserCtor ), [] );
 			} );
 
-			it( 'leaves the user function usable standalone (swap fully reverted)', () => {
+			it( 'leaves the user function usable standalone (prototype never written)', () => {
 				const plain = new UserCtor( 'y' );
 				assert.equal( gof( plain ), UserCtor.prototype );
 				assert.equal( plain.u, 'y' );

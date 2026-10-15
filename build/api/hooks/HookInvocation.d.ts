@@ -1,4 +1,4 @@
-import type { hooksOpts, TypeDef } from '../../types';
+import type { deliveredHookOpts, TypeDef } from '../../types';
 export declare class HookInvocation {
     private readonly type;
     private readonly TypeName;
@@ -11,5 +11,5 @@ export declare class HookInvocation {
     withCreator(creator: {
         throwModificationError(error: Error): void;
     }): this;
-    build(): hooksOpts;
+    build(): deliveredHookOpts;
 }

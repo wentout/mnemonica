@@ -568,7 +568,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		strictChain: false
 	});
 
-	// Coverage test for strictChain validation - types to trigger the branch at InstanceCreator.ts:141
+	// Coverage test for strictChain validation - types to trigger the
+	// continuationOf check in InstanceCreator
 	const RootForStrictChain = define('RootForStrictChain', withInstanceMethods(function(this: { scRootProp: boolean }) {
 		this.scRootProp = true;
 	}));
@@ -1768,6 +1769,12 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(overMoreCallEvenMoreUndefined.str).toEqual('re-defined EvenMore str');
 			});
 
+			it('instance.ConstructorName.call(otherParent) builds over that parent — the DAG form', () => {
+				const dagInstance = overMore.EvenMore.call(overMoreFork);
+				expect(dagInstance).toBeInstanceOf(overMore.EvenMore);
+				expect(getProps(dagInstance).__parent__).toBe(overMoreFork);
+			});
+
 			it('instance.ConstructorName.call(null) should work', () => {
 				expect(overMoreCallEvenMoreNull).toBeInstanceOf(overMore.EvenMore);
 				expect(overMoreCallEvenMoreNull + 1).toEqual(1);
@@ -2551,7 +2558,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 
 			it('should cover default constructHandler function', () => {
 				// Define a type without a handler function
-				// This covers the default empty function at line 1093
+				// This covers the default empty handler in createFromDirectHandler
 				const EmptyType = define('EmptyTypeForCoverage');
 				expect(typeof EmptyType.constructHandler).toBe('function');
 				// Create instance to trigger the default handler
@@ -2721,7 +2728,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			});
 	
 			it('should cover MnemonicaProtoProps SymbolConstructorName method directly', () => {
-				// This test specifically targets line 104 of Mnemosyne.ts
+				// This test specifically targets the SymbolConstructorName
+				// method on MnemonicaProtoProps in Mnemosyne.ts
 				// The method is defined on MnemonicaProtoProps and accessed through prototype chain
 				const { constants } = require('../src/constants');
 				const { SymbolConstructorName, MNEMONICA } = constants;
@@ -2735,10 +2743,10 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const instance = new DirectMethodType();
 	
 				// The SymbolConstructorName is accessed through the mnemosyne proxy mechanism
-				// which internally calls the method defined at line 104
+				// which internally calls the method on MnemonicaProtoProps
 				const result = (instance as { [key: symbol]: string })[SymbolConstructorName];
 	
-				// The result should be 'Mnemonica' from the method at line 104
+				// The result should be 'Mnemonica' from that method
 				expect(result).toBe(MNEMONICA);
 			});
 	
@@ -3110,9 +3118,73 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				const result = lookup('NonExistentType.NestedType');
 				expect(result).toBeUndefined();
 			});
+
+			describe('lazy() construction forms', () => {
+				it('named lazy with an anonymous handler constructs', () => {
+					const LazyAnon = types.lazy('LazyAnon', () => function (this: { tag: string }) {
+						this.tag = 'anon';
+					});
+					const instance = new LazyAnon();
+					expect(instance).toHaveProperty('tag', 'anon');
+					expect(instance).toBeInstanceOf(LazyAnon);
+				});
+
+				it('named lazy with a differently named handler constructs under the TYPE name', () => {
+					const LazyMismatch = types.lazy('LazyMismatch', () => function SomeOtherName (this: { tag: string }) {
+						this.tag = 'mis';
+					});
+					const instance = new LazyMismatch();
+					expect(instance).toHaveProperty('tag', 'mis');
+					expect(instance).toBeInstanceOf(LazyMismatch);
+					expect(String(instance.constructor.name)).toBe('LazyMismatch');
+				});
+
+				it('chained lazy with an anonymous handler constructs from the parent instance', () => {
+					const LazyChainRoot = define('LazyChainRoot', function () {});
+					const LazyChainSub = LazyChainRoot.lazy('LazyChainSub', () => function (this: { tag: string }) {
+						this.tag = 'sub';
+					});
+					const root = new LazyChainRoot();
+					const instance = new root.LazyChainSub();
+					expect(instance).toHaveProperty('tag', 'sub');
+					expect(instance).toBeInstanceOf(LazyChainSub);
+					expect(instance).toBeInstanceOf(LazyChainRoot);
+				});
+
+				it('unnamed lazy takes the name from the returned function', () => {
+					const LazyAutoType = types.lazy(() => function LazyAutoName (this: { tag: string }) {
+						this.tag = 'auto';
+					});
+					const instance = new LazyAutoType();
+					expect(instance).toHaveProperty('tag', 'auto');
+					expect(String(instance.constructor.name)).toBe('LazyAutoName');
+				});
+
+				it('async lazy handler constructs (awaits to the instance)', async () => {
+					const LazyAsync = types.lazy('LazyAsync', () => async function (this: { tag: string }) {
+						this.tag = 'async';
+						return this;
+					});
+					const instance = await new LazyAsync();
+					expect(instance).toHaveProperty('tag', 'async');
+					expect(instance).toBeInstanceOf(LazyAsync);
+				});
+
+				it('class lazy handler constructs like a define()d class', () => {
+					const LazyClass = types.lazy('LazyClass', () => class LazyClassInner {
+						tag: string;
+						constructor () {
+							this.tag = 'class';
+						}
+					});
+					const instance = new LazyClass();
+					expect(instance).toHaveProperty('tag', 'class');
+					expect(instance).toBeInstanceOf(LazyClass);
+				});
+			});
 	
-			describe('Mnemosyne.ts direct coverage for lines 104 and 299-302', () => {
-				it('should directly cover MnemonicaProtoProps SymbolConstructorName method at line 104', () => {
+			describe('Mnemosyne.ts direct coverage for the SymbolConstructorName method and the proxy symbol getter', () => {
+				it('should directly cover MnemonicaProtoProps SymbolConstructorName method', () => {
 					// This test directly imports and tests the MnemonicaProtoProps object
 					const mnemosyneModule = require('../src/api/types/Mnemosyne');
 					const { constants } = require('../src/constants');
@@ -3126,8 +3198,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					const testTarget = { testValue: 'direct' };
 					const proxy = createMnemosyne(testTarget);
 	
-					// Access the symbol through the proxy - this should trigger lines 299-302
-					// which in turn calls line 104
+					// Access the symbol through the proxy - this should trigger the
+					// proxy's symbol getter, which in turn calls the ProtoProps method
 					const result = proxy[SymbolConstructorName];
 					expect(result).toBe(MNEMONICA);
 				});
@@ -3153,7 +3225,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					expect(r2).toBe(MNEMONICA);
 				});
 	
-				it('should cover line 104 by calling SymbolConstructorName method through prototype chain', () => {
+				it('should cover the ProtoProps method by calling SymbolConstructorName through the prototype chain', () => {
 					const { constants } = require('../src/constants');
 					const { SymbolConstructorName, MNEMONICA, odp } = constants;
 					const { createMnemosyne } = require('../src/api/types/Mnemosyne').default;
@@ -3207,7 +3279,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(result).toBe(MNEMONICA);
 			});
 
-			it('should cover line 104 by directly calling MnemonicaProtoProps method', () => {
+			it('should cover the ProtoProps method by directly accessing it on the proxy', () => {
 				// Access MnemonicaProtoProps directly from the built module
 				const mnemosyneModule = require('../src/api/types/Mnemosyne');
 				const { constants } = require('../src/constants');
@@ -3261,22 +3333,21 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	
 		});
 
-		describe('Line 377 coverage through non-Function return', () => {
-			it('should trigger line 377 by returning non-Function from factory', () => {
+		describe('define() with an object-returning construct handler', () => {
+			it('defines the type even though the handler returns a non-Function', () => {
 				// Create a parent type
 				const ParentType377 = define('ParentType377', function () { });
 				
-				// Define using a factory function that returns an object
-				// This should trigger line 375: if (!(type instanceof Function))
-				// and then line 377: throw new ALREADY_DECLARED
-				// The error is caught by the catch block at line 390
+				// the handler is the CONSTRUCT handler, not a factory: its
+				// return value is the construction's answer (the return-value
+				// rule), so a plain object is a legitimate thing to return
 				const result = ParentType377.define('NestedType377', function () {
-					// Return an object instead of a function
 					const fnResult = { someProp: 'value' } as unknown as CallableFunction;
 					return fnResult;
 				});
 				
-				// The define call should succeed because the catch block handles the error
+				// define() itself succeeds: the returned object only matters
+				// at construction time
 				expect(result).toBeDefined();
 			});
 		});
@@ -3303,7 +3374,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			});
 		});
 
-		describe('throwModificationError line 109 coverage', () => {
+		describe('throwModificationError proto-walk coverage', () => {
 			it('should cover break statement in while loop when testToProto is null', () => {
 				// Create a type that will trigger the error path with specific prototype structure
 				const ErrorTestType = define('ErrorTestType', function () { });
@@ -3319,7 +3390,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			});
 		});
 
-		describe('src/api/types/index.ts line 312 coverage', () => {
+		describe('define() named-function duplicate coverage', () => {
 			it('should throw ALREADY_DECLARED when defining type with existing constructor name', () => {
 				// First define a type with a named function
 				const NamedFnType = define(function NamedConstructorFunction() { });

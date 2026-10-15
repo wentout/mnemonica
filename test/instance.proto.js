@@ -3,9 +3,11 @@
 const mnemonica = require( '..' );
 
 const {
-	_lookup,
 	lookup
 } = mnemonica;
+
+// _lookup is internal: reach it through the build tree, not the package
+const { lookup: _lookup } = require( '../build/api/types' );
 
 const gof = Object.getPrototypeOf;
 
@@ -241,7 +243,7 @@ const tests = ( opts ) => {
 			
 		} );
 
-		it( 'api/types/index.ts coverage (line 389) should cover lookup undefined type case', () => {
+		it( 'api/types lookup() should cover the undefined type case', () => {
 			// Create a mock subtypes map that returns undefined for the first lookup
 			const mockSubtypes = new Map();
 			// Test lookup with non-existent nested path - should return undefined
@@ -282,6 +284,13 @@ const tests = ( opts ) => {
 			expect( overMoreCallEvenMoreUndefined ).instanceof( overMore.EvenMore );
 			expect( overMoreCallEvenMoreUndefined ).instanceof( evenMore );
 			expect( overMoreCallEvenMoreUndefined.str ).equal( 're-defined EvenMore str' );
+		} );
+
+		it( 'instance.ConstructorName.call(otherParent) builds over that parent — the DAG form', () => {
+			const dagInstance = overMore.EvenMore.call( overMoreFork );
+			expect( dagInstance ).instanceof( overMore.EvenMore );
+			expect( dagInstance ).instanceof( evenMore );
+			expect( getProps( dagInstance ).__parent__ ).equal( overMoreFork );
 		} );
 
 		it( 'instance.ConstructorName.call(null) should work', () => {

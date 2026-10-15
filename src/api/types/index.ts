@@ -503,36 +503,34 @@ const createFromLazyGetter = function (
 		(typeof type.prototype === 'object')
 	) ? type.prototype : getDefaultPrototype();
 
+	// the getter's raw function cannot construct directly: it lacks the
+	// compiled modificator body — the type's name on prototype.constructor,
+	// the CreationHandler call, the Reflect.construct with new.target —
+	// which is why named lazy with an anonymous or differently named
+	// handler failed to construct, and async lazy handlers broke. Build
+	// through the SAME wrapper as the direct path, per construction: the
+	// getter may return a NEW function each time, so neither the shape
+	// check nor the wrapper can be cached. This is what makes lazy slower
+	// than a direct define
+	const modificatorBody = compileNewModificatorFunctionBody(
+		TypeName,
+		asClass
+	);
+
 	const makeConstructHandler = () => {
 		const constructHandler = getter();
 
-		// and on EVERY construction: the getter may return a new function
-		// each time, so the shape check cannot be cached from define time.
-		// This is what makes lazy slower than a direct define
 		classifyConstructHandler(
 			TypeName,
 			constructHandler as ConstructHandler
 		);
 
-		odp(
-			constructHandler,
-			SymbolConstructorName, {
-				get () {
-					return TypeName;
-				}
-			}
+		const wrappedBody = modificatorBody(
+			constructHandler as ConstructHandler,
+			CreationHandler,
+			SymbolConstructorName
 		);
-
-		const protoDesc = Object
-			.getOwnPropertyDescriptor(
-				constructHandler,
-				'prototype'
-			) as PropertyDescriptor | undefined;
-		if (protoDesc && protoDesc.writable) {
-			constructHandler.prototype = getDefaultPrototype();
-		}
-
-		const handlerResult = constructHandler as MnemonicaConstructorFactory;
+		const handlerResult = wrappedBody();
 		return handlerResult;
 	};
 

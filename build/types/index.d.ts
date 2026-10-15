@@ -36,7 +36,7 @@ export interface ForkInvoker<T extends object> extends CallableFunction {
 export type ErrorMessageKey = 'BASE_ERROR_MESSAGE' | 'HANDLER_MUST_BE_A_FUNCTION' | 'WRONG_TYPE_DEFINITION' | 'WRONG_INSTANCE_INVOCATION' | 'WRONG_MODIFICATION_PATTERN' | 'ALREADY_DECLARED' | 'WRONG_ARGUMENTS_USED' | 'WRONG_HOOK_TYPE' | 'MISSING_HOOK_CALLBACK' | 'MISSING_CALLBACK_ARGUMENT' | 'OPTIONS_ERROR' | 'WRONG_STACK_CLEANER' | 'TYPENAME_MUST_BE_A_STRING';
 export type ErrorMessages = Record<ErrorMessageKey, string>;
 export interface hook extends CallableFunction {
-    (opts: hooksOpts): unknown;
+    (opts: deliveredHookOpts): unknown;
 }
 export interface FlowChecker extends CallableFunction {
     (opts: object): unknown;
@@ -93,6 +93,14 @@ export type hooksOpts<P = object, T = P> = {
         throwModificationError(error: Error): void;
     };
 };
+export type deliveredHookOpts<P = object, T = P> = {
+    TypeName: string;
+    type: TypeDef;
+    args: unknown[];
+    existentInstance: P;
+    inheritedInstance?: T;
+    throwModificationError?: ThrowModificationError;
+};
 export type typedHookOpts<HT extends hooksTypes, P extends object, T extends object> = HT extends 'preCreation' ? {
     TypeName: string;
     type: TypeDef;
@@ -104,9 +112,7 @@ export type typedHookOpts<HT extends hooksTypes, P extends object, T extends obj
     args: unknown[];
     existentInstance: P;
     inheritedInstance: T;
-    creator: {
-        throwModificationError(error: Error): void;
-    };
+    throwModificationError: ThrowModificationError;
 };
 export interface typedHook<HT extends hooksTypes, P extends object = object, T extends object = object> extends CallableFunction {
     (opts: typedHookOpts<HT, P, T>): unknown;
@@ -390,7 +396,7 @@ export interface TypesCollection<T extends object = {}, Parent extends object = 
 export interface Hookable {
     hooks: Record<string, Set<hook>>;
     invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
-    registerHook(hookType: hooksTypes, cb: hook): void;
+    registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT>): void;
     registerFlowChecker(cb: FlowChecker): void;
 }
 export type CreateTypesCollectionFunction = <T extends object = {}, Parent extends object = object>(config?: constructorOptions) => TypesCollection<T, Parent>;

@@ -181,7 +181,7 @@ Read [`../docs/async-constructors.md`](../docs/async-constructors.md) for the `s
 
 ## Common Pitfalls
 
-1. **`await new AsyncSubType()`** — wrong. Use `await parent.AsyncSubType()`.
+1. **`await new AsyncSubType()`** — wrong (the bare constructor; subtype construction must start from a parent instance). Use `await parent.AsyncSubType()` — or equivalently `await new parent.AsyncSubType()`.
 2. **`return { a, b }`** — wrong. Use `const result = { a, b }; return result;`.
 3. **Modifying `tsconfig.json` or `eslint.config.js`** — forbidden without explicit approval.
 4. **Forgetting `npm run test:cov`** — always run before finishing.

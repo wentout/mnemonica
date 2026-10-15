@@ -134,7 +134,9 @@ collection root. These are all equivalent:
 ```typescript
 const AdminA = App.lookup('User.Admin');           // absolute, via root fallback
 const AdminB = App.lookup('User').lookup('Admin'); // root, then relative
-const AdminC = App.lookup('Admin');                // works only if App has a descendant named Admin
+const AdminC = App.lookup('Admin');                // works only if Admin is a DIRECT subtype of App —
+                                                   // a deeper descendant needs the dotted relative path
+                                                   // (App.lookup('User').lookup('Admin') or 'User.Admin')
 ```
 
 Relative resolution wins when both could match: if a type has its own subtype

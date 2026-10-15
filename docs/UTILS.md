@@ -80,7 +80,7 @@ export type Parsed<T extends object> = {
     self: T;
     proto: object;
     joint: Record<string, unknown>;
-    parent: object | undefined;
+    parent: object | null;
 };
 ```
 
@@ -162,7 +162,8 @@ utils.extract(merged); // OK
 `parse(null)` is the one non-object input it accepts: the empty shape
 (`EmptyParsed` — empty `props`/`joint`, `self: null`, `parent: undefined`),
 "nothing was given". `undefined` and every other non-object throw
-`WRONG_MODIFICATION_PATTERN`, same as `utils.parent(null)`.
+`WRONG_MODIFICATION_PATTERN` (`utils.parent(null)` is a different contract:
+it throws `WRONG_INSTANCE_INVOCATION`).
 
 - `name` — constructor name of the immediate prototype.
 - `props` — `Extracted<T>` from the instance itself.

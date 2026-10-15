@@ -41,9 +41,13 @@ const utilsUnWrapped = {
 
 };
 
-const wrapThis = ( method: WrappableMethod ) => {
+const wrapThis = ( collection: object, method: WrappableMethod ) => {
 	const result = function ( this: object, instance: object | undefined, ...args: unknown[] ) {
-		const instanceContext = instance !== undefined ? instance : this;
+		// utils.X(undefined) must not silently operate on the utils
+		// collection itself: `this` substitutes only for a genuine method
+		// call on some OTHER object (the prototype opt-in form)
+		const instanceContext = instance !== undefined ? instance
+			: ( this !== collection ? this : undefined );
 		let wrapResult: unknown;
 		if ( new.target ) {
 			// wrapThis forwards `new` to the util; WrappableMethod (a plain
@@ -64,18 +68,15 @@ const wrapThis = ( method: WrappableMethod ) => {
 	return result;
 };
 
-export const utils = {
+// one object serves both roles: the exported collection AND the identity
+// wrapThis compares `this` against (a spread copy would defeat the check)
+const wrappedUtils: { [ index: string ]: WrappableMethod } = {};
+Object.entries( utilsUnWrapped )
+	.forEach(( util ) => {
+		const [ name, fn ] = util;
+		wrappedUtils[ name ] = wrapThis( wrappedUtils, fn );
+	});
 
-	...Object.entries( utilsUnWrapped )
-		.reduce(
-			( methods: { [ index: string ]: WrappableMethod }, util ) => {
-				const [ name, fn ] = util;
-				methods[ name ] = wrapThis( fn );
-				return methods;
-			},
-			{}
-		),
-
-} as UtilsCollection;
+export const utils = wrappedUtils as UtilsCollection;
 
 export { defineStackCleaner } from './defineStackCleaner';

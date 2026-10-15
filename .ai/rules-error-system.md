@@ -19,8 +19,10 @@ All errors extend from `BASE_MNEMONICA_ERROR` which provides:
 
 ## Error Data Lives in Props, Not on the Error Object
 
-Mnemonica errors are plain `Error` objects: only `.message` and `.stack` are
-own properties. All mnemonica-specific data (`args`, `originalError`,
+Mnemonica errors are plain `Error` objects: the own properties are
+`.message`, `.stack`, and a non-enumerable `BaseStack` getter (the preserved
+original stack, before mnemonica's cleaning). All mnemonica-specific data
+(`args`, `originalError`,
 `instance`, `exceptionReason`, `reasons`, `surplus`, `error`) is stored in the
 external props storage — read it with `getProps(error)`, write it with
 `setProps(error, …)` (see `.ai/PROTOTYPE-CHAIN.md` for the two key-spaces).

@@ -165,6 +165,16 @@ const result = await new UserTypeConstructor({
 Each async subtype returns a Promise that resolves to the next instance. The
 single `await` unwraps the entire sequence.
 
+The links of such a chain are two different things. Up to the first async
+constructor, `.SubType(...)` is read from a finished instance — the
+SubTypeProxy, a real constructor. From the first pending promise on, it is
+read from that promise: `InstanceCreator` installs one continuation per
+subtype name on it (`type.subtypes.forEach` in `InstanceCreator.ts`), an
+arrow function that routes through `makeAwaiter` — it awaits the previous
+link, then constructs. A continuation is not a constructor: `new` on it
+throws "is not a constructor", so chain links after a pending promise are
+always plain calls.
+
 ## makeAwaiter
 
 `InstanceCreator.makeAwaiter()` wraps the construction result in a Promise,
