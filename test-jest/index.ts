@@ -135,7 +135,7 @@ const pl1Proto = {
 	UserTypePL1Extra: 'UserTypePL_1_Extra',
 };
 
-UserType.lazy(() => {
+UserType.lazy('UserTypePL1', () => {
 	const UserTypePL1 = function (this: { user_pl_1_sign: string }) {
 		this.user_pl_1_sign = 'pl_1';
 	};
@@ -160,7 +160,7 @@ const shaperFactory = () => {
 	};
 };
 
-UserType.lazy(() => {
+UserType.lazy('UserTypePL2', () => {
 	const Shaper = shaperFactory();
 	class UserTypePL2 extends Shaper {
 		user_pl_2_sign: string;
@@ -495,7 +495,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		WithoutPasswordSign: 'WithoutPasswordSign'
 	};
 
-	const UserWithoutPassword = types.UserTypeConstructor.lazy(() => {
+	const UserWithoutPassword = types.UserTypeConstructor.lazy('WithoutPassword', () => {
 		const WithoutPassword = function (this: UserWithoutPasswordInstance) {
 			this.password = undefined;
 		};
@@ -508,7 +508,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	const WithAdditionalSignProto = {
 		WithAdditionalSignSign: 'WithAdditionalSignSign'
 	};
-	const WithAdditionalSignTypeDef = UserWithoutPassword.lazy(() => {
+	const WithAdditionalSignTypeDef = UserWithoutPassword.lazy('WithAdditionalSign', () => {
 		const WithAdditionalSign = function (this: WithAdditionalSignInstance, sign: string) {
 			this.sign = sign;
 		};
@@ -521,7 +521,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 	const MoreOverProto = {
 		MoreOverSign: 'MoreOverSign'
 	};
-	const MoreOverTypeDef = WithAdditionalSignTypeDef.lazy(() => {
+	const MoreOverTypeDef = WithAdditionalSignTypeDef.lazy('MoreOver', () => {
 		class MoreOver {
 			str: string;
 			constructor(str: string) {
@@ -555,7 +555,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 		EvenMoreSign: 'EvenMoreSign'
 	};
 
-	const EvenMoreTypeDef = OverMore.lazy(() => {
+	const EvenMoreTypeDef = OverMore.lazy('EvenMore', () => {
 
 		// it would be MoreOver . OverMore . EvenMore
 		const EvenMore = function (this: EvenMoreInstance, str: string) {
@@ -772,14 +772,17 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 
 		[
 			[types.subtypes, 'UserType', UserTypeProto],
-			[UserType.subtypes, 'UserTypePL1', pl1Proto],
+			// lazy types: the registered proto is the shim's empty prototype
+			// (the callback's own .prototype is never used at define time),
+			// so their expected proto below is an empty object
+			[UserType.subtypes, 'UserTypePL1', {}],
 			[UserType.subtypes, 'UserTypePL2'],
 			[types.subtypes, 'UserTypeConstructor', UserTypeConstructorProto],
-			[types.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto],
-			[UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto],
+			[types.UserTypeConstructor.subtypes, 'WithoutPassword', {}],
+			[UserWithoutPassword.subtypes, 'WithAdditionalSign', {}],
 			[WithAdditionalSignTypeDef.subtypes, 'MoreOver'],
 			[MoreOverTypeDef.subtypes, 'OverMore', OverMoreProto],
-			[OverMore.subtypes, 'EvenMore', EvenMoreProto],
+			[OverMore.subtypes, 'EvenMore', {}],
 		].forEach(entry => {
 			const [_types, def, proto] = entry as [Map<string, TypeDefInfo>, string, Record<string, unknown> | undefined];
 			checkTypeDefinition(_types, def, proto);
@@ -3087,13 +3090,14 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			it('should cover lazy HANDLER_MUST_BE_A_FUNCTION', () => {
 				const { lazy } = require('../src/index');
 
-				// Try to define a type with a non-function handler using lazy getter
-				expect(() => {
-					lazy(() => {
-						// Return a non-function (string instead of function)
-						return 'not a function' as unknown as CallableFunction;
-					});
-				}).toThrow();
+				// the callback result is checked at construction now:
+				// a non-function result is a wrapped construction error
+				const LazyNonFunctionJestType = lazy('LazyNonFunctionJestType', () => {
+					// Return a non-function (string instead of function)
+					// @ts-expect-error — intentionally a non-function result
+					return 'not a function';
+				});
+				expect(() => new LazyNonFunctionJestType()).toThrow('handler must be a function');
 			});
 
 			it('should cover lazy TYPENAME_MUST_BE_A_STRING', () => {
@@ -3151,13 +3155,12 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					expect(instance).toBeInstanceOf(LazyChainRoot);
 				});
 
-				it('unnamed lazy takes the name from the returned function', () => {
-					const LazyAutoType = types.lazy(() => function LazyAutoName (this: { tag: string }) {
+				it('the unnamed lazy form is rejected — the name must come explicitly', () => {
+					// the callback is never called at .lazy(), so there is
+					// nothing to derive a name from
+					expect(() => types.lazy(() => function LazyAutoName (this: { tag: string }) {
 						this.tag = 'auto';
-					});
-					const instance = new LazyAutoType();
-					expect(instance).toHaveProperty('tag', 'auto');
-					expect(String(instance.constructor.name)).toBe('LazyAutoName');
+					})).toThrow(errors.TYPENAME_MUST_BE_A_STRING);
 				});
 
 				it('async lazy handler constructs (awaits to the instance)', async () => {
@@ -3181,6 +3184,345 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					expect(instance).toHaveProperty('tag', 'class');
 					expect(instance).toBeInstanceOf(LazyClass);
 				});
+			});
+
+			describe('lazy deferred define semantics', () => {
+
+				// a dedicated collection: mirrors the mocha pin — these
+				// constructions must not pollute the defaultTypes hook
+				// counters (hooks.js counts them)
+				const LazyLab = createTypesCollection({ name: 'LazyLabJest' });
+
+				// Reflect-based, cast-free construction of a subtype the TS
+				// registry does not know (these tests build their own chains)
+				const constructSubtype = (instance: object, name: string, ...args: unknown[]) => {
+					const ctor: unknown = Reflect.get(instance, name);
+					if (typeof ctor !== 'function') {
+						throw new Error(`no subtype constructor ${name}`);
+					}
+					const result = Reflect.construct(ctor, args);
+					return result;
+				};
+
+				it('the callback is never called at .lazy() and exactly once per new', () => {
+					let calls = 0;
+					const LazyCounted = LazyLab.lazy('LazyCounted', () => {
+						calls++;
+						return function () {};
+					});
+					expect(calls).toBe(0);
+					const first = new LazyCounted();
+					const second = new LazyCounted();
+					expect(calls).toBe(2);
+					expect(first).toBeInstanceOf(LazyCounted);
+					expect(second).toBeInstanceOf(LazyCounted);
+				});
+
+				it('the define-time surface works before any new', () => {
+					const LazySurface = LazyLab.lazy('LazySurface', () => {
+						return function () {};
+					});
+					expect(LazyLab.lookup('LazySurface')).toBe(LazySurface);
+					LazySurface.define('LazySurfaceSub', function () {});
+					expect(LazySurface.lookup('LazySurfaceSub')).toBeDefined();
+					LazySurface.registerHook('postCreation', () => undefined);
+					// X.prototype of a lazy type is the shim's empty prototype —
+					// the callback's own .prototype is never used at define time
+					expect(LazySurface.prototype).toEqual({});
+				});
+
+				it('forward references resolve at the first new', () => {
+					let target: unknown = null;
+					// @ts-expect-error — the target is deliberately unknown until assigned below
+					const LazyForward = LazyLab.lazy('LazyForward', () => target);
+					target = function (this: { forward?: boolean }) {
+						this.forward = true;
+					};
+					const instance = new LazyForward();
+					expect(instance).toHaveProperty('forward', true);
+				});
+
+				it('the callback result may differ per new — function vs class', () => {
+					let flip = false;
+					const LazyFlip = LazyLab.lazy('LazyFlip', () => {
+						flip = !flip;
+						if (flip) {
+							return function (this: { kind?: string }) {
+								this.kind = 'function';
+							};
+						}
+						return class {
+							kind: string;
+							constructor () {
+								this.kind = 'class';
+							}
+
+							classMethod () {
+								return 'class-method';
+							}
+						};
+					});
+					const flipFn = new LazyFlip();
+					const flipClass = new LazyFlip();
+					const flipFn2 = new LazyFlip();
+					expect(flipFn).toHaveProperty('kind', 'function');
+					expect(flipClass).toHaveProperty('kind', 'class');
+					expect(flipFn2).toHaveProperty('kind', 'function');
+					const flipClassMethod: unknown = Reflect.get(flipClass, 'classMethod');
+					expect(typeof flipClassMethod).toBe('function');
+					if (typeof flipClassMethod === 'function') {
+						expect(flipClassMethod.call(flipClass)).toBe('class-method');
+					}
+					expect(Reflect.get(flipFn, 'classMethod')).toBeUndefined();
+				});
+
+				it('a callback throw is a construction error: creationError with existentInstance and args, preCreation never fires', () => {
+					const LazyThrowerParent = LazyLab.define('LazyThrowerParent', function () {});
+					const parentInstance = new LazyThrowerParent();
+					const seen: {
+						preCreation: number;
+						creationError: number;
+						opts?: { existentInstance?: unknown; args?: unknown[] };
+					} = {
+						preCreation: 0,
+						creationError: 0
+					};
+					const LazyThrower = LazyThrowerParent.lazy('LazyThrower', () => {
+						throw new Error('gather exploded');
+					});
+					LazyThrower.registerHook('preCreation', () => {
+						seen.preCreation++;
+					});
+					LazyThrower.registerHook('creationError', (opts) => {
+						seen.creationError++;
+						seen.opts = opts;
+					});
+					let thrownError: unknown;
+					try {
+						constructSubtype(parentInstance, 'LazyThrower', 'arg1', 'arg2');
+					} catch (error) {
+						thrownError = error;
+					}
+					expect(thrownError).toBeInstanceOf(Error);
+					expect(thrownError).toBeInstanceOf(LazyThrower);
+					if (thrownError instanceof Error) {
+						expect(thrownError.message).toBe('gather exploded');
+					}
+					expect(seen.preCreation).toBe(0);
+					expect(seen.creationError).toBe(1);
+					expect(seen.opts?.existentInstance).toBe(parentInstance);
+					expect(seen.opts?.args).toEqual([ 'arg1', 'arg2' ]);
+				});
+
+				it('a creationError hook returning true suppresses the throw', () => {
+					const LazySuppressed = LazyLab.lazy('LazySuppressed', () => {
+						throw new Error('suppressed gather failure');
+					});
+					let fires = 0;
+					LazySuppressed.registerHook('creationError', () => {
+						fires++;
+						return true;
+					});
+					const result = new LazySuppressed();
+					expect(result).toBeInstanceOf(Error);
+					expect(result).toBeInstanceOf(LazySuppressed);
+					// twice, exactly like a suppressed constructor-body failure:
+					// once inside throwModificationError, once from postProcessing
+					expect(fires).toBe(2);
+				});
+
+				it('a callback throwing undefined mirrors the constructor-body path', () => {
+					// the failed flag is explicit precisely because the thrown
+					// value may BE undefined; the body path throws the splice
+					// TypeError for the same value
+					const BodyThrowsUndefined = LazyLab.define('BodyThrowsUndefined', function () {
+						throw undefined;
+					});
+					let bodyThrown: unknown;
+					try {
+						new BodyThrowsUndefined();
+					} catch (error) {
+						bodyThrown = error;
+					}
+					const LazyThrowsUndefined = LazyLab.lazy('LazyThrowsUndefined', () => {
+						throw undefined;
+					});
+					let lazyThrown: unknown;
+					try {
+						new LazyThrowsUndefined();
+					} catch (error) {
+						lazyThrown = error;
+					}
+					expect(bodyThrown).toBeDefined();
+					expect(lazyThrown).toBeDefined();
+					expect(lazyThrown).toBeInstanceOf(Error);
+					expect(bodyThrown).toBeInstanceOf(Error);
+					if (lazyThrown instanceof Error && bodyThrown instanceof Error) {
+						expect(lazyThrown.message).toBe(bodyThrown.message);
+					}
+				});
+
+				it('a nested new inside a custom ModificationConstructor cannot clobber the outer gather error', () => {
+					const defaultModificationConstructor =
+						require('../src/api/types/createInstanceModificator').default;
+					let nestedAttempted = false;
+					let hookFires = 0;
+					const LazyNestedGuard = LazyLab.lazy('LazyNestedGuard', () => {
+						throw new Error('outer gather fails');
+					}, {
+						ModificationConstructor: () => {
+							if (!nestedAttempted) {
+								nestedAttempted = true;
+								try {
+									// re-gathers the same type mid-setup of the outer
+									// construction; the outer's gather error must survive
+									new LazyNestedGuard();
+								} catch (error) {
+									void error;
+								}
+							}
+							return defaultModificationConstructor();
+						}
+					});
+					LazyNestedGuard.registerHook('creationError', () => {
+						hookFires++;
+					});
+					let thrownError: unknown;
+					try {
+						new LazyNestedGuard();
+					} catch (error) {
+						thrownError = error;
+					}
+					expect(thrownError).toBeDefined();
+					expect(thrownError).toBeInstanceOf(Error);
+					if (thrownError instanceof Error) {
+						expect(thrownError.message).toBe('outer gather fails');
+					}
+					expect(hookFires).toBe(2);
+				});
+
+				it('X.prototype stays the shim prototype before and after constructions', () => {
+					let returnedProto: object | undefined;
+					const LazyProtoPin = LazyLab.lazy('LazyProtoPin', () => {
+						const result = function LazyProtoInner () {};
+						returnedProto = result.prototype;
+						return result;
+					});
+					const protoBefore = LazyProtoPin.prototype;
+					const instance = new LazyProtoPin();
+					new LazyProtoPin();
+					expect(LazyProtoPin.prototype).toBe(protoBefore);
+					expect(LazyProtoPin.prototype).not.toBe(returnedProto);
+					expect(instance).toBeInstanceOf(LazyProtoPin);
+				});
+
+				it('async handler and async chain link gather per construction', async () => {
+					const LazyAsyncRoot = LazyLab.lazy('LazyAsyncRoot', () => async function (this: { root?: boolean }) {
+						this.root = true;
+						return this;
+					});
+					const LazyAsyncSub = LazyAsyncRoot.lazy('LazyAsyncSub', () => function (this: { sub?: boolean }) {
+						this.sub = true;
+					});
+					// a pending async link: subtype factories on the promise are
+					// plain calls (never `new`), routed through makeAwaiter/addThen
+					const pending: unknown = new LazyAsyncRoot();
+					if (typeof pending !== 'object' || pending === null) {
+						throw new Error('async construction must be a pending promise');
+					}
+					const subFactory: unknown = Reflect.get(pending, 'LazyAsyncSub');
+					if (typeof subFactory !== 'function') {
+						throw new Error('missing subtype factory on the pending link');
+					}
+					const chainedSub = await Reflect.apply(subFactory, pending, []);
+					expect(chainedSub.root).toBe(true);
+					expect(chainedSub.sub).toBe(true);
+					expect(chainedSub).toBeInstanceOf(LazyAsyncSub);
+					expect(chainedSub).toBeInstanceOf(LazyAsyncRoot);
+				});
+
+				it('a blocked construction (errored parent, blockErrors on) never calls the callback', () => {
+					const BlockedParent = LazyLab.define('BlockedParent', function () {
+						throw new Error('parent body failed');
+					});
+					// suppress, to obtain the errored parent instance
+					BlockedParent.registerHook('creationError', () => true);
+					const erroredParent = new BlockedParent();
+					expect(erroredParent).toBeInstanceOf(Error);
+					let callbackCalls = 0;
+					BlockedParent.lazy('BlockedLazySub', () => {
+						callbackCalls++;
+						return function () {};
+					});
+					BlockedParent.define('BlockedDirectSub', function () {});
+					let lazyThrown: unknown;
+					try {
+						constructSubtype(erroredParent, 'BlockedLazySub');
+					} catch (error) {
+						lazyThrown = error;
+					}
+					let directThrown: unknown;
+					try {
+						constructSubtype(erroredParent, 'BlockedDirectSub');
+					} catch (error) {
+						directThrown = error;
+					}
+					expect(callbackCalls).toBe(0);
+					expect(lazyThrown).toBeInstanceOf(Error);
+					expect(directThrown).toBeInstanceOf(Error);
+					if (lazyThrown instanceof Error && directThrown instanceof Error) {
+						expect(lazyThrown.message).toBe(directThrown.message);
+					}
+				});
+
+				it('a dotted lazy path lands under the parent type, like define', () => {
+					LazyLab.define('PathRootLazy', function () {});
+					const LazyPathChild = LazyLab.lazy('PathRootLazy.LazyPathChild', () => {
+						return function (this: { dotted?: boolean }) {
+							this.dotted = true;
+						};
+					});
+					expect(LazyLab.lookup('PathRootLazy.LazyPathChild')).toBe(LazyPathChild);
+					const PathRootLazy = LazyLab.lookup('PathRootLazy');
+					if (PathRootLazy === undefined) {
+						throw new Error('PathRootLazy must be registered');
+					}
+					const rootInstance = new PathRootLazy();
+					const child = constructSubtype(rootInstance, 'LazyPathChild');
+					expect(child).toHaveProperty('dotted', true);
+					expect(child).toBeInstanceOf(LazyPathChild);
+					expect(child).toBeInstanceOf(PathRootLazy);
+				});
+
+				it('async, generator and async-generator callbacks are rejected at .lazy()', () => {
+					// under the es6 ts-jest target, async callbacks are
+					// downleveled to sync functions returning Promises — the
+					// define-time AsyncFunction rejection is only visible on
+					// the native-async build (the mocha pin); here the
+					// generator check is native, and a downleveled async
+					// callback fails at the first new instead: its call
+					// returns a Promise, not a constructor
+					expect(() => LazyLab.lazy('LazyGenCbPin', function* () {}))
+						.toThrow(errors.WRONG_MODIFICATION_PATTERN);
+					const DownleveledAsyncCb = LazyLab.lazy('LazyAsyncCbPin', async () => function () {});
+					expect(() => new DownleveledAsyncCb()).toThrow('handler must be a function');
+					const DownleveledAsyncGenCb = LazyLab.lazy('LazyAsyncGenCbPin', async function* () {});
+					expect(() => new DownleveledAsyncGenCb()).toThrow('handler must be a function');
+				});
+
+				it('the lazyDefinition helpers no-op on primitives and foreign objects', () => {
+					const {
+						gatherLazyDefinition,
+						resetLazyDefinition,
+						readLazyDefinitionFailure
+					} = require('../src/api/types/lazyDefinition');
+					expect(gatherLazyDefinition(null)).toBeUndefined();
+					expect(gatherLazyDefinition(42)).toBeUndefined();
+					expect(resetLazyDefinition('nope')).toBeUndefined();
+					expect(readLazyDefinitionFailure(false)).toBeUndefined();
+					expect(readLazyDefinitionFailure({})).toBeUndefined();
+				});
+
 			});
 	
 			describe('Mnemosyne.ts direct coverage for the SymbolConstructorName method and the proxy symbol getter', () => {
@@ -3403,26 +3745,26 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			});
 	
 			describe('lazy coverage - factory returns non-Function', () => {
-				it('should throw HANDLER_MUST_BE_A_FUNCTION when lazy factory returns object', () => {
+				it('should throw HANDLER_MUST_BE_A_FUNCTION at the first construction when the lazy factory returns an object', () => {
 					const { lazy } = require('../src/index');
-					expect(() => {
-						lazy(() => {
-							// Return an object instead of a function
-							const fnResult = { notAFunction: true } as unknown as CallableFunction;
-							return fnResult;
-						});
-					}).toThrow(ErrorsTypes.HANDLER_MUST_BE_A_FUNCTION);
+					const LazyObjectFactoryJestType = lazy('LazyObjectFactoryJestType', () => {
+						// Return an object instead of a function
+						// @ts-expect-error — intentionally a non-function result
+						return { notAFunction: true };
+					});
+					expect(() => new LazyObjectFactoryJestType()).toThrow(ErrorsTypes.HANDLER_MUST_BE_A_FUNCTION);
 				});
 			});
 
 			describe('lazy coverage - factory throws', () => {
-				it('should propagate the factory error', () => {
+				it('should propagate the factory error at the first construction', () => {
 					const { lazy } = require('../src/index');
-					expect(() => {
-						lazy(() => {
-							throw new Error('factory throws');
-						});
-					}).toThrow('factory throws');
+					// the callback is never called at .lazy(): its throw
+					// surfaces at construction, wrapped into an errored instance
+					const LazyFactoryThrowJestType = lazy('LazyFactoryThrowJestType', () => {
+						throw new Error('factory throws');
+					});
+					expect(() => new LazyFactoryThrowJestType()).toThrow('factory throws');
 				});
 			});
 
@@ -3445,11 +3787,12 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			});
 
 			describe('lazy coverage - explicit-source lazy', () => {
-				it('should support lazy(source, getter) form', () => {
-					const ExplicitSourceJestType = lazy(types, () => {
+				it('should reject the unnamed explicit-source form', () => {
+					// the callback is never called at .lazy(), so the name
+					// cannot be derived from its result
+					expect(() => lazy(types, () => {
 						return class ExplicitSourceJestType {};
-					});
-					expect(ExplicitSourceJestType.TypeName).toBe('ExplicitSourceJestType');
+					})).toThrow(errors.TYPENAME_MUST_BE_A_STRING);
 				});
 				it('should support lazy(source, name, getter) form', () => {
 					const ExplicitSourceNamedJestType = lazy(types, 'ExplicitSourceNamedJestType', () => {
@@ -3485,7 +3828,7 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 
 			describe('free lazy this = mnemonica branch coverage', () => {
 				it('should cover checkThis true branch in free lazy', () => {
-					const MnemonicaThisJestType = mnemonica.lazy(() => {
+					const MnemonicaThisJestType = mnemonica.lazy('MnemonicaThisJestType', () => {
 						return class MnemonicaThisJestType {};
 					});
 					expect(MnemonicaThisJestType.TypeName).toBe('MnemonicaThisJestType');
@@ -3513,38 +3856,39 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			});
 
 			describe('lazy coverage - getter returns function without prototype', () => {
-				it('a no-own-prototype getter result is rejected with the readable error', () => {
-					// the handler-shape classification now rejects arrows at
-					// define time, so the old getDefaultPrototype fallback for
-					// them is gone — the readable error is the behavior
-					expect(() => lazy('NoProtoLazyType', () => {
+				it('a no-own-prototype getter result is rejected with the readable error at construction', () => {
+					// the callback is never called at .lazy(): the arrow result
+					// registers fine and fails at the first new
+					const NoProtoLazyType = lazy('NoProtoLazyType', () => {
 						const ArrowCtor = () => {};
 						return ArrowCtor;
-					})).toThrow(/NoProtoLazyType: constructor must be a regular function or a class/);
+					});
+					expect(() => new NoProtoLazyType()).toThrow(/NoProtoLazyType: constructor must be a regular function or a class/);
 				});
 
 				it('a getter returning a function with a non-object prototype takes the default', () => {
-					const NonObjectProtoTypeResult = lazy(() => {
+					const NonObjectProtoTypeResult = lazy('NonObjectProtoType', () => {
 						function NonObjectProtoType () {}
-						NonObjectProtoType.prototype = 123 as unknown as object;
+						// @ts-expect-error — intentionally a non-object prototype
+						NonObjectProtoType.prototype = 123;
 						return NonObjectProtoType;
 					});
 					expect(NonObjectProtoTypeResult).toBeDefined();
 					expect(NonObjectProtoTypeResult.TypeName).toBe('NonObjectProtoType');
-					const instance = new (NonObjectProtoTypeResult as new () => object)();
+					const instance = new NonObjectProtoTypeResult();
 					expect(instance).toBeDefined();
 				});
 			});
 
 			describe('lazy coverage - config object branch', () => {
 				it('should cover config-as-object branch in lazy', () => {
-					const LazyWithConfigJestType = UserType.lazy(() => {
+					const LazyWithConfigJestType = UserType.lazy('LazyWithConfigJestType', () => {
 						return class LazyWithConfigJestType {};
 					}, { strictChain: false });
 					expect(LazyWithConfigJestType.TypeName).toBe('LazyWithConfigJestType');
 				});
 				it('should cover config-as-function branch in lazy', () => {
-					const LazyWithFunctionConfigJestType = UserType.lazy(() => {
+					const LazyWithFunctionConfigJestType = UserType.lazy('LazyWithFunctionConfigJestType', () => {
 						return class LazyWithFunctionConfigJestType {};
 					}, () => {});
 					expect(LazyWithFunctionConfigJestType.TypeName).toBe('LazyWithFunctionConfigJestType');

@@ -241,6 +241,8 @@ export interface InstanceCreatorContext {
     proto: object;
     __proto_proto__?: object;
     stack?: string[];
+    lazyFailed?: boolean;
+    lazyError?: unknown;
     getExistentAsyncStack(existentInstance: object): unknown;
     postProcessing(continuationOf?: TypeDef): void;
     makeAwaiter(type: TypeDef, then?: ThenSpec): Promise<object>;
@@ -359,7 +361,6 @@ export interface RegistryEntry<F extends object, Path extends string = '', Paren
 export interface RegistryHolderBase<T extends object = {}, Parent extends object = object, Path extends string = ''> {
     define<SubType extends object>(this: RegistryHolderBase<T, Parent, Path>, TypeOrTypeName: DefineNewableOrCallable, constructHandlerOrConfig?: IDEF<SubType> | object | boolean | DefineNewableOrCallable, configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean): IDefinitorInstance<SubType>;
     define<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler?: IDEF<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>, ChildPath, Parent>;
-    lazy<SubType extends object>(this: RegistryHolderBase<T, Parent, Path>, getter: LazyDef<SubType>, config?: constructorOptions): IDefinitorInstance<SubType>;
     lazy<const Name extends string, N extends object, F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: LazyDef<N>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>, ChildPath, Parent>;
 }
 export interface RegistryHolder<T extends object = {}, Parent extends object = object, Path extends string = ''> extends RegistryHolderBase<T, Parent, Path> {
@@ -381,12 +382,8 @@ export interface TypeAbsorber extends CallableFunction {
     <T extends object>(this: unknown, TypeOrTypeName: string | DefineNewableOrCallable, constructHandlerOrConfig?: IDEF<T> | object | boolean | DefineNewableOrCallable, configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean): IDefinitorInstance<T>;
 }
 export interface LazyAbsorber extends CallableFunction {
-    <T extends object>(this: unknown, getter: LazyDef<T>, config?: constructorOptions): IDefinitorInstance<T>;
     <T extends object>(this: unknown, TypeName: string, getter: LazyDef<T>, config?: constructorOptions): IDefinitorInstance<T>;
-    <T extends object>(this: unknown, TypeNameOrGetter: string | LazyDef<T>, getterOrConfig: LazyDef<T> | constructorOptions, namedFormConfig?: constructorOptions): IDefinitorInstance<T>;
-    <T extends object>(this: unknown, source: RegistryHolderBase<object, object, string>, getter: LazyDef<T>, config?: constructorOptions): IDefinitorInstance<T>;
     <T extends object>(this: unknown, source: RegistryHolderBase<object, object, string>, TypeName: string, getter: LazyDef<T>, config?: constructorOptions): IDefinitorInstance<T>;
-    <T extends object>(this: unknown, source: RegistryHolderBase<object, object, string>, TypeNameOrGetter: string | LazyDef<T>, getterOrConfig: LazyDef<T> | constructorOptions, namedFormConfig?: constructorOptions): IDefinitorInstance<T>;
 }
 export interface TypesCollection<T extends object = {}, Parent extends object = object, Path extends string = ''> extends RegistryHolder<T, Parent, Path>, Hookable {
     subtypes: SubtypesMap;
@@ -411,7 +408,7 @@ export interface TypeDescriptorDefine extends CallableFunction {
     (TypeOrTypeName: string | DefineNewableOrCallable, constructHandlerOrConfig?: DefineNewableOrCallable | object, config?: object): TypeClass;
 }
 export interface TypeDescriptorLazy extends CallableFunction {
-    (getter: LazyDef<object>, config?: object): TypeClass;
+    (TypeName: string, getter: LazyDef<object>, config?: object): TypeClass;
 }
 export interface TypeDescriptorLookup extends CallableFunction {
     (TypeNestedPath: string): TypeClass | undefined;

@@ -249,32 +249,28 @@ Note what does **not** work: passing an *anonymous* function as the first
 argument. `define(() => { ... return MyClass; })` throws
 `TYPENAME_MUST_BE_A_STRING` — there is no name to register the type under.
 For the deferred / factory case, where the constructor must be resolved
-through a getter (to break a circular dependency, or to defer constructor
-selection), use `.lazy()`:
+through a callback (to break a circular dependency, or to defer constructor
+selection until the first construction), use `.lazy()`:
 
 ```js
-// unnamed: the type name is taken from the returned constructor's .name
-const ClassType = SomeType.lazy(() => class ClassType {
+// the name is explicit — the callback is never called at definition time,
+// so there is nothing to derive a name from
+const ClassType = SomeType.lazy('ClassType', () => class ClassType {
   constructor(opts) {
     Object.assign(this, opts);
   }
 });
 
-// named: explicit type name
-const GuestType = SomeType.lazy('GuestType', () => function (opts) {
-  Object.assign(this, opts);
-});
-
 // also available as a free export
 const { lazy } = require('mnemonica');
-const StandaloneType = lazy(() => function StandaloneType(opts) {
+const StandaloneType = lazy('StandaloneType', () => function (opts) {
   Object.assign(this, opts);
 });
 ```
 
 The resulting type behaves exactly like one created with `define()` — same
 registry, same `.lookup()`, same subtype chaining. See
-[`lazy(typeName?, getter, config?)`](#lazytypename-getter-config) in the API
+[`lazy(typeName, callback, config?)`](#lazytypename-callback-config) in the API
 reference.
 
 ### Nested Type Definition
@@ -473,7 +469,7 @@ The most commonly used types for TypeScript projects:
 ```typescript
 import {
   IDEF,                // Base constructor function type
-  LazyDef,             // Zero-arg getter returning a constructor (for lazy())
+  LazyDef,             // Zero-arg callback returning a constructor (for lazy())
   constructorOptions,  // Type config options (strictChain, blockErrors, etc.)
   hooksTypes,          // 'preCreation' | 'postCreation' | 'creationError'
   hook,                // Hook callback type (untyped — collection-wide handlers)
@@ -536,7 +532,7 @@ const AsyncTypeNoReturn = define('AsyncType', async function () {
 | I want to... | Use |
 |---|---|
 | Define a type | `define('Name', ctor)` |
-| Define a type lazily | `lazy('Name', () => ctor)` or `Type.lazy(() => ctor)` |
+| Define a type lazily | `lazy('Name', () => ctor)` or `Type.lazy('Name', () => ctor)` |
 | Create from instance | `new instance.SubType(args)` |
 | Create from a *different* parent (DAG) | `instance.SubType.call(otherParent, args)` |
 | Look up a type | `lookup('Name')` or `Type.lookup('Path')` |
@@ -566,29 +562,35 @@ const MyType = define('MyType', function (data) {
 - `constructHandler` (Function): Constructor function
 - `config` (object, optional): Configuration options
 
-#### `lazy(typeName?, getter, config?)`
+#### `lazy(typeName, callback, config?)`
 
-Defines a type whose constructor is resolved through a zero-arg getter. Useful
-for breaking circular dependencies or deferring constructor selection until
-definition time. The resulting type behaves like a type created with `define()`.
-The handler-shape rules apply to the getter's result exactly as they do to a
-direct `define()` handler — generators, sync arrows, shorthand methods and
-bound functions are rejected with the same readable errors — and they are
-enforced BOTH at definition time AND on every construction (the getter may
-return a new function each time). That per-construction check is what makes
-`lazy` slower than a direct `define()`; getters should also be pure, since
-they run eagerly at definition time and again per construction.
+Defines a type whose constructor is resolved through a zero-arg callback on
+**every construction** — the callback is **never called at definition time**,
+so forward references and circular imports work: the callback's target only
+has to exist by the first `new`. The callback itself must be a sync function
+(async and generator callbacks are rejected at definition time); the
+constructor it returns may be async. The resulting type behaves like a type
+created with `define()` — same registry, same `.lookup()`, same subtype
+chaining, same hooks.
+
+The handler-shape rules apply to the callback's result exactly as they do to
+a direct `define()` handler — generators, sync arrows, shorthand methods and
+bound functions are rejected with the same readable errors — enforced on
+every construction (the callback may return a new function each time). That
+per-construction resolution is what makes `lazy` slower than a direct
+`define()`; keep callbacks pure.
+
+A callback throw or a rejected result is a **construction error**, not a
+define-time one: `creationError` hooks fire with the existent instance and
+the construction args, and `preCreation` never runs — exactly like a
+constructor body that throws. And `X.prototype` of a lazy type is the shim's
+empty prototype: the callback's own `.prototype` is used per construction
+(as the chain's proto), never registered on the type at define time.
 
 ```js
 const { lazy } = require('mnemonica');
 
-// unnamed: type name is taken from the returned constructor's .name
-const LazyType = lazy(() => function LazyType(data) {
-  Object.assign(this, data);
-});
-
-// named: explicit type name
-const NamedType = lazy('NamedType', () => function (data) {
+const LazyType = lazy('LazyType', () => function (data) {
   Object.assign(this, data);
 });
 
@@ -599,13 +601,9 @@ const SubType = MyType.lazy('SubType', () => function (data) {
 ```
 
 **Parameters:**
-- `typeName` (string, optional): Name of the type. If omitted, the name is taken from the getter's returned constructor.
-- `getter` (Function): Zero-arg function returning the constructor.
+- `typeName` (string, required): Name of the type. The unnamed form was removed — the callback is never called at definition time, so there is nothing to derive a name from.
+- `callback` (Function): Zero-arg sync function returning the constructor; called once per construction.
 - `config` (object, optional): Configuration options
-
-**Note:** the getter is invoked **once at definition time** (to determine the
-type name, class mode, and prototype) and then again on every construction.
-Keep it free of side effects that must not run at `define()` time.
 
 #### `lookup(typeNestedPath)`
 
@@ -1161,10 +1159,11 @@ MyType.registerHook('postCreation', (hookData) => {
 
 **Error wrapping boundaries.** `preCreation` hooks do not receive
 `throwModificationError` — throw normally to abort construction; the error
-propagates unwrapped. The same is true for errors thrown by a lazy type's
-getter at setup and by a custom `ModificationConstructor` during prototype
-wiring: they propagate as-is. Only failures of the user constructor body are
-wrapped into mnemonica errored instances (when `blockErrors` is `true`).
+propagates unwrapped. The same is true for errors thrown by a custom
+`ModificationConstructor` during prototype wiring: they propagate as-is.
+Failures of the user constructor body — and of a lazy type's callback, which
+is resolved per construction and fails as a construction error — are wrapped
+into mnemonica errored instances (when `blockErrors` is `true`).
 
 ---
 

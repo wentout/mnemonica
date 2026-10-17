@@ -26,6 +26,8 @@ const {
 
 import { InstanceCreator } from './InstanceCreator';
 
+import { gatherLazyDefinition } from './lazyDefinition';
+
 import {
 	_getProps, Props
 } from './Props';
@@ -87,7 +89,13 @@ const staticProps = [
 const makeSubTypeProxy = function (subtype: SubtypeEntry, inheritedInstance: unknown) {
 
 	const SubTypeProxy = function (this: unknown, ..._args: unknown[]) {
+		// the lazy callback runs exactly ONCE per construction, here at the
+		// entry — before InstanceCreator's setup reads the facades; a no-op
+		// for direct types, and skipped when the parent instance is an Error
+		// with blockErrors on (the circuit breaker then throws, as on the
+		// body path)
 		if (new.target) {
+			gatherLazyDefinition(subtype, inheritedInstance);
 			const instanceResult = new InstanceCreator(
 				subtype as TypeDef,
 				inheritedInstance as object,
@@ -97,6 +105,7 @@ const makeSubTypeProxy = function (subtype: SubtypeEntry, inheritedInstance: unk
 		}
 		const thisArg = this === undefined ? inheritedInstance : this;
 		const existentInstance = reflectPrimitiveWrappers(thisArg);
+		gatherLazyDefinition(subtype, existentInstance);
 		const instance = new InstanceCreator(
 			subtype as TypeDef,
 			existentInstance as object,

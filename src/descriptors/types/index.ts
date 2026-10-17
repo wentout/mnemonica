@@ -4,14 +4,14 @@ import type {
 	_Internal_TC_,
 	CreateTypesCollectionFunction,
 	TypesCollection,
-	TypeClass,
 	IDEF,
 	hooksOpts,
 	hook,
 	StackBoundary,
 	DefineNewable,
 	DefineNewableOrCallable,
-	FlowChecker
+	FlowChecker,
+	LazyDef
 } from '../../types';
 
 import { constants } from '../../constants';
@@ -28,7 +28,7 @@ const {
 
 // here is TypesCollection.define() method
 import {
-	define, lazy, lookup, type TypesMap, type LazyTypeGetter
+	define, lazy, lookup, type TypesMap
 } from '../../api/types';
 
 import * as hooksAPI from '../../api/hooks';
@@ -186,40 +186,19 @@ odp(
 			const { subtypes } = this;
 			const result = function (
 				this: StackBoundary,
-				TypeNameOrGetter: string | LazyTypeGetter,
-				getterOrConfig?: LazyTypeGetter | object,
-				namedFormConfig?: object
+				TypeName: string,
+				getter?: LazyDef<object>,
+				config?: object
 			) {
-				let name: string | undefined;
-				let getter: LazyTypeGetter;
-				let config: object | undefined;
-				if (typeof TypeNameOrGetter === 'string') {
-					name = TypeNameOrGetter;
-					getter = getterOrConfig as LazyTypeGetter;
-					config = namedFormConfig;
-				} else {
-					getter = TypeNameOrGetter as LazyTypeGetter;
-					config = getterOrConfig as object;
-				}
-				let lazyResult: TypeClass;
 				// same as in `define` above: pass `result` itself as the
 				// stack-capture boundary, not the collection object
-				if (name) {
-					lazyResult = lazy.call(
-						result,
-						subtypes as TypesMap,
-						name,
-						getter as LazyTypeGetter,
-						config
-					);
-				} else {
-					lazyResult = lazy.call(
-						result,
-						subtypes as TypesMap,
-						getter as LazyTypeGetter,
-						config
-					);
-				}
+				const lazyResult = lazy.call(
+					result,
+					subtypes as TypesMap,
+					TypeName,
+					getter,
+					config
+				);
 				return lazyResult;
 			};
 			return result;

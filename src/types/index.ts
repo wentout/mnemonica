@@ -683,6 +683,13 @@ export interface InstanceCreatorContext {
 	proto: object;
 	__proto_proto__?: object;
 	stack?: string[];
+	// a lazy type's gather outcome, snapshotted by runSetup before the cell
+	// is reset (see lazyDefinition.ts): failed is the explicit flag (a
+	// callback may throw undefined), lazyError the thrown value itself —
+	// passed through to throwModificationError exactly like a
+	// constructor-body throw
+	lazyFailed?: boolean;
+	lazyError?: unknown;
 
 	getExistentAsyncStack(existentInstance: object): unknown;
 	postProcessing(continuationOf?: TypeDef): void;
@@ -939,14 +946,9 @@ export interface RegistryHolderBase<
 		Parent
 	>;
 
-	// Explicit lazy getter: .lazy(() => Constructor, config?)
-	lazy<SubType extends object>(
-		this: RegistryHolderBase<T, Parent, Path>,
-		getter: LazyDef<SubType>,
-		config?: constructorOptions
-	): IDefinitorInstance<SubType>;
-
-	// Named lazy getter: .lazy(TypeName, () => Constructor, config?)
+	// Lazy getter: .lazy(TypeName, () => Constructor, config?)
+	// (the unnamed form is dropped: the callback is never called at define
+	// time, so there is nothing to derive the name from)
 	lazy<
 		const Name extends string,
 		N extends object,
@@ -1042,27 +1044,12 @@ export interface TypeAbsorber extends CallableFunction {
 }
 
 // Lazy absorber function type - used for explicit lazy getter definitions
+// (named form only: the callback is never called at define time, so the
+// name cannot be derived from it)
 export interface LazyAbsorber extends CallableFunction {
 	<T extends object>(
 		this: unknown,
-		getter: LazyDef<T>,
-		config?: constructorOptions
-	): IDefinitorInstance<T>;
-	<T extends object>(
-		this: unknown,
 		TypeName: string,
-		getter: LazyDef<T>,
-		config?: constructorOptions
-	): IDefinitorInstance<T>;
-	<T extends object>(
-		this: unknown,
-		TypeNameOrGetter: string | LazyDef<T>,
-		getterOrConfig: LazyDef<T> | constructorOptions,
-		namedFormConfig?: constructorOptions
-	): IDefinitorInstance<T>;
-	<T extends object>(
-		this: unknown,
-		source: RegistryHolderBase<object, object, string>,
 		getter: LazyDef<T>,
 		config?: constructorOptions
 	): IDefinitorInstance<T>;
@@ -1072,13 +1059,6 @@ export interface LazyAbsorber extends CallableFunction {
 		TypeName: string,
 		getter: LazyDef<T>,
 		config?: constructorOptions
-	): IDefinitorInstance<T>;
-	<T extends object>(
-		this: unknown,
-		source: RegistryHolderBase<object, object, string>,
-		TypeNameOrGetter: string | LazyDef<T>,
-		getterOrConfig: LazyDef<T> | constructorOptions,
-		namedFormConfig?: constructorOptions
 	): IDefinitorInstance<T>;
 }
 
@@ -1149,6 +1129,7 @@ export interface TypeDescriptorDefine extends CallableFunction {
 
 export interface TypeDescriptorLazy extends CallableFunction {
 	(
+		TypeName: string,
 		getter: LazyDef<object>,
 		config?: object
 	): TypeClass;

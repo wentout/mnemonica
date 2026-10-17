@@ -46,6 +46,12 @@ import {
 import { makeInstanceModificator } from './InstanceModificator';
 import { parent } from '../../utils/parent';
 
+import {
+	gatherLazyDefinition,
+	readLazyDefinitionFailure,
+	resetLazyDefinition
+} from './lazyDefinition';
+
 // import { Mnemosyne } from './Mnemosyne';
   
 const invokePreHooks = function ( this: InstanceCreatorContext ) {
@@ -249,6 +255,13 @@ const addThen = function ( this: InstanceCreatorContext, then: ThenSpec ) {
 
 	self.inheritedInstance = (self.inheritedInstance as Promise<object>)
 		.then( () => {
+			// async chain link: the lazy callback runs here, at the start of
+			// THIS link's construction — once the previous link resolved,
+			// not when the link was queued; a no-op for direct types, and
+			// skipped when the resolved previous link is an Error with
+			// blockErrors on (the circuit breaker then throws, as on the
+			// body path)
+			gatherLazyDefinition( then.subtype, self.inheritedInstance );
 			self.inheritedInstance =
 			new InstanceCreator(
 				then.subtype as TypeDef,
@@ -365,13 +378,28 @@ const runSetup = function (
 		TypeName
 	} = type;
 
+	// the facade destructuring above and this call must happen BEFORE
+	// ModificationConstructor() below: for a lazy type they resolve the
+	// current construction's gathered handler, and ModificationConstructor
+	// is user code — a nested construction of the same lazy type inside it
+	// would replace the gathered result
+	const ModificatorType = constructHandler();
+
+	// lazy types: snapshot the gather outcome (the failed flag AND the error
+	// value — a callback may throw undefined) alongside the facades above,
+	// then return the cell to its define-time state — everything the rest
+	// of this construction needs now lives on self, a nested construction
+	// cannot clobber it, and between constructions every facade read sees
+	// the define-time state (X.prototype stays the shim's empty prototype)
+	const lazyFailure = readLazyDefinitionFailure(type);
+	resetLazyDefinition(type);
+
 	const {
 		ModificationConstructor,
 		submitStack
 	} = config;
 
 	const mc = ModificationConstructor!();
-	const ModificatorType = constructHandler();
 
 	Object.assign(
 		self,
@@ -385,8 +413,10 @@ const runSetup = function (
 			ModificationConstructor : mc,
 			ModificatorType,
 			config,
-			proto
-		} 
+			proto,
+			lazyFailed              : lazyFailure === undefined ? false : lazyFailure.failed,
+			lazyError               : lazyFailure === undefined ? undefined : lazyFailure.error
+		}
 	);
 
 	const title = `\n<-- creation of [ ${TypeName} ] traced -->`;
@@ -495,8 +525,30 @@ const instanceCreatorImpl = function (
 	// Phase 2: Circuit breaker — if parent is Error and blockErrors, abort early
 	runBlockErrorsCheck(
 		self,
-		args 
+		args
 	);
+
+	// Phase 2.5: lazy gather failure — a lazy type whose callback threw
+	// (anything at all, undefined included), returned a non-function, or a
+	// rejected shape is a construction error: route it through the regular
+	// error path so creationError hooks fire with the existent instance and
+	// the construction args, with preCreation never running. It must sit
+	// AFTER runBlockErrorsCheck: throwModificationError splices the original
+	// error into the chain that contains the existent instance, so a later
+	// circuit-breaker check would see "parent is an Error" and mis-fire.
+	// Reads the runSetup snapshot, never the cell. If a creationError hook
+	// suppresses the throw, mirror the body-failure path: the pipeline
+	// continues from the errored instance exactly as if the build had
+	// failed and been suppressed there.
+	if ( self.lazyFailed === true ) {
+		// the same passthrough idiom as runBuild's catch: whatever the
+		// callback threw reaches the error path (a thrown non-Error breaks
+		// the prototype splice there exactly as it does for a constructor
+		// body)
+		self.throwModificationError( self.lazyError as MnemonicaError );
+		self.postProcessing( type );
+		return self.inheritedInstance;
+	}
 
 	// Phase 3: Pre-hooks — invoke preCreation hooks on collection and type
 	self.invokePreHooks();

@@ -48,7 +48,7 @@ Handlers are classified once at define time from `constructor.name` + own
 - generators / async generators → define-time error: "<Name>: generator functions are not supported as a constructor"
 - sync arrows, shorthand methods, bound functions (Function with no own prototype) → define-time error: "<Name>: constructor must be a regular function or a class (arrow functions, methods and bound functions are not supported)"
 - async forms (`async function`, async arrows, async methods) are NOT separable — they take the async path. Write async constructors as `async function` (only that form supports the `this`-substitution dance); the `no-arrow-this` ESLint plugin is the early guard.
-- the same classification applies to `lazy` getters — on the getter's result, at definition time AND on every construction (a getter may return a new function each time, so the check cannot be cached). The per-construction check is what makes `lazy` slower than a direct `define()`; keep getters pure.
+- the same classification applies to `lazy` callbacks — on the callback's result, on every construction (the callback may return a new function each time, so the check cannot be cached). The callback itself is never called at define time and must be sync (async/generator callbacks are rejected at `.lazy()`); the constructor it returns may be async. The per-construction check is what makes `lazy` slower than a direct `define()`; keep callbacks pure.
 - generators as CONSUMERS work fully: `yield new X()` yields the instance; async generators even resolve un-awaited construction promises (`test_yields/`).
 
 ## The super() Return-Value Pattern

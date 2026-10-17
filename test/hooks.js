@@ -32,7 +32,11 @@ const tests = ( opts ) => {
 			*/
 
 
-			assert.equal( 8, userTypeHooksInvocations.length );
+			// +12 (lazy handler-shape pins: six fresh UserType constructions —
+			//      a failed subtype construction splices the error at the top
+			//      of the ROOT instance's chain, poisoning everything under
+			//      that root, so each pin needs a disposable root)
+			assert.equal( 20, userTypeHooksInvocations.length );
 			// +2 (increased due to strictChain check adding extra flow checks)
 			// assert.equal( 188, typesFlowCheckerInvocations.length );
 			// assert.equal( 90, typesFlowCheckerInvocations.length );
@@ -50,7 +54,10 @@ const tests = ( opts ) => {
 			// +22 (environment.js 'named constructor define' tests now run in
 			//     place: its async describe used to register them after load,
 			//     past this count)
-			assert.equal( 298, typesFlowCheckerInvocations.length );
+			// +14 (lazy handler-shape pins: six fresh parent constructions
+			//     plus the now-successful first LazyLatePin construction —
+			//     the rejected forms moved from define time to construction)
+			assert.equal( 312, typesFlowCheckerInvocations.length );
 
 			// +3 (increased due to explicit .lazy() API adding extra creations)
 			// +12 (increased due to dotted parent() tests adding instances)
@@ -65,7 +72,9 @@ const tests = ( opts ) => {
 			// +2 (define-paths pins: two fresh constructions)
 			// +11 (environment.js 'named constructor define' tests now run
 			//     in place, before this count)
-			assert.equal( 160, typesPreCreationInvocations.length );
+			// +7 (lazy handler-shape pins: six fresh parents + the successful
+			//     first LazyLatePin construction)
+			assert.equal( 167, typesPreCreationInvocations.length );
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
@@ -81,7 +90,10 @@ const tests = ( opts ) => {
 			// +4 (define-paths pins: fresh construction levels)
 			// +22 (environment.js 'named constructor define' tests now run
 			//     in place, before this count)
-			assert.equal( 276, typesPostCreationInvocations.length );
+			// +14 (lazy handler-shape pins: six fresh parents + the
+			//     now-successful first LazyLatePin construction + the
+			//     failing constructions' levels)
+			assert.equal( 290, typesPostCreationInvocations.length );
 		} );
 	} );
 
