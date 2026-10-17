@@ -1,6 +1,6 @@
 {
 	"name": "mnemonica",
-	"version": "1.4.0",
+	"version": "1.4.1",
 	"description": "AI-agent ready instance inheritance system for JavaScript/TypeScript via prototype chains",
 	"type": "commonjs",
 	"main": "./build/index.js",
@@ -121,7 +121,7 @@
 		"nyc": "^17.1.0",
 		"oxlint": "^0.16.12",
 		"ts-jest": "^29.4.15",
-		"typeomatica": "^0.3.63",
+		"typeomatica": "^0.3.64",
 		"typescript": "^6.0.3"
 	},
 	"engines": {
@@ -130,7 +130,10 @@
 	"overrides": {
 		"serialize-javascript": "^7.0.5",
 		"uuid": "^11.1.1",
-		"diff": "^9.0.0"
+		"diff": "^9.0.0",
+		"@istanbuljs/load-nyc-config": {
+			"js-yaml": "^4.1.0"
+		}
 	},
 	"lint-staged": {
 		"src/**/*.ts": "eslint --fix",

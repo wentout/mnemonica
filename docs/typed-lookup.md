@@ -154,7 +154,8 @@ User.define('Guest', function (this: GuestShape, data: { token: string }) {
 ```
 
 You can also use `.lazy()` when the constructor must be resolved through a
-getter (for example, to break a circular dependency):
+callback (for example, to break a circular dependency) — the callback is never
+called at define time, only once per construction:
 
 ```typescript
 const User = App.lookup('User');
@@ -382,7 +383,7 @@ const LazyGuest = lazy(User, 'Guest', () => function (this: GuestShape, data: { 
 Semantics follow the source object: a **collection** source defines a root
 type, a **constructor** source defines a subtype. `lookup(source, path)`
 resolves exactly like `source.lookup(path)` — relative first, root fallback.
-The same source inference applies to `lazy(source, name?, getter, config?)`.
+The same source inference applies to `lazy(source, name, getter, config?)`.
 
 ---
 

@@ -9,6 +9,15 @@ const { checkProto, } = TypesUtils;
 
 import { hop } from '../../utils/hop';
 
+import { constants } from '../../constants';
+const { odp } = constants;
+
+import {
+	readLazyDefinition,
+	gatherLazyDefinition,
+	setLazyDefinition
+} from './lazyDefinition';
+
 import { ErrorsTypes } from '../../descriptors/errors';
 const { WRONG_TYPE_DEFINITION, } = ErrorsTypes;
 
@@ -50,14 +59,49 @@ export const TypeProxy = function (__type__: TypeProxyType, ancestor: unknown) {
 	Object.assign(
 		this,
 		{
-			__type__,
-			ancestor
+			__type__
 		}
 	);
+	// for a lazy ROOT type the ancestor is not fixed at define time: it is
+	// the current construction's gathered prototype, so it is a facade over
+	// the lazy cell. An explicit ancestor (the .call/.apply/.bind path)
+	// keeps winning as a plain value, exactly as for direct types
+	const lazy = readLazyDefinition(__type__);
+	if (lazy !== undefined && ancestor === undefined && !__type__.isSubType) {
+		const { cell } = lazy;
+		odp(
+			this,
+			'ancestor',
+			{
+				get () {
+					const result = cell.proto;
+					return result;
+				},
+				enumerable   : true,
+				configurable : true
+			}
+		);
+	} else {
+		Object.assign(
+			this,
+			{
+				ancestor
+			}
+		);
+	}
 	const typeProxy = new Proxy(
 		InstanceCreator,
 		this
 	);
+	if (lazy !== undefined) {
+		// the subtype construction entries (makeSubTypeProxy, addThen) hold
+		// this proxy, not the descriptor — register it against the same
+		// definition so both keys resolve the one cell
+		setLazyDefinition(
+			typeProxy,
+			lazy
+		);
+	}
 	return typeProxy;
 } as _Internal_TC_<TypeProxyInstance>;
 
@@ -199,17 +243,29 @@ TypeProxy.prototype.construct = function (this: TypeProxyInstance, _target: unkn
 
 	// new.target id equal with target here
 
-	const {
-		__type__: type,
-		ancestor
-	} = this;
+	const { __type__: type } = this;
+
+	const { ancestor } = this;
 
 	// so this is a direct Sub-Type invocation
 	// having no existentInstance created earlier
 	// then we should rely on that somehow
 	const parentProto = type.isSubType ? getDefaultPrototype() : ancestor;
 
-	const mnemosyneProxy = createMnemosyne(parentProto);
+	// the lazy callback runs exactly ONCE per construction, here at the
+	// entry — unless the construction is about to be blocked (an errored
+	// parent with blockErrors on): the body path never runs user code for
+	// a blocked construction, so the callback must not run either. The
+	// pre-gather parentProto is enough for that check: on this path the
+	// facade still serves the define-time prototype (never an Error); only
+	// an explicit apply-path ancestor can be one
+	gatherLazyDefinition(type, parentProto);
+
+	// re-read after the gather: for a lazy root the ancestor facade now
+	// serves THIS construction's gathered prototype
+	const gatheredParentProto = type.isSubType ? getDefaultPrototype() : this.ancestor;
+
+	const mnemosyneProxy = createMnemosyne(gatheredParentProto);
 	const instance = new InstanceCreator(
 		type,
 		mnemosyneProxy,

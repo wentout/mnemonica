@@ -274,7 +274,7 @@ const tests = (opts) => {
 				expect(__subtypes__.has('NamedFunction')).is.equal(true);
 			});
 
-			const NamedClassPtr = UserType.lazy(() => {
+			const NamedClassPtr = UserType.lazy('NamedClass', () => {
 				const result = class NamedClass {
 					constructor (snc) {
 						this.type = 'class';
@@ -288,7 +288,7 @@ const tests = (opts) => {
 				return result;
 			});
 
-			UserType.lazy(function () {
+			UserType.lazy('NamedClass2', function () {
 				const result = class NamedClass2 {
 					constructor (snc) {
 						this.type = 'class';
@@ -302,7 +302,7 @@ const tests = (opts) => {
 				return result;
 			});
 
-			const SubNamedClassPtr = NamedClassPtr.lazy(() => {
+			const SubNamedClassPtr = NamedClassPtr.lazy('SubNamedClass', () => {
 				const result = class SubNamedClass {
 					constructor () {
 						this.type = 'subclass';
@@ -428,48 +428,76 @@ const tests = (opts) => {
 
 			describe('lazy handler-shape classification', () => {
 
-				it('a sync arrow from the getter throws the readable error at define', () => {
-					expect(() => UserType.lazy('LazyArrowPin', () => () => {}))
+				// the callback is never called at .lazy(): rejected shapes
+				// register fine and surface as wrapped construction errors
+				// at the first new
+
+				// a failed subtype construction splices the error at the top
+				// of the ROOT instance's chain, poisoning that root and
+				// everything under it (existing error-path behavior) — so
+				// every pin constructs on a fresh, disposable root instance
+				const freshUserInstance = () => {
+					const result = new UserType({
+						email    : 'lazy-pin@example.com',
+						password : 123
+					});
+					return result;
+				};
+
+				it('a sync arrow from the getter throws the readable error at construction', () => {
+					UserType.lazy('LazyArrowPin', () => () => {});
+					const instance = freshUserInstance();
+					expect(() => new instance.LazyArrowPin())
 						.to.throw(/LazyArrowPin: constructor must be a regular function or a class/);
 				});
 
-				it('a shorthand method from the getter throws the readable error at define', () => {
+				it('a shorthand method from the getter throws the readable error at construction', () => {
 					const holder = { method () {} };
-					expect(() => UserType.lazy('LazyMethodPin', () => holder.method))
+					UserType.lazy('LazyMethodPin', () => holder.method);
+					const instance = freshUserInstance();
+					expect(() => new instance.LazyMethodPin())
 						.to.throw(/LazyMethodPin: constructor must be a regular function or a class/);
 				});
 
-				it('a bound function from the getter throws the readable error at define', () => {
+				it('a bound function from the getter throws the readable error at construction', () => {
 					const regularFn = function () {};
-					expect(() => UserType.lazy('LazyBoundPin', () => regularFn.bind(null)))
+					UserType.lazy('LazyBoundPin', () => regularFn.bind(null));
+					const instance = freshUserInstance();
+					expect(() => new instance.LazyBoundPin())
 						.to.throw(/LazyBoundPin: constructor must be a regular function or a class/);
 				});
 
-				it('a generator from the getter throws the readable error at define', () => {
-					expect(() => UserType.lazy('LazyGenPin', () => function* () {}))
+				it('a generator from the getter throws the readable error at construction', () => {
+					UserType.lazy('LazyGenPin', () => function* () {});
+					const instance = freshUserInstance();
+					expect(() => new instance.LazyGenPin())
 						.to.throw(/LazyGenPin: generator functions are not supported as a constructor/);
 				});
 
-				it('after the throw lookup finds nothing and a corrected re-define succeeds', () => {
-					expect(() => UserType.lazy('LazyRePin', () => () => {})).to.throw();
+				it('a rejected shape registers at define, fails at the first new, and the name is taken', () => {
+					UserType.lazy('LazyRePin', () => () => {});
+					expect(UserType.lookup('LazyRePin')).to.exist;
+					// subtypes never surface through the root lookup
 					expect(lookup('LazyRePin')).is.equal(undefined);
-					const fixed = UserType.lazy('LazyRePin', () => function () {});
-					expect(fixed).to.exist;
+					const instance = freshUserInstance();
+					expect(() => new instance.LazyRePin()).to.throw();
+					expect(() => UserType.lazy('LazyRePin', () => function () {}))
+						.to.throw(errors.ALREADY_DECLARED);
 				});
 
 				it('a getter returning valid first and rejected later fails at that construction', () => {
 					let calls = 0;
 					UserType.lazy('LazyLatePin', () => {
 						calls++;
-						// define time consumes the first (valid) result; the
-						// first construction gets the rejected form
+						// the callback runs per construction now, never at
+						// define: the FIRST construction gets the valid form,
+						// the second the rejected one
 						const result = calls < 2 ? function () {} : () => {};
 						return result;
 					});
-					const instance = new (user.constructor)({
-						email    : 'late@example.com',
-						password : 123
-					});
+					const instance = freshUserInstance();
+					const first = new instance.LazyLatePin();
+					expect(first).to.exist;
 					expect(() => new instance.LazyLatePin())
 						.to.throw(/LazyLatePin: constructor must be a regular function or a class/);
 				});
@@ -990,25 +1018,28 @@ const tests = (opts) => {
 				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
 
 				[ 'handler must be a function', () => {
-					lazy(() => {
+					// the callback result is checked at construction now:
+					// a non-function result is a wrapped construction error
+					const LazyNonFunctionResult = lazy('LazyNonFunctionResult', () => {
 						const result = {
 							name : null
 						};
 						return result;
 					});
+					const instance = new LazyNonFunctionResult();
+					void instance;
 				}, errors.HANDLER_MUST_BE_A_FUNCTION ],
 
 				[ 'this type has already been declared : WithoutPassword', () => {
-					types.UserTypeConstructor.lazy(() => {
-						// eslint-disable-next-line func-name-matching
-						const result = function WithoutPassword () { };
+					types.UserTypeConstructor.lazy('WithoutPassword', () => {
+						const result = function () { };
 						return result;
 					});
 				}, errors.ALREADY_DECLARED ],
 
 				[ 'this type has already been declared : UserTypePL1', () => {
 					// in-depth re-declaration
-					types.UserType.UserTypePL1.lazy(() => {
+					types.UserType.lazy('UserTypePL1', () => {
 						const result = function () { };
 						return result;
 					});
@@ -1057,7 +1088,7 @@ const tests = (opts) => {
 			}
 
 			try {
-				lazy(() => {
+				lazy('SetSomeName', () => {
 					// eslint-disable-next-line mnemonica/return-intermediate
 					return function SetSomeName () { };
 				});
@@ -1066,7 +1097,7 @@ const tests = (opts) => {
 			}
 
 			try {
-				lazy(() => {
+				lazy('SetSomeName', () => {
 					// eslint-disable-next-line mnemonica/return-intermediate
 					return class SetSomeName { };
 				});

@@ -229,15 +229,9 @@ export function define <
 }
 
 export function lazy<T extends object>(
-	// explicit-source named form: lazy(source, TypeName, getter, config?)
+	// explicit-source form: lazy(source, TypeName, getter, config?)
 	source: RegistryHolderBase<object, object, string>,
 	TypeName: string,
-	getter: () => IDEF<T>,
-	config?: constructorOptions
-): IDefinitorInstance<T>;
-export function lazy<T extends object>(
-	// explicit-source unnamed form: lazy(source, getter, config?)
-	source: RegistryHolderBase<object, object, string>,
 	getter: () => IDEF<T>,
 	config?: constructorOptions
 ): IDefinitorInstance<T>;
@@ -248,32 +242,26 @@ export function lazy<T extends object>(
 	getter: LazyDef<T>,
 	config?: constructorOptions
 ): IDefinitorInstance<T>;
-export function lazy<T extends object>(
-	// unnamed form: lazy(getter, config?)
-	this: unknown,
-	getter: LazyDef<T>,
-	config?: constructorOptions
-): IDefinitorInstance<T>;
 export function lazy(
 	this: unknown,
-	sourceOrTypeNameOrGetter: unknown,
-	TypeNameOrGetterOrConfig?: unknown,
+	sourceOrTypeName: unknown,
+	TypeNameOrGetter?: unknown,
 	getterOrConfig?: unknown,
 	config?: unknown
 ): unknown {
 
-	// explicit-source form: lazy(source, name?, getter, config?)
+	// explicit-source form: lazy(source, TypeName, getter, config?)
 	// the source may be a TypesCollection (object) or a TypeProxy (function),
 	// so detection is: has a callable .lazy
 	const mayBeSource = (
-		(typeof sourceOrTypeNameOrGetter === 'object' && sourceOrTypeNameOrGetter !== null) ||
-		typeof sourceOrTypeNameOrGetter === 'function'
-	) && typeof (sourceOrTypeNameOrGetter as { lazy?: unknown }).lazy === 'function';
+		(typeof sourceOrTypeName === 'object' && sourceOrTypeName !== null) ||
+		typeof sourceOrTypeName === 'function'
+	) && typeof (sourceOrTypeName as { lazy?: unknown }).lazy === 'function';
 	if (mayBeSource) {
-		const source = sourceOrTypeNameOrGetter as { lazy: LazyAbsorber };
+		const source = sourceOrTypeName as { lazy: LazyAbsorber };
 		const sourceLazyResult = source.lazy(
-			TypeNameOrGetterOrConfig as string | LazyDef<object>,
-			getterOrConfig as LazyDef<object> | constructorOptions,
+			TypeNameOrGetter as string,
+			getterOrConfig as LazyDef<object>,
 			config as constructorOptions
 		) as unknown;
 		return sourceLazyResult;
@@ -283,8 +271,8 @@ export function lazy(
 	// Type assertion needed because TypesCollectionProxy is a Proxy
 	const lazyResult = (types as { lazy: LazyAbsorber })
 		.lazy(
-			sourceOrTypeNameOrGetter as string | LazyDef<object>,
-			TypeNameOrGetterOrConfig as LazyDef<object> | constructorOptions,
+			sourceOrTypeName as string,
+			TypeNameOrGetter as LazyDef<object>,
 			getterOrConfig as constructorOptions
 		) as unknown;
 	return lazyResult;

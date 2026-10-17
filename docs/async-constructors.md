@@ -52,11 +52,13 @@ its own instance, and `null` throws exactly like `undefined`
 > the `this`-substitution dance. Arrow functions never see the instance
 > (their `this` is lexical); the shape rules below reject the sync forms at
 > define time, and the `no-arrow-this` ESLint plugin is the early guard.
-> The same rules apply to `lazy` getters — on the getter's result, at
-> definition time AND on every construction (the getter may return a new
-> function each time, so the check cannot be cached). That per-construction
-> check is what makes `lazy` slower than a direct `define()`; keep getters
-> pure — they run eagerly at definition time and again per construction.
+> The same rules apply to `lazy` callbacks — on the callback's result, on
+> every construction (the callback may return a new function each time, so
+> the check cannot be cached). The callback itself is never called at define
+> time and must be sync (async and generator callbacks are rejected at
+> `.lazy()`); the constructor it returns may be async. That per-construction
+> check is what makes `lazy` slower than a direct `define()`; keep callbacks
+> pure.
 
 ---
 
@@ -328,7 +330,7 @@ The error's composite stack keeps its three sections for async failures too. The
 | `super()` returning Promise | ✅ | Standard JS; mnemonica's wrapper preserves it |
 | `define('Name', () => { ... })` — arrow, method, bound fn | ❌ | Define-time error: must be a regular function or a class |
 | `define('Name', function* () { ... })` — generators | ❌ | Define-time error: not supported as a constructor |
-| `lazy(getter)` returning any of the rejected forms | ❌ | Same errors, at define time AND at every construction |
+| `lazy('Name', callback)` whose result is any of the rejected forms | ❌ | Same errors, as construction errors at every `new` (the callback is never called at define time; async/generator callbacks themselves are rejected at `.lazy()`) |
 | Generators CONSUMING constructions (`yield new X()`) | ✅ | The yielded value is the instance; async generators even resolve un-awaited construction promises |
 
 ---

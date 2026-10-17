@@ -36,12 +36,6 @@ import {
 	LazyDef,
 } from '../../types';
 
-// Lazy getter: a function that, when called, returns the actual constructor function.
-// Used when define() receives an anonymous function wrapping the real constructor.
-export interface LazyTypeGetter extends CallableFunction {
-	(): ConstructHandler;
-}
-
 import { hop } from '../../utils/hop';
 
 import { constants } from '../../constants';
@@ -65,6 +59,7 @@ const { getDefaultPrototype } = mnemosynes;
 const {
 	ALREADY_DECLARED,
 	WRONG_TYPE_DEFINITION,
+	WRONG_MODIFICATION_PATTERN,
 	TYPENAME_MUST_BE_A_STRING,
 	HANDLER_MUST_BE_A_FUNCTION,
 	OPTIONS_ERROR,
@@ -78,8 +73,14 @@ import { TypeProxy } from './TypeProxy';
 
 import compileNewModificatorFunctionBody, {
 	classifyConstructHandler,
+	isCallableCandidate,
 	ConstructHandler
 } from './compileNewModificatorFunctionBody';
+
+import {
+	setLazyDefinition,
+	LazyDefinitionCell,
+} from './lazyDefinition';
 
 import TypesUtils, { CreationHandler } from '../utils';
 const {
@@ -99,6 +100,159 @@ export type TypesMap = Map<string, object> & {
 	[MNEMOSYNE]?: CollectionDef;
 };
 
+// Lazy type facades.
+// A lazy type is a regular define whose handler is the empty shim; the real
+// constructor is gathered from the callback once per construction (see
+// lazyDefinition.ts). The type's proto / config / constructHandler read the
+// gather cell, so the same type object serves every construction without
+// ever calling the callback at define time.
+const installLazyDefinition = function (
+	type: TypeDescriptorInstance,
+	TypeName: string,
+	shimConstructHandler: MnemonicaConstructorFactory,
+	shimProto: { [index: string]: unknown },
+	mergedConfig: { [index: string]: unknown },
+	getter: LazyDef<object>
+) {
+
+	// outside any construction the cell holds the define-time fallback:
+	// no handler, the shim's empty prototype, asClass off, no failure
+	const cell: LazyDefinitionCell = {
+		handler : undefined,
+		asClass : false,
+		proto   : shimProto,
+		failed  : false,
+		error   : undefined
+	};
+
+	// back to the define-time state: no handler retained, the shim's empty
+	// prototype, asClass off, no error
+	const reset = function () {
+		cell.handler = undefined;
+		cell.asClass = false;
+		cell.proto = shimProto;
+		cell.failed = false;
+		cell.error = undefined;
+	};
+
+	// the single callback call per construction — invoked ONLY by
+	// gatherLazyDefinition at the construction entries
+	const gather = function () {
+		reset();
+		try {
+			const gathered = getter();
+			if (!isCallableCandidate(gathered)) {
+				throw new HANDLER_MUST_BE_A_FUNCTION;
+			}
+			// the shape checks are what make it a ConstructHandler
+			classifyConstructHandler(
+				TypeName,
+				gathered
+			);
+			const handler = gathered;
+			cell.handler = handler;
+			cell.asClass = isClass(handler);
+			// same fallback as the direct path: an own NON-OBJECT prototype
+			// (prototype = 123) is replaced by the default
+			cell.proto = (
+				hop(
+					handler,
+					'prototype'
+				) &&
+				(typeof handler.prototype === 'object')
+			) ? handler.prototype : getDefaultPrototype();
+		} catch (error) {
+			// passthrough, exactly like runBuild's catch: whatever the
+			// callback threw reaches throwModificationError as-is (a thrown
+			// non-Error breaks the prototype splice there the same way it
+			// does for a constructor body). The flag is separate from the
+			// value: a callback may throw undefined
+			cell.failed = true;
+			cell.error = error;
+		}
+	};
+
+	// keyed by the type descriptor here; TypeProxy registers its proxy
+	// against the same definition when it wraps this type
+	setLazyDefinition(
+		type,
+		{
+			cell,
+			// the merged config value at define time — the callback must
+			// not run when the construction will be blocked
+			blockErrors : mergedConfig.blockErrors !== false,
+			gather,
+			reset
+		}
+	);
+
+	// zero-arg factory, the same contract as a direct type's
+	// constructHandler: builds the wrapper from the gathered handler,
+	// rebuilt on every construction (the callback may return a new function
+	// each time); before the gather — and after a failed one — it builds
+	// the shim's wrapper, which the error path then replaces
+	const lazyConstructHandler = function () {
+		if (cell.handler === undefined) {
+			const shimResult = shimConstructHandler();
+			return shimResult;
+		}
+		const { handler } = cell;
+		const modificatorBody = compileNewModificatorFunctionBody(
+			TypeName,
+			cell.asClass
+		);
+		const wrappedBody = modificatorBody(
+			handler,
+			CreationHandler,
+			SymbolConstructorName
+		);
+		const handlerResult = wrappedBody();
+		return handlerResult;
+	};
+
+	odp(
+		type,
+		'constructHandler', {
+			get () {
+				return lazyConstructHandler;
+			},
+			enumerable   : true,
+			configurable : true
+		}
+	);
+
+	odp(
+		type,
+		'proto', {
+			get () {
+				const result = cell.proto;
+				return result;
+			},
+			enumerable   : true,
+			configurable : true
+		}
+	);
+
+	// a fresh copy per read: asClass is per-construction and must never
+	// leak into the shared merged config
+	odp(
+		type,
+		'config', {
+			get () {
+				const result = Object.assign(
+					{},
+					mergedConfig,
+					{ asClass : cell.asClass }
+				);
+				return result;
+			},
+			enumerable   : true,
+			configurable : true
+		}
+	);
+
+};
+
 const typeDescriptorCreator = function (
 	this: TypeDescriptorInstance,
 	defineOrigin: TypeAbsorber,
@@ -107,6 +261,7 @@ const typeDescriptorCreator = function (
 	constructHandler: MnemonicaConstructorFactory,
 	proto: { [index: string]: unknown },
 	config: { [index: string]: unknown },
+	lazyGetter?: LazyDef<object>,
 ) {
 
 	// here "types" refers to subtypes of type or collection object {}
@@ -177,6 +332,20 @@ const typeDescriptorCreator = function (
 		defineOrigin
 	);
 
+	// lazy types: proto / config / constructHandler become facades over the
+	// per-construction gather cell — see installLazyDefinition above and
+	// lazyDefinition.ts
+	if (lazyGetter !== undefined) {
+		installLazyDefinition(
+			type,
+			TypeName,
+			constructHandler,
+			proto,
+			config,
+			lazyGetter
+		);
+	}
+
 	odp(
 		subtypes,
 		SymbolParentType, {
@@ -187,7 +356,10 @@ const typeDescriptorCreator = function (
 	);
 
 	// const ancestor = isSubType ? Object.create(null) : proto;
-	const ancestor = isSubType ? undefined : proto;
+	// a lazy root's ancestor is not known at define time either: TypeProxy
+	// installs a facade over the gather cell when it receives undefined for
+	// a non-subtype here
+	const ancestor = (isSubType || lazyGetter !== undefined) ? undefined : proto;
 	types.set(
 		TypeName,
 		new TypeProxy(
@@ -232,38 +404,17 @@ TypeDescriptor.prototype.define = function (
 
 TypeDescriptor.prototype.lazy = function (
 	this: TypeDescriptorInstance,
-	TypeNameOrGetter: string | LazyDef<object>,
-	getterOrConfig?: LazyDef<object> | object,
-	namedFormConfig?: object
+	TypeName: string,
+	getter?: LazyDef<object>,
+	config?: object
 ) {
-	let name: string | undefined;
-	let getter: LazyTypeGetter;
-	let config: object | undefined;
-	if (typeof TypeNameOrGetter === 'string') {
-		name = TypeNameOrGetter;
-		getter = getterOrConfig as LazyTypeGetter;
-		config = namedFormConfig;
-	} else {
-		getter = TypeNameOrGetter as LazyTypeGetter;
-		config = getterOrConfig as object;
-	}
-	let result: TypeClass;
-	if (name) {
-		result = lazy.call(
-			this,
-			this.subtypes as TypesMap,
-			name,
-			getter as LazyTypeGetter,
-			config
-		);
-	} else {
-		result = lazy.call(
-			this,
-			this.subtypes as TypesMap,
-			getter as LazyTypeGetter,
-			config
-		);
-	}
+	const result = lazy.call(
+		this,
+		this.subtypes as TypesMap,
+		TypeName,
+		getter,
+		config
+	);
 	return result;
 };
 
@@ -398,8 +549,12 @@ const createFromDirectHandler = function (
 	target: TypesMap,
 	name: string,
 	handler?: ConstructHandler,
-	config?: constructorOptions
+	config?: constructorOptions,
+	lazyGetter?: LazyDef<object>
 ) {
+	// for a lazy type the handler stays the empty shim: the real constructor
+	// is gathered from the callback once per construction (see
+	// installLazyDefinition above and lazyDefinition.ts)
 	handler = handler || function () { };
 	const asClass = isClass(handler);
 	const modificatorBody = compileNewModificatorFunctionBody(
@@ -437,7 +592,7 @@ const createFromDirectHandler = function (
 	if ( !target.has( name ) ) {
 		classifyConstructHandler(
 			name,
-			handler as ConstructHandler
+			handler
 		);
 	}
 
@@ -447,7 +602,8 @@ const createFromDirectHandler = function (
 		name,
 		makeConstructHandler,
 		proto,
-		config
+		config,
+		lazyGetter
 		// new TypeDescriptor() returns the TypeProxy it registers in the
 		// subtypes map — a Proxy materializing the TypeClass surface
 		// dynamically — so the public constructor contract is named here
@@ -455,108 +611,28 @@ const createFromDirectHandler = function (
 	return result;
 };
 
-const createFromLazyGetter = function (
+// .lazy() is a regular define whose handler is the empty shim; the real
+// constructor is gathered from the callback once per construction — see
+// installLazyDefinition above and lazyDefinition.ts. NOTHING is derived
+// from the callback here: it is never called at define time, so forward
+// references and circular imports work — the callback's target only has to
+// exist by the first `new`
+const createFromLazyDefinition = function (
 	defineOrigin: TypeAbsorber,
 	target: TypesMap,
-	name: string | undefined,
-	getter: LazyTypeGetter,
+	name: string,
+	getter: LazyDef<object>,
 	config: constructorOptions
 ) {
 
-	const type = getter();
-
-	if (typeof type !== 'function') {
-		throw new HANDLER_MUST_BE_A_FUNCTION;
-	}
-
-	const TypeName = name || type.name;
-	if (!TypeName) {
-		throw new TYPENAME_MUST_BE_A_STRING;
-	}
-
-	checkDuplicate(
-		target,
-		TypeName
-	);
-
-	// reject the unsupported handler shapes at DEFINE time too — the lazy
-	// path used to check only typeof/name, so a getter returning an arrow,
-	// a method, a bound function or a generator defined fine and failed
-	// (or misbehaved) at construction. Same readable errors as the direct
-	// path; checkDuplicate runs first so a taken name still wins with the
-	// canonical ALREADY_DECLARED
-	classifyConstructHandler(
-		TypeName,
-		type as ConstructHandler
-	);
-
-	const asClass = isClass(type);
-
-	// classifyConstructHandler above rejects only no-own-prototype
-	// functions; a function with an own NON-OBJECT prototype (prototype = 123)
-	// still passes and needs the default-prototype fallback
-	const proto = (
-		hop(
-			type,
-			'prototype'
-		) &&
-		(typeof type.prototype === 'object')
-	) ? type.prototype : getDefaultPrototype();
-
-	// the getter's raw function cannot construct directly: it lacks the
-	// compiled modificator body — the type's name on prototype.constructor,
-	// the CreationHandler call, the Reflect.construct with new.target —
-	// which is why named lazy with an anonymous or differently named
-	// handler failed to construct, and async lazy handlers broke. Build
-	// through the SAME wrapper as the direct path, per construction: the
-	// getter may return a NEW function each time, so neither the shape
-	// check nor the wrapper can be cached. This is what makes lazy slower
-	// than a direct define
-	const modificatorBody = compileNewModificatorFunctionBody(
-		TypeName,
-		asClass
-	);
-
-	const makeConstructHandler = () => {
-		const constructHandler = getter();
-
-		classifyConstructHandler(
-			TypeName,
-			constructHandler as ConstructHandler
-		);
-
-		const wrappedBody = modificatorBody(
-			constructHandler as ConstructHandler,
-			CreationHandler,
-			SymbolConstructorName
-		);
-		const handlerResult = wrappedBody();
-		return handlerResult;
-	};
-
-	// 'name' is a COLLECTION option only (same rejection as the direct path)
-	if ( config !== undefined && typeof config === 'object' && 'name' in config ) {
-		const nameError = '\"name\" is a collection option ' +
-			'(createTypesCollection({ name })) — it cannot be set on a type';
-		throw new OPTIONS_ERROR( nameError );
-	}
-	config = Object.assign(
-		{},
-		config
-	);
-
-	config.asClass = asClass;
-
-	const result = new TypeDescriptor(
+	const result = createFromDirectHandler(
 		defineOrigin,
 		target,
-		TypeName,
-		makeConstructHandler,
-		proto,
-		config
-		// same TypeProxy return as createFromDirectHandler: the public
-		// TypeClass contract is materialized dynamically by the Proxy
-	) as unknown as TypeClass;
+		name,
+		undefined,
+		config,
+		getter
+	);
 	return result;
 };
 
@@ -639,36 +715,55 @@ export const define = function (
 export const lazy = function (
 	this: unknown,
 	subtypes: TypesMap,
-	TypeNameOrGetter: string | LazyTypeGetter | undefined,
-	getterOrConfig?: LazyTypeGetter | object,
-	namedFormConfig?: object
+	TypeName: string,
+	getter?: LazyDef<object>,
+	config?: object
 ): TypeClass {
 
-	let name: string | undefined;
-	let getter: LazyTypeGetter;
-	let config: object | undefined;
-	if (typeof TypeNameOrGetter === 'string') {
-		name = TypeNameOrGetter;
-		getter = getterOrConfig as LazyTypeGetter;
-		config = namedFormConfig;
-	} else {
-		getter = TypeNameOrGetter as LazyTypeGetter;
-		config = getterOrConfig as object;
+	// the unnamed lazy(() => Constructor) form is dropped: the callback is
+	// never called at define time, so there is nothing to derive the name
+	// from — the name must come in explicitly
+	if (typeof TypeName !== 'string') {
+		throw new TYPENAME_MUST_BE_A_STRING;
 	}
 
 	if (typeof getter !== 'function') {
 		throw new HANDLER_MUST_BE_A_FUNCTION;
 	}
 
+	// the callback runs per construction and must deliver the constructor
+	// synchronously: an async or generator callback would produce a
+	// Promise / iterator instead
+	const callbackKind = getter.constructor.name;
+	if (
+		callbackKind === 'AsyncFunction' ||
+		callbackKind === 'GeneratorFunction' ||
+		callbackKind === 'AsyncGeneratorFunction'
+	) {
+		const msg = `${TypeName}: lazy callback must be a sync function ` +
+			'(async and generator callbacks are not supported)';
+		throw new WRONG_MODIFICATION_PATTERN( msg );
+	}
+
 	if (!config || (typeof config !== 'object' && typeof config !== 'function')) {
 		config = {};
 	}
 
-	const lazyResult = createFromLazyGetter(
-		this as TypeAbsorber,
+	// the same dotted-path resolution as define's string branch:
+	// lazy('Parent.Child', ...) lands under Parent, and a taken name fails
+	// with the descriptor's ALREADY_DECLARED, exactly like define
+	checkTypeName(TypeName);
+
+	const { target, name } = resolveDefinitionContext(
 		subtypes,
+		TypeName
+	);
+
+	const lazyResult = createFromLazyDefinition(
+		this as TypeAbsorber,
+		target,
 		name,
-		getter as LazyTypeGetter,
+		getter,
 		config as constructorOptions
 	);
 	return lazyResult;

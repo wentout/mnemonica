@@ -8,9 +8,7 @@ export declare const defaultTypes: import("./types").TypesCollection<{}, object,
 export declare function define<Reg extends object, Parent extends object, Path extends string, const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(source: RegistryHolderBase<Reg, Parent, Path>, TypeName: Name, constructHandler?: IDEF<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, Reg & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>, ChildPath, Parent>;
 export declare function define<T extends object, P extends object = object, N extends Proto<P, T> = Proto<P, T>, R extends IDefinitorInstance<N> = IDefinitorInstance<N>>(this: unknown, TypeName?: string | DefineNewableOrCallable, constructHandler?: IDEF<T> | DefineNewableOrCallable | object | boolean, config?: constructorOptions): R;
 export declare function lazy<T extends object>(source: RegistryHolderBase<object, object, string>, TypeName: string, getter: () => IDEF<T>, config?: constructorOptions): IDefinitorInstance<T>;
-export declare function lazy<T extends object>(source: RegistryHolderBase<object, object, string>, getter: () => IDEF<T>, config?: constructorOptions): IDefinitorInstance<T>;
 export declare function lazy<T extends object>(this: unknown, TypeName: string, getter: LazyDef<T>, config?: constructorOptions): IDefinitorInstance<T>;
-export declare function lazy<T extends object>(this: unknown, getter: LazyDef<T>, config?: constructorOptions): IDefinitorInstance<T>;
 export declare function lookup<const K extends keyof TypeRegistry>(this: unknown, TypeNestedPath: K): WithHookRegister<TypeRegistry[K]>;
 export declare function lookup<Reg extends object, const K extends keyof Reg & string>(source: {
     lookup: TypeLookup<Reg>;

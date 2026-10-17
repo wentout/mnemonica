@@ -108,7 +108,7 @@ const pl1Proto = {
 	UserTypePL1Extra : 'UserTypePL_1_Extra',
 };
 
-UserType.lazy(() => {
+UserType.lazy('UserTypePL1', () => {
 	const UserTypePL1 = function () {
 		this.user_pl_1_sign = 'pl_1';
 	};
@@ -135,7 +135,7 @@ const shaperFactory = () => {
 	return result;
 };
 
-UserType.lazy(() => {
+UserType.lazy('UserTypePL2', () => {
 	// const Shaper = shaperFactory(true);
 	const Shaper = shaperFactory();
 	class UserTypePL2 extends Shaper {
@@ -476,7 +476,7 @@ describe('Main Test', () => {
 		WithoutPasswordSign : 'WithoutPasswordSign'
 	};
 
-	const UserWithoutPassword = defaultTypes.UserTypeConstructor.lazy(() => {
+	const UserWithoutPassword = defaultTypes.UserTypeConstructor.lazy('WithoutPassword', () => {
 		const WithoutPassword = function () {
 			this.password = undefined;
 		};
@@ -490,7 +490,7 @@ describe('Main Test', () => {
 	const WithAdditionalSignProto = {
 		WithAdditionalSignSign : 'WithAdditionalSignSign'
 	};
-	const WithAdditionalSignTypeDef = UserWithoutPassword.lazy(() => {
+	const WithAdditionalSignTypeDef = UserWithoutPassword.lazy('WithAdditionalSign', () => {
 		const WithAdditionalSign = function (sign) {
 			this.sign = sign;
 		};
@@ -503,7 +503,7 @@ describe('Main Test', () => {
 	const MoreOverProto = {
 		MoreOverSign : 'MoreOverSign'
 	};
-	const MoreOverTypeDef = WithAdditionalSignTypeDef.lazy(() => {
+	const MoreOverTypeDef = WithAdditionalSignTypeDef.lazy('MoreOver', () => {
 		class MoreOver {
 			constructor (str) {
 				this.str = str || 'moreover str';
@@ -536,7 +536,7 @@ describe('Main Test', () => {
 		EvenMoreSign : 'EvenMoreSign'
 	};
 
-	const EvenMoreTypeDef = OverMore.lazy(() => {
+	const EvenMoreTypeDef = OverMore.lazy('EvenMore', () => {
 
 		// it would be MoreOver . OverMore . EvenMore
 		const EvenMore = function (str) {
@@ -735,14 +735,17 @@ describe('Main Test', () => {
 
 		[
 			[ defaultTypes.subtypes, 'UserType', UserTypeProto ],
-			[ UserType.subtypes, 'UserTypePL1', pl1Proto ],
+			// lazy types: the registered proto is the shim's empty prototype
+			// (the callback's own .prototype is never used at define time),
+			// so their expected proto below is an empty object
+			[ UserType.subtypes, 'UserTypePL1', {} ],
 			[ UserType.subtypes, 'UserTypePL2' ],
 			[ defaultTypes.subtypes, 'UserTypeConstructor', UserTypeConstructorProto ],
-			[ defaultTypes.UserTypeConstructor.subtypes, 'WithoutPassword', WithoutPasswordProto ],
-			[ UserWithoutPassword.subtypes, 'WithAdditionalSign', WithAdditionalSignProto ],
+			[ defaultTypes.UserTypeConstructor.subtypes, 'WithoutPassword', {} ],
+			[ UserWithoutPassword.subtypes, 'WithAdditionalSign', {} ],
 			[ WithAdditionalSignTypeDef.subtypes, 'MoreOver' ],
 			[ MoreOverTypeDef.subtypes, 'OverMore', OverMoreProto ],
-			[ OverMore.subtypes, 'EvenMore', EvenMoreProto ],
+			[ OverMore.subtypes, 'EvenMore', {} ],
 		].forEach(entry => {
 			const [ _types, TypeName, proto ] = entry;
 			const parentType = _types[ SymbolParentType ];
@@ -1649,12 +1652,16 @@ describe('Main Test', () => {
 		});
 
 		describe('define() coverage for refactored paths', () => {
-			it('should propagate factory errors from .lazy()', () => {
+			it('should propagate factory errors from .lazy() as construction errors at the first new', () => {
+				// the callback is never called at .lazy(): its throw surfaces
+				// at construction, wrapped into an errored instance of the type
+				const LazyFactoryThrow = lazy('LazyFactoryThrow', () => {
+					throw new Error('factory throws');
+				});
 				let thrownError;
 				try {
-					lazy(() => {
-						throw new Error('factory throws');
-					});
+					const instance = new LazyFactoryThrow();
+					void instance;
 				} catch (error) {
 					thrownError = error;
 				}
@@ -1688,7 +1695,7 @@ describe('Main Test', () => {
 			});
 
 			it('should cover explicit-source lazy form', () => {
-				const LazyExplicitSourceTypeResult = lazy(defaultTypes, () => {
+				const LazyExplicitSourceTypeResult = lazy(defaultTypes, 'LazyExplicitSourceType', () => {
 					const result = class LazyExplicitSourceType {};
 					return result;
 				});
@@ -1735,7 +1742,7 @@ describe('Main Test', () => {
 			});
 
 			it('should cover free lazy with successful getter', () => {
-				const FreeLazyTypeResult = lazy(() => {
+				const FreeLazyTypeResult = lazy('FreeLazyType', () => {
 					const result = class FreeLazyType {};
 					return result;
 				});
@@ -1744,7 +1751,7 @@ describe('Main Test', () => {
 			});
 
 			it('should cover lazy with config object', () => {
-				const LazyWithConfigTypeResult = UserType.lazy(() => {
+				const LazyWithConfigTypeResult = UserType.lazy('LazyWithConfigType', () => {
 					const result = class LazyWithConfigType {};
 					return result;
 				}, { strictChain : false });
@@ -1753,7 +1760,7 @@ describe('Main Test', () => {
 			});
 
 			it('should cover lazy getter returning function with non-object prototype', () => {
-				const NonObjectProtoTypeResult = lazy(() => {
+				const NonObjectProtoTypeResult = lazy('NonObjectProtoType', () => {
 					function NonObjectProtoType () {}
 					NonObjectProtoType.prototype = 123;
 					const result = NonObjectProtoType;
@@ -1766,7 +1773,7 @@ describe('Main Test', () => {
 			});
 
 			it('should cover free lazy with null this', () => {
-				const LazyNullThisTypeResult = lazy.call(null, () => {
+				const LazyNullThisTypeResult = lazy.call(null, 'LazyNullThisType', () => {
 					const result = class LazyNullThisType {};
 					return result;
 				});
@@ -1775,7 +1782,7 @@ describe('Main Test', () => {
 			});
 
 			it('should cover free lazy with type proxy this', () => {
-				const LazyProxyThisTypeResult = lazy.call(UserType, () => {
+				const LazyProxyThisTypeResult = lazy.call(UserType, 'LazyProxyThisType', () => {
 					const result = class LazyProxyThisType {};
 					return result;
 				});
@@ -1784,7 +1791,7 @@ describe('Main Test', () => {
 			});
 
 			it('should cover free lazy with mnemonica this', () => {
-				const LazyMnemonicaThisTypeResult = lazy.call(mnemonica, () => {
+				const LazyMnemonicaThisTypeResult = lazy.call(mnemonica, 'LazyMnemonicaThisType', () => {
 					const result = class LazyMnemonicaThisType {};
 					return result;
 				});
@@ -1793,7 +1800,7 @@ describe('Main Test', () => {
 			});
 
 			it('should cover lazy with function config', () => {
-				const LazyFunctionConfigTypeResult = UserType.lazy(() => {
+				const LazyFunctionConfigTypeResult = UserType.lazy('LazyFunctionConfigType', () => {
 					const result = class LazyFunctionConfigType {};
 					return result;
 				}, () => {});
@@ -1851,13 +1858,17 @@ describe('Main Test', () => {
 				expect(instance).instanceOf(LazyChainRoot);
 			});
 
-			it('unnamed lazy takes the name from the returned function', () => {
-				const LazyAutoType = defaultTypes.lazy(() => function LazyAutoName () {
-					this.tag = 'auto';
-				});
-				const instance = new LazyAutoType();
-				expect(instance.tag).to.equal('auto');
-				expect(String(instance.constructor.name)).to.equal('LazyAutoName');
+			it('the unnamed lazy form is rejected — the name must come explicitly', () => {
+				// the callback is never called at .lazy(), so there is nothing
+				// to derive a name from; the unnamed form is a define-time error
+				let thrownError;
+				try {
+					defaultTypes.lazy(() => function LazyAutoName () {});
+				} catch (error) {
+					thrownError = error;
+				}
+				expect(thrownError).instanceOf(errors.TYPENAME_MUST_BE_A_STRING);
+				expect(thrownError.message).to.equal('typename must be a string');
 			});
 
 			it('async lazy handler constructs (awaits to the instance)', async () => {
@@ -1880,6 +1891,307 @@ describe('Main Test', () => {
 				expect(instance.tag).to.equal('class');
 				expect(instance).instanceOf(LazyClass);
 			});
+		});
+
+		describe('lazy deferred define semantics', () => {
+
+			// a dedicated collection: these constructions must not pollute
+			// the defaultTypes hook counters (hooks.js counts them)
+			const LazyLab = createTypesCollection({ name : 'LazyLab' });
+
+			it('the callback is never called at .lazy() and exactly once per new', () => {
+				let calls = 0;
+				const LazyCounted = LazyLab.lazy('LazyCounted', () => {
+					calls++;
+					const result = function () {};
+					return result;
+				});
+				expect(calls).to.equal(0);
+				const first = new LazyCounted();
+				const second = new LazyCounted();
+				expect(calls).to.equal(2);
+				expect(first).instanceOf(LazyCounted);
+				expect(second).instanceOf(LazyCounted);
+			});
+
+			it('the define-time surface works before any new', () => {
+				const LazySurface = LazyLab.lazy('LazySurface', () => {
+					const result = function () {};
+					return result;
+				});
+				expect(LazyLab.lookup('LazySurface')).to.equal(LazySurface);
+				LazySurface.define('LazySurfaceSub', function () {});
+				expect(LazySurface.lookup('LazySurfaceSub')).to.exist;
+				LazySurface.registerHook('postCreation', () => undefined);
+				// X.prototype of a lazy type is the shim's empty prototype —
+				// the callback's own .prototype is never used at define time
+				expect(LazySurface.prototype).to.deep.equal({});
+			});
+
+			it('forward references resolve at the first new', () => {
+				let target = null;
+				const LazyForward = LazyLab.lazy('LazyForward', () => target);
+				target = function () {
+					this.forward = true;
+				};
+				const instance = new LazyForward();
+				expect(instance.forward).to.equal(true);
+			});
+
+			it('the callback result may differ per new — function vs class', () => {
+				let flip = false;
+				const LazyFlip = LazyLab.lazy('LazyFlip', () => {
+					flip = !flip;
+					if (flip) {
+						const fnResult = function () {
+							this.kind = 'function';
+						};
+						return fnResult;
+					}
+					const classResult = class {
+						constructor () {
+							this.kind = 'class';
+						}
+
+						classMethod () {
+							return 'class-method';
+						}
+					};
+					return classResult;
+				});
+				const flipFn = new LazyFlip();
+				const flipClass = new LazyFlip();
+				const flipFn2 = new LazyFlip();
+				expect(flipFn.kind).to.equal('function');
+				expect(flipClass.kind).to.equal('class');
+				expect(flipFn2.kind).to.equal('function');
+				expect(flipClass.classMethod()).to.equal('class-method');
+				expect(flipFn.classMethod).to.equal(undefined);
+			});
+
+			it('a callback throw is a construction error: creationError with existentInstance and args, preCreation never fires', () => {
+				const LazyThrowerParent = LazyLab.define('LazyThrowerParent', function () {});
+				const parentInstance = new LazyThrowerParent();
+				const seen = {
+					preCreation   : 0,
+					creationError : 0,
+					opts          : undefined
+				};
+				const LazyThrower = LazyThrowerParent.lazy('LazyThrower', () => {
+					throw new Error('gather exploded');
+				});
+				LazyThrower.registerHook('preCreation', () => {
+					seen.preCreation++;
+				});
+				LazyThrower.registerHook('creationError', (opts) => {
+					seen.creationError++;
+					seen.opts = opts;
+				});
+				let thrownError;
+				try {
+					const instance = new parentInstance.LazyThrower('arg1', 'arg2');
+					void instance;
+				} catch (error) {
+					thrownError = error;
+				}
+				expect(thrownError).instanceOf(Error);
+				expect(thrownError).instanceOf(LazyThrower);
+				expect(seen.preCreation).to.equal(0);
+				expect(seen.creationError).to.equal(1);
+				expect(seen.opts.existentInstance).to.equal(parentInstance);
+				expect(seen.opts.args).to.deep.equal([ 'arg1', 'arg2' ]);
+				expect(getProps(thrownError).originalError.message).to.equal('gather exploded');
+			});
+
+			it('a creationError hook returning true suppresses the throw', () => {
+				const LazySuppressed = LazyLab.lazy('LazySuppressed', () => {
+					throw new Error('suppressed gather failure');
+				});
+				let fires = 0;
+				LazySuppressed.registerHook('creationError', () => {
+					fires++;
+					return true;
+				});
+				const result = new LazySuppressed();
+				expect(result).instanceOf(Error);
+				expect(result).instanceOf(LazySuppressed);
+				// twice, exactly like a suppressed constructor-body failure:
+				// once inside throwModificationError, once from postProcessing
+				expect(fires).to.equal(2);
+			});
+
+			it('a callback throwing undefined mirrors the constructor-body path', () => {
+				// the failed flag is explicit precisely because the thrown
+				// value may BE undefined; the body path throws the splice
+				// TypeError for the same value
+				const BodyThrowsUndefined = LazyLab.define('BodyThrowsUndefined', function () {
+					throw undefined;
+				});
+				let bodyThrown;
+				try {
+					const instance = new BodyThrowsUndefined();
+					void instance;
+				} catch (error) {
+					bodyThrown = error;
+				}
+				const LazyThrowsUndefined = LazyLab.lazy('LazyThrowsUndefined', () => {
+					throw undefined;
+				});
+				let lazyThrown;
+				try {
+					const instance = new LazyThrowsUndefined();
+					void instance;
+				} catch (error) {
+					lazyThrown = error;
+				}
+				expect(bodyThrown).to.exist;
+				expect(lazyThrown).to.exist;
+				expect(lazyThrown.message).to.equal(bodyThrown.message);
+			});
+
+			it('a nested new inside a custom ModificationConstructor cannot clobber the outer gather error', () => {
+				const defaultModificationConstructor =
+					require('../build/api/types/createInstanceModificator').default;
+				let nestedAttempted = false;
+				let hookFires = 0;
+				const LazyNestedGuard = LazyLab.lazy('LazyNestedGuard', () => {
+					throw new Error('outer gather fails');
+				}, {
+					ModificationConstructor : () => {
+						if (!nestedAttempted) {
+							nestedAttempted = true;
+							try {
+								// re-gathers the same type mid-setup of the outer
+								// construction; the outer's gather error must survive
+								const nested = new LazyNestedGuard();
+								void nested;
+							} catch (error) {
+								void error;
+							}
+						}
+						const modificatorConstructor = defaultModificationConstructor();
+						return modificatorConstructor;
+					}
+				});
+				LazyNestedGuard.registerHook('creationError', () => {
+					hookFires++;
+				});
+				let thrownError;
+				try {
+					const instance = new LazyNestedGuard();
+					void instance;
+				} catch (error) {
+					thrownError = error;
+				}
+				expect(thrownError).to.exist;
+				expect(thrownError.message).to.equal('outer gather fails');
+				expect(hookFires).to.equal(2);
+			});
+
+			it('X.prototype stays the shim prototype before and after constructions', () => {
+				let returnedProto;
+				const LazyProtoPin = LazyLab.lazy('LazyProtoPin', () => {
+					const result = function () {};
+					returnedProto = result.prototype;
+					return result;
+				});
+				const protoBefore = LazyProtoPin.prototype;
+				const instance = new LazyProtoPin();
+				new LazyProtoPin();
+				expect(LazyProtoPin.prototype).to.equal(protoBefore);
+				expect(LazyProtoPin.prototype).to.not.equal(returnedProto);
+				expect(instance).instanceOf(LazyProtoPin);
+			});
+
+			it('async handler and async chain link gather per construction', async () => {
+				const LazyAsyncRoot = LazyLab.lazy('LazyAsyncRoot', () => async function () {
+					this.root = true;
+					return this;
+				});
+				const LazyAsyncSub = LazyAsyncRoot.lazy('LazyAsyncSub', () => function () {
+					this.sub = true;
+				});
+				const chainedSub = await new LazyAsyncRoot().LazyAsyncSub();
+				expect(chainedSub.root).to.equal(true);
+				expect(chainedSub.sub).to.equal(true);
+				expect(chainedSub).instanceOf(LazyAsyncSub);
+				expect(chainedSub).instanceOf(LazyAsyncRoot);
+			});
+
+			it('a blocked construction (errored parent, blockErrors on) never calls the callback', () => {
+				const BlockedParent = LazyLab.define('BlockedParent', function () {
+					throw new Error('parent body failed');
+				});
+				// suppress, to obtain the errored parent instance
+				BlockedParent.registerHook('creationError', () => true);
+				const erroredParent = new BlockedParent();
+				expect(erroredParent).instanceOf(Error);
+				let callbackCalls = 0;
+				BlockedParent.lazy('BlockedLazySub', () => {
+					callbackCalls++;
+					const result = function () {};
+					return result;
+				});
+				BlockedParent.define('BlockedDirectSub', function () {});
+				let lazyThrown;
+				try {
+					const instance = new erroredParent.BlockedLazySub();
+					void instance;
+				} catch (error) {
+					lazyThrown = error;
+				}
+				let directThrown;
+				try {
+					const instance = new erroredParent.BlockedDirectSub();
+					void instance;
+				} catch (error) {
+					directThrown = error;
+				}
+				expect(callbackCalls).to.equal(0);
+				expect(lazyThrown).to.exist;
+				expect(directThrown).to.exist;
+				expect(lazyThrown.message).to.equal(directThrown.message);
+			});
+
+			it('a dotted lazy path lands under the parent type, like define', () => {
+				LazyLab.define('PathRootLazy', function () {});
+				const LazyPathChild = LazyLab.lazy('PathRootLazy.LazyPathChild', () => {
+					const result = function () {
+						this.dotted = true;
+					};
+					return result;
+				});
+				expect(LazyLab.lookup('PathRootLazy.LazyPathChild')).to.equal(LazyPathChild);
+				const PathRootLazy = LazyLab.lookup('PathRootLazy');
+				const rootInstance = new PathRootLazy();
+				const child = new rootInstance.LazyPathChild();
+				expect(child.dotted).to.equal(true);
+				expect(child).instanceOf(LazyPathChild);
+				expect(child).instanceOf(PathRootLazy);
+			});
+
+			it('async, generator and async-generator callbacks are rejected at .lazy()', () => {
+				expect(() => LazyLab.lazy('LazyAsyncCbPin', async () => function () {}))
+					.to.throw(errors.WRONG_MODIFICATION_PATTERN);
+				expect(() => LazyLab.lazy('LazyGenCbPin', function* () {}))
+					.to.throw(errors.WRONG_MODIFICATION_PATTERN);
+				expect(() => LazyLab.lazy('LazyAsyncGenCbPin', async function* () {}))
+					.to.throw(errors.WRONG_MODIFICATION_PATTERN);
+			});
+
+			it('the lazyDefinition helpers no-op on primitives and foreign objects', () => {
+				const {
+					gatherLazyDefinition,
+					resetLazyDefinition,
+					readLazyDefinitionFailure
+				} = require('../build/api/types/lazyDefinition');
+				expect(gatherLazyDefinition(null)).to.equal(undefined);
+				expect(gatherLazyDefinition(42)).to.equal(undefined);
+				expect(resetLazyDefinition('nope')).to.equal(undefined);
+				expect(readLazyDefinitionFailure(false)).to.equal(undefined);
+				expect(readLazyDefinitionFailure({})).to.equal(undefined);
+			});
+
 		});
 
 		describe('constructor .lookup() relative semantics (5-level chain)', () => {

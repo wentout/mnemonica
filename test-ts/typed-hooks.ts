@@ -318,3 +318,38 @@ plainCollection.registerHook('preCreation', (opts) => {
 	// @ts-expect-error — preCreation opts have no throwModificationError
 	opts.throwModificationError;
 });
+
+// --- lazy as deferred define: typing pins ------------------------------------
+
+// the named lazy form is typed from the callback's return type, and the
+// typed registerHook keeps working on it
+const LazyStrictHook = HookUser.lazy('LazyStrictHook', () => function (
+	this: HookLazyStrict
+) {
+	this.mark = 'strict';
+});
+interface HookLazyStrict {
+	mark: string;
+}
+
+LazyStrictHook.registerHook('postCreation', (opts) => {
+	const created: HookLazyStrict = opts.inheritedInstance;
+	void created;
+	// parent of a lazy subtype is the holder instance type
+	const parentName: string = opts.existentInstance.name;
+	void parentName;
+	// @ts-expect-error — the lazy instance has no 'role' (only parent fields)
+	opts.inheritedInstance.role;
+});
+
+// the unnamed form is dropped: the callback is never called at define time,
+// so there is nothing to derive the name from — a type error on both the
+// type-level and the free forms
+// @ts-expect-error — the unnamed form requires a name first
+HookUser.lazy(() => function (this: HookLazyStrict) {
+	this.mark = 'unnamed';
+});
+// @ts-expect-error — free lazy also requires the name
+lazy(() => function (this: HookLazyStrict) {
+	this.mark = 'unnamed';
+});

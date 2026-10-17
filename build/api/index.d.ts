@@ -6,6 +6,6 @@ export declare const hooks: {
 };
 export declare const types: {
     define: (this: unknown, subtypes: import("./types").TypesMap, TypeOrTypeName: string | import("../types").DefineNewableOrCallable, constructHandlerOrConfig?: import("../types").DefineNewableOrCallable | object, config?: object) => import("..").TypeClass;
-    lazy: (this: unknown, subtypes: import("./types").TypesMap, TypeNameOrGetter: string | import("./types").LazyTypeGetter | undefined, getterOrConfig?: import("./types").LazyTypeGetter | object, namedFormConfig?: object) => import("..").TypeClass;
+    lazy: (this: unknown, subtypes: import("./types").TypesMap, TypeName: string, getter?: import("..").LazyDef<object>, config?: object) => import("..").TypeClass;
     lookup: (this: import("./types").TypesMap, TypeNestedPath: string) => import("..").TypeClass | undefined;
 };

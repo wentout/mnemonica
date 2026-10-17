@@ -50,6 +50,16 @@ export interface CreationHandler extends CallableFunction {
 	(this: object, answer: unknown): unknown;
 }
 
+// what a typeof === 'function' check proves — callability and nothing
+// more; the SHAPE checks in classifyConstructHandler below are what make
+// a candidate a ConstructHandler
+export interface CallableCandidate extends CallableFunction {}
+
+export const isCallableCandidate = ( value: unknown ): value is CallableCandidate => {
+	const result = typeof value === 'function';
+	return result;
+};
+
 // Classify the construct handler ONCE at define time from two cheap
 // facts only — constructor.name and own prototype — NO toString()
 // (overhead, fragile under transpilers). Async forms are NOT
@@ -59,10 +69,14 @@ export interface CreationHandler extends CallableFunction {
 // function — the three are indistinguishable here and all are
 // rejected with the readable error (the docs: write constructors as
 // regular functions or classes).
-export const classifyConstructHandler = ( FunctionName: string, ConstructHandler: ConstructHandler ) => {
-	const handlerKind = ConstructHandler.constructor.name;
+// a function declaration: assertion signatures require one (TS2775)
+export function classifyConstructHandler (
+	FunctionName: string,
+	handler: CallableCandidate
+): asserts handler is ConstructHandler {
+	const handlerKind = handler.constructor.name;
 	const hasOwnPrototype = hop(
-		ConstructHandler,
+		handler,
 		'prototype'
 	);
 
@@ -79,7 +93,7 @@ export const classifyConstructHandler = ( FunctionName: string, ConstructHandler
 			'(arrow functions, methods and bound functions are not supported)';
 		throw new WRONG_MODIFICATION_PATTERN( msg );
 	}
-};
+}
 
 const getClassConstructor = (
 	ConstructHandler: ClassConstructHandler,

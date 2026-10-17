@@ -86,30 +86,24 @@ define('Parent.Child', function (this: Child, data: Data) {
 
 ## Lazy definitions
 
-Use `.lazy()` when the constructor must be resolved through a getter — for
+Use `.lazy()` when the constructor must be resolved through a callback — for
 example, to break a circular dependency or to defer constructor selection until
-definition time. `.define()` no longer accepts an anonymous function as its
+the first construction. `.define()` no longer accepts an anonymous function as its
 first argument; that form has moved to `.lazy()`.
 
-### Unnamed (name from returned constructor)
-```typescript
-const LazyType = define('RootType', function () {})
-	.lazy(() => function LazySubType(this: LazySubType, data: LazyData) {
-		Object.assign(this, data);
-	});
-```
+The callback is **never called at definition time** — only once per
+construction, before `preCreation` hooks. It must be a sync function (async and
+generator callbacks are rejected at definition time); the constructor it
+returns may be async. Because nothing is derived from the callback at
+definition time, the name is always explicit:
 
-### Named (explicit type name)
 ```typescript
-const NamedLazy = RootType.lazy('NamedLazy', () => function (data: NamedData) {
+const LazySubType = RootType.lazy('LazySubType', () => function (this: LazySubType, data: LazyData) {
 	Object.assign(this, data);
 });
 ```
 
-### Free-function form
 ```typescript
-import { lazy } from 'mnemonica';
-
 const LazyRoot = lazy('LazyRoot', () => class LazyRoot {
 	field: string;
 	constructor(field: string) {
@@ -118,12 +112,15 @@ const LazyRoot = lazy('LazyRoot', () => class LazyRoot {
 });
 ```
 
-The getter is called once at definition time (to resolve the name, class mode,
-and prototype) and then again on every construction — keep it free of side
-effects that must not run at `define()` time. The returned constructor is
-registered exactly like a constructor passed directly to `define()`, and the
-resulting type supports `.define()`, `.lazy()`, `.lookup()`, and subtype
-chaining.
+The returned constructor is registered exactly like a constructor passed
+directly to `define()`, and the resulting type supports `.define()`,
+`.lazy()`, `.lookup()`, hooks, and subtype chaining before any construction.
+A callback throw or a rejected result shape is a construction error:
+`creationError` hooks fire with the existent instance and the construction
+args, and `preCreation` never runs — exactly like a constructor body that
+throws. `X.prototype` of a lazy type is the shim's empty prototype; the
+callback result's own `.prototype` is used per construction, never registered
+at define time.
 
 ## Export root constructors only when needed; never export subtypes
 

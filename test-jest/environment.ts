@@ -263,7 +263,7 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				expect(__subtypes__.has('NamedFunction')).toEqual(true);
 			});
 
-			const NamedClassPtr = UserType.lazy(() => {
+			const NamedClassPtr = UserType.lazy('NamedClass', () => {
 				return class NamedClass {
 					type: string;
 					snc: number;
@@ -278,7 +278,7 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				};
 			});
 
-			UserType.lazy(function () {
+			UserType.lazy('NamedClass2', function () {
 				return class NamedClass2 {
 					type: string;
 					snc: number;
@@ -293,7 +293,7 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				};
 			});
 
-			const SubNamedClassPtr = NamedClassPtr.lazy(() => {
+			const SubNamedClassPtr = NamedClassPtr.lazy('SubNamedClass', () => {
 				return class SubNamedClass {
 					type: string;
 					constructor() {
@@ -452,45 +452,90 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 
 			describe('lazy handler-shape classification', () => {
 
-				it('a sync arrow from the getter throws the readable error at define', () => {
-					expect(() => UserType.lazy('LazyArrowPinJest', () => () => {}))
+				// the callback is never called at .lazy(): rejected shapes
+				// register fine and surface as wrapped construction errors
+				// at the first new
+
+				// a failed construction splices the error into the PARENT
+				// instance's chain (existing error-path behavior), so every
+				// pin constructs on a fresh, disposable parent instance — a
+				// a failed subtype construction splices the error at the top
+				// of the ROOT instance's chain, poisoning that root and
+				// everything under it (existing error-path behavior) — so
+				// every pin constructs on a fresh, disposable root instance
+				const freshUserInstance = () => {
+					const result = new UserType({
+						email: 'lazy-pin-jest@example.com',
+						password: 123
+					});
+					return result;
+				};
+
+				// Reflect-based, cast-free construction of a subtype the TS
+				// registry does not know (these tests build their own chains)
+				const constructSubtype = (instance: object, name: string) => {
+					const ctor: unknown = Reflect.get(instance, name);
+					if (typeof ctor !== 'function') {
+						throw new Error(`no subtype constructor ${name}`);
+					}
+					const result = Reflect.construct(ctor, []);
+					return result;
+				};
+
+				it('a sync arrow from the getter throws the readable error at construction', () => {
+					UserType.lazy('LazyArrowPinJest', () => () => {});
+					const instance = freshUserInstance();
+					expect(() => constructSubtype(instance, 'LazyArrowPinJest'))
 						.toThrow(/LazyArrowPinJest: constructor must be a regular function or a class/);
 				});
 
-				it('a shorthand method from the getter throws the readable error at define', () => {
+				it('a shorthand method from the getter throws the readable error at construction', () => {
 					const holder = { method () {} };
-					expect(() => UserType.lazy('LazyMethodPinJest', () => holder.method))
+					UserType.lazy('LazyMethodPinJest', () => holder.method);
+					const instance = freshUserInstance();
+					expect(() => constructSubtype(instance, 'LazyMethodPinJest'))
 						.toThrow(/LazyMethodPinJest: constructor must be a regular function or a class/);
 				});
 
-				it('a bound function from the getter throws the readable error at define', () => {
+				it('a bound function from the getter throws the readable error at construction', () => {
 					const regularFn = function () {};
-					expect(() => UserType.lazy('LazyBoundPinJest', () => regularFn.bind(null)))
+					UserType.lazy('LazyBoundPinJest', () => regularFn.bind(null));
+					const instance = freshUserInstance();
+					expect(() => constructSubtype(instance, 'LazyBoundPinJest'))
 						.toThrow(/LazyBoundPinJest: constructor must be a regular function or a class/);
 				});
 
-				it('a generator from the getter throws the readable error at define', () => {
-					expect(() => UserType.lazy('LazyGenPinJest', () => function* () {}))
+				it('a generator from the getter throws the readable error at construction', () => {
+					UserType.lazy('LazyGenPinJest', () => function* () {});
+					const instance = freshUserInstance();
+					expect(() => constructSubtype(instance, 'LazyGenPinJest'))
 						.toThrow(/LazyGenPinJest: generator functions are not supported as a constructor/);
 				});
 
-				it('after the throw lookup finds nothing and a corrected re-define succeeds', () => {
-					expect(() => UserType.lazy('LazyRePinJest', () => () => {})).toThrow();
+				it('a rejected shape registers at define, fails at the first new, and the name is taken', () => {
+					UserType.lazy('LazyRePinJest', () => () => {});
+					expect(UserType.lookup('LazyRePinJest')).toBeDefined();
+					// subtypes never surface through the root lookup
 					expect(lookup('LazyRePinJest')).toBeUndefined();
-					const fixed = UserType.lazy('LazyRePinJest', () => function () {});
-					expect(fixed).toBeDefined();
+					const instance = freshUserInstance();
+					expect(() => constructSubtype(instance, 'LazyRePinJest')).toThrow();
+					expect(() => UserType.lazy('LazyRePinJest', () => function () {}))
+						.toThrow(errors.ALREADY_DECLARED);
 				});
 
 				it('a getter returning valid first and rejected later fails at that construction', () => {
 					let calls = 0;
 					UserType.lazy('LazyLatePinJest', () => {
 						calls++;
+						// the callback runs per construction now, never at
+						// define: the FIRST construction gets the valid form,
+						// the second the rejected one
 						return calls < 2 ? function () {} : () => {};
 					});
-					const instance = new (user.constructor as new (data: object) => {
-						LazyLatePinJest: new () => object;
-					})({ email: 'late@example.com', password: 123 });
-					expect(() => new instance.LazyLatePinJest())
+					const instance = freshUserInstance();
+					const first = constructSubtype(instance, 'LazyLatePinJest');
+					expect(first).toBeDefined();
+					expect(() => constructSubtype(instance, 'LazyLatePinJest'))
 						.toThrow(/LazyLatePinJest: constructor must be a regular function or a class/);
 				});
 
@@ -994,12 +1039,10 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 					define('NoConstructFunctionType', NaN, 'false' as unknown as object);
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
 				['handler must be a function', () => {
-				lazy(() => {
-					const result = {
-						name: null
-					};
-					return result;
-				});
+					// the named form with no callback (this matrix asserts by
+					// constructor name, so the wrapped construction-error form
+					// of the same scenario lives in index.ts instead)
+					lazy('LazyHandlerMatrixJest');
 				}, errors.HANDLER_MUST_BE_A_FUNCTION],
 				['this type has already been declared : UserTypeConstructor', () => {
 					// UserTypeConstructor is already defined in index.ts
@@ -1008,9 +1051,10 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 						return function WithoutPassword() { };
 					});
 				}, errors.ALREADY_DECLARED],
-				['this type has already been declared : UserType.UserTypePL1', () => {
+				['this type has already been declared : UserTypePL1', () => {
 					// UserType.UserTypePL1 is already defined in index.ts
-					// in-depth re-declaration
+					// in-depth re-declaration: the dotted path resolves like
+					// define's, and the error names the leaf
 					lazy('UserType.UserTypePL1', () => {
 						return function () { };
 					});
