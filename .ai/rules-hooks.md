@@ -49,6 +49,11 @@ Pre-hooks run collection → type; post-hooks and error hooks run
 type → collection (`invokePostHooks` in `src/api/types/InstanceCreator.ts`
 calls the type first) — the collection wraps the type on both sides.
 
+A failed construction fires `creationError` exactly **once**, even when a
+hook suppresses the throw: `throwModificationError` marks the construction
+when the post hooks fire (`postHooksFired`), and `postProcessing` does not
+invoke them again.
+
 ## Typed Hooks (type-level)
 
 A hook registered **on a type** gets its callback's `opts` typed by inference

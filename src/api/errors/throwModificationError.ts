@@ -198,6 +198,11 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 
 			// if hooks had some interception: start
 			const results = self.invokePostHooks();
+			// the post hooks have now fired for this construction: when a
+			// hook suppresses the throw the pipeline continues (runBuild's
+			// catch, the lazy gather-error check, the postProcessing checks)
+			// and postProcessing must not fire them a second time
+			self.postHooksFired = true;
 			const {
 				type,
 				collection,
