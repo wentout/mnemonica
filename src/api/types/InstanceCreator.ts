@@ -218,22 +218,33 @@ const postProcessing = function ( this: InstanceCreatorContext, continuationOf?:
 				msg,
 				stack 
 			) );
-		}
-		const parentName = prev!.constructor.name;
-		const parentTypeName = self.type.parentType!.TypeName;
-		if (parentName !== parentTypeName) {
-			const msg = `should inherit from ${parentTypeName} but made on ${parentName}`;
-			self.throwModificationError( new WRONG_MODIFICATION_PATTERN(
-				msg,
-				stack 
-			) );
+			// throwModificationError throws unless a creationError hook
+			// suppressed it — a suppressed failure is already recorded on
+			// the errored instance: skip ONLY the remaining strictChain
+			// checks (they would read the stale null prev); the shared tail
+			// (_setSelf, the marked hook guard) still runs
+		} else {
+			const parentName = prev.constructor.name;
+			const parentTypeName = self.type.parentType!.TypeName;
+			if (parentName !== parentTypeName) {
+				const msg = `should inherit from ${parentTypeName} but made on ${parentName}`;
+				self.throwModificationError( new WRONG_MODIFICATION_PATTERN(
+					msg,
+					stack 
+				) );
+			}
 		}
 
 	}
 
 	_setSelf(self.inheritedInstance);
 
-	self.invokePostHooks();
+	// when throwModificationError already fired the post hooks for this
+	// construction (a suppressed failure that continued the pipeline), do
+	// not fire them again — one creationError per failed construction
+	if ( !self.postHooksFired ) {
+		self.invokePostHooks();
+	}
 
 };
 

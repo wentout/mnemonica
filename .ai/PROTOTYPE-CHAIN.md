@@ -70,7 +70,7 @@ Hooks are stored per-type and per-collection (`type.hooks.preCreation` etc.); ea
 
 - **`preCreation`** — fired by `invokePreHooks` before `runBuild`, i.e. *before the memory layer exists*. A throw here aborts construction raw: there is no instance yet to wrap the error into.
 - **`postCreation`** — fired by `invokePostHooks` at the end of `postProcessing`, after the user constructor has run, validation has passed, and `__self__` is set.
-- **`creationError`** — the same `invokePostHooks` code path, selected instead of `postCreation` whenever `inheritedInstance instanceof Error`. It fires on the errored instance (see below); a hook returning `true` suppresses the throw and the errored instance becomes the construction result.
+- **`creationError`** — the same `invokePostHooks` code path, selected instead of `postCreation` whenever `inheritedInstance instanceof Error`. It fires on the errored instance (see below); a hook returning `true` suppresses the throw and the errored instance becomes the construction result. It fires **once per failed construction**: `throwModificationError` marks the construction when the post hooks fire, and `postProcessing` skips its own `invokePostHooks` call when the mark is present.
 
 The per-target flow checker lives in `flowCheckers`, a `WeakMap<Hookable, () => unknown>` (the `flowCheckers` export in `src/api/hooks/flowCheckers.ts`) — keyed by the hookable object, so checkers never leak into enumeration.
 
@@ -82,7 +82,7 @@ When the user constructor throws and `blockErrors` is on (the default), `runBuil
 2. Splice the original error into the errored instance's prototype chain (`Reflect.setPrototypeOf`). This is why a thrown mnemonica error answers `true` to both `instanceof ErroredType` and `instanceof TypeError`.
 3. Store the error data in props, never on the error object: `exceptionReason`, `reasons`, `surplus` first, then `args`, `originalError`, `instance` once the error is actually thrown. Read them with `getProps(error)`.
 4. Merge and clean the stack (creation stack + original error stack + type-definition stack, through `cleanupStack`).
-5. Fire `creationError` hooks; if none suppresses, `throw erroredInstance`.
+5. Fire `creationError` hooks and mark the construction (`postHooksFired` on the creator context); if none suppresses, `throw erroredInstance`. When a hook suppresses, the pipeline continues with the errored instance as the result — the `strictChain` checks in `postProcessing` stop at a suppressed failure, and `postProcessing`'s own hook firing is skipped by the mark, so `creationError` fires exactly once per failed construction.
 
 If an errored instance arrives as the *parent* and `blockErrors` is on, the circuit breaker (`runBlockErrorsCheck`) builds the same kind of errored instance and throws it before pre-hooks even run. With `blockErrors: false` the original error propagates raw — that path exists for mnemonica's own exception construction.
 

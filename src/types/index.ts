@@ -690,6 +690,10 @@ export interface InstanceCreatorContext {
 	// constructor-body throw
 	lazyFailed?: boolean;
 	lazyError?: unknown;
+	// set by throwModificationError once the post hooks have fired for this
+	// construction; postProcessing reads it to avoid a second firing when a
+	// creationError hook suppressed the throw
+	postHooksFired?: boolean;
 
 	getExistentAsyncStack(existentInstance: object): unknown;
 	postProcessing(continuationOf?: TypeDef): void;

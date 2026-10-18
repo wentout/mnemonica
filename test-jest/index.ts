@@ -3314,6 +3314,71 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					expect(seen.opts?.args).toEqual([ 'arg1', 'arg2' ]);
 				});
 
+				it('a suppressed body failure fires creationError exactly once and never postCreation', () => {
+					const BodySuppressed = LazyLab.define('BodySuppressed', function () {
+						throw new Error('body suppressed');
+					});
+					const seen: string[] = [];
+					BodySuppressed.registerHook('preCreation', () => {
+						seen.push('pre');
+					});
+					BodySuppressed.registerHook('postCreation', () => {
+						seen.push('post');
+					});
+					BodySuppressed.registerHook('creationError', () => {
+						seen.push('error');
+						return true;
+					});
+					const result = new BodySuppressed();
+					expect(result).toBeInstanceOf(Error);
+					expect(seen).toEqual([ 'pre', 'error' ]);
+				});
+
+				it('a suppressed async failure fires creationError exactly once and never postCreation', async () => {
+					const AsyncSuppressed = LazyLab.define('AsyncSuppressed', async function () {
+						throw new Error('async suppressed');
+					});
+					const seen: string[] = [];
+					AsyncSuppressed.registerHook('preCreation', () => {
+						seen.push('pre');
+					});
+					AsyncSuppressed.registerHook('postCreation', () => {
+						seen.push('post');
+					});
+					AsyncSuppressed.registerHook('creationError', () => {
+						seen.push('error');
+						return true;
+					});
+					await new AsyncSuppressed();
+					expect(seen).toEqual([ 'pre', 'error' ]);
+				});
+
+				it('a suppressed strictChain failure fires creationError once and returns the errored instance', () => {
+					// a subtype constructed without its parent instance fails
+					// strictChain in postProcessing; the suppression must return
+					// the errored instance, not continue into the stale checks
+					const StrictRoot = LazyLab.define('StrictRoot', function () {});
+					const StrictSub = StrictRoot.define('StrictSub', function () {});
+					const seen: string[] = [];
+					StrictSub.registerHook('preCreation', () => {
+						seen.push('pre');
+					});
+					StrictSub.registerHook('postCreation', () => {
+						seen.push('post');
+					});
+					StrictSub.registerHook('creationError', () => {
+						seen.push('error');
+						return true;
+					});
+					const result = new StrictSub();
+					expect(result).toBeInstanceOf(Error);
+					expect(result).toBeInstanceOf(StrictSub);
+					// the shared tail ran: __self__ marks a fully
+					// post-processed instance, errored ones included
+					expect(getProps(result)?.__self__).toBe(result);
+					expect(seen).toEqual([ 'pre', 'error' ]);
+				});
+
 				it('a creationError hook returning true suppresses the throw', () => {
 					const LazySuppressed = LazyLab.lazy('LazySuppressed', () => {
 						throw new Error('suppressed gather failure');
@@ -3326,9 +3391,8 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					const result = new LazySuppressed();
 					expect(result).toBeInstanceOf(Error);
 					expect(result).toBeInstanceOf(LazySuppressed);
-					// twice, exactly like a suppressed constructor-body failure:
-					// once inside throwModificationError, once from postProcessing
-					expect(fires).toBe(2);
+					// exactly once — one creationError per failed construction
+					expect(fires).toBe(1);
 				});
 
 				it('a callback throwing undefined mirrors the constructor-body path', () => {

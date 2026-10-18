@@ -243,6 +243,7 @@ export interface InstanceCreatorContext {
     stack?: string[];
     lazyFailed?: boolean;
     lazyError?: unknown;
+    postHooksFired?: boolean;
     getExistentAsyncStack(existentInstance: object): unknown;
     postProcessing(continuationOf?: TypeDef): void;
     makeAwaiter(type: TypeDef, then?: ThenSpec): Promise<object>;

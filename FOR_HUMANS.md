@@ -1098,6 +1098,9 @@ produced an **errored instance** — the `blockErrors: true` path, where a
 failure of the user constructor body is wrapped so that
 `inheritedInstance instanceof Error` (see
 [`src/api/types/InstanceCreator.ts`](./src/api/types/InstanceCreator.ts)).
+It fires exactly once per failed construction, including when a hook
+suppresses the throw (a hook returning `true`): the pipeline continues with
+the errored instance as the result and does not fire the post hooks again.
 With `blockErrors: false` such a failure propagates unwrapped instead. The
 object carries none of the internal props as own properties — they live in
 the WeakMap, readable via `getProps`.
