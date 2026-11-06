@@ -36,6 +36,14 @@ const nativeProps = new Set([
 	'__self__',
 ]);
 
+// a memory layer is a __props__ key that sits in an instance's chain: created
+// by mnemonica per construction, so it is safe to re-link. (The props objects
+// keyed there for setProps additions are never chain levels)
+export const isMemoryLayer = (level: object): boolean => {
+	const result = __props__.has(level);
+	return result;
+};
+
 export const _addProps = function (this: InstanceCreatorContext): void {
 
 
@@ -291,6 +299,7 @@ export type {
 };
 
 module.exports = {
+	isMemoryLayer,
 	_addProps,
 	_getProps,
 	_setSelf,

@@ -113,7 +113,19 @@ The Proxy is kept for an important reason: **subtypes can be defined after an in
 
 ## Your constructor’s `.prototype` is untouched
 
-When you call `define('AdminType', AdminConstructor)`, mnemonica stores `AdminConstructor.prototype` as the type's proto (when it is an object) and copies its own property descriptors onto every construction's fresh `ModificatorType.prototype` — for a root type the chain also descends from that prototype object itself. Constructions run `Reflect.construct(AdminConstructor, args, this.constructor)`: your constructor executes with `new.target` set to the per-type modificator. On the `define()` path the constructor's `.prototype` is never written, swapped, or restored. This is why you can reuse the same constructor function for several type definitions without cross-contamination.
+When you call `define('AdminType', AdminConstructor)`, mnemonica stores `AdminConstructor.prototype` as the type's proto (when it is an object) and copies its own property descriptors (all of them for a class, the enumerable ones for a function) onto every construction's fresh `ModificatorType.prototype` — for a root type the chain also descends from that prototype object itself. Constructions run `Reflect.construct(AdminConstructor, args, this.constructor)`: your constructor executes with `new.target` set to the per-type modificator. On the `define()` path the constructor's `.prototype` is never written, swapped, or restored. This is why you can reuse the same constructor function for several type definitions without cross-contamination.
+
+### Root and subtype differ here
+
+A root instance sits on its constructor's `.prototype` object: that object itself is in the chain, directly under the Mnemonica base. A subtype instance only gets a copy of its constructor's `.prototype` members. An object has one prototype link, and each subtype instance's chain must go through its own parent instance, so one shared `.prototype` object cannot be in all of those chains.
+
+| | Constructor's `.prototype` in the chain | Member added to it later | `instance instanceof handler` |
+|---|---|---|---|
+| Root (`new Root()`) | Yes | Seen by existing and new instances | `true` |
+| Subtype (`new root.Sub()`) | No, its members are copied | Seen by new instances only | `false` |
+| Root over an explicit parent (`Root.call(x)`) | No, `x` takes that place | Seen by new instances only | `false` |
+
+Here `handler` is the function or class you passed to `define()`. Checks against the type returned by `define()` work in all three cases. The root's `.prototype` is an ordinary object, so it also brings `Object.prototype` into the chain, which is why instances are `instanceof Object`.
 
 ---
 

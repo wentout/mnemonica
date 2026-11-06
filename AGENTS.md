@@ -418,7 +418,7 @@ compaction — keep them while they describe **current or open** state. But:
   AGENTS.md describes the present only. When reality changes, update the
   section in place — do not append narrative.
 - **No pointers to local-only places in shipped files** — the full rule
-  (covers `reports/`, `plans/`, `/code/experiments/`, any absolute local
+  (covers `reports/`, `plans/`, `/code/mnemonica/experiments/`, any absolute local
   path, and which files are shipped) lives in
   [`.ai/rules-coding.md`](./.ai/rules-coding.md).
 

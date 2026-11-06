@@ -695,7 +695,6 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 
 	const overMoreFork = overMore.fork();
 
-	const overMoreCallEvenMoreUndefined = overMore.EvenMore.call(undefined);
 	const overMoreCallEvenMoreNull = overMore.EvenMore.call(null);
 	const overMoreCallEvenMoreNumber = overMore.EvenMore.call(new Number(5));
 	const overMoreCallEvenMoreString = overMore.EvenMore.call(new String(5));
@@ -822,6 +821,29 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 			expect(subtypes.has('UserTypePL2')).toEqual(true);
 		});
 
+
+		describe('root instance is only constructed with new', () => {
+			const RootOnlyWithNewJest = define('RootOnlyWithNewJest', function (this: { rootSign: string }) {
+				this.rootSign = 'made';
+			});
+			it('new Root() constructs a root instance', () => {
+				const root = new RootOnlyWithNewJest();
+				expect(root).toBeInstanceOf(RootOnlyWithNewJest);
+				expect(root.rootSign).toEqual('made');
+			});
+			it('Root() without new constructs nothing, returns a decorator', () => {
+				const root = RootOnlyWithNewJest();
+				expect(typeof root).toEqual('function');
+				expect(root).not.toBeInstanceOf(RootOnlyWithNewJest);
+				expect(Reflect.get(root, 'rootSign')).toEqual(undefined);
+			});
+			it('Root.call(undefined) constructs nothing, returns a decorator', () => {
+				const root = RootOnlyWithNewJest.call(undefined);
+				expect(typeof root).toEqual('function');
+				expect(root).not.toBeInstanceOf(RootOnlyWithNewJest);
+				expect(Reflect.get(root, 'rootSign')).toEqual(undefined);
+			});
+		});
 
 		describe('empty constructor works properly', () => {
 			it('should construct an object', () => {
@@ -1767,15 +1789,107 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 
 			});
 
-			it('instance.ConstructorName.call(undefined) should work', () => {
-				expect(overMoreCallEvenMoreUndefined).toBeInstanceOf(overMore.EvenMore);
-				expect(overMoreCallEvenMoreUndefined.str).toEqual('re-defined EvenMore str');
+			describe('subtype detached from its instance needs new', () => {
+				it('const { Sub } = instance; Sub() throws WRONG_INSTANCE_INVOCATION', () => {
+					const { EvenMore } = overMore;
+					expect(() => EvenMore()).toThrow(errors.WRONG_INSTANCE_INVOCATION);
+				});
+				it('instance.ConstructorName.call(undefined) throws WRONG_INSTANCE_INVOCATION', () => {
+					expect(() => overMore.EvenMore.call(undefined)).toThrow(errors.WRONG_INSTANCE_INVOCATION);
+				});
+				it('const { Sub } = instance; new Sub() builds over that instance', () => {
+					const { EvenMore } = overMore;
+					const detached = new EvenMore();
+					expect(detached).toBeInstanceOf(overMore.EvenMore);
+					expect(detached.str).toEqual('re-defined EvenMore str');
+					expect(getProps(detached).__parent__).toBe(overMore);
+				});
+				it('chains without new in the middle still work', () => {
+					const DetachRootJest = define('DetachRootJest', function (this: { r: number }) {
+						this.r = 1;
+					});
+					const DetachSubJest = DetachRootJest.define('DetachSubJest', function (this: { s: number }) {
+						this.s = 2;
+					});
+					DetachSubJest.define('DetachSubSubJest', function (this: { ss: number }) {
+						this.ss = 3;
+					});
+					const chained = new DetachRootJest().DetachSubJest().DetachSubSubJest();
+					expect(chained).toBeInstanceOf(DetachSubJest);
+					expect([ chained.r, chained.s, chained.ss ]).toEqual([ 1, 2, 3 ]);
+					const root = new DetachRootJest();
+					const viaMember = root.DetachSubJest();
+					expect(getProps(viaMember).__parent__).toBe(root);
+				});
 			});
 
 			it('instance.ConstructorName.call(otherParent) builds over that parent — the DAG form', () => {
 				const dagInstance = overMore.EvenMore.call(overMoreFork);
 				expect(dagInstance).toBeInstanceOf(overMore.EvenMore);
 				expect(getProps(dagInstance).__parent__).toBe(overMoreFork);
+			});
+
+			it('instance.ConstructorName.call(primitive) throws WRONG_MODIFICATION_PATTERN — a primitive is not boxed', () => {
+				expect(() => overMore.EvenMore.call(5)).toThrow(errors.WRONG_MODIFICATION_PATTERN);
+				expect(() => overMore.EvenMore.call('str')).toThrow('got string');
+				expect(() => overMore.EvenMore.call(true)).toThrow('got boolean');
+			});
+
+			describe('a failed construction over a parent outside mnemonica', () => {
+				const gof = Reflect.getPrototypeOf;
+				const catchThrown = (construct: () => unknown) => {
+					let thrown = new Error('nothing was thrown');
+					try {
+						construct();
+					} catch (error) {
+						if (error instanceof Error) {
+							thrown = error;
+						}
+					}
+					return thrown;
+				};
+				const readProp = (instance: object, name: string) => {
+					const result = Reflect.get(Object(getProps(instance)), name);
+					return result;
+				};
+				it('strictChain over a wrapper: a real Error naming the parent, with its creation history', () => {
+					const WrapperRoot = define('WrapperParentRootJest', function () {});
+					const WrapperSub = WrapperRoot.define('WrapperParentSubJest', function () {});
+					const root = new WrapperRoot();
+					const wrapper = new Number(5);
+					const thrown = catchThrown(() => root.WrapperParentSubJest.call(wrapper));
+					expect(thrown).toBeInstanceOf(Error);
+					expect(thrown).toBeInstanceOf(errors.WRONG_MODIFICATION_PATTERN);
+					expect(thrown).toBeInstanceOf(WrapperSub);
+					expect(thrown.message).toEqual(
+						'wrong modification pattern : should inherit from WrapperParentRootJest but made on Number'
+					);
+					expect(readProp(thrown, '__parent__')).toBe(wrapper);
+					expect(readProp(thrown, 'exceptionReason')).toBeInstanceOf(errors.WRONG_MODIFICATION_PATTERN);
+					expect(readProp(thrown, 'originalError')).toBe(readProp(thrown, 'exceptionReason'));
+					expect(readProp(thrown, 'reasons')).toEqual([ readProp(thrown, 'exceptionReason') ]);
+					expect(readProp(thrown, 'surplus')).toEqual([]);
+					expect(readProp(thrown, 'instance')).toBe(thrown);
+					expect(gof(wrapper)).toBe(Number.prototype);
+					expect(gof(Number.prototype)).toBe(Object.prototype);
+				});
+				it('strictChain false: a throwing constructor over a wrapper or a plain object', () => {
+					const LooseRoot = define('LooseParentRootJest', function () {});
+					const LooseSub = LooseRoot.define('LooseParentSubJest', function () {
+						throw new RangeError('constructor failed');
+					}, {
+						strictChain : false
+					});
+					const root = new LooseRoot();
+					[ new Number(5), { plain : true } ].forEach((outsideParent) => {
+						const before = gof(outsideParent);
+						const thrown = catchThrown(() => root.LooseParentSubJest.call(outsideParent));
+						expect(thrown).toBeInstanceOf(RangeError);
+						expect(thrown).toBeInstanceOf(LooseSub);
+						expect(readProp(thrown, '__parent__')).toBe(outsideParent);
+						expect(gof(outsideParent)).toBe(before);
+					});
+				});
 			});
 
 			it('instance.ConstructorName.call(null) should work', () => {

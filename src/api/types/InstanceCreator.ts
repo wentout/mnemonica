@@ -24,7 +24,8 @@ import { constants } from '../../constants';
 
 const {
 	odp,
-	SymbolConstructorName
+	SymbolConstructorName,
+	MNEMONICA
 } = constants;
 
 import { ErrorsTypes } from '../../descriptors/errors';
@@ -212,7 +213,10 @@ const postProcessing = function ( this: InstanceCreatorContext, continuationOf?:
 			if ( madeOnName === undefined ) {
 				msg = 'should inherit from some instance';
 			} else {
-				msg = `should inherit from ${self.type.parentType!.TypeName} but made on ${inheritedConstructor.name}`;
+				// the sentinel is internal, so the message names the type being
+				// made; a real outside parent (`.call(new Number(5))`) is named
+				const madeOn = madeOnName === MNEMONICA ? inheritedConstructor.name : madeOnName;
+				msg = `should inherit from ${self.type.parentType!.TypeName} but made on ${madeOn}`;
 			}
 			self.throwModificationError( new WRONG_MODIFICATION_PATTERN(
 				msg,

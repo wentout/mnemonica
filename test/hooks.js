@@ -57,7 +57,9 @@ const tests = ( opts ) => {
 			// +14 (lazy handler-shape pins: six fresh parent constructions
 			//     plus the now-successful first LazyLatePin construction —
 			//     the rejected forms moved from define time to construction)
-			assert.equal( 312, typesFlowCheckerInvocations.length );
+			// -2 (the detached overMore.EvenMore.call(undefined) fixture is
+			//     gone: that form now throws before any construction)
+			assert.equal( 310, typesFlowCheckerInvocations.length );
 
 			// +3 (increased due to explicit .lazy() API adding extra creations)
 			// +12 (increased due to dotted parent() tests adding instances)
@@ -74,7 +76,9 @@ const tests = ( opts ) => {
 			//     in place, before this count)
 			// +7 (lazy handler-shape pins: six fresh parents + the successful
 			//     first LazyLatePin construction)
-			assert.equal( 167, typesPreCreationInvocations.length );
+			// -1 (the detached .call(undefined) fixture now throws before
+			//     any construction)
+			assert.equal( 166, typesPreCreationInvocations.length );
 			// there are two errors on creation
 			// checked before
 			// that is why, and with clones
@@ -93,7 +97,9 @@ const tests = ( opts ) => {
 			// +14 (lazy handler-shape pins: six fresh parents + the
 			//     now-successful first LazyLatePin construction + the
 			//     failing constructions' levels)
-			assert.equal( 290, typesPostCreationInvocations.length );
+			// -2 (the detached .call(undefined) fixture's levels: that form
+			//     now throws before any construction)
+			assert.equal( 288, typesPostCreationInvocations.length );
 		} );
 	} );
 
