@@ -14,7 +14,8 @@ const gof = Object.getPrototypeOf;
 const { assert, expect } = require( 'chai' );
 
 const {
-	getProps
+	getProps,
+	errors
 } = require( '..' );
 
 const tests = ( opts ) => {
@@ -43,7 +44,6 @@ const tests = ( opts ) => {
 		evenMoreFork,
 		evenMoreForkFork,
 		evenMoreForkCall,
-		overMoreCallEvenMoreUndefined,
 		overMoreCallEvenMoreNull,
 		overMoreCallEvenMoreNumber,
 		overMoreCallEvenMoreString,
@@ -280,10 +280,41 @@ const tests = ( opts ) => {
 			expect(result).equal(undefined);
 		} );
 
-		it( 'instance.ConstructorName.call(undefined) should work', () => {
-			expect( overMoreCallEvenMoreUndefined ).instanceof( overMore.EvenMore );
-			expect( overMoreCallEvenMoreUndefined ).instanceof( evenMore );
-			expect( overMoreCallEvenMoreUndefined.str ).equal( 're-defined EvenMore str' );
+		describe( 'subtype detached from its instance needs new', () => {
+			it( 'const { Sub } = instance; Sub() throws WRONG_INSTANCE_INVOCATION', () => {
+				const { EvenMore } = overMore;
+				expect( () => EvenMore() ).to.throw( errors.WRONG_INSTANCE_INVOCATION );
+			} );
+			it( 'instance.ConstructorName.call(undefined) throws WRONG_INSTANCE_INVOCATION', () => {
+				expect( () => overMore.EvenMore.call( undefined ) ).to.throw( errors.WRONG_INSTANCE_INVOCATION );
+			} );
+			it( 'const { Sub } = instance; new Sub() builds over that instance', () => {
+				const { EvenMore } = overMore;
+				const detached = new EvenMore();
+				expect( detached ).instanceof( overMore.EvenMore );
+				expect( detached ).instanceof( evenMore );
+				expect( detached.str ).equal( 're-defined EvenMore str' );
+				expect( getProps( detached ).__parent__ ).equal( overMore );
+			} );
+			it( 'chains without new in the middle still work', () => {
+				const DetachRoot = mnemonica.define( 'DetachRoot', function () {
+					this.r = 1;
+				} );
+				const DetachSub = DetachRoot.define( 'DetachSub', function () {
+					this.s = 2;
+				} );
+				DetachSub.define( 'DetachSubSub', function () {
+					this.ss = 3;
+				} );
+				const chained = new DetachRoot()
+					.DetachSub()
+					.DetachSubSub();
+				expect( chained ).instanceof( DetachSub );
+				expect( [ chained.r, chained.s, chained.ss ] ).deep.equal( [ 1, 2, 3 ] );
+				const root = new DetachRoot();
+				const viaMember = root.DetachSub();
+				expect( getProps( viaMember ).__parent__ ).equal( root );
+			} );
 		} );
 
 		it( 'instance.ConstructorName.call(otherParent) builds over that parent — the DAG form', () => {
@@ -291,6 +322,121 @@ const tests = ( opts ) => {
 			expect( dagInstance ).instanceof( overMore.EvenMore );
 			expect( dagInstance ).instanceof( evenMore );
 			expect( getProps( dagInstance ).__parent__ ).equal( overMoreFork );
+		} );
+
+		it( 'instance.ConstructorName.call(primitive) throws WRONG_MODIFICATION_PATTERN — a primitive is not boxed', () => {
+			expect( () => overMore.EvenMore.call( 5 ) ).to.throw( errors.WRONG_MODIFICATION_PATTERN, 'got number' );
+			expect( () => overMore.EvenMore.call( 'str' ) ).to.throw( errors.WRONG_MODIFICATION_PATTERN, 'got string' );
+			expect( () => overMore.EvenMore.call( true ) ).to.throw( errors.WRONG_MODIFICATION_PATTERN, 'got boolean' );
+		} );
+
+		describe( 'a failed construction over a parent outside mnemonica', () => {
+			const catchThrown = ( construct ) => {
+				let thrown;
+				try {
+					construct();
+				} catch ( error ) {
+					thrown = error;
+				}
+				return thrown;
+			};
+			it( 'strictChain over a wrapper: a real Error naming the parent, with its creation history', () => {
+				const WrapperRoot = mnemonica.define( 'WrapperParentRoot', function () {
+					this.r = 1;
+				} );
+				const WrapperSub = WrapperRoot.define( 'WrapperParentSub', function () {
+					this.s = 2;
+				} );
+				const root = new WrapperRoot();
+				const wrapper = new Number( 5 );
+				const thrown = catchThrown( () => root.WrapperParentSub.call( wrapper ) );
+				expect( thrown ).instanceof( Error );
+				expect( thrown ).instanceof( errors.WRONG_MODIFICATION_PATTERN );
+				expect( thrown ).instanceof( WrapperSub );
+				expect( thrown.message ).equal(
+					'wrong modification pattern : should inherit from WrapperParentRoot but made on Number'
+				);
+				const props = getProps( thrown );
+				expect( props.__parent__ ).equal( wrapper );
+				expect( props.exceptionReason ).instanceof( errors.WRONG_MODIFICATION_PATTERN );
+				expect( props.originalError ).equal( props.exceptionReason );
+				expect( props.reasons ).deep.equal( [ props.exceptionReason ] );
+				expect( props.surplus ).deep.equal( [] );
+				expect( props.instance ).equal( thrown );
+			} );
+			it( 'a function handler copy keeps getters as getters and skips non-enumerable members', () => {
+				let getterCalls = 0;
+				const handler = function () {};
+				Object.defineProperty( handler.prototype, 'enumerableGetter', {
+					get () {
+						getterCalls++;
+						return 'from getter';
+					},
+					enumerable : true
+				} );
+				Object.defineProperty( handler.prototype, 'hiddenMember', {
+					value      : 'hidden',
+					enumerable : false
+				} );
+				const CopyRoot = mnemonica.define( 'CopyRootPin', function () {} );
+				CopyRoot.define( 'CopySubPin', handler );
+				const sub = new ( new CopyRoot() ).CopySubPin();
+				expect( getterCalls ).equal( 0 );
+				expect( sub.enumerableGetter ).equal( 'from getter' );
+				expect( getterCalls ).equal( 1 );
+				expect( sub.hiddenMember ).equal( undefined );
+			} );
+			it( 'the outside parent and the built-ins stay untouched', () => {
+				const WrapperRoot = lookup( 'WrapperParentRoot' );
+				const root = new WrapperRoot();
+				const wrapper = new Number( 5 );
+				catchThrown( () => root.WrapperParentSub.call( wrapper ) );
+				expect( gof( wrapper ) ).equal( Number.prototype );
+				expect( gof( Number.prototype ) ).equal( Object.prototype );
+				expect( gof( Object.prototype ) ).equal( null );
+			} );
+			it( 'strictChain false: a throwing constructor over a wrapper or a plain object', () => {
+				const LooseRoot = mnemonica.define( 'LooseParentRoot', function () {} );
+				const LooseSub = LooseRoot.define( 'LooseParentSub', function () {
+					throw new RangeError( 'constructor failed' );
+				}, {
+					strictChain : false
+				} );
+				const root = new LooseRoot();
+				[ new Number( 5 ), { plain : true } ].forEach( ( outsideParent ) => {
+					const protoBefore = gof( outsideParent );
+					const thrown = catchThrown( () => root.LooseParentSub.call( outsideParent ) );
+					expect( thrown ).instanceof( RangeError );
+					expect( thrown ).instanceof( LooseSub );
+					expect( thrown.message ).equal( 'constructor failed' );
+					expect( getProps( thrown ).__parent__ ).equal( outsideParent );
+					expect( gof( outsideParent ) ).equal( protoBefore );
+				} );
+			} );
+			it( 'a deeper failure keeps the levels mnemonica built over the outside parent', () => {
+				const DeepRoot = mnemonica.define( 'DeepParentRoot', function () {} );
+				const DeepMid = DeepRoot.define( 'DeepParentMid', function () {
+					this.mid = 1;
+				}, {
+					strictChain : false
+				} );
+				const DeepLeaf = DeepMid.define( 'DeepParentLeaf', function () {
+					throw new RangeError( 'leaf failed' );
+				} );
+				const wrapper = new Number( 5 );
+				const root = new DeepRoot();
+				const mid = root.DeepParentMid.call( wrapper );
+				// a chain over an outside parent has no root Proxy, so no subtype
+				// lookup on it: the leaf is taken from a regular instance
+				const regularMid = new root.DeepParentMid();
+				const thrown = catchThrown( () => regularMid.DeepParentLeaf.call( mid ) );
+				expect( thrown ).instanceof( RangeError );
+				expect( thrown ).instanceof( DeepLeaf );
+				expect( thrown ).instanceof( DeepMid );
+				expect( thrown.mid ).equal( 1 );
+				expect( getProps( thrown ).__parent__ ).equal( mid );
+				expect( gof( wrapper ) ).equal( Number.prototype );
+			} );
 		} );
 
 		it( 'instance.ConstructorName.call(null) should work', () => {

@@ -32,7 +32,7 @@ You work with a Computer Science Enthusiast. You are their clever and knowledgea
 Change files with your agent's own file edit/write tools. When a change is
 too broad for them (the same replacement across many files), write a
 **Node.js script** — a predictable tool that can always be written for text
-replacement — and keep it in `/code/experiments/<date>-<topic>/` with the
+replacement — and keep it in `/code/mnemonica/experiments/<date>-<topic>/` with the
 experiment's README.
 
 Rewriting files from the shell in any other language (`sed -i`, `perl -pi`,
@@ -50,7 +50,7 @@ Never write a pointer to a local-only place into any **shipped** file —
 `src/`, the test suites (`test/`, `test-jest/`, `test_async/`,
 `test_yields/`), `docs/`, `.ai/`, `README.md`, `SKILL.md`, `FOR_HUMANS.md`,
 `AGENTS.md`, `DECISIONS.md`. Local-only places include `reports/`, `plans/`,
-`/code/experiments/`, and any other absolute local path: those directories
+`/code/mnemonica/experiments/`, and any other absolute local path: those directories
 are internal agent memory and are gitignored, so a published reference 404s
 for every reader (and misleads agents in other checkouts).
 

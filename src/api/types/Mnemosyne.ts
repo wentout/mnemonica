@@ -26,6 +26,12 @@ const {
 
 import { InstanceCreator } from './InstanceCreator';
 
+import { ErrorsTypes } from '../../descriptors/errors';
+const {
+	WRONG_INSTANCE_INVOCATION,
+	WRONG_MODIFICATION_PATTERN
+} = ErrorsTypes;
+
 import { gatherLazyDefinition } from './lazyDefinition';
 
 import {
@@ -103,8 +109,22 @@ const makeSubTypeProxy = function (subtype: SubtypeEntry, inheritedInstance: unk
 			);
 			return instanceResult;
 		}
-		const thisArg = this === undefined ? inheritedInstance : this;
-		const existentInstance = reflectPrimitiveWrappers(thisArg);
+		// a call without `new` keeps its parent in `this`: `x.Sub()`, every
+		// link of `new Root().Sub().SubSub()`, or `.call(otherParent)`. With
+		// no `this` the subtype was detached from its instance
+		// (`const { Sub } = x; Sub()`) — that form must be `new Sub()`
+		if (this === undefined) {
+			throw new WRONG_INSTANCE_INVOCATION('detached subtype should be made with new keyword');
+		}
+		// a bare primitive parent (`x.Sub.call(5)`) is not boxed: strict
+		// mode keeps `this` primitive, and nothing can inherit from it —
+		// `null` and wrapper objects (`new Number(5)`) are handled by
+		// reflectPrimitiveWrappers, a primitive is rejected here
+		const thisType = typeof this;
+		if (this !== null && thisType !== 'object' && thisType !== 'function') {
+			throw new WRONG_MODIFICATION_PATTERN(`subtype should be made on an object, got ${thisType}`);
+		}
+		const existentInstance = reflectPrimitiveWrappers(this);
 		gatherLazyDefinition(subtype, existentInstance);
 		const instance = new InstanceCreator(
 			subtype as TypeDef,

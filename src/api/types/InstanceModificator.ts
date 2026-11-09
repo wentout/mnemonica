@@ -19,22 +19,22 @@ export const makeInstanceModificator = ( self: InstanceCreatorContext ): Mnemoni
 		config,
 	} = self;
 
-	// Class-handler prototypes need the FULL-descriptor copy: class body
-	// methods are non-enumerable, and an enumerable-only Object.assign copy
-	// silently dropped them — Type.define('X', class { m() {} }) lost m on
-	// the subtype while lazy kept it. Function-handler prototypes keep the
-	// historical enumerable-only copy: their non-enumerable props (legacy
-	// opt-in instance methods, exception wiring) were never copied, and
-	// pins depend on that (exception instances expose no bound methods)
-	const ModificatorTypePrototype = config.asClass
-		? Object.defineProperties(
-			{},
-			Object.getOwnPropertyDescriptors( proto )
-		)
-		: Object.assign(
-			{},
-			proto
-		);
+	// Copied by descriptor, never by Object.assign, which invokes getters and
+	// freezes them to a value.
+	// Class-handler prototypes copy every member: class body methods are
+	// non-enumerable, and an enumerable-only copy silently dropped them —
+	// Type.define('X', class { m() {} }) lost m on the subtype while lazy
+	// kept it. Function-handler prototypes copy the enumerable members only:
+	// their non-enumerable props (legacy opt-in instance methods, exception
+	// wiring) were never copied, and pins depend on that (exception instances
+	// expose no bound methods)
+	const ModificatorTypePrototype: { [index: string]: unknown } = {};
+	Reflect.ownKeys( proto ).forEach( ( key ) => {
+		const descriptor = Reflect.getOwnPropertyDescriptor( proto, key );
+		if ( descriptor && ( config.asClass || descriptor.enumerable ) ) {
+			Reflect.defineProperty( ModificatorTypePrototype, key, descriptor );
+		}
+	} );
 
 	const result = ModificationConstructor.call(
 		existentInstance,

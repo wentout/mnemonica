@@ -56,10 +56,12 @@ export interface TypeProxyInstance extends TypeProxyGetHandler, TypeProxySetHand
 }
 
 export const TypeProxy = function (__type__: TypeProxyType, ancestor: unknown) {
-	Object.assign(
+	odp(
 		this,
+		'__type__',
 		{
-			__type__
+			value      : __type__,
+			enumerable : true
 		}
 	);
 	// for a lazy ROOT type the ancestor is not fixed at define time: it is
@@ -82,10 +84,12 @@ export const TypeProxy = function (__type__: TypeProxyType, ancestor: unknown) {
 			}
 		);
 	} else {
-		Object.assign(
+		odp(
 			this,
+			'ancestor',
 			{
-				ancestor
+				value      : ancestor,
+				enumerable : true
 			}
 		);
 	}

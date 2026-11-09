@@ -633,8 +633,6 @@ describe('Main Test', () => {
 
 	const overMoreFork = overMore.fork();
 
-	const overMoreCallEvenMoreUndefined = overMore.EvenMore.call(undefined);
-
 	const overMoreCallEvenMoreNull = overMore.EvenMore.call(null);
 	const overMoreCallEvenMoreNumber = overMore.EvenMore.call(new Number(5));
 	const overMoreCallEvenMoreString = overMore.EvenMore.call(new String(5));
@@ -816,6 +814,29 @@ describe('Main Test', () => {
 			expect(getProps(oogpuser).__subtypes__.has('UserTypePL2')).is.equal(true);
 		});
 
+
+		describe('root instance is only constructed with new', () => {
+			const RootOnlyWithNew = define('RootOnlyWithNew', function () {
+				this.rootSign = 'made';
+			});
+			it('new Root() constructs a root instance', () => {
+				const root = new RootOnlyWithNew();
+				expect(root).to.be.an.instanceof(RootOnlyWithNew);
+				expect(root.rootSign).to.equal('made');
+			});
+			it('Root() without new constructs nothing, returns a decorator', () => {
+				const root = RootOnlyWithNew();
+				expect(typeof root).to.equal('function');
+				expect(root).not.to.be.an.instanceof(RootOnlyWithNew);
+				expect(root.rootSign).to.equal(undefined);
+			});
+			it('Root.call(undefined) constructs nothing, returns a decorator', () => {
+				const root = RootOnlyWithNew.call(undefined);
+				expect(typeof root).to.equal('function');
+				expect(root).not.to.be.an.instanceof(RootOnlyWithNew);
+				expect(root.rootSign).to.equal(undefined);
+			});
+		});
 
 		describe('empty constructor works properly', () => {
 			it('should construct an object', () => {
@@ -1046,7 +1067,6 @@ describe('Main Test', () => {
 			evenMoreFork,
 			evenMoreForkFork,
 			evenMoreForkCall,
-			overMoreCallEvenMoreUndefined,
 			overMoreCallEvenMoreNull,
 			overMoreCallEvenMoreNumber,
 			overMoreCallEvenMoreString,

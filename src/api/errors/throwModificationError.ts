@@ -21,7 +21,7 @@ import TypesUtils from '../utils';
 const { makeErrorModificatorType } = TypesUtils;
 
 import {
-	getProps, setProps 
+	getProps, isMemoryLayer, setProps
 } from '../types/Props';
 
 import { makeInstanceModificator } from '../types/InstanceModificator';
@@ -92,8 +92,14 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 	);
 
 	let errorProto: object | null = Reflect.getPrototypeOf( erroredInstance );
+	// the lowest level mnemonica itself created on this chain: the fallback
+	// splice point when the chain below it belongs to somebody else
+	let lowestMemoryLayer = errorProto as object;
 	let isMnemonicaInstance = false;
 	while ( errorProto ) {
+		if ( isMemoryLayer( errorProto ) ) {
+			lowestMemoryLayer = errorProto;
+		}
 		const testToProto = Reflect.getPrototypeOf( errorProto );
 		if (testToProto === null) {
 			break;
@@ -127,6 +133,19 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 	// 	result = true;
 	// }
 	// console.log(result);
+
+	// a parent outside mnemonica (`x.Sub.call(new Number(5))`, a plain object)
+	// has no Mnemonica level: the walk ends at Object.prototype, whose
+	// prototype is immutable, so that splice returned false. Foreign objects
+	// and built-ins must stay untouched, so the error goes under the lowest
+	// memory layer instead. The chain above it stays as it was before this
+	// failure, and the parent stays reachable as getProps(error).__parent__
+	if ( !result ) {
+		Reflect.setPrototypeOf(
+			lowestMemoryLayer,
+			error
+		);
+	}
 
 	const stack: string[] = [];
 
@@ -193,44 +212,42 @@ export const throwModificationError = function ( this: InstanceCreatorContext, e
 
 	self.inheritedInstance = erroredInstance;
 
-	if (result) {
-		if (isMnemonicaInstance) {
+	if (isMnemonicaInstance) {
 
-			// if hooks had some interception: start
-			const results = self.invokePostHooks();
-			// the post hooks have now fired for this construction: when a
-			// hook suppresses the throw the pipeline continues (runBuild's
-			// catch, the lazy gather-error check, the postProcessing checks)
-			// and postProcessing must not fire them a second time
-			self.postHooksFired = true;
-			const {
-				type,
-				collection,
-			} = results;
-			if ( type.has( true ) || collection.has( true ) ) {
-				return;
-			}
+		// if hooks had some interception: start
+		const results = self.invokePostHooks();
+		// the post hooks have now fired for this construction: when a
+		// hook suppresses the throw the pipeline continues (runBuild's
+		// catch, the lazy gather-error check, the postProcessing checks)
+		// and postProcessing must not fire them a second time
+		self.postHooksFired = true;
+		const {
+			type,
+			collection,
+		} = results;
+		if ( type.has( true ) || collection.has( true ) ) {
+			return;
 		}
-
-		// }
-
-		// if hooks had some interception: stop
-
-		// the rest of error data, available only when the error is thrown
-		setProps(
-			erroredInstance,
-			{
-				args,
-				originalError : error,
-				instance      : erroredInstance
-			} 
-		);
-
-		// no bound .extract()/.parse() here: since v1.0.6 instances expose no
-		// methods, so errors follow — call utils.extract(...) / utils.parse(...)
-		// on the thrown error (or on utils.parent(error) for the pre-failure
-		// layer, which the old bound .extract() used to return)
 	}
+
+	// }
+
+	// if hooks had some interception: stop
+
+	// the rest of error data, available only when the error is thrown
+	setProps(
+		erroredInstance,
+		{
+			args,
+			originalError : error,
+			instance      : erroredInstance
+		}
+	);
+
+	// no bound .extract()/.parse() here: since v1.0.6 instances expose no
+	// methods, so errors follow — call utils.extract(...) / utils.parse(...)
+	// on the thrown error (or on utils.parent(error) for the pre-failure
+	// layer, which the old bound .extract() used to return)
 
 	throw erroredInstance;
 
