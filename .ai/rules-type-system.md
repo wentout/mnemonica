@@ -185,6 +185,13 @@ and `.lazy()` pass their holder `Parent` into both the returned constructor
 and the stored `RegistryEntry<F, ChildPath, Parent>`, so a looked-up chained
 subtype types `registerHook`'s `existentInstance` as its real parent.
 
+`FreeLookupResult<K>` is the return type of the first free `lookup()` overload.
+When `TypeRegistry[K]` carries `define`, it resolves to
+`LookedUpConstructor<TypeRegistry, K & string>`, matching the builder lookup and
+putting registered subtype constructors on the instance. Other entries resolve
+to `WithHookRegister<TypeRegistry[K]>`, preserving hand-written and
+tactica-generated plain signatures.
+
 For bare augmented entries (tactica-emitted or hand-written `TypeRegistry`
 constructors) the free `lookup()` wraps its result in `WithHookRegister<C>`:
 `C extends { registerHook: CallableFunction }` passes through untouched

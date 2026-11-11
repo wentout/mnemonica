@@ -35,6 +35,7 @@ const expectations = {
 	'b3-instance.ts'      : true,
 	'b4-collection.ts'    : true,
 	'b5-registry-bridge.ts' : true,
+	'b6-free-lookup-bridge.ts' : true,
 	'm1-free-merge.ts'    : true,
 	'n1-naive-define.ts'  : false,
 	'n2-naive-subtype.ts' : false

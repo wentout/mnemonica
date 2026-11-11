@@ -23,6 +23,7 @@ import type {
 	RegistryEntry,
 	GlobalRegistry,
 	LookedUpConstructor,
+	FreeLookupResult,
 	WithHookRegister,
 	typedHook,
 	HookableConstructor,
@@ -62,6 +63,7 @@ export type {
 	TypesCollection,
 	TypeLookup,
 	LookupResult,
+	FreeLookupResult,
 	RegistryOf,
 	MnemonicaModule,
 	// Deliberate public vocabulary for builder-mode consumers (TS 6
@@ -314,7 +316,7 @@ export function lazy(
 export function lookup<const K extends keyof TypeRegistry>(
 	this: unknown,
 	TypeNestedPath: K
-): WithHookRegister<TypeRegistry[K]>;
+): FreeLookupResult<K>;
 export function lookup<Reg extends object, const K extends keyof Reg & string>(
 	// explicit-source form: lookup(source, path)
 	// resolves against the registry carried by a builder/collection value
