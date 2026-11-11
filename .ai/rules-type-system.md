@@ -64,11 +64,11 @@ export type Proto<P extends object, T extends object> =
 what a constructor must satisfy (both `new`-able and callable).
 
 ```typescript
-export interface _Internal_TC_<ConstructorInstance extends object> {
-    new(...args: unknown[]): ConstructorInstance;
-    (this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
+export interface _Internal_TC_<ConstructorInstance extends object, Args extends unknown[] = unknown[]> {
+    new(...args: Args): ConstructorInstance;
+    (this: ConstructorInstance, ...args: Args): ConstructorInstance;
     readonly prototype: ConstructorInstance & {
-        readonly constructor: _Internal_TC_<ConstructorInstance>
+        readonly constructor: _Internal_TC_<ConstructorInstance, Args>
     };
 }
 ```
@@ -95,6 +95,27 @@ both `new`-able and callable:
 ```typescript
 export type TypeConstructor<ConstructorInstance extends object> = _Internal_TC_<ConstructorInstance>;
 ```
+
+### Constructor argument tuples
+
+`_Internal_TC_` carries `Args` through both invocation signatures and the
+recursive `prototype.constructor`. `IDefinitorInstance` takes the same tuple as
+its sixth generic (`N, R, Registry, Path, Parent, Args`), and `RegistryEntry`
+takes it as its fourth (`F, Path, Parent, Args`). Both default to `unknown[]`,
+which is also the signature for `define()` without a handler.
+
+`RegistryHolderBase.define()` and `.lazy()` pass the inferred tuple into both
+the returned constructor and the stored registry entry. The free forms do the
+same. `ReplaceConstructorInstance` infers the tuple again for lookups and
+instance-carried subtype constructors. `apply`, `call`, and `bind` infer it
+from their constructor argument; `apply` requires its array whenever the tuple
+contains a required element.
+
+Conditionals that accept any constructor use `never[]` for this tuple, not
+`unknown[]`: a narrower parameter list is not assignable to `unknown[]` under
+`strictFunctionTypes`. `RegistryOf` uses the `never[]` matcher because it only
+extracts `Registry`. The legacy `define()` `R` constraint uses it so precisely
+typed constructors satisfy the constraint while their own `Args` stays intact.
 
 ## Before/After: Prototype Assignment vs define()
 

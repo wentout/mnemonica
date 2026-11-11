@@ -21,13 +21,15 @@ import type {
 	TypeLookup,
 	RegistryHolderBase,
 	RegistryEntry,
+	GlobalRegistry,
 	LookedUpConstructor,
 	WithHookRegister,
 	typedHook,
 	HookableConstructor,
 	DefineNewableOrCallable,
 	LookupSource,
-	LazyDef
+	LazyDef,
+	ApplyFunction
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -149,7 +151,7 @@ export function define <
 	Path extends string,
 	const Name extends string,
 	N extends object,
-	Args extends unknown[],
+	Args extends unknown[] = unknown[],
 	F extends Proto<Parent, N> = Proto<Parent, N>,
 	ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
 >(
@@ -162,16 +164,40 @@ export function define <
 ): IDefinitorInstance<
 	F,
 	InstanceResult<F>,
-	Reg & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>,
+	Reg & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>,
 	ChildPath,
-	Parent
+	Parent,
+	Args
+>;
+export function define <
+	T extends object,
+	Args extends unknown[] = unknown[]
+>(
+	this: unknown,
+	TypeName?: string | IDEF<T, Args>,
+	constructHandler?: IDEF<T, Args>,
+	config?: constructorOptions
+): IDefinitorInstance<
+	T,
+	InstanceResult<T>,
+	GlobalRegistry,
+	'',
+	object,
+	Args
 >;
 export function define <
 	T extends object,
 	P extends object = object,
 	N extends Proto<P, T> = Proto<P, T>,
 	// here IDefinitorInstance is a CONSTRUCTOR !!!
-	R extends IDefinitorInstance<N> = IDefinitorInstance<N>,
+	R extends IDefinitorInstance<
+		N,
+		InstanceResult<N>,
+		GlobalRegistry,
+		'',
+		object,
+		never[]
+	> = IDefinitorInstance<N>,
 >(
 	this: unknown,
 	TypeName?: string | DefineNewableOrCallable,
@@ -183,7 +209,14 @@ export function define <
 	T extends object,
 	P extends object = object,
 	N extends Proto<P, T> = Proto<P, T>,
-	R extends IDefinitorInstance<N> = IDefinitorInstance<N>,
+	R extends IDefinitorInstance<
+		N,
+		InstanceResult<N>,
+		GlobalRegistry,
+		'',
+		object,
+		never[]
+	> = IDefinitorInstance<N>,
 >(
 	this: unknown,
 	TypeNameOrSource?: string | DefineNewableOrCallable | RegistryHolderBase<object, object, string>,
@@ -228,20 +261,20 @@ export function define <
 	return defineResult;
 }
 
-export function lazy<T extends object>(
+export function lazy<T extends object, Args extends unknown[] = unknown[]>(
 	// explicit-source form: lazy(source, TypeName, getter, config?)
 	source: RegistryHolderBase<object, object, string>,
 	TypeName: string,
-	getter: () => IDEF<T>,
+	getter: LazyDef<T, Args>,
 	config?: constructorOptions
-): IDefinitorInstance<T>;
-export function lazy<T extends object>(
+): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
+export function lazy<T extends object, Args extends unknown[] = unknown[]>(
 	// named form: lazy(TypeName, getter, config?)
 	this: unknown,
 	TypeName: string,
-	getter: LazyDef<T>,
+	getter: LazyDef<T, Args>,
 	config?: constructorOptions
-): IDefinitorInstance<T>;
+): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
 export function lazy(
 	this: unknown,
 	sourceOrTypeName: unknown,
@@ -313,9 +346,9 @@ export function lookup(
 }
 
 
-const $run = function <E extends object, T extends object, S extends Proto<E, T>>(
+const $run = function <E extends object, T extends object, S extends Proto<E, T>, Args extends unknown[]>(
 	entity: E,
-	Ctor: CtorParameter<T>,
+	Ctor: CtorParameter<T, Args>,
 	args: unknown[]
 ): {
 		[key in keyof S]: S[key]
@@ -340,12 +373,17 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 };
 
 // TODO: apply instance .to type .with arguments
-export const apply = function <E extends object, T extends object, S extends Proto<E, T>>(
+export const apply: ApplyFunction = function <
+	E extends object,
+	T extends object,
+	S extends Proto<E, T>,
+	Args extends unknown[]
+>(
 	entity: E,
-	Ctor: CtorParameter<T>,
+	Ctor: CtorParameter<T, Args>,
 	args: unknown[] = []
 ): InstanceResult<Merge<E, T>> {
-	const runResult = $run<E, T, S>(
+	const runResult = $run<E, T, S, Args>(
 		entity,
 		Ctor,
 		args
@@ -357,12 +395,12 @@ export const apply = function <E extends object, T extends object, S extends Pro
 };
 
 // TODO: call type .by instance .with arguments
-export const call = function <E extends object, T extends object, S extends Proto<E, T>>(
+export const call = function <E extends object, T extends object, S extends Proto<E, T>, Args extends unknown[]>(
 	entity: E,
-	Ctor: CtorParameter<T>,
-	...args: unknown[]
+	Ctor: CtorParameter<T, Args>,
+	...args: NoInfer<Args>
 ): InstanceResult<Merge<E, T>> {
-	const runResult = $run<E, T, S>(
+	const runResult = $run<E, T, S, Args>(
 		entity,
 		Ctor,
 		args
@@ -373,12 +411,12 @@ export const call = function <E extends object, T extends object, S extends Prot
 };
 
 // TODO: bind type .with instance → (...args)
-export const bind = function <E extends object, T extends object, S extends Proto<E, T>>(
+export const bind = function <E extends object, T extends object, S extends Proto<E, T>, Args extends unknown[]>(
 	entity: E,
-	Ctor: CtorParameter<T>
-): (...args: unknown[]) => InstanceResult<Merge<E, T>> {
-	const result = (...args: unknown[]) => {
-		const runResult = $run<E, T, S>(
+	Ctor: CtorParameter<T, Args>
+): (...args: Args) => InstanceResult<Merge<E, T>> {
+	const result = (...args: Args) => {
+		const runResult = $run<E, T, S, Args>(
 			entity,
 			Ctor,
 			args
@@ -409,10 +447,11 @@ export const decorate = function <
 
 	const decorator = function <U extends Constructor<object>>(cstr: U): DecoratedClass<U> {
 		const { name } = cstr;
+		const handler: IDEF<object, never[]> = cstr;
 		if (parentType === undefined) {
 			const decoratorResult = define(
 				name,
-				cstr as IDEF<object>,
+				handler,
 				opts
 				// decorator contract: define() returns the constructor that
 				// wraps cstr; the decorator replaces the class binding with
@@ -422,7 +461,7 @@ export const decorate = function <
 		}
 		const defineResult = parentType.define(
 			name,
-			cstr as IDEF<object>,
+			handler,
 			opts
 			// same decorator contract as the branch above
 		) as unknown as DecoratedClass<U>;

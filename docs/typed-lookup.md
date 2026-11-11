@@ -183,6 +183,44 @@ Direct `new` on a constructor returned by `.define()` works for **root types** o
 
 ---
 
+## Constructor arguments
+
+A constructor made by `define()` takes exactly the arguments its function or
+class handler declares, following ordinary TypeScript call rules:
+
+| handler | `new Ctor()` | `new Ctor( x )` |
+|---|---|---|
+| `function ( this: T ) {}` — no arguments | ✓ | ✗ |
+| `function ( this: T, data?: D ) {}` | ✓ | ✓, `x` must be a `D` |
+| `function ( this: T, data: D ) {}` | ✗ | ✓, `x` must be a `D` |
+| `class { constructor ( data: D ) {} }` | ✗ | ✓, `x` must be a `D` |
+| `define( 'X' )` — no handler | ✓ | ✓, `unknown[]` |
+
+Rest parameters follow the same TypeScript rules. The `this` parameter is not
+part of the constructor's argument tuple, so `ConstructorParameters` matches
+only the handler's declared parameters.
+
+The tuple is preserved by builder roots, chained subtypes, custom collections,
+`new instance.Sub( x )`, relative and absolute lookups, `.lazy()`, and the free
+`define()` / `lazy()` forms. Wrong argument counts and types are compile
+errors in each form.
+
+`apply`, `call`, and `bind` infer their arguments from the constructor as well:
+
+- `apply( entity, Ctor, args )` requires the array when the constructor has a
+  required parameter. It may be omitted for a no-argument constructor or when
+  every parameter is optional.
+- `call( entity, Ctor, ...args )` and the function returned by
+  `bind( entity, Ctor )` use the constructor's exact required, optional, and
+  rest parameters.
+
+The legacy `define( fn, config )` form keeps the open `unknown[]` signature:
+the config occupies the second argument instead of a typed handler position,
+so the call resolves through the legacy `R` overload. Use
+`define( 'Name', fn, config )` when constructor argument checking is required.
+
+---
+
 ## Declaration emit on TypeScript 6 (the TS2883 symptom)
 
 Builder mode compiles cleanly with `declaration: true` on TypeScript 6:
