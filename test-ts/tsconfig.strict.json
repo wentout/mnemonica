@@ -9,6 +9,7 @@
 		"experimentalDecorators": true
 	},
 	"include": [
+		"constructor-args.ts",
 		"typed-lookup-gates.ts",
 		"call-forms.ts",
 		"typed-collections.ts",

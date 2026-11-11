@@ -219,7 +219,7 @@ class MidAddDecoratorAddExtSub {
 export const midDecoratorBase = new MidDecoratorBase;
 
 // debugger;
-export const midDecoratorExt = apply(midDecoratorBase, MidDecoratorExt, [ 3, 2, 1 ]);
+export const midDecoratorExt = apply(midDecoratorBase, MidDecoratorExt, [ '3', 2, 1 ]);
 
 // debugger;
 // @ts-expect-error sub constructor is undefined

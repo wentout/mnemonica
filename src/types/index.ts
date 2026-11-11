@@ -11,7 +11,9 @@ export type PropsType = Record<string, unknown>;
 // Base constructor function type - can be a class constructor or a function.
 // Args defaults to unknown[] so IDEF<T> is backwards compatible;
 // supply Args to get typed constructor params: IDEF<MyType, [string, number]>
-export type IDEF<T, Args extends unknown[] = unknown[]> = { new(): T } | { (this: T, ...args: Args): void };
+export type IDEF<T, Args extends unknown[] = unknown[]> =
+	| { new(...args: Args): T }
+	| { (this: T, ...args: Args): void };
 
 // Construction-function parameter for the .call/.apply/.bind family:
 // anything IDEF accepts PLUS any required-argument constructor shape.
@@ -19,7 +21,7 @@ export type IDEF<T, Args extends unknown[] = unknown[]> = { new(): T } | { (this
 // parameter type is a supertype of never) while keeping the constructed
 // result typed; unknown[] would reject required params under
 // strictFunctionTypes.
-export type CtorParameter<T> = IDEF<T> | { new (...args: never[]): T };
+export type CtorParameter<T, Args extends unknown[] = never[]> = IDEF<T, Args> | { new (...args: Args): T };
 
 // Lazy getter type - a zero-arg factory that returns a constructor.
 // Used by the explicit .lazy() API.
@@ -183,12 +185,12 @@ export type CreationError<T extends object> = ( T & Error ) | Error;
  * TC = Type Constructor; "Internal" means this is the library's own constructor
  * shape, distinct from user-facing TypeConstructor below.
  */
-export interface _Internal_TC_<ConstructorInstance extends object> {
+export interface _Internal_TC_<ConstructorInstance extends object, Args extends unknown[] = unknown[]> {
 	/** @throws {CreationError<ConstructorInstance>} when construction fails */
-	new(...args: unknown[]): ConstructorInstance;
-	(this: ConstructorInstance, ...args: unknown[]): ConstructorInstance;
+	new(...args: Args): ConstructorInstance;
+	(this: ConstructorInstance, ...args: Args): ConstructorInstance;
 	readonly prototype: ConstructorInstance & {
-		readonly constructor: _Internal_TC_<ConstructorInstance>
+		readonly constructor: _Internal_TC_<ConstructorInstance, Args>
 	};
 }
 
@@ -620,7 +622,15 @@ export interface TypeLookup<T extends object = GlobalRegistry> extends CallableF
 //   	interface TypeRegistry extends RegistryOf<typeof App> {}
 //   }
 export type RegistryOf<T> =
-	T extends IDefinitorInstance<object, InstanceResult<object>, infer Registry, string> ? Registry
+	// never[] accepts every handler Args tuple; only Registry is extracted here.
+	T extends IDefinitorInstance<
+		object,
+		InstanceResult<object>,
+		infer Registry,
+		string,
+		object,
+		never[]
+	> ? Registry
 	: T extends TypesCollection<infer Registry, object, string> ? Registry
 	: T extends MnemonicaModule<infer Registry> ? Registry
 	: never;
@@ -905,8 +915,9 @@ export type InstanceResult<
 export interface RegistryEntry<
 	F extends object,
 	Path extends string = '',
-	Parent extends object = object
-> extends _Internal_TC_<F>, RegistryHolderBase<{}, F, Path> {
+	Parent extends object = object,
+	Args extends unknown[] = unknown[]
+> extends _Internal_TC_<F, Args>, RegistryHolderBase<{}, F, Path> {
 	// typed hook registration — preserved through ReplaceConstructorInstance's
 	// member preservation, so lookup() results of builder-typed registries
 	// get registerHook with inferred opts
@@ -934,7 +945,7 @@ export interface RegistryHolderBase<
 	define<
 		const Name extends string,
 		N extends object,
-		Args extends unknown[],
+		Args extends unknown[] = unknown[],
 		F extends Proto<Parent, N> = Proto<Parent, N>,
 		ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
 	>(
@@ -945,9 +956,10 @@ export interface RegistryHolderBase<
 	): IDefinitorInstance<
 		F,
 		InstanceResult<F>,
-		T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>,
+		T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>,
 		ChildPath,
-		Parent
+		Parent,
+		Args
 	>;
 
 	// Lazy getter: .lazy(TypeName, () => Constructor, config?)
@@ -956,19 +968,21 @@ export interface RegistryHolderBase<
 	lazy<
 		const Name extends string,
 		N extends object,
+		Args extends unknown[],
 		F extends Proto<Parent, N> = Proto<Parent, N>,
 		ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
 	>(
 		this: RegistryHolderBase<T, Parent, Path>,
 		TypeName: Name,
-		getter: LazyDef<N>,
+		getter: LazyDef<N, Args>,
 		config?: constructorOptions
 	): IDefinitorInstance<
 		F,
 		InstanceResult<F>,
-		T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent>>,
+		T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>,
 		ChildPath,
-		Parent
+		Parent,
+		Args
 	>;
 }
 
@@ -990,12 +1004,14 @@ export interface RegistryHolder<
 // Path = dotted type path of this constructor (empty for root types)
 // Parent = instance type of the parent type (object for root types);
 //          threaded into registerHook's existentInstance typing
+// Args = construction parameters declared by the handler
 export interface IDefinitorInstance<
 	N extends object,
 	R extends InstanceResult<N> = InstanceResult<N>,
 	Registry extends object = GlobalRegistry,
 	Path extends string = '',
 	Parent extends object = object,
+	Args extends unknown[] = unknown[],
 >
 	extends RegistryHolderBase<Registry, N, Path> {
 
@@ -1007,7 +1023,7 @@ export interface IDefinitorInstance<
 	// so makes interface constructible
 	// new(...args: unknown[]): { [key in keyof R]: R[key] };
 	/** @throws {CreationError<R>} when construction fails */
-	new(...args: unknown[]): R;
+	new(...args: Args): R;
 
 	
 	// TODO: need check if line below works
@@ -1039,31 +1055,31 @@ export interface IDefinitorInstance<
 // 2. Legacy: define(constructHandler, config?) - TypeName from constructor name
 // 3. Nested: parentType.define(TypeName, constructHandler, config?)
 export interface TypeAbsorber extends CallableFunction {
-	<T extends object>(
+	<T extends object, Args extends unknown[] = unknown[]>(
 		this: unknown,
 		TypeOrTypeName: string | DefineNewableOrCallable,
-		constructHandlerOrConfig?: IDEF<T> | object | boolean | DefineNewableOrCallable,
+		constructHandlerOrConfig?: IDEF<T, Args> | object | boolean | DefineNewableOrCallable,
 		configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean
-	): IDefinitorInstance<T>;
+	): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
 }
 
 // Lazy absorber function type - used for explicit lazy getter definitions
 // (named form only: the callback is never called at define time, so the
 // name cannot be derived from it)
 export interface LazyAbsorber extends CallableFunction {
-	<T extends object>(
+	<T extends object, Args extends unknown[] = unknown[]>(
 		this: unknown,
 		TypeName: string,
-		getter: LazyDef<T>,
+		getter: LazyDef<T, Args>,
 		config?: constructorOptions
-	): IDefinitorInstance<T>;
-	<T extends object>(
+	): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
+	<T extends object, Args extends unknown[] = unknown[]>(
 		this: unknown,
 		source: RegistryHolderBase<object, object, string>,
 		TypeName: string,
-		getter: LazyDef<T>,
+		getter: LazyDef<T, Args>,
 		config?: constructorOptions
-	): IDefinitorInstance<T>;
+	): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
 }
 
 // TypesCollection interface for createTypesCollection
@@ -1196,26 +1212,26 @@ export type Merge<E extends object, T extends object> = {
 // fields (filtering out MnemonicaInstance method names), producing the same
 // `{ fields }` hover style as `new Type()`.
 export interface ApplyFunction extends CallableFunction {
-	<E extends object, T extends object>(
+	<E extends object, T extends object, Args extends unknown[]>(
 		entity: E,
-		Constructor: IDEF<T>,
-		args?: unknown[]
+		Constructor: CtorParameter<T, Args>,
+		... [ args ]: [] extends Args ? [args?: NoInfer<Args>] : [args: NoInfer<Args>]
 	): InstanceResult<Merge<E, T>>;
 }
 
 export interface CallFunction extends CallableFunction {
-	<E extends object, T extends object>(
+	<E extends object, T extends object, Args extends unknown[]>(
 		entity: E,
-		Constructor: IDEF<T>,
-		...args: unknown[]
+		Constructor: CtorParameter<T, Args>,
+		...args: NoInfer<Args>
 	): InstanceResult<Merge<E, T>>;
 }
 
 export interface BindFunction extends CallableFunction {
-	<E extends object, T extends object>(
+	<E extends object, T extends object, Args extends unknown[]>(
 		entity: E,
-		Constructor: IDEF<T>
-	): (...args: unknown[]) => InstanceResult<Merge<E, T>>;
+		Constructor: CtorParameter<T, Args>
+	): (...args: Args) => InstanceResult<Merge<E, T>>;
 }
 
 // Utils object type
