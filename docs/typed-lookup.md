@@ -371,8 +371,14 @@ declare module 'mnemonica' {
 import './registry';
 import { lookup } from 'mnemonica';
 
-const Admin = lookup('User.Admin'); // fully typed, no Tactica
+const user = new (lookup('User'))({ name: 'Ada' });
+const admin = new user.Admin({ role: 'root' }); // own and inherited fields typed
 ```
+
+The free lookup returns the same subtype-augmented constructor as
+`App.lookup()` for core registry entries carried through the bridge.
+Plain-signature entries, whether hand-written or Tactica-generated, keep their
+declared constructor and instance types.
 
 Why prefer this over hand-written augmentation (below): **single source of
 truth**. The builder chain is the registry; the interface just re-exports it

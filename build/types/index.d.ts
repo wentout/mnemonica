@@ -208,6 +208,9 @@ export type WithHookRegister<C> = C extends {
 } ? R extends object ? C & {
     registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, object, R>): void;
 } : C : C;
+export type FreeLookupResult<K extends keyof TypeRegistry> = TypeRegistry[K] extends {
+    define: unknown;
+} ? LookedUpConstructor<TypeRegistry, K & string> : WithHookRegister<TypeRegistry[K]>;
 export type LookupResult<Registry extends object, Path extends keyof Registry & string> = Registry[Path] extends AnyConstructor ? LookedUpConstructor<Registry, Path> : never;
 export interface TypeLookup<T extends object = GlobalRegistry> extends CallableFunction {
     <const K extends keyof T & string>(this: unknown, TypeNestedPath: K): LookedUpConstructor<T, K>;

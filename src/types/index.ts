@@ -599,6 +599,15 @@ export type WithHookRegister<C> = C extends { registerHook: AnyHookCallback }
 				: C
 			: C;
 
+// Result of the free lookup() overload for an augmented TypeRegistry.
+// Builder-bridged entries carry define and need the same subtype-augmented
+// constructor as collection lookup; plain signature entries keep their
+// existing hook-wrapped shape.
+export type FreeLookupResult<K extends keyof TypeRegistry> =
+	TypeRegistry[K] extends { define: unknown }
+		? LookedUpConstructor<TypeRegistry, K & string>
+		: WithHookRegister<TypeRegistry[K]>;
+
 // Result of a typed lookup: the augmented constructor plus a `lookup` method
 // scoped to the constructor's own type path for relative subtype lookups.
 export type LookupResult<

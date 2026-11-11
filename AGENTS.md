@@ -244,6 +244,9 @@ Public types involved:
   `.define()`.
 - `RegistryOf<T>` — extracts the accumulated `Registry` from any of the above,
   for the bridge.
+- `FreeLookupResult<K>` — the public return type of the first free `lookup()`
+  overload; core entries carrying `define` produce `LookedUpConstructor`, while
+  plain signature entries retain `WithHookRegister`.
 - `RegistryEntry<F, Path>`, `LookedUpConstructor<Registry, Path>`,
   `LookedUpInstance<Registry, Path>` — the deliberate public vocabulary for
   consumer declaration emit (TS 6): registry values, lookup results, and

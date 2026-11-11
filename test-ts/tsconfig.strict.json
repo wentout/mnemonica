@@ -10,6 +10,7 @@
 	},
 	"include": [
 		"constructor-args.ts",
+		"free-lookup-bridge.ts",
 		"typed-lookup-gates.ts",
 		"call-forms.ts",
 		"typed-collections.ts",
