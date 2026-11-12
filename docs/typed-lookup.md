@@ -99,6 +99,8 @@ the only names a declaration file (`.d.ts`) built on mnemonica ever needs:
 
 - `RegistryEntry<Shape, Path>` — what the builder stores per defined path
   and what typed lookups read back;
+- `AsyncRegistryEntry<Shape, Path>` — the same for an `async` handler: its
+  construction is typed `Promise<Shape>`, its instances and hooks `Shape`;
 - `LookedUpConstructor<Registry, Path>` — the type of a `lookup()` result:
   a constructor whose instances carry their registered subtypes, plus a
   `lookup()` scoped to its own path;
@@ -180,6 +182,23 @@ const admin2 = new Admin({ role: 'root' }); // fails: no parent instance
 ```
 
 Direct `new` on a constructor returned by `.define()` works for **root types** only. For subtypes the parent instance is required (or use `apply(parentInstance, Ctor, args)`). With `strictChain: true` (the default) the parent must be the immediate type; with `strictChain: false` ancestor instances further up the chain are also accepted.
+
+An `async` handler makes construction a Promise at runtime, and the types say so:
+
+```typescript
+const Sessions = App.lookup('User').define('Session', async function (this: SessionShape, token: string) {
+	this.token = token;
+	return this;
+});
+
+const user = new (Sessions.lookup('User'))({ name: 'Ada' });
+const pending = new user.Session('t');   // Promise<…>: no `token` until awaited
+const session = await pending;
+session.token;                           // string
+session.name;                            // string, inherited from User
+```
+
+The handler must `return this` (mnemonica rejects the construction otherwise). The registry stores the type as an `AsyncRegistryEntry`; hooks registered on it receive the resolved instance.
 
 ---
 
@@ -347,6 +366,23 @@ const AdminCtor = Admin.lookup('User.Admin'); // typed
 Rule: thread the chain through exports and keep imports tree-shaped (no
 cycles). Each file sees exactly the types registered up to its point in the
 chain.
+
+A subtype defined in a later statement, on a looked-up constructor, joins
+the registry it was looked up from, so the returned value carries
+everything before it plus the new type:
+
+```typescript
+export const App = mnemonica.define('User', …).define('Admin', …);
+export const Sessions = App.lookup('User').define('Session', …);
+
+const User = Sessions.lookup('User');
+const user = new User({ name: 'Ada' });
+new user.Admin({ role: 'root' });   // typed
+new user.Session('t');              // typed
+```
+
+`App` itself does not learn about `Session`: its type was fixed when it was
+declared. Look up from the latest value in the chain.
 
 ---
 

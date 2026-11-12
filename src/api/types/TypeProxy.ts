@@ -1,7 +1,7 @@
 'use strict';
 
 import type {
-	constructorOptions, _Internal_TC_, TypeDef, TypeDescriptorDefine 
+	constructorOptions, _Internal_TC_, TypeDef, TypeDescriptorDefine, TypeClass 
 } from '../../types';
 
 import TypesUtils from '../utils';
@@ -187,7 +187,8 @@ const subTypeApply = (
 	parentType: TypeProxyType,
 	cfg?: constructorOptions
 ) => {
-	const decorator = function <T extends { new (): unknown }>(cstr: T): T {
+	function decorator <T extends { new (): unknown }>(cstr: T): T;
+	function decorator (cstr: { new (): unknown }): TypeClass {
 		const { name } = cstr;
 		const defineResult = parentType.define(
 			name,
@@ -197,9 +198,10 @@ const subTypeApply = (
 		// decorator contract: define() returns the constructor wrapping cstr
 		// (construction still runs through cstr); the class binding is
 		// replaced by that constructor, so it is presented as T
-		const result = defineResult as unknown as T;
+		// The overload carries T; the implementation returns TypeClass directly.
+		const result = defineResult;
 		return result;
-	};
+	}
 	return decorator;
 };
 

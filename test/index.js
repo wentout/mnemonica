@@ -885,6 +885,37 @@ describe('Main Test', () => {
 				expect(evenMore).to.be.an.instanceof(userTC);
 				expect(evenMore).to.be.an.instanceof(userWithoutPassword);
 			});
+
+			const Fake = function Fake () {};
+			const nullPrototype = Object.create(null);
+			const nullPrototypeWithConstructor = Object.create(null);
+			nullPrototypeWithConstructor.constructor = Fake;
+			const deepNullPrototype = Object.create(Object.create(null));
+			deepNullPrototype.constructor = Fake;
+			const undefinedConstructorPrototype = Object.create({ constructor : undefined });
+			undefinedConstructorPrototype.constructor = Fake;
+			const nullConstructorPrototype = Object.create({ constructor : null });
+			nullConstructorPrototype.constructor = Fake;
+			const nonInstanceValues = [
+				[ 'null', null ],
+				[ 'undefined', undefined ],
+				[ 'primitive', 42 ],
+				[ 'plain object', {} ],
+				[ 'null-prototype object', nullPrototype ],
+				[ 'null-prototype object with own constructor', nullPrototypeWithConstructor ],
+				[ 'deep null-prototype chain', deepNullPrototype ],
+				[ 'prototype with undefined constructor', undefinedConstructorPrototype ],
+				[ 'prototype with null constructor', nullConstructorPrototype ]
+			];
+			const collection = createTypesCollection();
+			nonInstanceValues.forEach(([ label, value ]) => {
+				it(`${label} instanceof a type returns false`, () => {
+					expect(value instanceof userTC).to.equal(false);
+				});
+				it(`${label} instanceof a collection returns false`, () => {
+					expect(value instanceof collection).to.equal(false);
+				});
+			});
 		});
 
 		describe('util.inspect tests', () => {
@@ -1876,6 +1907,18 @@ describe('Main Test', () => {
 				expect(instance.tag).to.equal('sub');
 				expect(instance).instanceOf(LazyChainSub);
 				expect(instance).instanceOf(LazyChainRoot);
+			});
+
+			it('chained lazy call form constructs from the parent instance', () => {
+				const LazyCallChainRoot = defaultTypes.define('LazyCallChainRoot', function () {});
+				const LazyCallChainSub = LazyCallChainRoot.lazy('LazyCallChainSub', () => function () {
+					this.tag = 'sub-call';
+				});
+				const root = new LazyCallChainRoot();
+				const instance = root.LazyCallChainSub();
+				expect(instance.tag).to.equal('sub-call');
+				expect(instance).instanceOf(LazyCallChainSub);
+				expect(instance).instanceOf(LazyCallChainRoot);
 			});
 
 			it('the unnamed lazy form is rejected — the name must come explicitly', () => {

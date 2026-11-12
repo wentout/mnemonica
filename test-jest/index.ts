@@ -892,6 +892,36 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(evenMore instanceof userTC).toEqual(true);
 				expect(evenMore instanceof userWithoutPassword).toEqual(true);
 			});
+
+			const nullPrototype = Object.create(null);
+			const nullPrototypeWithConstructor = Object.create(null);
+			nullPrototypeWithConstructor.constructor = function Fake () {};
+			const deepNullPrototype = Object.create(Object.create(null));
+			deepNullPrototype.constructor = function Fake () {};
+			const undefinedConstructorPrototype = Object.create({ constructor: undefined });
+			undefinedConstructorPrototype.constructor = function Fake () {};
+			const nullConstructorPrototype = Object.create({ constructor: null });
+			nullConstructorPrototype.constructor = function Fake () {};
+			const nonInstanceValues = [
+				[ 'null', null ],
+				[ 'undefined', undefined ],
+				[ 'primitive', 42 ],
+				[ 'plain object', {} ],
+				[ 'null-prototype object', nullPrototype ],
+				[ 'null-prototype object with own constructor', nullPrototypeWithConstructor ],
+				[ 'deep null-prototype chain', deepNullPrototype ],
+				[ 'prototype with undefined constructor', undefinedConstructorPrototype ],
+				[ 'prototype with null constructor', nullConstructorPrototype ]
+			];
+			const collection = createTypesCollection();
+			nonInstanceValues.forEach(([ label, value ]) => {
+				it(`${label} instanceof a type returns false`, () => {
+					expect(value instanceof userTC).toEqual(false);
+				});
+				it(`${label} instanceof a collection returns false`, () => {
+					expect(value instanceof collection).toEqual(false);
+				});
+			});
 		});
 
 		describe('strictChain validation tests', () => {
@@ -3267,6 +3297,18 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					expect(instance).toHaveProperty('tag', 'sub');
 					expect(instance).toBeInstanceOf(LazyChainSub);
 					expect(instance).toBeInstanceOf(LazyChainRoot);
+				});
+
+				it('chained lazy call form constructs from the parent instance', () => {
+					const LazyCallChainRoot = define('LazyCallChainRoot', function () {});
+					const LazyCallChainSub = LazyCallChainRoot.lazy('LazyCallChainSub', () => function (this: { tag: string }) {
+						this.tag = 'sub-call';
+					});
+					const root = new LazyCallChainRoot();
+					const instance = root.LazyCallChainSub();
+					expect(instance).toHaveProperty('tag', 'sub-call');
+					expect(instance).toBeInstanceOf(LazyCallChainSub);
+					expect(instance).toBeInstanceOf(LazyCallChainRoot);
 				});
 
 				it('the unnamed lazy form is rejected — the name must come explicitly', () => {

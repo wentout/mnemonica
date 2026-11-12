@@ -103,7 +103,9 @@ export const constants = {
 		return SymbolDefaultTypesCollection;
 	},
 
-	get 'SymbolConfig' () {
+	// typed as the declared symbol itself (unique symbol), so it can key a
+	// typed property such as CollectionDef's config
+	get 'SymbolConfig' (): typeof SymbolConfig {
 		return SymbolConfig;
 	},
 

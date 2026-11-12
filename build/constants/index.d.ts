@@ -1,8 +1,9 @@
+declare const SymbolConfig: unique symbol;
 export declare const constants: {
     readonly SymbolParentType: symbol;
     readonly SymbolConstructorName: symbol;
     readonly SymbolDefaultTypesCollection: symbol;
-    readonly SymbolConfig: symbol;
+    readonly SymbolConfig: typeof SymbolConfig;
     readonly MNEMONICA: string;
     readonly MNEMOSYNE: string;
     readonly odp: <T extends object>(o: T, p: PropertyKey, attributes: PropertyDescriptor) => T;
@@ -25,3 +26,4 @@ export declare const constants: {
         WRONG_STACK_CLEANER: string;
     };
 };
+export {};

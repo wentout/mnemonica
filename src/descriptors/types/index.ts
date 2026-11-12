@@ -80,6 +80,9 @@ const TypesCollection = function (_config: Record<string, unknown>) {
 		{
 			get () {
 				const result = (instance: { [SymbolConstructorName]?: string }) => {
+					if (typeof instance !== 'object' || instance === null) {
+						return false;
+					}
 					const checkResult = instance[ SymbolConstructorName ] === MNEMONICA;
 					return checkResult;
 				};

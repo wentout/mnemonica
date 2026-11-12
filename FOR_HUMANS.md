@@ -159,7 +159,7 @@ The key inversion: `new` is called on the **parent instance** (`alice`), not on 
 npm install mnemonica
 ```
 
-**Requirements:** Node.js `>=18 <26` (tested on 20.x, 22.x, 24.x in CI).
+**Requirements:** Node.js `>=22 <27` (tested on 22.x, 24.x, 26.x in CI).
 
 ### From a Git checkout
 

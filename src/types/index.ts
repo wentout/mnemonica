@@ -2,6 +2,7 @@
 /* eslint no-unused-vars: "off" */
 
 import type { TypeRegistry } from '../index';
+import type { constants } from '../constants';
 
 // Props type for getProps/setProps
 export type PropsType = Record<string, unknown>;
@@ -87,7 +88,7 @@ export interface ThrowModificationError extends CallableFunction {
 // The bound fork invoker that instance.fork() returns: consumes fork
 // arguments, produces a fresh instance of the forked type.
 export interface ForkInvoker<T extends object> extends CallableFunction {
-	(this: object, ...forkArgs: unknown[]): T;
+	(this: object | void, ...forkArgs: unknown[]): T;
 }
 
 // Error message types - all error messages are strings
@@ -463,11 +464,23 @@ export interface CollectionLookup extends CallableFunction {
 }
 
 // Collection definition
+// A collection's config, stored under SymbolConfig. Every collection carries
+// a name by construction: 'defaultTypes' for the default one, the given or
+// auto-numbered name for custom ones (createTypesCollection).
+export type CollectionConfig = {
+	name: string;
+	[key: string]: unknown;
+};
+
+// the config key is SymbolConfig's own unique symbol type; a mapped type
+// over it keeps this module type-only (no runtime import of constants)
 export type CollectionDef = Hookable & {
 	define: TypeAbsorber;
 	lookup: CollectionLookup;
 	subtypes: SubtypesMap;
 	[key: string]: unknown;
+} & {
+	[K in typeof constants.SymbolConfig]: CollectionConfig;
 };
 
 // Type lookup function type: may have augmentation by Tactica re-definition
@@ -481,12 +494,21 @@ export type CollectionDef = Hookable & {
 export type GlobalRegistry = TypeRegistry & Record<string, TypeConstructorBase>;
 
 // Extract the instance type returned by a mnemonica-compatible constructor.
-// Falls back to `object` so generic helpers that require an object constraint
-// do not fail when the constructor shape is not yet narrowed.
+// Async entries construct a Promise, but inheritance, hooks, and subtype
+// lookup all operate on the resolved instance. Falls back to `object` so
+// generic helpers that require an object constraint do not fail when the
+// constructor shape is not yet narrowed.
 export type ExtractConstructorInstance<C> =
 	C extends { new (...args: never[]): infer I }
-		? I extends object ? I : object
+		? Awaited<I> extends object ? Awaited<I> : object
 		: object;
+
+// Preserve the entry's construction kind when replacing its instance shape:
+// an async entry stays Promise-returning on both new and call signatures.
+export type ConstructResult<C, NewInstance extends object> =
+	C extends { new (...args: never[]): PromiseLike<unknown> }
+		? Promise<NewInstance>
+		: NewInstance;
 
 // Map dotted registry paths that extend `${Path}.${Child}` into child
 // constructor properties on the parent instance. This lets typed lookups
@@ -516,7 +538,7 @@ export type ReplaceConstructorInstance<
 	new (...args: infer A): unknown;
 }
 	? {
-		new (...args: A): NewInstance;
+		new (...args: A): ConstructResult<C, NewInstance>;
 		readonly prototype: NewInstance & {
 			readonly constructor: ReplaceConstructorInstance<C, NewInstance, CallConstructs>;
 		};
@@ -525,11 +547,11 @@ export type ReplaceConstructorInstance<
 			// SubTypeProxy-backed member: the call form constructs the child
 			// from the parent instance (the chain-tip form new R().A()), so
 			// no `this` demand — detached bare calls construct too.
-			? { (...args: A2): NewInstance }
+			? { (...args: A2): ConstructResult<C, NewInstance> }
 			// Raw looked-up constructor: the `this` guard honestly models
 			// .call(childInstance, args); a bare call here is the decorator
 			// path at runtime, not construction.
-			: { (this: NewInstance, ...args: A2): NewInstance }
+			: { (this: NewInstance, ...args: A2): ConstructResult<C, NewInstance> }
 		: unknown)
 	& Omit<C, 'prototype' | 'lookup'>
 	: never;
@@ -567,19 +589,20 @@ export type LookedUpInstance<
 	Path extends string
 > = WithSubTypes<ExtractConstructorInstance<Registry[Path & keyof Registry]>, Registry, Path>;
 
-// Lookup result type (public vocabulary): the augmented constructor plus a
-// lookup method scoped to the constructor's own type path. Non-conditional
-// on purpose: a conditional alias resolves during inference and its
-// expansion (internal helpers) would leak into consumer declaration emit.
-// CallConstructs mirrors the SubTypeProxy distinction (true drops the this
-// demand for instance-carried child constructors).
+// Lookup result type (public vocabulary): the full-registry definition
+// surface plus the augmented constructor and a lookup method scoped to the
+// constructor's own type path. Non-conditional on purpose: a conditional
+// alias resolves during inference and its expansion (internal helpers) would
+// leak into consumer declaration emit. CallConstructs mirrors the SubTypeProxy
+// distinction (true drops the this demand for instance-carried child constructors).
 export type LookedUpConstructor<
 	Registry extends object,
 	Path extends keyof Registry & string,
 	CallConstructs extends boolean = false
-> = AugmentedConstructor<Registry, Path, CallConstructs> & {
-	lookup: NestedTypeLookup<Registry, Path>;
-};
+> = RegistryHolderBase<Registry, ExtractConstructorInstance<Registry[Path]>, Path> &
+	AugmentedConstructor<Registry, Path, CallConstructs> & {
+		lookup: NestedTypeLookup<Registry, Path>;
+	};
 
 // Typed registerHook surface for lookup results whose registry entries are
 // bare constructors (tactica-emitted or hand-written TypeRegistry entries):
@@ -933,6 +956,24 @@ export interface RegistryEntry<
 	registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
 }
 
+// Async registry VALUE: the same public vocabulary as RegistryEntry, with
+// construction returning the Promise that the runtime always produces for an
+// async handler. The resolved F remains the instance used by hooks and
+// subtypes; only construction is deferred.
+export interface AsyncRegistryEntry<
+	F extends object,
+	Path extends string = '',
+	Parent extends object = object,
+	Args extends unknown[] = unknown[]
+> extends RegistryHolderBase<{}, F, Path> {
+	new (...args: Args): Promise<F>;
+	(this: F, ...args: Args): Promise<F>;
+	readonly prototype: F & {
+		readonly constructor: AsyncRegistryEntry<F, Path, Parent, Args>;
+	};
+	registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
+}
+
 // Registry holder base - provides the accumulating .define() method.
 // `Parent` tracks the instance type of the last defined constructor, so chained
 // subtypes get the correct merged `Proto<Parent, N>` instance type.
@@ -950,6 +991,29 @@ export interface RegistryHolderBase<
 		configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean
 	): IDefinitorInstance<SubType>;
 
+	// Async modern overload: a Promise-returning callable handler stores an
+	// async entry. It must precede the IDEF overload, whose callable void
+	// result otherwise accepts async functions and erases their Promise.
+	define<
+		const Name extends string,
+		N extends object,
+		Args extends unknown[] = unknown[],
+		F extends Proto<Parent, N> = Proto<Parent, N>,
+		ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
+	>(
+		this: RegistryHolderBase<T, Parent, Path>,
+		TypeName: Name,
+		constructHandler: (this: N, ...args: Args) => PromiseLike<unknown>,
+		config?: constructorOptions
+	): IDefinitorInstance<
+		F,
+		InstanceResult<F>,
+		T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>,
+		ChildPath,
+		Parent,
+		Args
+	>;
+
 	// Modern overload: define(TypeName, constructHandler, config?)
 	define<
 		const Name extends string,
@@ -966,6 +1030,28 @@ export interface RegistryHolderBase<
 		F,
 		InstanceResult<F>,
 		T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>,
+		ChildPath,
+		Parent,
+		Args
+	>;
+
+	// Async lazy getter: the callback itself stays synchronous, but the
+	// constructor it returns may produce a Promise on every construction.
+	lazy<
+		const Name extends string,
+		N extends object,
+		Args extends unknown[],
+		F extends Proto<Parent, N> = Proto<Parent, N>,
+		ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
+	>(
+		this: RegistryHolderBase<T, Parent, Path>,
+		TypeName: Name,
+		getter: () => (this: N, ...args: Args) => PromiseLike<unknown>,
+		config?: constructorOptions
+	): IDefinitorInstance<
+		F,
+		InstanceResult<F>,
+		T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>,
 		ChildPath,
 		Parent,
 		Args

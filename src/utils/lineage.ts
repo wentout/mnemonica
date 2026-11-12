@@ -13,8 +13,6 @@ import {
 } from '../api/types/Props';
 import { constants } from '../constants';
 
-const { SymbolConfig } = constants;
-
 import type {
 	LineageGraph,
 	LineageNode,
@@ -181,11 +179,12 @@ export const lineage = ( instances: object[], options?: LineageOptions ): Lineag
 		const { __collection__: collection } = baseProps;
 		// every collection carries a name by construction (the default
 		// collection is 'defaultTypes', unnamed customs are auto-named), so
-		// no fallback is needed here
-		const collectionConfig = ( collection as unknown as { [ SymbolConfig ]?: { name?: string } } )[
-			SymbolConfig
-		]!;
-		const collectionName: string = collectionConfig.name!;
+		// no fallback is needed here; CollectionDef types its SymbolConfig
+		// entry as CollectionConfig with that name. Read through constants
+		// directly: a local alias (const or destructured) widens the unique
+		// symbol to symbol and loses the typed key
+		const collectionConfig = collection[ constants.SymbolConfig ];
+		const collectionName: string = collectionConfig.name;
 
 		const node: LineageNode = {
 			type : {
