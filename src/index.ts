@@ -67,9 +67,10 @@ export type {
 	RegistryOf,
 	MnemonicaModule,
 	// Deliberate public vocabulary for builder-mode consumers (TS 6
-	// declaration emit names ONLY entry exports; these three stand in
+	// declaration emit names ONLY entry exports; these four stand in
 	// for the internal registry/lookup machinery):
 	RegistryEntry,
+	AsyncRegistryEntry,
 	LookedUpConstructor,
 	LookedUpInstance,
 	typedHook,
@@ -207,25 +208,13 @@ export function define <
 	constructHandler?: IDEF<T> | DefineNewableOrCallable | object | boolean,
 	config?: constructorOptions,
 ): R;
-export function define <
-	T extends object,
-	P extends object = object,
-	N extends Proto<P, T> = Proto<P, T>,
-	R extends IDefinitorInstance<
-		N,
-		InstanceResult<N>,
-		GlobalRegistry,
-		'',
-		object,
-		never[]
-	> = IDefinitorInstance<N>,
->(
+export function define <T extends object>(
 	this: unknown,
 	TypeNameOrSource?: string | DefineNewableOrCallable | RegistryHolderBase<object, object, string>,
 	constructHandlerOrName?: IDEF<T> | DefineNewableOrCallable | object | boolean | string,
 	configOrHandler?: constructorOptions | IDEF<T> | DefineNewableOrCallable | object | boolean,
 	config?: constructorOptions,
-): R {
+): IDefinitorInstance<T> {
 
 	// explicit-source form: define(source, name, handler, config?)
 	// the source may be a TypesCollection (object) or a TypeProxy (function),
@@ -238,28 +227,25 @@ export function define <
 	if (mayBeSource && typeof constructHandlerOrName === 'string') {
 		// .define was verified callable above; the cast only adds its signature
 		const source = sourceCandidate as { define: TypeAbsorber };
+		// The implementation returns the delegated constructor directly;
+		// caller-specific R views live only on the overloads.
 		const sourceDefineResult = source.define(
 			constructHandlerOrName,
 			configOrHandler as IDEF<T>,
 			config
-			// facade return: the overload promises R (the caller's constructor
-			// view); the delegated define produces that same runtime
-			// constructor under a different generic instantiation
-		) as unknown as R;
+		);
 		return sourceDefineResult;
 	}
 
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
+	// The implementation returns the delegated constructor directly.
 	const defineResult = (types as { define: TypeAbsorber })
 		.define(
 			TypeNameOrSource as string,
 			constructHandlerOrName as IDEF<T>,
 			configOrHandler as constructorOptions
-			// facade return: the overload promises R (the caller's constructor
-			// view); the delegated define produces that same runtime
-			// constructor under a different generic instantiation
-		) as unknown as R;
+		);
 	return defineResult;
 }
 
@@ -357,7 +343,10 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 	} {
 
 	// debugger;
-	// @ts-expect-error - extracting TypeName from function
+	// CtorParameter deliberately accepts constructors without a TypeName
+	// declaration; runtime mnemonica constructors carry it. Widening that
+	// public input type would change the API, so this property read stays.
+	// @ts-expect-error -- runtime mnemonica constructors carry TypeName
 	const { TypeName } = Ctor;
 	// the returned SubTypeProxy is a plain function at runtime — constructable —
 	// so TypeConstructorBase (the named minimal constructor shape) is its
@@ -370,7 +359,10 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 		throw new WRONG_MODIFICATION_PATTERN(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
 	}
 	const runResult = new Cstr(...args);
-	// @ts-expect-error - returning result as merged proto type
+	// new Cstr returns object here; S is the caller's merged entity/constructor
+	// shape and cannot be recovered by narrowing without changing the public
+	// result type, so the return stays suppressed.
+	// @ts-expect-error -- the merged result shape cannot be recovered by narrowing
 	return runResult;
 };
 
@@ -447,7 +439,12 @@ export const decorate = function <
 		? target as Constructor<object> & { define: TypeAbsorber }
 		: undefined;
 
-	const decorator = function <U extends Constructor<object>>(cstr: U): DecoratedClass<U> {
+	// decorator contract: define() returns the constructor that wraps cstr;
+	// the decorator replaces the class binding with it, so callers see the
+	// result as DecoratedClass<U>. The overload states that contract; the
+	// implementation signature (not emitted) returns what define() gives.
+	function decorator <U extends Constructor<object>>(cstr: U): DecoratedClass<U>;
+	function decorator (cstr: Constructor<object>): object {
 		const { name } = cstr;
 		const handler: IDEF<object, never[]> = cstr;
 		if (parentType === undefined) {
@@ -455,20 +452,17 @@ export const decorate = function <
 				name,
 				handler,
 				opts
-				// decorator contract: define() returns the constructor that
-				// wraps cstr; the decorator replaces the class binding with
-				// it, so the result is presented as DecoratedClass<U>
-			) as unknown as DecoratedClass<U>;
+			);
 			return decoratorResult;
 		}
+		// same decorator contract as the branch above
 		const defineResult = parentType.define(
 			name,
 			handler,
 			opts
-			// same decorator contract as the branch above
-		) as unknown as DecoratedClass<U>;
+		);
 		return defineResult;
-	};
+	}
 	return decorator;
 };
 

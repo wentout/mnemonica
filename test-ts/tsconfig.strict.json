@@ -10,7 +10,10 @@
 	},
 	"include": [
 		"constructor-args.ts",
+		"async-construction.ts",
 		"free-lookup-bridge.ts",
+		"fork-no-this.ts",
+		"lookup-define-registry.ts",
 		"typed-lookup-gates.ts",
 		"call-forms.ts",
 		"typed-collections.ts",

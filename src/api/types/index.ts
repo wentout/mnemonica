@@ -379,6 +379,8 @@ const typeDescriptorCreator = function (
 // below); a function expression carries no construct signature, so it is
 // named once as the constructor interface it is used through — the
 // prototype contract is attached immediately below
+// The registered result is a TypeProxy, not the descriptor's declared
+// TypeDescriptorInstance shape.
 const TypeDescriptor = typeDescriptorCreator as _Internal_TC_<TypeDescriptorInstance>;
 
 Object.assign(
@@ -607,6 +609,8 @@ const createFromDirectHandler = function (
 		// new TypeDescriptor() returns the TypeProxy it registers in the
 		// subtypes map — a Proxy materializing the TypeClass surface
 		// dynamically — so the public constructor contract is named here
+		// The declared descriptor result and dynamic proxy surface differ;
+		// changing the producing signature breaks descriptor prototype methods.
 	) as unknown as TypeClass;
 	return result;
 };

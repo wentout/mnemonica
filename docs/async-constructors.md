@@ -60,6 +60,27 @@ its own instance, and `null` throws exactly like `undefined`
 > check is what makes `lazy` slower than a direct `define()`; keep callbacks
 > pure.
 
+### TypeScript
+
+A handler returning a Promise is typed as what it is at runtime: `new` gives
+a Promise, and `await` gives the instance.
+
+```typescript
+const Sessions = App.lookup('User').define('Session', async function (this: SessionShape, token: string) {
+	this.token = token;
+	return this;
+});
+
+const pending = new user.Session('t');   // Promise<…> — `pending.token` is a type error
+const session = await pending;           // session.token: string
+```
+
+The registry entry is an `AsyncRegistryEntry`; lookups, subtypes and hooks
+see the resolved instance. The same holds for a `lazy()` getter returning
+an `async function`. An async *class* (a constructor returning a Promise)
+cannot be written in typed code — TypeScript rejects it (TS2409) — so it
+has no special typing.
+
 ---
 
 ## The `super()` Return-Value Trap

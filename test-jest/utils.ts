@@ -183,6 +183,105 @@ describe('utils/sibling', () => {
 			});
 		});
 
+		describe('fork on lazy types', () => {
+			const { merge } = mnemonica.utils;
+			const lazyCollection = createTypesCollection();
+			const LazyHolder = lazyCollection.define('ForkLazyHolderJest', function () {});
+			LazyHolder.lazy('ForkLazyTypeJest', () => function (
+				this: { value: string; marker: string },
+				data: { value: string }
+			) {
+				this.value = data.value;
+				this.marker = 'lazy';
+			});
+			const lazyParent = new LazyHolder();
+			const otherLazyParent = new LazyHolder();
+
+			it('should build the same own fields as direct lazy construction', () => {
+				const direct = new lazyParent.ForkLazyTypeJest({ value: 'forked' });
+				const expected = new otherLazyParent.ForkLazyTypeJest({ value: 'forked' });
+				const forked = fork(direct).call(otherLazyParent, { value: 'forked' });
+
+				expect({ ...forked }).toEqual({ ...expected });
+				expect(forked.value).toBe('forked');
+				expect(forked).toHaveProperty('marker', 'lazy');
+			});
+
+			it('should build the same own fields through merge', () => {
+				const direct = new lazyParent.ForkLazyTypeJest({ value: 'merged' });
+				const expected = new otherLazyParent.ForkLazyTypeJest({ value: 'merged' });
+				const merged = merge(direct, otherLazyParent, { value: 'merged' });
+
+				expect({ ...merged }).toEqual({ ...expected });
+				expect(merged.value).toBe('merged');
+				expect(merged).toHaveProperty('marker', 'lazy');
+			});
+		});
+
+		describe('plain fork call without this', () => {
+			const { parent } = mnemonica.utils;
+			const collection = createTypesCollection();
+			const Direct = collection.define('PlainForkDirectJest', function (this: { value: string }, data: { value: string }) {
+				this.value = data.value;
+			});
+			const ParentType = collection.define('PlainForkParentJest', function () {});
+			const SubType = ParentType.define('PlainForkSubJest', function (this: { value: string }, data: { value: string }) {
+				this.value = data.value;
+			});
+			const LazyHolder = collection.define('PlainForkLazyHolderJest', function () {});
+			const LazyType = LazyHolder.lazy('PlainForkLazyJest', () => function (
+				this: { value: string; marker: string },
+				data: { value: string }
+			) {
+				this.value = data.value;
+				this.marker = 'lazy';
+			});
+
+			const directInstance = new Direct({ value: 'direct original' });
+			const parentInstance = new ParentType();
+			const subInstance = new parentInstance.PlainForkSubJest({ value: 'sub original' });
+			const lazyParent = new LazyHolder();
+			const lazyInstance = new lazyParent.PlainForkLazyJest({ value: 'lazy original' });
+			const cases = [
+				{ label: 'direct type', value: directInstance, type: Direct, originalValue: 'direct original' },
+				{ label: 'subtype', value: subInstance, type: SubType, originalValue: 'sub original' },
+				{ label: 'lazy type', value: lazyInstance, type: LazyType, originalValue: 'lazy original' }
+			];
+
+			cases.forEach(({ label, value, type, originalValue }) => {
+				it(`${label} keeps type, parent, and fields with original args`, () => {
+					const forkFn = fork(value);
+					const expected = forkFn.call(value);
+					const forked = forkFn();
+
+					expect(forked instanceof type).toBe(true);
+					expect(getProps(forked).__type__).toBe(getProps(expected).__type__);
+					expect(parent(forked)).toBe(parent(expected));
+					expect({ ...forked }).toEqual({ ...expected });
+					expect(forked.value).toBe(originalValue);
+					if (label === 'lazy type') {
+						expect(forked).toHaveProperty('marker', 'lazy');
+					}
+				});
+
+				it(`${label} keeps type, parent, and fields with new args`, () => {
+					const forkFn = fork(value);
+					const data = { value: `${label} changed` };
+					const expected = forkFn.call(value, data);
+					const forked = forkFn(data);
+
+					expect(forked instanceof type).toBe(true);
+					expect(getProps(forked).__type__).toBe(getProps(expected).__type__);
+					expect(parent(forked)).toBe(parent(expected));
+					expect({ ...forked }).toEqual({ ...expected });
+					expect(forked.value).toBe(data.value);
+					if (label === 'lazy type') {
+						expect(forked).toHaveProperty('marker', 'lazy');
+					}
+				});
+			});
+		});
+
 		describe('fork on subtype', () => {
 			it('should fork subtype using existentInstance as Constructor', () => {
 				const ParentType = define('ForkParentType', function (this: { parentVal: string }, data: { parentVal: string }) {

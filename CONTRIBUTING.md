@@ -6,7 +6,7 @@ development loop. Repository conventions and code style live in
 
 ## Development environment
 
-- Node.js `>=18 <26` (CI runs 20.x, 22.x, 24.x).
+- Node.js `>=22 <27` (CI runs 22.x, 24.x, 26.x).
 - npm 9+ (ships with recent Node).
 - Git with `core.hooksPath = .husky/_` (set automatically by `npm install`
   via the `prepare` script).

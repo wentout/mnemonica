@@ -1,4 +1,5 @@
 import type { TypeRegistry } from '../index';
+import type { constants } from '../constants';
 export type PropsType = Record<string, unknown>;
 export type IDEF<T, Args extends unknown[] = unknown[]> = {
     new (...args: Args): T;
@@ -31,7 +32,7 @@ export interface ThrowModificationError extends CallableFunction {
     (error: Error): void;
 }
 export interface ForkInvoker<T extends object> extends CallableFunction {
-    (this: object, ...forkArgs: unknown[]): T;
+    (this: object | void, ...forkArgs: unknown[]): T;
 }
 export type ErrorMessageKey = 'BASE_ERROR_MESSAGE' | 'HANDLER_MUST_BE_A_FUNCTION' | 'WRONG_TYPE_DEFINITION' | 'WRONG_INSTANCE_INVOCATION' | 'WRONG_MODIFICATION_PATTERN' | 'ALREADY_DECLARED' | 'WRONG_ARGUMENTS_USED' | 'WRONG_HOOK_TYPE' | 'MISSING_HOOK_CALLBACK' | 'MISSING_CALLBACK_ARGUMENT' | 'OPTIONS_ERROR' | 'WRONG_STACK_CLEANER' | 'TYPENAME_MUST_BE_A_STRING';
 export type ErrorMessages = Record<ErrorMessageKey, string>;
@@ -164,37 +165,46 @@ export type TypeDef = {
 export interface CollectionLookup extends CallableFunction {
     (this: unknown, TypeNestedPath: string): TypeClass | undefined;
 }
+export type CollectionConfig = {
+    name: string;
+    [key: string]: unknown;
+};
 export type CollectionDef = Hookable & {
     define: TypeAbsorber;
     lookup: CollectionLookup;
     subtypes: SubtypesMap;
     [key: string]: unknown;
+} & {
+    [K in typeof constants.SymbolConfig]: CollectionConfig;
 };
 export type GlobalRegistry = TypeRegistry & Record<string, TypeConstructorBase>;
 export type ExtractConstructorInstance<C> = C extends {
     new (...args: never[]): infer I;
-} ? I extends object ? I : object : object;
+} ? Awaited<I> extends object ? Awaited<I> : object : object;
+export type ConstructResult<C, NewInstance extends object> = C extends {
+    new (...args: never[]): PromiseLike<unknown>;
+} ? Promise<NewInstance> : NewInstance;
 export type SubTypeConstructors<Registry extends object, Path extends string> = {
     [K in keyof Registry as K extends `${Path}.${infer Child}` ? Child : never]: LookedUpConstructor<Registry, K & string, true>;
 };
 export type ReplaceConstructorInstance<C, NewInstance extends object, CallConstructs extends boolean = false> = C extends {
     new (...args: infer A): unknown;
 } ? {
-    new (...args: A): NewInstance;
+    new (...args: A): ConstructResult<C, NewInstance>;
     readonly prototype: NewInstance & {
         readonly constructor: ReplaceConstructorInstance<C, NewInstance, CallConstructs>;
     };
 } & (C extends {
     (...args: infer A2): unknown;
 } ? CallConstructs extends true ? {
-    (...args: A2): NewInstance;
+    (...args: A2): ConstructResult<C, NewInstance>;
 } : {
-    (this: NewInstance, ...args: A2): NewInstance;
+    (this: NewInstance, ...args: A2): ConstructResult<C, NewInstance>;
 } : unknown) & Omit<C, 'prototype' | 'lookup'> : never;
 export type WithSubTypes<Instance extends object, Registry extends object, Path extends string> = Instance & SubTypeConstructors<Registry, Path>;
 export type AugmentedConstructor<Registry extends object, Path extends keyof Registry & string, CallConstructs extends boolean = false> = ReplaceConstructorInstance<Registry[Path], LookedUpInstance<Registry, Path>, CallConstructs>;
 export type LookedUpInstance<Registry extends object, Path extends string> = WithSubTypes<ExtractConstructorInstance<Registry[Path & keyof Registry]>, Registry, Path>;
-export type LookedUpConstructor<Registry extends object, Path extends keyof Registry & string, CallConstructs extends boolean = false> = AugmentedConstructor<Registry, Path, CallConstructs> & {
+export type LookedUpConstructor<Registry extends object, Path extends keyof Registry & string, CallConstructs extends boolean = false> = RegistryHolderBase<Registry, ExtractConstructorInstance<Registry[Path]>, Path> & AugmentedConstructor<Registry, Path, CallConstructs> & {
     lookup: NestedTypeLookup<Registry, Path>;
 };
 export type WithHookRegister<C> = C extends {
@@ -362,9 +372,19 @@ export type InstanceResult<N extends object> = {
 export interface RegistryEntry<F extends object, Path extends string = '', Parent extends object = object, Args extends unknown[] = unknown[]> extends _Internal_TC_<F, Args>, RegistryHolderBase<{}, F, Path> {
     registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
 }
+export interface AsyncRegistryEntry<F extends object, Path extends string = '', Parent extends object = object, Args extends unknown[] = unknown[]> extends RegistryHolderBase<{}, F, Path> {
+    new (...args: Args): Promise<F>;
+    (this: F, ...args: Args): Promise<F>;
+    readonly prototype: F & {
+        readonly constructor: AsyncRegistryEntry<F, Path, Parent, Args>;
+    };
+    registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
+}
 export interface RegistryHolderBase<T extends object = {}, Parent extends object = object, Path extends string = ''> {
     define<SubType extends object>(this: RegistryHolderBase<T, Parent, Path>, TypeOrTypeName: DefineNewableOrCallable, constructHandlerOrConfig?: IDEF<SubType> | object | boolean | DefineNewableOrCallable, configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean): IDefinitorInstance<SubType>;
+    define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler: (this: N, ...args: Args) => PromiseLike<unknown>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
     define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler?: IDEF<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
+    lazy<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: () => (this: N, ...args: Args) => PromiseLike<unknown>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
     lazy<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: LazyDef<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
 }
 export interface RegistryHolder<T extends object = {}, Parent extends object = object, Path extends string = ''> extends RegistryHolderBase<T, Parent, Path> {

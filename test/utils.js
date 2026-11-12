@@ -190,6 +190,99 @@ const tests = () => {
 			});
 		});
 
+		describe('fork on lazy types', () => {
+			const { merge } = mnemonica.utils;
+			const lazyCollection = createTypesCollection();
+			const LazyHolder = lazyCollection.define('ForkLazyHolderMocha', function () {});
+			LazyHolder.lazy('ForkLazyTypeMocha', () => function (data) {
+				this.value = data.value;
+				this.marker = 'lazy';
+			});
+			const lazyParent = new LazyHolder();
+			const otherLazyParent = new LazyHolder();
+
+			it('should build the same own fields as direct lazy construction', () => {
+				const direct = new lazyParent.ForkLazyTypeMocha({ value : 'forked' });
+				const expected = new otherLazyParent.ForkLazyTypeMocha({ value : 'forked' });
+				const forked = fork(direct).call(otherLazyParent, { value : 'forked' });
+
+				assert.deepEqual({ ...forked }, { ...expected });
+				assert.equal(forked.value, 'forked');
+				assert.equal(forked.marker, 'lazy');
+			});
+
+			it('should build the same own fields through merge', () => {
+				const direct = new lazyParent.ForkLazyTypeMocha({ value : 'merged' });
+				const expected = new otherLazyParent.ForkLazyTypeMocha({ value : 'merged' });
+				const merged = merge(direct, otherLazyParent, { value : 'merged' });
+
+				assert.deepEqual({ ...merged }, { ...expected });
+				assert.equal(merged.value, 'merged');
+				assert.equal(merged.marker, 'lazy');
+			});
+		});
+
+		describe('plain fork call without this', () => {
+			const { parent } = mnemonica.utils;
+			const collection = createTypesCollection();
+			const Direct = collection.define('PlainForkDirectMocha', function (data) {
+				this.value = data.value;
+			});
+			const ParentType = collection.define('PlainForkParentMocha', function () {});
+			const SubType = ParentType.define('PlainForkSubMocha', function (data) {
+				this.value = data.value;
+			});
+			const LazyHolder = collection.define('PlainForkLazyHolderMocha', function () {});
+			const LazyType = LazyHolder.lazy('PlainForkLazyMocha', () => function (data) {
+				this.value = data.value;
+				this.marker = 'lazy';
+			});
+
+			const directInstance = new Direct({ value : 'direct original' });
+			const parentInstance = new ParentType();
+			const subInstance = new parentInstance.PlainForkSubMocha({ value : 'sub original' });
+			const lazyParent = new LazyHolder();
+			const lazyInstance = new lazyParent.PlainForkLazyMocha({ value : 'lazy original' });
+			const cases = [
+				{ label : 'direct type', value : directInstance, type : Direct, originalValue : 'direct original' },
+				{ label : 'subtype', value : subInstance, type : SubType, originalValue : 'sub original' },
+				{ label : 'lazy type', value : lazyInstance, type : LazyType, originalValue : 'lazy original' }
+			];
+
+			cases.forEach(({ label, value, type, originalValue }) => {
+				it(`${label} keeps type, parent, and fields with original args`, () => {
+					const forkFn = fork(value);
+					const expected = forkFn.call(value);
+					const forked = forkFn();
+
+					assert.instanceOf(forked, type);
+					assert.strictEqual(getProps(forked).__type__, getProps(expected).__type__);
+					assert.strictEqual(parent(forked), parent(expected));
+					assert.deepEqual({ ...forked }, { ...expected });
+					assert.equal(forked.value, originalValue);
+					if (label === 'lazy type') {
+						assert.equal(forked.marker, 'lazy');
+					}
+				});
+
+				it(`${label} keeps type, parent, and fields with new args`, () => {
+					const forkFn = fork(value);
+					const data = { value : `${label} changed` };
+					const expected = forkFn.call(value, data);
+					const forked = forkFn(data);
+
+					assert.instanceOf(forked, type);
+					assert.strictEqual(getProps(forked).__type__, getProps(expected).__type__);
+					assert.strictEqual(parent(forked), parent(expected));
+					assert.deepEqual({ ...forked }, { ...expected });
+					assert.equal(forked.value, data.value);
+					if (label === 'lazy type') {
+						assert.equal(forked.marker, 'lazy');
+					}
+				});
+			});
+		});
+
 		describe('fork on subtype', () => {
 			it('should fork subtype using existentInstance as Constructor', () => {
 				const ParentType = define('ForkParentTypeMocha', function (data) {

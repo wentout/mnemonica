@@ -381,7 +381,7 @@ The full TypeScript source is in [`src/`](./src/) (on GitHub; the npm package sh
 npm install mnemonica
 ```
 
-**Node.js:** `>=18 <26`.
+**Node.js:** `>=22 <27`.
 
 ---
 

@@ -164,11 +164,13 @@ and do not change core's public exports to make a consumer's error go away.
 
 ### Core-side vocabulary rule
 
-The builder public vocabulary is exactly three names, re-exported from
-`src/index.ts` on purpose: `RegistryEntry`, `LookedUpConstructor`,
-`LookedUpInstance` (see `src/types/index.ts`). When the builder result types
-change, those three stay nameable from the entry — anything else that starts
-leaking into consumer declaration emit is a design bug, not an export to add.
+The builder public vocabulary is exactly four names, re-exported from
+`src/index.ts` on purpose: `RegistryEntry`, `AsyncRegistryEntry`,
+`LookedUpConstructor`, `LookedUpInstance` (see `src/types/index.ts`). The async
+entry constructs `Promise<F>` while lookups and hooks use the resolved `F`.
+When the builder result types change, those four stay nameable from the entry —
+anything else that starts leaking into consumer declaration emit is a design
+bug, not an export to add.
 
 The typed-hooks vocabulary (`typedHook`, `typedHookOpts`, `WithHookRegister`,
 `HookableConstructor`) is deliberately exported too, but for a different

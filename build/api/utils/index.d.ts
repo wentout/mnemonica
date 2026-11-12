@@ -1,4 +1,4 @@
-import type { InstanceConstructor, MnemonicaConstructor } from '../../types';
+import type { InstanceConstructor, MnemonicaConstructor, TypeClass } from '../../types';
 import { ConstructHandler } from '../types/compileNewModificatorFunctionBody';
 export declare const CreationHandler: (this: object & {
     constructor: InstanceConstructor;
@@ -25,7 +25,7 @@ declare const TypesUtils: {
     getTypeSplitPath: (path: string) => string[];
     getExistentAsyncStack: (existentInstance: asyncStack) => unknown;
     checkTypeName: (name: string) => void;
-    findSubTypeFromParent: (instance: parentSub | object | undefined, subType: string) => parentSub | null;
+    findSubTypeFromParent: (instance: parentSub | object | undefined, subType: string) => TypeClass | null;
     makeErrorModificatorType: (TypeName: string, ErrorModificator?: () => void) => MnemonicaConstructor;
     reflectPrimitiveWrappers: (_thisArg: unknown) => object;
 };

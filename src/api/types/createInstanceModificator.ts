@@ -14,7 +14,7 @@ export default function () {
 	const CreateInstanceModificator = function (
 		this: object,
 		ModificatorType: MnemonicaConstructor,
-		ModificatorTypePrototype: { [index: string]: unknown },
+		ModificatorTypePrototype: { [index: string]: unknown; constructor: unknown },
 		_addProps: AddPropsCallback
 	) {
 
@@ -59,7 +59,6 @@ export default function () {
 		// so now we have to copy all constructor props
 		const props = Object.getOwnPropertyDescriptors(ModificatorTypePrototype);
 		props.constructor = {
-			// @ts-expect-error I'm too lazy for that
 			value : ModificatorType
 		};
 		Object.defineProperties(

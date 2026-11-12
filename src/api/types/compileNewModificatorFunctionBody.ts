@@ -145,7 +145,7 @@ const getFunctionConstructor = (
 			// !!! it MUST be strict replacement !!!
 			// !!! this is the only way to keep Prototype Chain correct !!!
 			// ConstructHandler.prototype = this.constructor.prototype;
-			// answer = new (ConstructHandler as unknown as new (...args: unknown[]) => object)( ...args );
+			// answer = new ConstructHandler(...args);
 			// ConstructHandler.prototype = _proto;
 
 			const constructResult = Reflect.construct(
@@ -178,6 +178,8 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 				// this branch runs only when isClass() verified at define
 				// time that the handler is a class — the cast names the class
 				// view (construct signature) of that same function value
+				// ConstructHandler has no construct signature; the boolean cannot
+				// narrow it without a runtime guard or a changed public signature.
 				ModificationBody = getClassConstructor(
 					ConstructHandler as unknown as ClassConstructHandler,
 					CreationHandler
@@ -189,6 +191,8 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string, asCla
 				// the compiled body is invoked with `new` by the pipeline;
 				// a function expression carries no construct signature, so
 				// the `new`-able view of the same value is named here
+				// CreationHandler returns unknown; ModificationBody must construct
+				// object, so a direct return annotation cannot replace this cast.
 				ModificationBody = getFunctionConstructor(
 					ConstructHandler,
 					CreationHandler

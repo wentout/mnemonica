@@ -18,7 +18,8 @@ import {
 } from '../types/Props';
 import type {
 	InstanceConstructor,
-	MnemonicaConstructor
+	MnemonicaConstructor,
+	TypeClass
 } from '../../types';
 
 import compileNewModificatorFunctionBody, { ConstructHandler } from '../types/compileNewModificatorFunctionBody';
@@ -39,22 +40,25 @@ const checkProto = (proto: unknown) => {
 };
 
 const getTypeChecker = (TypeName: string) => {
-	const seeker: unknown = (instance: object) => {
+	const seeker: unknown = (instance: object & { [SymbolConstructorName]?: string }) => {
 
-		if (typeof instance !== 'object') {
+		if (typeof instance !== 'object' || instance === null) {
 			return false;
 		}
 
 
-		if (!instance!.constructor) {
+		if (!instance.constructor) {
 			return false;
 		}
 
-		// @ts-expect-error I'm too lazy for that
-		if (Reflect.getPrototypeOf(instance).constructor.name === 'Promise') {
+		const prototype = Reflect.getPrototypeOf(instance);
+		if (prototype === null) {
+			return false;
+		}
+
+		if (prototype.constructor && prototype.constructor.name === 'Promise') {
 			// if ( instance instanceof Promise ) {
 
-			// @ts-expect-error I'm too lazy for that
 			const checkResult = instance[ SymbolConstructorName ] === TypeName;
 			return checkResult;
 		}
@@ -185,8 +189,8 @@ export type parentSub = {
 	__parent__: parentSub
 }
 
-const findSubTypeFromParent = (instance: parentSub | object | undefined, subType: string): parentSub | null => {
-	let subtype = null;
+const findSubTypeFromParent = (instance: parentSub | object | undefined, subType: string): TypeClass | null => {
+	let subtype: TypeClass | null = null;
 
 	if (!instance) {
 		return null;
@@ -195,8 +199,8 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 	const props = _getProps(instance) as Props;
 
 	if (props) {
-		if (props.__type__.subtypes.has(subType)) {
-			const _subtype = props.__type__.subtypes.get(subType);
+		const _subtype = props.__type__.subtypes.get(subType);
+		if (_subtype !== undefined) {
 			subtype = _subtype;
 		} else {
 			subtype = findSubTypeFromParent(
@@ -206,7 +210,6 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 		}
 	}
 
-	// @ts-expect-error I'm too lazy for that
 	return subtype;
 };
 
