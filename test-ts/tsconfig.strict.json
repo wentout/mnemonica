@@ -26,6 +26,7 @@
 		"test-tactica-style-consumer.ts",
 		"test-tactica-style-definitions.ts",
 		"test-example.ts",
-		"test-decorate-typings.ts"
+		"test-decorate-typings.ts",
+		"checker-cost.ts"
 	]
 }

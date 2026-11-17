@@ -204,7 +204,11 @@ export type ReplaceConstructorInstance<C, NewInstance extends object, CallConstr
 export type WithSubTypes<Instance extends object, Registry extends object, Path extends string> = Instance & SubTypeConstructors<Registry, Path>;
 export type AugmentedConstructor<Registry extends object, Path extends keyof Registry & string, CallConstructs extends boolean = false> = ReplaceConstructorInstance<Registry[Path], LookedUpInstance<Registry, Path>, CallConstructs>;
 export type LookedUpInstance<Registry extends object, Path extends string> = WithSubTypes<ExtractConstructorInstance<Registry[Path & keyof Registry]>, Registry, Path>;
-export type LookedUpConstructor<Registry extends object, Path extends keyof Registry & string, CallConstructs extends boolean = false> = RegistryHolderBase<Registry, ExtractConstructorInstance<Registry[Path]>, Path> & AugmentedConstructor<Registry, Path, CallConstructs> & {
+declare const TypePathKey: unique symbol;
+export type TypePathMark<Path extends string> = {
+    readonly [TypePathKey]?: Path;
+};
+export type LookedUpConstructor<Registry extends object, Path extends keyof Registry & string, CallConstructs extends boolean = false> = TypePathMark<Path> & RegistryHolderBase<Registry, ExtractConstructorInstance<Registry[Path]>, Path> & AugmentedConstructor<Registry, Path, CallConstructs> & {
     lookup: NestedTypeLookup<Registry, Path>;
 };
 export type WithHookRegister<C> = C extends {
@@ -523,3 +527,4 @@ export interface MnemonicaModule<Registry extends object = {}> extends RegistryH
     createTypesCollection: CreateTypesCollectionFunction;
     [key: string]: unknown;
 }
+export {};

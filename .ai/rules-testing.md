@@ -23,6 +23,11 @@ Mnemonica uses TWO test frameworks:
 **Important**: `npm run test:cov` runs `npm run build:all` internally — no need
 to run build first.
 
+**Type gates**: `npm run test:ts` runs `test:ts:strict` (the `test-ts` pins
+under a 1 GB heap, so a checker-cost regression fails as an out-of-memory
+error), `test:ts:consumers` (consumer declaration emit) and `test:ts:7`
+(TypeScript 7). They check `build/`, so they run after `test:cov`.
+
 ## 100% Coverage Requirement
 
 All metrics must be 100%:
@@ -68,6 +73,6 @@ both suites assert this way throughout. What does **not** work is comparing
 
 1. **Jest tests must mirror Mocha patterns** from `test/environment.js`
 2. **Assert error types with `instanceof`/`toBeInstanceOf`**; coerce constructor names before string comparison
-3. **Run `npm run test:cov` before completing** any task
+3. **Run `npm run test:cov`, then `npm run test:ts`, before completing** any task
 4. **Run `npm run test:jest:cov`** for Jest coverage validation
 5. Tests must pass with `--allow-uncaught` flag (mocha)

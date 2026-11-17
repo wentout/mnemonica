@@ -589,17 +589,37 @@ export type LookedUpInstance<
 	Path extends string
 > = WithSubTypes<ExtractConstructorInstance<Registry[Path & keyof Registry]>, Registry, Path>;
 
+// Type-only key: no runtime property carries it. It holds a looked-up
+// constructor's own type path (see TypePathMark below).
+declare const TypePathKey: unique symbol;
+
+// A looked-up constructor's type path as a member TypeScript compares first.
+// Runtime types are nominal: constructors of different paths are different
+// types even when their shapes match. Without this member, relating two
+// looked-up constructors of different paths walks both subtrees member by
+// member (their path's variance is unreliable, through the template-literal
+// key remapping), at a cost exponential in the subtree's depth and fan, and
+// the checker runs out of memory, e.g. when an instance is passed to a
+// parameter typed as a union of generated types with the wrong member
+// first. With it, such a relation fails at this member.
+export type TypePathMark<Path extends string> = {
+	readonly [TypePathKey]?: Path;
+};
+
 // Lookup result type (public vocabulary): the full-registry definition
 // surface plus the augmented constructor and a lookup method scoped to the
 // constructor's own type path. Non-conditional on purpose: a conditional
 // alias resolves during inference and its expansion (internal helpers) would
 // leak into consumer declaration emit. CallConstructs mirrors the SubTypeProxy
 // distinction (true drops the this demand for instance-carried child constructors).
+// TypePathMark comes first: an intersection target is checked member by
+// member in order, so a different path is rejected before anything else.
 export type LookedUpConstructor<
 	Registry extends object,
 	Path extends keyof Registry & string,
 	CallConstructs extends boolean = false
-> = RegistryHolderBase<Registry, ExtractConstructorInstance<Registry[Path]>, Path> &
+> = TypePathMark<Path> &
+	RegistryHolderBase<Registry, ExtractConstructorInstance<Registry[Path]>, Path> &
 	AugmentedConstructor<Registry, Path, CallConstructs> & {
 		lookup: NestedTypeLookup<Registry, Path>;
 	};
