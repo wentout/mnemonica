@@ -179,6 +179,16 @@ reason: consumers write callbacks and registry entries against them by hand
 vocabulary, not registry machinery — the TS2883 guard above is about the
 latter.
 
+### The path in `LookedUpConstructor`
+
+`LookedUpConstructor` starts with `TypePathMark<Path>`, an optional member
+under a type-only `unique symbol` key. Looked-up constructors of different
+paths are different types even when their shapes match, as at runtime.
+Keep it the first intersection member: TypeScript checks an intersection
+target member by member, and without the mark relating two paths walks
+both subtrees structurally, at a cost exponential in their depth and fan.
+`test-ts/checker-cost.ts` pins both the cost and the rule.
+
 ## Typed hooks — Parent threading and lookup inference
 
 `IDefinitorInstance` carries a 5th generic `Parent extends object = object`

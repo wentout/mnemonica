@@ -44,11 +44,15 @@ npm run test:cov
 # Run Jest tests with coverage (TypeScript source, faster)
 npm run test:jest:cov
 
+# Type gates on the current build/: strict pins (1 GB heap), consumer
+# declaration emit, TypeScript 7
+npm run test:ts
+
 # Watch mode
 npm run watch
 ```
 
-**Rule:** `npm run test:cov` before completing any task. It validates the build and ensures 100% coverage.
+**Rule:** `npm run test:cov`, then `npm run test:ts`, before completing any task. The first validates the build and ensures 100% coverage; the second checks the types on that build. CI runs both, in that order.
 
 **Know your gates:**
 - `npm run build` is **tsc only** — it does not lint.

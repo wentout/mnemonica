@@ -174,14 +174,19 @@ npm run build          # tsc only — no linting happens here
 npx eslint ./src       # the lint gate: zero warnings allowed
 npm run test:cov       # Mocha + coverage (runs build:all internally)
 npm run test:jest:cov  # Jest on TypeScript source
-npm run test:ts:strict # strict-mode type-level pins (test-ts/tsconfig.strict.json)
+npm run test:ts       # the type gates, on the current build/:
+                       #   test:ts:strict    type-level pins under a 1 GB heap
+                       #                     (test-ts/tsconfig.strict.json)
+                       #   test:ts:consumers consumer declaration emit
+                       #   test:ts:7         the same checks on TypeScript 7
 npm run watch          # watch mode
 npm run debug          # mocha suite under --inspect-brk: attach chrome://inspect
                        # or VS Code and step through construction live — the
                        # return-via-variable rule below exists for exactly this
 ```
 
-**Must run `npm run test:cov` before completing any task.**
+**Must run `npm run test:cov`, then `npm run test:ts`, before completing
+any task.** CI runs both, in that order.
 
 **The surrounding toolchain** (dive tracing, the nestjs adapter, mnemographica's
 Live Trace + 3D graph, strategy's live-craft WS channel) is mapped in
@@ -393,7 +398,7 @@ If a comment becomes technically inaccurate after a change, update it rather tha
 
 ## Testing Requirements
 
-See [`.ai/rules-testing.md`](./.ai/rules-testing.md) for full coverage requirements and patterns. 100% required on both Mocha and Jest. Must run `npm run test:cov` before completing any task.
+See [`.ai/rules-testing.md`](./.ai/rules-testing.md) for full coverage requirements and patterns. 100% required on both Mocha and Jest. Must run `npm run test:cov`, then `npm run test:ts`, before completing any task.
 
 ## Before Saying a Task Is Done
 

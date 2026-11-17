@@ -46,6 +46,11 @@ jobs:
     - name: Test
       run: npm run test:cov
 
+    # type gates on the build test:cov just made: strict pins (heap-capped),
+    # consumer declaration emit, TypeScript 7
+    - name: Type gates
+      run: npm run test:ts
+
     - name: Coveralls Start Parallel Build
       uses: coverallsapp/github-action@master
       with:
