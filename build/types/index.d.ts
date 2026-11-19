@@ -1,6 +1,5 @@
 import type { TypeRegistry } from '../index';
 import type { constants } from '../constants';
-export type PropsType = Record<string, unknown>;
 export type IDEF<T, Args extends unknown[] = unknown[]> = {
     new (...args: Args): T;
 } | {
@@ -19,34 +18,12 @@ export interface DefineNewable extends NewableFunction {
 export type DefineNewableOrCallable = DefineNewable | DefineCallable;
 export interface InstanceConstructor extends NewableFunction {
 }
-export interface AnyHookCallback extends CallableFunction {
-    (...args: never[]): unknown;
-}
-export interface UtilFunction extends CallableFunction {
-    (...args: never[]): unknown;
-}
-export interface LookupSource {
-    lookup(path: string): TypeClass | undefined;
-}
-export interface ThrowModificationError extends CallableFunction {
-    (error: Error): void;
-}
-export interface ForkInvoker<T extends object> extends CallableFunction {
-    (this: object | void, ...forkArgs: unknown[]): T;
-}
 export type ErrorMessageKey = 'BASE_ERROR_MESSAGE' | 'HANDLER_MUST_BE_A_FUNCTION' | 'WRONG_TYPE_DEFINITION' | 'WRONG_INSTANCE_INVOCATION' | 'WRONG_MODIFICATION_PATTERN' | 'ALREADY_DECLARED' | 'WRONG_ARGUMENTS_USED' | 'WRONG_HOOK_TYPE' | 'MISSING_HOOK_CALLBACK' | 'MISSING_CALLBACK_ARGUMENT' | 'OPTIONS_ERROR' | 'WRONG_STACK_CLEANER' | 'TYPENAME_MUST_BE_A_STRING';
 export type ErrorMessages = Record<ErrorMessageKey, string>;
-export interface hook extends CallableFunction {
-    (opts: deliveredHookOpts): unknown;
-}
-export interface FlowChecker extends CallableFunction {
-    (opts: object): unknown;
-}
 export interface MnemonicaErrorConstructor extends NewableFunction {
     new (addition?: string, stack?: string[]): MnemonicaError;
     readonly prototype: MnemonicaError;
 }
-export type ErrorsTypesMap = Record<string, MnemonicaErrorConstructor>;
 export type MnemonicaError = Error;
 export interface ErrorProps {
     args?: unknown[];
@@ -70,19 +47,22 @@ export interface TypeConstructorBase {
     new (...args: unknown[]): object;
 }
 export type AnyConstructor = new (...args: never[]) => unknown;
-export type InstanceOfTypeRegistry<K extends keyof TypeRegistry> = TypeRegistry[K] extends new (...args: never[]) => infer R ? R : never;
-export type LiteralKeysOf<T> = keyof T extends infer K ? K extends string ? string extends K ? never : K : never : never;
-export type ParentPath<K extends string> = K extends `${infer P}.${string}` ? P : never;
-export type AllParentPrefixes<K extends string> = K extends `${infer P}.${string}` ? P | AllParentPrefixes<P> : never;
-export type ChildKeysOf<P extends string> = {
-    [K in keyof TypeRegistry]: K extends `${P}.${string}` ? K : never;
-}[keyof TypeRegistry];
-export type PathOfInstance<T extends object> = {
-    [K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: never[]) => infer R ? T extends R ? K : never : never;
-}[LiteralKeysOf<TypeRegistry>];
-export type ParentPathOfInstance<T extends object> = {
-    [K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: never[]) => infer R ? T extends R ? AllParentPrefixes<K> : never : never;
-}[LiteralKeysOf<TypeRegistry>];
+export type Constructor<T = object> = new (...args: never[]) => T;
+export type ConstructorName<T extends Constructor<object>> = T extends {
+    name: infer N;
+} ? N extends string ? N : string : string;
+export interface AnyHookCallback extends CallableFunction {
+    (...args: never[]): unknown;
+}
+export interface ThrowModificationError extends CallableFunction {
+    (error: Error): void;
+}
+export interface hook extends CallableFunction {
+    (opts: deliveredHookOpts): unknown;
+}
+export interface FlowChecker extends CallableFunction {
+    (opts: object): unknown;
+}
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
 export type hooksOpts<P = object, T = P> = {
     TypeName: string;
@@ -121,6 +101,12 @@ export interface typedHook<HT extends hooksTypes, P extends object = object, T e
 export type HookableConstructor<T extends object> = Constructor<T> & {
     registerHook(hookType: hooksTypes, cb: AnyHookCallback): void;
 };
+export interface Hookable {
+    hooks: Record<string, Set<hook>>;
+    invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
+    registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT>): void;
+    registerFlowChecker(cb: FlowChecker): void;
+}
 export interface AddPropsCallback extends CallableFunction {
     (proto: object): void;
 }
@@ -177,6 +163,85 @@ export type CollectionDef = Hookable & {
 } & {
     [K in typeof constants.SymbolConfig]: CollectionConfig;
 };
+export interface ThenSpec {
+    subtype: object;
+    args: unknown[];
+    name?: string;
+}
+export interface InstanceCreatorContext {
+    type: TypeDef;
+    TypeName: string;
+    existentInstance: object;
+    args: unknown[];
+    ModificationConstructor: ModificationConstructor;
+    ModificatorType: MnemonicaConstructor;
+    InstanceModificator: MnemonicaConstructor;
+    inheritedInstance: object | Promise<object>;
+    config: constructorOptions;
+    proto: object;
+    __proto_proto__?: object;
+    stack?: string[];
+    lazyFailed?: boolean;
+    lazyError?: unknown;
+    postHooksFired?: boolean;
+    getExistentAsyncStack(existentInstance: object): unknown;
+    postProcessing(continuationOf?: TypeDef): void;
+    makeAwaiter(type: TypeDef, then?: ThenSpec): Promise<object>;
+    addThen(then: ThenSpec): void;
+    invokePreHooks(): void;
+    invokePostHooks(): {
+        type: Set<unknown>;
+        collection: Set<unknown>;
+    };
+    throwModificationError(error: MnemonicaError): void;
+}
+export type InstanceInternalProps = {
+    __proto_proto__: object;
+    __args__: unknown[];
+    __collection__: CollectionDef;
+    __subtypes__: Map<string, object>;
+    __type__: TypeDef;
+    __parent__: object;
+    __stack__?: string;
+    __creator__: InstanceCreatorContext;
+    __timestamp__: number;
+};
+export type Props = InstanceInternalProps & {
+    __self__: InstanceInternalProps;
+    [key: string]: unknown;
+};
+export interface MnemonicaConstructor extends NewableFunction {
+    new (...args: unknown[]): object;
+    (this: object, ...args: unknown[]): unknown;
+    [key: symbol]: unknown;
+}
+export interface TypeDescriptorDefine extends CallableFunction {
+    (TypeOrTypeName: string | DefineNewableOrCallable, constructHandlerOrConfig?: DefineNewableOrCallable | object, config?: object): TypeClass;
+}
+export interface TypeDescriptorLazy extends CallableFunction {
+    (TypeName: string, getter: LazyDef<object>, config?: object): TypeClass;
+}
+export interface TypeDescriptorLookup extends CallableFunction {
+    (TypeNestedPath: string): TypeClass | undefined;
+}
+export type TypeDescriptorInstance = {
+    define: TypeDescriptorDefine;
+    lazy: TypeDescriptorLazy;
+    decorate: (config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
+    lookup: TypeDescriptorLookup;
+    subtypes: Map<string, object>;
+    TypeName: string;
+    collection: CollectionDef;
+};
+export interface LookupSource {
+    lookup(path: string): TypeClass | undefined;
+}
+export type InstanceOfTypeRegistry<K extends keyof TypeRegistry> = TypeRegistry[K] extends new (...args: never[]) => infer R ? R : never;
+export type LiteralKeysOf<T> = keyof T extends infer K ? K extends string ? string extends K ? never : K : never : never;
+export type AllParentPrefixes<K extends string> = K extends `${infer P}.${string}` ? P | AllParentPrefixes<P> : never;
+export type ParentPathOfInstance<T extends object> = {
+    [K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: never[]) => infer R ? T extends R ? AllParentPrefixes<K> : never : never;
+}[LiteralKeysOf<TypeRegistry>];
 export type GlobalRegistry = TypeRegistry & Record<string, TypeConstructorBase>;
 export type ExtractConstructorInstance<C> = C extends {
     new (...args: never[]): infer I;
@@ -232,146 +297,12 @@ export interface TypeLookup<T extends object = GlobalRegistry> extends CallableF
 }
 export type RegistryOf<T> = T extends IDefinitorInstance<object, InstanceResult<object>, infer Registry, string, object, never[]> ? Registry : T extends TypesCollection<infer Registry, object, string> ? Registry : T extends MnemonicaModule<infer Registry> ? Registry : never;
 export type RelativeKeys<Registry extends object, Path extends string> = Path extends '' ? keyof Registry & string : (keyof Registry extends infer K ? K extends `${Path}.${infer Child}` ? Child : never : never);
-export type FullKey<Registry extends object, Path extends string, K extends string> = Path extends '' ? K : Extract<keyof Registry & string, `${Path}.${K}`>;
 export type NestedTypeLookup<Registry extends object, Path extends string = ''> = (Path extends '' ? {
     <const K extends keyof Registry & string>(this: unknown, TypeNestedPath: K): LookedUpConstructor<Registry, K>;
 } : {
     <const K extends RelativeKeys<Registry, Path> & string>(this: unknown, TypeNestedPath: K): LookedUpConstructor<Registry, Extract<keyof Registry & string, `${Path}.${K}`>>;
 }) & {
     (this: unknown, TypeNestedPath: string): TypeClass | undefined;
-};
-export interface ThenSpec {
-    subtype: object;
-    args: unknown[];
-    name?: string;
-}
-export interface InstanceCreatorContext {
-    type: TypeDef;
-    TypeName: string;
-    existentInstance: object;
-    args: unknown[];
-    ModificationConstructor: ModificationConstructor;
-    ModificatorType: MnemonicaConstructor;
-    InstanceModificator: MnemonicaConstructor;
-    inheritedInstance: object | Promise<object>;
-    config: constructorOptions;
-    proto: object;
-    __proto_proto__?: object;
-    stack?: string[];
-    lazyFailed?: boolean;
-    lazyError?: unknown;
-    postHooksFired?: boolean;
-    getExistentAsyncStack(existentInstance: object): unknown;
-    postProcessing(continuationOf?: TypeDef): void;
-    makeAwaiter(type: TypeDef, then?: ThenSpec): Promise<object>;
-    addThen(then: ThenSpec): void;
-    invokePreHooks(): void;
-    invokePostHooks(): {
-        type: Set<unknown>;
-        collection: Set<unknown>;
-    };
-    throwModificationError(error: MnemonicaError): void;
-}
-export type Proto<P extends object, T extends object> = [
-    Exclude<keyof P, keyof T>
-] extends [never] ? T : T & Pick<P, Exclude<keyof P, keyof T>>;
-export type ProtoFlat<P extends object, T extends object, L extends Exclude<keyof P, keyof T> = Exclude<keyof P, keyof T>> = {
-    [key in keyof T]: T[key];
-} & {
-    [key in L]: P[key];
-};
-export type MnemonicaInstanceMethodKeys = 'extract' | 'pick' | 'parent' | 'clone' | 'fork' | 'exception' | 'sibling';
-export type Flatten<F> = {
-    [key in keyof F]: F[key];
-};
-export type Extracted<T extends object> = {
-    [K in keyof T as K extends string ? (K extends MnemonicaInstanceMethodKeys ? never : K) : never]: T[K];
-} & {};
-export type Parsed<T extends object> = {
-    name: string;
-    props: Extracted<T>;
-    self: T;
-    proto: object;
-    joint: Record<string, unknown>;
-    parent: object | null;
-};
-export interface EmptyParsed {
-    name: undefined;
-    props: {};
-    self: null;
-    proto: undefined;
-    joint: {};
-    parent: undefined;
-}
-export type LineageValue = null | boolean | string | number | LineageValue[] | {
-    $ref: string;
-} | {
-    '$mnemonica': 'unsupported';
-    kind: string;
-} | {
-    [key: string]: LineageValue;
-};
-export interface LineageTypeRef {
-    collection: string;
-    path: string;
-}
-export interface LineageNode {
-    type: LineageTypeRef;
-    own: {
-        [key: string]: LineageValue;
-    };
-    parent: string | null;
-    args?: LineageValue;
-    props?: {
-        [key: string]: LineageValue;
-    };
-}
-export interface LineageGraph {
-    version: '1';
-    heads: string[];
-    nodes: {
-        [id: string]: LineageNode;
-    };
-}
-export interface LineageOptions {
-    args?: boolean;
-    props?: string[];
-}
-export interface SiblingAccessor {
-    (SiblingTypeName: string): TypeClass | undefined;
-    [key: string]: TypeClass | undefined;
-}
-export interface MnemonicaInstance<T extends object = object> {
-    extract(): Extracted<T>;
-    pick<K extends keyof T>(...keys: (K | K[])[]): {
-        [P in K]: T[P];
-    } & {};
-    pick(...keys: string[]): Record<string, unknown>;
-    parent(): object | undefined;
-    parent<K extends ParentPathOfInstance<this> & string>(constructorLookupPath: K): InstanceOfTypeRegistry<K> | undefined;
-    parent(constructorLookupPath: string): object | undefined;
-    readonly clone: this;
-    fork(...forkArgs: unknown[]): this;
-    exception(error: Error, ...args: unknown[]): Error;
-    readonly sibling: SiblingAccessor;
-}
-export type InstanceInternalProps = {
-    __proto_proto__: object;
-    __args__: unknown[];
-    __collection__: CollectionDef;
-    __subtypes__: Map<string, object>;
-    __type__: TypeDef;
-    __parent__: object;
-    __stack__?: string;
-    __creator__: InstanceCreatorContext;
-    __timestamp__: number;
-};
-export type Props = InstanceInternalProps & {
-    __self__: InstanceInternalProps;
-    [key: string]: unknown;
-};
-export type InstanceResult<N extends object> = {
-    [K in keyof N]: N[K];
 };
 export interface RegistryEntry<F extends object, Path extends string = '', Parent extends object = object, Args extends unknown[] = unknown[]> extends _Internal_TC_<F, Args>, RegistryHolderBase<{}, F, Path> {
     registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
@@ -418,45 +349,67 @@ export interface TypesCollection<T extends object = {}, Parent extends object = 
     decorate(config?: constructorOptions): <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, T & Record<ConstructorName<U>, RegistryEntry<InstanceType<U>, ConstructorName<U>>>>;
     [key: string]: unknown;
 }
-export interface Hookable {
-    hooks: Record<string, Set<hook>>;
-    invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
-    registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT>): void;
-    registerFlowChecker(cb: FlowChecker): void;
-}
 export type CreateTypesCollectionFunction = <T extends object = {}, Parent extends object = object>(config?: constructorOptions) => TypesCollection<T, Parent>;
 export type TypeClass = IDefinitorInstance<object>;
-export type TypeRegistryMap = Record<string, TypeConstructorBase>;
-export interface MnemonicaConstructor extends NewableFunction {
-    new (...args: unknown[]): object;
-    (this: object, ...args: unknown[]): unknown;
-    [key: symbol]: unknown;
-}
-export interface TypeDescriptorDefine extends CallableFunction {
-    (TypeOrTypeName: string | DefineNewableOrCallable, constructHandlerOrConfig?: DefineNewableOrCallable | object, config?: object): TypeClass;
-}
-export interface TypeDescriptorLazy extends CallableFunction {
-    (TypeName: string, getter: LazyDef<object>, config?: object): TypeClass;
-}
-export interface TypeDescriptorLookup extends CallableFunction {
-    (TypeNestedPath: string): TypeClass | undefined;
-}
-export type TypeDescriptorInstance = {
-    define: TypeDescriptorDefine;
-    lazy: TypeDescriptorLazy;
-    decorate: (config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
-    lookup: TypeDescriptorLookup;
-    subtypes: Map<string, object>;
-    TypeName: string;
-    collection: CollectionDef;
-};
-export type Constructor<T = object> = new (...args: never[]) => T;
-export type ConstructorName<T extends Constructor<object>> = T extends {
-    name: infer N;
-} ? N extends string ? N : string : string;
 export type DecoratedClass<T extends Constructor<object>, Registry extends object = TypeRegistry> = T & Omit<IDefinitorInstance<InstanceType<T>, InstanceType<T>, Registry, ConstructorName<T>>, 'define' | 'lookup'> & (<U extends Constructor<object>>(target: U) => DecoratedClass<U, Registry>) & {
     define: TypeAbsorber;
     lookup: TypeLookup<Registry>;
+};
+export type PropsType = Record<string, unknown>;
+export interface UtilFunction extends CallableFunction {
+    (...args: never[]): unknown;
+}
+export interface ForkInvoker<T extends object> extends CallableFunction {
+    (this: object | void, ...forkArgs: unknown[]): T;
+}
+export type Proto<P extends object, T extends object> = [
+    Exclude<keyof P, keyof T>
+] extends [never] ? T : T & Pick<P, Exclude<keyof P, keyof T>>;
+export type ProtoFlat<P extends object, T extends object, L extends Exclude<keyof P, keyof T> = Exclude<keyof P, keyof T>> = {
+    [key in keyof T]: T[key];
+} & {
+    [key in L]: P[key];
+};
+export type MnemonicaInstanceMethodKeys = 'extract' | 'pick' | 'parent' | 'clone' | 'fork' | 'exception' | 'sibling';
+export type Extracted<T extends object> = {
+    [K in keyof T as K extends string ? (K extends MnemonicaInstanceMethodKeys ? never : K) : never]: T[K];
+} & {};
+export type Parsed<T extends object> = {
+    name: string;
+    props: Extracted<T>;
+    self: T;
+    proto: object;
+    joint: Record<string, unknown>;
+    parent: object | null;
+};
+export interface EmptyParsed {
+    name: undefined;
+    props: {};
+    self: null;
+    proto: undefined;
+    joint: {};
+    parent: undefined;
+}
+export interface SiblingAccessor {
+    (SiblingTypeName: string): TypeClass | undefined;
+    [key: string]: TypeClass | undefined;
+}
+export interface MnemonicaInstance<T extends object = object> {
+    extract(): Extracted<T>;
+    pick<K extends keyof T>(...keys: (K | K[])[]): {
+        [P in K]: T[P];
+    } & {};
+    pick(...keys: string[]): Record<string, unknown>;
+    parent(): object | undefined;
+    parent<K extends ParentPathOfInstance<this> & string>(constructorLookupPath: K): InstanceOfTypeRegistry<K> | undefined;
+    parent(constructorLookupPath: string): object | undefined;
+    readonly clone: this;
+    fork(...forkArgs: unknown[]): this;
+    exception(error: Error, ...args: unknown[]): Error;
+    readonly sibling: SiblingAccessor;
+}
+export type InstanceResult<N extends object> = {
+    [K in keyof N]: N[K];
 };
 export type Merge<E extends object, T extends object> = {
     [K in keyof T | keyof E as K extends MnemonicaInstanceMethodKeys ? never : K]: K extends keyof T ? T[K] : E[K & keyof E];
@@ -490,6 +443,40 @@ export interface UtilsCollection {
     parent<T extends object>(instance: T, path: string): object | undefined;
     toJSON<T extends object>(instance: T): string;
     [key: string]: UtilFunction;
+}
+export type LineageValue = null | boolean | string | number | LineageValue[] | {
+    $ref: string;
+} | {
+    '$mnemonica': 'unsupported';
+    kind: string;
+} | {
+    [key: string]: LineageValue;
+};
+export interface LineageTypeRef {
+    collection: string;
+    path: string;
+}
+export interface LineageNode {
+    type: LineageTypeRef;
+    own: {
+        [key: string]: LineageValue;
+    };
+    parent: string | null;
+    args?: LineageValue;
+    props?: {
+        [key: string]: LineageValue;
+    };
+}
+export interface LineageGraph {
+    version: '1';
+    heads: string[];
+    nodes: {
+        [id: string]: LineageNode;
+    };
+}
+export interface LineageOptions {
+    args?: boolean;
+    props?: string[];
 }
 export interface MnemonicaModule<Registry extends object = {}> extends RegistryHolder<Registry, object> {
     apply: ApplyFunction;

@@ -4,10 +4,9 @@
 import type { TypeRegistry } from '../index';
 import type { constants } from '../constants';
 
-// Props type for getProps/setProps
-export type PropsType = Record<string, unknown>;
-
 // Core type definitions for mnemonica
+
+// --- handler and callable shapes -------------------------------------------
 
 // Base constructor function type - can be a class constructor or a function.
 // Args defaults to unknown[] so IDEF<T> is backwards compatible;
@@ -55,41 +54,7 @@ export type DefineNewableOrCallable = DefineNewable | DefineCallable;
 // that reference must stay assignable here.
 export interface InstanceConstructor extends NewableFunction {}
 
-// A hook callback as seen by a REGISTERING surface that only forwards it
-// (HookableConstructor's registerHook, the WithHookRegister member check):
-// it consumes whatever opts the caller's typed hook carries and returns
-// unknown. never[] parameters keep every hook shape assignable by
-// contravariance, including generic typedHook<HT> instantiations (a
-// parameter typed as the plain `hook` interface would reject those).
-export interface AnyHookCallback extends CallableFunction {
-	(...args: never[]): unknown;
-}
-
-// A utility method as exposed on the `utils` collection — the
-// index-signature fallback for utilities beyond the declared set. Plain
-// callables: any argument list, unknown result.
-export interface UtilFunction extends CallableFunction {
-	(...args: never[]): unknown;
-}
-
-// The minimal source shape the free lookup() resolves against: any value
-// carrying a lookup method with the untyped fallback signature
-// (a TypesCollection, a type constructor, or the mnemonica module object).
-export interface LookupSource {
-	lookup(path: string): TypeClass | undefined;
-}
-
-// The modification-error sink handed through the creator object: consumes
-// the construction error, produces nothing (the construction aborts).
-export interface ThrowModificationError extends CallableFunction {
-	(error: Error): void;
-}
-
-// The bound fork invoker that instance.fork() returns: consumes fork
-// arguments, produces a fresh instance of the forked type.
-export interface ForkInvoker<T extends object> extends CallableFunction {
-	(this: object | void, ...forkArgs: unknown[]): T;
-}
+// --- errors ----------------------------------------------------------------
 
 // Error message types - all error messages are strings
 export type ErrorMessageKey =
@@ -111,21 +76,6 @@ export type ErrorMessageKey =
 // Error messages object type
 export type ErrorMessages = Record<ErrorMessageKey, string>;
 
-// Hook callback as STORED and invoked by invokeHook — its parameter is the
-// DELIVERED payload (deliveredHookOpts: HookInvocation.build()'s output).
-// The registration surface (registerHook) types callbacks per hookType via
-// typedHook instead.
-export interface hook extends CallableFunction {
-	(opts: deliveredHookOpts): unknown;
-}
-
-// Flow checker callback registered via registerFlowChecker: invoked with
-// the hook invocation record after each hook run; its return value is
-// collected into the invocation results but otherwise unused.
-export interface FlowChecker extends CallableFunction {
-	(opts: object): unknown;
-}
-
 // An error class made by constructError(name, message) — the lib.es5
 // ErrorConstructor idiom, `new`-only (a class cannot be called without it).
 // Each class carries one fixed message (constants ErrorMessages); `addition`
@@ -135,9 +85,6 @@ export interface MnemonicaErrorConstructor extends NewableFunction {
 	new (addition?: string, stack?: string[]): MnemonicaError;
 	readonly prototype: MnemonicaError;
 }
-
-// Errors types map - indexable record of error constructors
-export type ErrorsTypesMap = Record<string, MnemonicaErrorConstructor>;
 
 // Mnemonica-processed error. It carries no custom properties of its own:
 // the error data lives in the external props storage (WeakMap) — read it
@@ -178,6 +125,8 @@ export interface ErrorProps {
  * try { new Widget(1); } catch (e) { if (e instanceof Error) report(e); }
  */
 export type CreationError<T extends object> = ( T & Error ) | Error;
+
+// --- constructor shapes ----------------------------------------------------
 
 /**
  * Internal Type Constructor.
@@ -225,68 +174,48 @@ export interface TypeConstructorBase {
  */
 export type AnyConstructor = new (...args: never[]) => unknown;
 
-/**
- * Instance type produced by a TypeRegistry constructor.
- */
-export type InstanceOfTypeRegistry<K extends keyof TypeRegistry> =
-	TypeRegistry[K] extends new (...args: never[]) => infer R ? R : never;
+// Constructor type for decorate function.
+// Parameters are `never[]` for the same reason as AnyConstructor: under
+// strictFunctionTypes an `unknown[]` constraint rejects classes with precise
+// constructor parameters, so `@decorate()` could not be applied to them.
+export type Constructor<T = object> = new (...args: never[]) => T;
 
+// Name of a constructor as a string literal type.
+export type ConstructorName<T extends Constructor<object>> =
+	T extends { name: infer N } ? N extends string ? N : string : string;
 
-/**
- * Extract only the literal string keys of a type, filtering out generic
- * index signatures. This lets us iterate over augmented TypeRegistry keys
- * without picking up the `[key: string]` signature.
- */
-export type LiteralKeysOf<T> = keyof T extends infer K
-	? K extends string
-		? string extends K ? never : K
-		: never
-	: never;
+// --- hooks -----------------------------------------------------------------
 
-/**
- * Given a dotted TypeRegistry key, extract the parent path.
- * `ParentPath<'A.B.C'>` → `'A.B'`.
- */
-export type ParentPath<K extends string> =
-	K extends `${infer P}.${string}` ? P : never;
+// A hook callback as seen by a REGISTERING surface that only forwards it
+// (HookableConstructor's registerHook, the WithHookRegister member check):
+// it consumes whatever opts the caller's typed hook carries and returns
+// unknown. never[] parameters keep every hook shape assignable by
+// contravariance, including generic typedHook<HT> instantiations (a
+// parameter typed as the plain `hook` interface would reject those).
+export interface AnyHookCallback extends CallableFunction {
+	(...args: never[]): unknown;
+}
 
-/**
- * Given a dotted TypeRegistry key, return the union of all ancestor prefixes.
- * `AllParentPrefixes<'A.B.C'>` → `'A' | 'A.B'`.
- */
-export type AllParentPrefixes<K extends string> =
-	K extends `${infer P}.${string}` ? P | AllParentPrefixes<P> : never;
+// The modification-error sink handed through the creator object: consumes
+// the construction error, produces nothing (the construction aborts).
+export interface ThrowModificationError extends CallableFunction {
+	(error: Error): void;
+}
 
-/**
- * Given a parent path, return the union of TypeRegistry keys that are direct
- * or indirect children of that path.
- */
-export type ChildKeysOf<P extends string> = {
-	[K in keyof TypeRegistry]: K extends `${P}.${string}` ? K : never
-}[keyof TypeRegistry];
+// Hook callback as STORED and invoked by invokeHook — its parameter is the
+// DELIVERED payload (deliveredHookOpts: HookInvocation.build()'s output).
+// The registration surface (registerHook) types callbacks per hookType via
+// typedHook instead.
+export interface hook extends CallableFunction {
+	(opts: deliveredHookOpts): unknown;
+}
 
-/**
- * Given an instance type, find the TypeRegistry key(s) whose constructor
- * returns that instance type. This inverts the registry at the type level
- * so utilities like `parent()` can derive an instance's path from its
- * type alone.
- */
-export type PathOfInstance<T extends object> = {
-	[K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: never[]) => infer R
-		? T extends R ? K : never
-		: never
-}[LiteralKeysOf<TypeRegistry>];
-
-/**
- * Given an instance type, return the union of TypeRegistry paths that are
- * valid parent lookups for that instance. Root types produce `never` because
- * they have no parent path.
- */
-export type ParentPathOfInstance<T extends object> = {
-	[K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: never[]) => infer R
-		? T extends R ? AllParentPrefixes<K> : never
-		: never
-}[LiteralKeysOf<TypeRegistry>];
+// Flow checker callback registered via registerFlowChecker: invoked with
+// the hook invocation record after each hook run; its return value is
+// collected into the invocation results but otherwise unused.
+export interface FlowChecker extends CallableFunction {
+	(opts: object): unknown;
+}
 
 // Hook types
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
@@ -377,6 +306,21 @@ export type HookableConstructor<T extends object> = Constructor<T> & {
 	registerHook(hookType: hooksTypes, cb: AnyHookCallback): void;
 };
 
+// Shared interface for objects that support hooks (TypeDef and CollectionDef)
+export interface Hookable {
+	hooks: Record<string, Set<hook>>;
+	invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
+	// Collection-level registration: the payload split by hookType holds
+	// (preCreation has no inheritedInstance/throwModificationError; post
+	// hooks carry both, required) but P/T stay `object` — a collection
+	// mixes every registered type, so narrowing to a concrete instance
+	// happens in the callback.
+	registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT>): void;
+	registerFlowChecker(cb: FlowChecker): void;
+}
+
+// --- config and runtime internals ------------------------------------------
+
 // Callback passed into ModificationConstructor to attach internal props to the prototype
 export interface AddPropsCallback extends CallableFunction {
 	(proto: object): void;
@@ -463,7 +407,6 @@ export interface CollectionLookup extends CallableFunction {
 	(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 }
 
-// Collection definition
 // A collection's config, stored under SymbolConfig. Every collection carries
 // a name by construction: 'defaultTypes' for the default one, the given or
 // auto-numbered name for custom ones (createTypesCollection).
@@ -472,6 +415,7 @@ export type CollectionConfig = {
 	[key: string]: unknown;
 };
 
+// Collection definition
 // the config key is SymbolConfig's own unique symbol type; a mapped type
 // over it keeps this module type-only (no runtime import of constants)
 export type CollectionDef = Hookable & {
@@ -483,7 +427,155 @@ export type CollectionDef = Hookable & {
 	[K in typeof constants.SymbolConfig]: CollectionConfig;
 };
 
-// Type lookup function type: may have augmentation by Tactica re-definition
+// Specification for chained subtype creation with .then()
+export interface ThenSpec {
+	subtype: object;
+	args: unknown[];
+	name?: string;
+}
+
+// Context object passed through the InstanceCreator pipeline
+export interface InstanceCreatorContext {
+	type: TypeDef;
+	TypeName: string;
+	existentInstance: object;
+	args: unknown[];
+	ModificationConstructor: ModificationConstructor;
+	ModificatorType: MnemonicaConstructor;
+	InstanceModificator: MnemonicaConstructor;
+	inheritedInstance: object | Promise<object>;
+	config: constructorOptions;
+	proto: object;
+	__proto_proto__?: object;
+	stack?: string[];
+	// a lazy type's gather outcome, snapshotted by runSetup before the cell
+	// is reset (see lazyDefinition.ts): failed is the explicit flag (a
+	// callback may throw undefined), lazyError the thrown value itself —
+	// passed through to throwModificationError exactly like a
+	// constructor-body throw
+	lazyFailed?: boolean;
+	lazyError?: unknown;
+	// set by throwModificationError once the post hooks have fired for this
+	// construction; postProcessing reads it to avoid a second firing when a
+	// creationError hook suppressed the throw
+	postHooksFired?: boolean;
+
+	getExistentAsyncStack(existentInstance: object): unknown;
+	postProcessing(continuationOf?: TypeDef): void;
+	makeAwaiter(type: TypeDef, then?: ThenSpec): Promise<object>;
+	addThen(then: ThenSpec): void;
+	invokePreHooks(): void;
+	invokePostHooks(): { type: Set<unknown>; collection: Set<unknown> };
+	throwModificationError(error: MnemonicaError): void;
+}
+
+// Internal instance properties (non-enumerable)
+// These are always present on instances but accessed via getProps/setProps
+export type InstanceInternalProps = {
+	__proto_proto__: object;
+	__args__: unknown[];
+	__collection__: CollectionDef;
+	__subtypes__: Map<string, object>;
+	__type__: TypeDef;
+	__parent__: object;
+	__stack__?: string;
+	__creator__: InstanceCreatorContext;
+	__timestamp__: number;
+};
+
+// Combined Props type for internal use inside ./src
+// Instance properties for __self__ reference
+// This merges internal props with the __self__ reference and an open index
+export type Props =InstanceInternalProps & {
+	__self__: InstanceInternalProps;
+	[key: string]: unknown;
+};
+
+// Mnemonica constructor — the constructor function returned by constructHandler()
+// Has SymbolConstructorName attached and is both newable and callable
+export interface MnemonicaConstructor extends NewableFunction {
+	new (...args: unknown[]): object;
+	(this: object, ...args: unknown[]): unknown;
+	[key: symbol]: unknown;
+}
+
+// Type descriptor instance — internal shape of TypeDescriptor objects
+export interface TypeDescriptorDefine extends CallableFunction {
+	(
+		TypeOrTypeName: string | DefineNewableOrCallable,
+		constructHandlerOrConfig?: DefineNewableOrCallable | object,
+		config?: object
+	): TypeClass;
+}
+
+export interface TypeDescriptorLazy extends CallableFunction {
+	(
+		TypeName: string,
+		getter: LazyDef<object>,
+		config?: object
+	): TypeClass;
+}
+
+export interface TypeDescriptorLookup extends CallableFunction {
+	(TypeNestedPath: string): TypeClass | undefined;
+}
+
+export type TypeDescriptorInstance = {
+	define: TypeDescriptorDefine;
+	lazy: TypeDescriptorLazy;
+	decorate: (config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
+	lookup: TypeDescriptorLookup;
+	subtypes: Map<string, object>;
+	TypeName: string;
+	collection: CollectionDef;
+};
+
+// --- registry and lookup ---------------------------------------------------
+
+// The minimal source shape the free lookup() resolves against: any value
+// carrying a lookup method with the untyped fallback signature
+// (a TypesCollection, a type constructor, or the mnemonica module object).
+export interface LookupSource {
+	lookup(path: string): TypeClass | undefined;
+}
+
+/**
+ * Instance type produced by a TypeRegistry constructor.
+ */
+export type InstanceOfTypeRegistry<K extends keyof TypeRegistry> =
+	TypeRegistry[K] extends new (...args: never[]) => infer R ? R : never;
+
+/**
+ * Extract only the literal string keys of a type, filtering out generic
+ * index signatures. This lets us iterate over augmented TypeRegistry keys
+ * without picking up the `[key: string]` signature.
+ */
+export type LiteralKeysOf<T> = keyof T extends infer K
+	? K extends string
+		? string extends K ? never : K
+		: never
+	: never;
+
+/**
+ * Given a dotted TypeRegistry key, return the union of all ancestor prefixes.
+ * `AllParentPrefixes<'A.B.C'>` → `'A' | 'A.B'`.
+ */
+export type AllParentPrefixes<K extends string> =
+	K extends `${infer P}.${string}` ? P | AllParentPrefixes<P> : never;
+
+/**
+ * Given an instance type, return the union of TypeRegistry paths that are
+ * valid parent lookups for that instance: the registry is inverted at the
+ * type level (the key(s) whose constructor returns that instance type), so
+ * utilities like `parent()` derive an instance's parent paths from its type
+ * alone. Root types produce `never` because they have no parent path.
+ */
+export type ParentPathOfInstance<T extends object> = {
+	[K in LiteralKeysOf<TypeRegistry>]: TypeRegistry[K] extends new (...args: never[]) => infer R
+		? T extends R ? AllParentPrefixes<K> : never
+		: never
+}[LiteralKeysOf<TypeRegistry>];
+
 // Global registry shape used as the default for TypeLookup. It combines any
 // augmented TypeRegistry entries with a broad string index signature so the
 // generic TypeLookup constraint is satisfied.
@@ -660,6 +752,7 @@ export type LookupResult<
 	? LookedUpConstructor<Registry, Path>
 	: never;
 
+// Type lookup function type: may have augmentation by Tactica re-definition
 export interface TypeLookup<T extends object = GlobalRegistry> extends CallableFunction {
 	<const K extends keyof T & string>(this: unknown, TypeNestedPath: K): LookedUpConstructor<T, K>;
 	(this: unknown, TypeNestedPath: string): TypeClass | undefined;
@@ -698,13 +791,6 @@ export type RelativeKeys<
 		? K extends `${Path}.${infer Child}` ? Child : never
 		: never);
 
-// Full registry key that corresponds to a relative key `K` under `Path`.
-export type FullKey<
-	Registry extends object,
-	Path extends string,
-	K extends string
-> = Path extends '' ? K : Extract<keyof Registry & string, `${Path}.${K}`>;
-
 // Lookup function type for constructors and registry holders that know their
 // own dotted type path. Root holders use `Path = ''` and behave like the global
 // `TypeLookup`; child constructors use their own path for relative lookups.
@@ -724,236 +810,7 @@ export type NestedTypeLookup<
 		(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 	};
 
-// Specification for chained subtype creation with .then()
-export interface ThenSpec {
-	subtype: object;
-	args: unknown[];
-	name?: string;
-}
-
-// Context object passed through the InstanceCreator pipeline
-export interface InstanceCreatorContext {
-	type: TypeDef;
-	TypeName: string;
-	existentInstance: object;
-	args: unknown[];
-	ModificationConstructor: ModificationConstructor;
-	ModificatorType: MnemonicaConstructor;
-	InstanceModificator: MnemonicaConstructor;
-	inheritedInstance: object | Promise<object>;
-	config: constructorOptions;
-	proto: object;
-	__proto_proto__?: object;
-	stack?: string[];
-	// a lazy type's gather outcome, snapshotted by runSetup before the cell
-	// is reset (see lazyDefinition.ts): failed is the explicit flag (a
-	// callback may throw undefined), lazyError the thrown value itself —
-	// passed through to throwModificationError exactly like a
-	// constructor-body throw
-	lazyFailed?: boolean;
-	lazyError?: unknown;
-	// set by throwModificationError once the post hooks have fired for this
-	// construction; postProcessing reads it to avoid a second firing when a
-	// creationError hook suppressed the throw
-	postHooksFired?: boolean;
-
-	getExistentAsyncStack(existentInstance: object): unknown;
-	postProcessing(continuationOf?: TypeDef): void;
-	makeAwaiter(type: TypeDef, then?: ThenSpec): Promise<object>;
-	addThen(then: ThenSpec): void;
-	invokePreHooks(): void;
-	invokePostHooks(): { type: Set<unknown>; collection: Set<unknown> };
-	throwModificationError(error: MnemonicaError): void;
-}
-
-/**
- * Proto merge type - combines parent and child types without property conflicts.
- *
- * When a subtype is defined from a parent instance, we want the child properties
- * to take precedence. `Exclude<keyof P, keyof T>` removes overlapping keys from P,
- * so `Pick<P, ...>` only brings in parent properties that don't clash with child.
- *
- * Result: child T gets all its own props, plus parent's non-overlapping props.
- */
-// When the parent contributes no properties, collapse to the child type so
-// hover tooltips stay readable.
-export type Proto<P extends object, T extends object> =
-	[Exclude<keyof P, keyof T>] extends [never]
-		? T
-		: T & Pick<P, Exclude<keyof P, keyof T>>;
-
-
-// export type ProtoFlat<
-// 	P extends object,
-// 	T extends object,
-// 	F extends Proto<P, T> = Proto<P, T>
-// > = { [key in keyof F]: F[key]} ;
-
-export type ProtoFlat<
-	P extends object,
-	T extends object,
-	L extends Exclude<keyof P, keyof T> = Exclude<keyof P, keyof T>,
-> = {
-    [key in keyof T]: T[key];
-} & {
-	[key in L]: P[key];
-};
-
-// Mnemonica instance method keys. These are filtered out of extracted/merged
-// field-only views because they belong to the prototype, not to the user's
-// enumerable data properties.
-export type MnemonicaInstanceMethodKeys =
-	'extract' | 'pick' | 'parent' | 'clone' | 'fork' | 'exception' | 'sibling';
-
-export type Flatten<F> = { [key in keyof F]: F[key] }
-
-// Extracted<T>: the shape returned by utils.extract(instance).
-// It contains the enumerable string-keyed user properties of the instance,
-// omitting MnemonicaInstance methods (extract, pick, parent, clone, fork,
-// exception, sibling). Optionality is preserved from the source type.
-// The `& {}` trick forces TypeScript to expand the alias in hover tooltips
-// so it renders as a plain object literal instead of "Extracted<{...}>".
-export type Extracted<T extends object> = {
-	[K in keyof T as K extends string ? (K extends MnemonicaInstanceMethodKeys ? never : K) : never]: T[K];
-} & {};
-
-// Parsed<T>: the shape returned by utils.parse(instance).
-// It is a one-level snapshot of the instance's prototype chain.
-// `props` contains the instance's enumerable user properties;
-// `joint` contains enumerable properties copied from the immediate prototype;
-// `parent` is the parent INSTANCE — the same object utils.parent(instance)
-// returns; null for no parent. Not recursively parsed — walking the whole
-// lineage level by level is what utils.deepParse does — this function stays
-// the one-level primitive.
-// The three "no parent" readings, stated once:
-//   parent == null        — no parent at all (covers both below);
-//   parent === null       — the end of a REAL chain (a root instance);
-//   parent === undefined  — nothing was given (utils.parse(null)).
-export type Parsed<T extends object> = {
-	name: string;
-	props: Extracted<T>;
-	self: T;
-	proto: object;
-	joint: Record<string, unknown>;
-	parent: object | null;
-};
-
-// EmptyParsed: the shape utils.parse(null) returns — the one non-object
-// input parse accepts. "Nothing was given": every field is its empty value,
-// and parent is undefined (see the readings above).
-export interface EmptyParsed {
-	name: undefined;
-	props: {};
-	self: null;
-	proto: undefined;
-	joint: {};
-	parent: undefined;
-}
-
-// --- lineage (the lethe cross-language export) -----------------------------
-
-// A JSON-safe value in the lethe lineage graph: instances export as $ref,
-// non-JSON values as tagged placeholders — never an error.
-export type LineageValue =
-	| null
-	| boolean
-	| string
-	| number
-	| LineageValue[]
-	| { $ref: string }
-	| { '$mnemonica': 'unsupported'; kind: string }
-	| { [ key: string ]: LineageValue };
-
-// Where a level's type was DECLARED — not just its name (names collide
-// across levels and collections).
-export interface LineageTypeRef {
-	collection: string;
-	path: string;
-}
-
-export interface LineageNode {
-	type: LineageTypeRef;
-	// the fields this level set itself — shadowed values stay with their
-	// writer
-	own: { [ key: string ]: LineageValue };
-	// the parent's id, null at the root
-	parent: string | null;
-	// construction args — present only when lineage() gets { args: true }
-	args?: LineageValue;
-	// opt-in metadata (e.g. __timestamp__) — present only when
-	// lineage() gets { props: [...] }
-	props?: { [ key: string ]: LineageValue };
-}
-
-// The lethe lineage graph: version "1", heads in argument order, every
-// reachable instance deduplicated at any depth.
-export interface LineageGraph {
-	version: '1';
-	heads: string[];
-	nodes: { [ id: string ]: LineageNode };
-}
-
-export interface LineageOptions {
-	/** include construction args as node.args */
-	args?: boolean;
-	/** opt-in getProps keys exported as node.props (e.g. [ '__timestamp__' ]) */
-	props?: string[];
-}
-
-// Sibling type accessor
-export interface SiblingAccessor {
-	(SiblingTypeName: string): TypeClass | undefined;
-	[key: string]: TypeClass | undefined;
-}
-
-// Mnemonica instance methods interface (opt-in).
-// These methods used to be auto-injected onto every instance. They are now
-// available only when a type explicitly adds them to its prototype.
-// Users can still use this interface to type their own root-level helpers.
-export interface MnemonicaInstance<T extends object = object> {
-	extract(): Extracted<T>;
-	pick<K extends keyof T>(...keys: (K | K[])[]): { [P in K]: T[P] } & {};
-	pick(...keys: string[]): Record<string, unknown>;
-	parent(): object | undefined;
-	parent<K extends ParentPathOfInstance<this> & string>(
-		constructorLookupPath: K
-	): InstanceOfTypeRegistry<K> | undefined;
-	parent(constructorLookupPath: string): object | undefined;
-	readonly clone: this;
-	fork(...forkArgs: unknown[]): this;
-	exception(error: Error, ...args: unknown[]): Error;
-	readonly sibling: SiblingAccessor;
-}
-
-// Instance properties for __self__ reference
-// This merges internal props with the instance methods
-// Internal instance properties (non-enumerable)
-// These are always present on instances but accessed via getProps/setProps
-export type InstanceInternalProps = {
-	__proto_proto__: object;
-	__args__: unknown[];
-	__collection__: CollectionDef;
-	__subtypes__: Map<string, object>;
-	__type__: TypeDef;
-	__parent__: object;
-	__stack__?: string;
-	__creator__: InstanceCreatorContext;
-	__timestamp__: number;
-};
-
-// Combined Props type for internal use inside ./src
-export type Props = InstanceInternalProps & {
-	__self__: InstanceInternalProps;
-	[key: string]: unknown;
-};
-
-// Combined instance type: plain object with the user's fields only.
-// Instance methods (extract, pick, fork, etc.) are no longer auto-injected.
-// The inline mapped type is used instead of the Flatten alias so that hover
-// tooltips show the actual field object literal first, not "Flatten<{...}>".
-export type InstanceResult<
-  N extends object,
-> = { [K in keyof N]: N[K] };
+// --- builder holders and collections ---------------------------------------
 
 // The registry VALUE as public vocabulary: what a builder chain stores per
 // defined path and what typed lookups read back. Interface (not alias) so
@@ -1133,14 +990,12 @@ export interface IDefinitorInstance<
 	TypeName: string;
 	prototype: N;
 
-	
 	// the line below declares a `new ...` invocation,
 	// so makes interface constructible
 	// new(...args: unknown[]): { [key in keyof R]: R[key] };
 	/** @throws {CreationError<R>} when construction fails */
 	new(...args: Args): R;
 
-	
 	// TODO: need check if line below works
 	// also TS hinting check as well
 	// the line below should make is a @decorate decorator working
@@ -1219,19 +1074,6 @@ export interface TypesCollection<
 	[key: string]: unknown;
 }
 
-// Shared interface for objects that support hooks (TypeDef and CollectionDef)
-export interface Hookable {
-	hooks: Record<string, Set<hook>>;
-	invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
-	// Collection-level registration: the payload split by hookType holds
-	// (preCreation has no inheritedInstance/throwModificationError; post
-	// hooks carry both, required) but P/T stay `object` — a collection
-	// mixes every registered type, so narrowing to a concrete instance
-	// happens in the callback.
-	registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT>): void;
-	registerFlowChecker(cb: FlowChecker): void;
-}
-
 // createTypesCollection function type
 export type CreateTypesCollectionFunction =
 	<T extends object = {}, Parent extends object = object>(
@@ -1240,59 +1082,6 @@ export type CreateTypesCollectionFunction =
 
 // Type class - base type constructor
 export type TypeClass = IDefinitorInstance<object>;
-
-// Generic registry map used by typed collections and the mnemonica builder.
-// Keys are dotted type paths; values are mnemonica-compatible constructors.
-export type TypeRegistryMap = Record<string, TypeConstructorBase>;
-
-// Mnemonica constructor — the constructor function returned by constructHandler()
-// Has SymbolConstructorName attached and is both newable and callable
-export interface MnemonicaConstructor extends NewableFunction {
-	new (...args: unknown[]): object;
-	(this: object, ...args: unknown[]): unknown;
-	[key: symbol]: unknown;
-}
-
-// Type descriptor instance — internal shape of TypeDescriptor objects
-export interface TypeDescriptorDefine extends CallableFunction {
-	(
-		TypeOrTypeName: string | DefineNewableOrCallable,
-		constructHandlerOrConfig?: DefineNewableOrCallable | object,
-		config?: object
-	): TypeClass;
-}
-
-export interface TypeDescriptorLazy extends CallableFunction {
-	(
-		TypeName: string,
-		getter: LazyDef<object>,
-		config?: object
-	): TypeClass;
-}
-
-export interface TypeDescriptorLookup extends CallableFunction {
-	(TypeNestedPath: string): TypeClass | undefined;
-}
-
-export type TypeDescriptorInstance = {
-	define: TypeDescriptorDefine;
-	lazy: TypeDescriptorLazy;
-	decorate: (config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
-	lookup: TypeDescriptorLookup;
-	subtypes: Map<string, object>;
-	TypeName: string;
-	collection: CollectionDef;
-};
-
-// Constructor type for decorate function.
-// Parameters are `never[]` for the same reason as AnyConstructor: under
-// strictFunctionTypes an `unknown[]` constraint rejects classes with precise
-// constructor parameters, so `@decorate()` could not be applied to them.
-export type Constructor<T = object> = new (...args: never[]) => T;
-
-// Name of a constructor as a string literal type.
-export type ConstructorName<T extends Constructor<object>> =
-	T extends { name: infer N } ? N extends string ? N : string : string;
 
 // Decorated class type - includes call signature for decorator pattern and
 // aligns with `IDefinitorInstance` so decorated classes expose the same
@@ -1313,6 +1102,138 @@ export type DecoratedClass<
 		define: TypeAbsorber;
 		lookup: TypeLookup<Registry>;
 	};
+
+// --- instance shapes and utils ---------------------------------------------
+
+// Props type for getProps/setProps
+export type PropsType = Record<string, unknown>;
+
+// A utility method as exposed on the `utils` collection — the
+// index-signature fallback for utilities beyond the declared set. Plain
+// callables: any argument list, unknown result.
+export interface UtilFunction extends CallableFunction {
+	(...args: never[]): unknown;
+}
+
+// The bound fork invoker that instance.fork() returns: consumes fork
+// arguments, produces a fresh instance of the forked type.
+export interface ForkInvoker<T extends object> extends CallableFunction {
+	(this: object | void, ...forkArgs: unknown[]): T;
+}
+
+/**
+ * Proto merge type - combines parent and child types without property conflicts.
+ *
+ * When a subtype is defined from a parent instance, we want the child properties
+ * to take precedence. `Exclude<keyof P, keyof T>` removes overlapping keys from P,
+ * so `Pick<P, ...>` only brings in parent properties that don't clash with child.
+ *
+ * Result: child T gets all its own props, plus parent's non-overlapping props.
+ */
+// When the parent contributes no properties, collapse to the child type so
+// hover tooltips stay readable.
+export type Proto<P extends object, T extends object> =
+	[Exclude<keyof P, keyof T>] extends [never]
+		? T
+		: T & Pick<P, Exclude<keyof P, keyof T>>;
+
+// export type ProtoFlat<
+// 	P extends object,
+// 	T extends object,
+// 	F extends Proto<P, T> = Proto<P, T>
+// > = { [key in keyof F]: F[key]} ;
+
+export type ProtoFlat<
+	P extends object,
+	T extends object,
+	L extends Exclude<keyof P, keyof T> = Exclude<keyof P, keyof T>,
+> = {
+	[key in keyof T]: T[key];
+} & {
+	[key in L]: P[key];
+};
+
+// Mnemonica instance method keys. These are filtered out of extracted/merged
+// field-only views because they belong to the prototype, not to the user's
+// enumerable data properties.
+export type MnemonicaInstanceMethodKeys =
+	'extract' | 'pick' | 'parent' | 'clone' | 'fork' | 'exception' | 'sibling';
+
+// Extracted<T>: the shape returned by utils.extract(instance).
+// It contains the enumerable string-keyed user properties of the instance,
+// omitting MnemonicaInstance methods (extract, pick, parent, clone, fork,
+// exception, sibling). Optionality is preserved from the source type.
+// The `& {}` trick forces TypeScript to expand the alias in hover tooltips
+// so it renders as a plain object literal instead of "Extracted<{...}>".
+export type Extracted<T extends object> = {
+	[K in keyof T as K extends string ? (K extends MnemonicaInstanceMethodKeys ? never : K) : never]: T[K];
+} & {};
+
+// Parsed<T>: the shape returned by utils.parse(instance).
+// It is a one-level snapshot of the instance's prototype chain.
+// `props` contains the instance's enumerable user properties;
+// `joint` contains enumerable properties copied from the immediate prototype;
+// `parent` is the parent INSTANCE — the same object utils.parent(instance)
+// returns; null for no parent. Not recursively parsed — walking the whole
+// lineage level by level is what utils.deepParse does — this function stays
+// the one-level primitive.
+// The three "no parent" readings, stated once:
+//   parent == null        — no parent at all (covers both below);
+//   parent === null       — the end of a REAL chain (a root instance);
+//   parent === undefined  — nothing was given (utils.parse(null)).
+export type Parsed<T extends object> = {
+	name: string;
+	props: Extracted<T>;
+	self: T;
+	proto: object;
+	joint: Record<string, unknown>;
+	parent: object | null;
+};
+
+// EmptyParsed: the shape utils.parse(null) returns — the one non-object
+// input parse accepts. "Nothing was given": every field is its empty value,
+// and parent is undefined (see the readings above).
+export interface EmptyParsed {
+	name: undefined;
+	props: {};
+	self: null;
+	proto: undefined;
+	joint: {};
+	parent: undefined;
+}
+
+// Sibling type accessor
+export interface SiblingAccessor {
+	(SiblingTypeName: string): TypeClass | undefined;
+	[key: string]: TypeClass | undefined;
+}
+
+// Mnemonica instance methods interface (opt-in).
+// These methods used to be auto-injected onto every instance. They are now
+// available only when a type explicitly adds them to its prototype.
+// Users can still use this interface to type their own root-level helpers.
+export interface MnemonicaInstance<T extends object = object> {
+	extract(): Extracted<T>;
+	pick<K extends keyof T>(...keys: (K | K[])[]): { [P in K]: T[P] } & {};
+	pick(...keys: string[]): Record<string, unknown>;
+	parent(): object | undefined;
+	parent<K extends ParentPathOfInstance<this> & string>(
+		constructorLookupPath: K
+	): InstanceOfTypeRegistry<K> | undefined;
+	parent(constructorLookupPath: string): object | undefined;
+	readonly clone: this;
+	fork(...forkArgs: unknown[]): this;
+	exception(error: Error, ...args: unknown[]): Error;
+	readonly sibling: SiblingAccessor;
+}
+
+// Combined instance type: plain object with the user's fields only.
+// Instance methods (extract, pick, fork, etc.) are no longer auto-injected.
+// The inline mapped type is used instead of the Flatten alias so that hover
+// tooltips show the actual field object literal first, not "Flatten<{...}>".
+export type InstanceResult<
+	N extends object,
+> = { [K in keyof N]: N[K] };
 
 // Helper: merge parent entity (E) and child constructor instance (T) into a
 // single flat object type, filtering out MnemonicaInstance method names.
@@ -1376,6 +1297,58 @@ export interface UtilsCollection {
 	toJSON<T extends object>(instance: T): string;
 	[key: string]: UtilFunction;
 }
+
+// --- lineage (the lethe cross-language export) -----------------------------
+
+// A JSON-safe value in the lethe lineage graph: instances export as $ref,
+// non-JSON values as tagged placeholders — never an error.
+export type LineageValue =
+	| null
+	| boolean
+	| string
+	| number
+	| LineageValue[]
+	| { $ref: string }
+	| { '$mnemonica': 'unsupported'; kind: string }
+	| { [ key: string ]: LineageValue };
+
+// Where a level's type was DECLARED — not just its name (names collide
+// across levels and collections).
+export interface LineageTypeRef {
+	collection: string;
+	path: string;
+}
+
+export interface LineageNode {
+	type: LineageTypeRef;
+	// the fields this level set itself — shadowed values stay with their
+	// writer
+	own: { [ key: string ]: LineageValue };
+	// the parent's id, null at the root
+	parent: string | null;
+	// construction args — present only when lineage() gets { args: true }
+	args?: LineageValue;
+	// opt-in metadata (e.g. __timestamp__) — present only when
+	// lineage() gets { props: [...] }
+	props?: { [ key: string ]: LineageValue };
+}
+
+// The lethe lineage graph: version "1", heads in argument order, every
+// reachable instance deduplicated at any depth.
+export interface LineageGraph {
+	version: '1';
+	heads: string[];
+	nodes: { [ id: string ]: LineageNode };
+}
+
+export interface LineageOptions {
+	/** include construction args as node.args */
+	args?: boolean;
+	/** opt-in getProps keys exported as node.props (e.g. [ '__timestamp__' ]) */
+	props?: string[];
+}
+
+// --- the module object -----------------------------------------------------
 
 // Main mnemonica module interface - represents the exported module object.
 // The optional Registry generic lets the object act as a typed registry holder
