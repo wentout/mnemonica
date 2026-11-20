@@ -232,8 +232,7 @@ const makeErrorModificatorType = (
 	);
 
 	const result = modificatorType();
-	const constructorResult = result as MnemonicaConstructor;
-	return constructorResult;
+	return result;
 
 };
 

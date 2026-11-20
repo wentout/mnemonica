@@ -212,7 +212,6 @@ export type Props = InstanceInternalProps & {
 };
 export interface MnemonicaConstructor extends NewableFunction {
     new (...args: unknown[]): object;
-    (this: object, ...args: unknown[]): unknown;
     [key: symbol]: unknown;
 }
 export interface TypeDescriptorDefine extends CallableFunction {

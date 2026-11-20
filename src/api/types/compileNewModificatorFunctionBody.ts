@@ -2,6 +2,7 @@
 
 import { hop } from '../../utils/hop';
 import { ErrorsTypes } from '../../descriptors/errors';
+import type { MnemonicaConstructor } from '../../types';
 
 const { WRONG_MODIFICATION_PATTERN, } = ErrorsTypes;
 /*
@@ -164,7 +165,10 @@ const getClassConstructor = (
 			return castResult;
 		}
 	};
-	return result;
+	// the class as the pipeline uses it: the SymbolConstructorName mark
+	// it lacks here is attached by the compiler right after
+	const newableResult = result as MnemonicaConstructor;
+	return newableResult;
 };
 
 const getFunctionConstructor = (
@@ -209,14 +213,26 @@ const getFunctionConstructor = (
 		}
 		const result = CreationHandler.call(
 			this,
-			answer 
+			answer
 		);
 		return result;
 	};
-	return funcResult;
+	// the compiled body is invoked with `new` by the pipeline;
+	// a function expression carries no construct signature, so
+	// the `new`-able view of the same value is named here
+	const newableResult = funcResult as FunctionModificationBody;
+	return newableResult;
 };
 
-type ModificationBody = new (...args: unknown[]) => object;
+// the function-branch body: the plain function above, as the pipeline
+// uses it — invoked with `new`, constructing an object
+interface FunctionModificationBody extends MnemonicaConstructor {
+	(this: object, ...args: unknown[]): unknown;
+}
+
+// what both branches produce and every caller stores: only ever invoked
+// with `new` (a class body cannot be called without it)
+type ModificationBody = MnemonicaConstructor;
 
 const compileNewModificatorFunctionBody = function ( FunctionName: string ) {
 	const outerResult = function (
@@ -238,15 +254,10 @@ const compileNewModificatorFunctionBody = function ( FunctionName: string ) {
 				// const ReNamedConstructHandler = {} as unknown;
 				// ReNamedConstructHandler[FunctionName] = ConstructHandler;
 				// ModificationBody = getFunctionConstructor(ReNamedConstructHandler[FunctionName], CreationHandler);
-				// the compiled body is invoked with `new` by the pipeline;
-				// a function expression carries no construct signature, so
-				// the `new`-able view of the same value is named here
-				// CreationHandler returns unknown; ModificationBody must construct
-				// object, so a direct return annotation cannot replace this cast.
 				ModificationBody = getFunctionConstructor(
 					ConstructHandler,
 					CreationHandler
-				) as unknown as ModificationBody;
+				);
 			}
 			ModificationBody.prototype.constructor = ModificationBody;
 			Object.defineProperty(

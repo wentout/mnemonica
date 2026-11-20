@@ -495,7 +495,6 @@ export type Props =InstanceInternalProps & {
 // Has SymbolConstructorName attached and is both newable and callable
 export interface MnemonicaConstructor extends NewableFunction {
 	new (...args: unknown[]): object;
-	(this: object, ...args: unknown[]): unknown;
 	[key: symbol]: unknown;
 }
 
