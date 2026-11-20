@@ -197,10 +197,7 @@ const installLazyDefinition = function (
 			return shimResult;
 		}
 		const { handler } = cell;
-		const modificatorBody = compileNewModificatorFunctionBody(
-			TypeName,
-			cell.asClass
-		);
+		const modificatorBody = compileNewModificatorFunctionBody(TypeName);
 		const wrappedBody = modificatorBody(
 			handler,
 			CreationHandler,
@@ -559,10 +556,7 @@ const createFromDirectHandler = function (
 	// installLazyDefinition above and lazyDefinition.ts)
 	handler = handler || function () { };
 	const asClass = isClass(handler);
-	const modificatorBody = compileNewModificatorFunctionBody(
-		name,
-		asClass
-	);
+	const modificatorBody = compileNewModificatorFunctionBody(name);
 
 	const makeConstructHandler = modificatorBody(
 		handler as ConstructHandler,

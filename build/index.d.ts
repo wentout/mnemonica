@@ -1,5 +1,5 @@
 import type { CreateTypesCollectionFunction, CtorParameter, IDEF, hooksTypes, constructorOptions, Proto, IDefinitorInstance, Constructor, DecoratedClass, TypeClass, MnemonicaModule, InstanceResult, Merge, TypeLookup, RegistryHolderBase, RegistryEntry, GlobalRegistry, LookedUpConstructor, FreeLookupResult, WithHookRegister, typedHook, HookableConstructor, DefineNewableOrCallable, LookupSource, LazyDef, ApplyFunction } from './types';
-export declare const isClass: (fn: import("./api/types/compileNewModificatorFunctionBody").ConstructHandler) => boolean, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => TypeClass | null;
+export declare const isClass: (fn: import("./api/types/compileNewModificatorFunctionBody").ConstructHandler) => fn is import("./api/types/compileNewModificatorFunctionBody").ConstructHandler & import("./api/types/compileNewModificatorFunctionBody").ClassConstructHandler, findSubTypeFromParent: (instance: import("./api/utils/index").parentSub | object | undefined, subType: string) => TypeClass | null;
 export type { CtorParameter, IDEF, LazyDef, TypeConstructor, TypeConstructorBase, AnyConstructor, Proto, ProtoFlat, constructorOptions, deliveredHookOpts, hooksOpts, hook, hooksTypes, IDefinitorInstance, InstanceResult, Merge, Constructor, DecoratedClass, TypeClass, TypeAbsorber, TypesCollection, TypeLookup, LookupResult, FreeLookupResult, RegistryOf, MnemonicaModule, RegistryEntry, AsyncRegistryEntry, LookedUpConstructor, LookedUpInstance, typedHook, typedHookOpts, WithHookRegister, HookableConstructor, CreationError, ErrorProps, } from './types';
 export interface TypeRegistry {
 }
@@ -17,8 +17,8 @@ export declare function lookup<Reg extends object, const K extends keyof Reg & s
 export declare function lookup(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 export declare function lookup(source: LookupSource, TypeNestedPath: string): TypeClass | undefined;
 export declare const apply: ApplyFunction;
-export declare const call: <E extends object, T extends object, S extends Proto<E, T>, Args extends unknown[]>(entity: E, Ctor: CtorParameter<T, Args>, ...args: NoInfer<Args>) => InstanceResult<Merge<E, T>>;
-export declare const bind: <E extends object, T extends object, S extends Proto<E, T>, Args extends unknown[]>(entity: E, Ctor: CtorParameter<T, Args>) => (...args: Args) => InstanceResult<Merge<E, T>>;
+export declare const call: <E extends object, T extends object, Args extends unknown[]>(entity: E, Ctor: CtorParameter<T, Args>, ...args: NoInfer<Args>) => InstanceResult<Merge<E, T>>;
+export declare const bind: <E extends object, T extends object, Args extends unknown[]>(entity: E, Ctor: CtorParameter<T, Args>) => (...args: Args) => InstanceResult<Merge<E, T>>;
 export declare const decorate: <T extends Constructor<object> | constructorOptions | undefined = undefined>(target?: T, config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
 export declare const registerHook: <T extends object, HT extends hooksTypes = hooksTypes>(Ctor: HookableConstructor<T>, hookType: HT, cb: typedHook<HT, object, T>) => void;
 export declare const mnemonica: MnemonicaModule;

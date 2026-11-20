@@ -621,7 +621,8 @@ export type SubTypeConstructors<
 // hand-written registry entries are bare newables (no call signature, no
 // declared `prototype`), and demanding those members collapses the lookup
 // result to `never` for precisely-typed registries. A call signature is
-// re-added only when the source constructor carries one.
+// re-added only when the source constructor carries one
+// (ReplacedCallSignature).
 export type ReplaceConstructorInstance<
 	C,
 	NewInstance extends object,
@@ -634,19 +635,28 @@ export type ReplaceConstructorInstance<
 		readonly prototype: NewInstance & {
 			readonly constructor: ReplaceConstructorInstance<C, NewInstance, CallConstructs>;
 		};
-	} & (C extends { (...args: infer A2): unknown }
-		? CallConstructs extends true
-			// SubTypeProxy-backed member: the call form constructs the child
-			// from the parent instance (the chain-tip form new R().A()), so
-			// no `this` demand — detached bare calls construct too.
-			? { (...args: A2): ConstructResult<C, NewInstance> }
-			// Raw looked-up constructor: the `this` guard honestly models
-			// .call(childInstance, args); a bare call here is the decorator
-			// path at runtime, not construction.
-			: { (this: NewInstance, ...args: A2): ConstructResult<C, NewInstance> }
-		: unknown)
+	}
+	& ReplacedCallSignature<C, NewInstance, CallConstructs>
 	& Omit<C, 'prototype' | 'lookup'>
 	: never;
+
+// The call signature ReplaceConstructorInstance keeps: none (unknown) when
+// the source constructor has no call signature, otherwise one of two forms.
+export type ReplacedCallSignature<
+	C,
+	NewInstance extends object,
+	CallConstructs extends boolean
+> = C extends { (...args: infer A): unknown }
+	? CallConstructs extends true
+		// SubTypeProxy-backed member: the call form constructs the child
+		// from the parent instance (the chain-tip form new R().A()), so
+		// no `this` demand — detached bare calls construct too.
+		? { (...args: A): ConstructResult<C, NewInstance> }
+		// Raw looked-up constructor: the `this` guard honestly models
+		// .call(childInstance, args); a bare call here is the decorator
+		// path at runtime, not construction.
+		: { (this: NewInstance, ...args: A): ConstructResult<C, NewInstance> }
+	: unknown;
 
 // Instance type produced by a typed lookup: the constructor's own instance
 // shape plus child-constructor properties for every registered subtype.
@@ -851,6 +861,13 @@ export interface AsyncRegistryEntry<
 	registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
 }
 
+// The dotted path of a type named `Name` defined on a holder at `Path`:
+// the bare name on a root holder (`Path = ''`), `${Path}.${Name}` below it.
+// The default of every define()/lazy() overload's ChildPath; resolved at the
+// call site, so consumers see the literal path, never this name.
+export type ChildPathOf<Path extends string, Name extends string> =
+	Path extends '' ? Name : `${Path}.${Name}`;
+
 // Registry holder base - provides the accumulating .define() method.
 // `Parent` tracks the instance type of the last defined constructor, so chained
 // subtypes get the correct merged `Proto<Parent, N>` instance type.
@@ -876,7 +893,7 @@ export interface RegistryHolderBase<
 		N extends object,
 		Args extends unknown[] = unknown[],
 		F extends Proto<Parent, N> = Proto<Parent, N>,
-		ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
+		ChildPath extends string = ChildPathOf<Path, Name>
 	>(
 		this: RegistryHolderBase<T, Parent, Path>,
 		TypeName: Name,
@@ -897,7 +914,7 @@ export interface RegistryHolderBase<
 		N extends object,
 		Args extends unknown[] = unknown[],
 		F extends Proto<Parent, N> = Proto<Parent, N>,
-		ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
+		ChildPath extends string = ChildPathOf<Path, Name>
 	>(
 		this: RegistryHolderBase<T, Parent, Path>,
 		TypeName: Name,
@@ -919,7 +936,7 @@ export interface RegistryHolderBase<
 		N extends object,
 		Args extends unknown[],
 		F extends Proto<Parent, N> = Proto<Parent, N>,
-		ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
+		ChildPath extends string = ChildPathOf<Path, Name>
 	>(
 		this: RegistryHolderBase<T, Parent, Path>,
 		TypeName: Name,
@@ -942,7 +959,7 @@ export interface RegistryHolderBase<
 		N extends object,
 		Args extends unknown[],
 		F extends Proto<Parent, N> = Proto<Parent, N>,
-		ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
+		ChildPath extends string = ChildPathOf<Path, Name>
 	>(
 		this: RegistryHolderBase<T, Parent, Path>,
 		TypeName: Name,

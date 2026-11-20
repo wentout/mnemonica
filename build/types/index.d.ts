@@ -259,13 +259,14 @@ export type ReplaceConstructorInstance<C, NewInstance extends object, CallConstr
     readonly prototype: NewInstance & {
         readonly constructor: ReplaceConstructorInstance<C, NewInstance, CallConstructs>;
     };
-} & (C extends {
-    (...args: infer A2): unknown;
+} & ReplacedCallSignature<C, NewInstance, CallConstructs> & Omit<C, 'prototype' | 'lookup'> : never;
+export type ReplacedCallSignature<C, NewInstance extends object, CallConstructs extends boolean> = C extends {
+    (...args: infer A): unknown;
 } ? CallConstructs extends true ? {
-    (...args: A2): ConstructResult<C, NewInstance>;
+    (...args: A): ConstructResult<C, NewInstance>;
 } : {
-    (this: NewInstance, ...args: A2): ConstructResult<C, NewInstance>;
-} : unknown) & Omit<C, 'prototype' | 'lookup'> : never;
+    (this: NewInstance, ...args: A): ConstructResult<C, NewInstance>;
+} : unknown;
 export type WithSubTypes<Instance extends object, Registry extends object, Path extends string> = Instance & SubTypeConstructors<Registry, Path>;
 export type AugmentedConstructor<Registry extends object, Path extends keyof Registry & string, CallConstructs extends boolean = false> = ReplaceConstructorInstance<Registry[Path], LookedUpInstance<Registry, Path>, CallConstructs>;
 export type LookedUpInstance<Registry extends object, Path extends string> = WithSubTypes<ExtractConstructorInstance<Registry[Path & keyof Registry]>, Registry, Path>;
@@ -315,12 +316,13 @@ export interface AsyncRegistryEntry<F extends object, Path extends string = '', 
     };
     registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
 }
+export type ChildPathOf<Path extends string, Name extends string> = Path extends '' ? Name : `${Path}.${Name}`;
 export interface RegistryHolderBase<T extends object = {}, Parent extends object = object, Path extends string = ''> {
     define<SubType extends object>(this: RegistryHolderBase<T, Parent, Path>, TypeOrTypeName: DefineNewableOrCallable, constructHandlerOrConfig?: IDEF<SubType> | object | boolean | DefineNewableOrCallable, configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean): IDefinitorInstance<SubType>;
-    define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler: (this: N, ...args: Args) => PromiseLike<unknown>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
-    define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler?: IDEF<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
-    lazy<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: () => (this: N, ...args: Args) => PromiseLike<unknown>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
-    lazy<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: LazyDef<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
+    define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler: (this: N, ...args: Args) => PromiseLike<unknown>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
+    define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler?: IDEF<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
+    lazy<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: () => (this: N, ...args: Args) => PromiseLike<unknown>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
+    lazy<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: LazyDef<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
 }
 export interface RegistryHolder<T extends object = {}, Parent extends object = object, Path extends string = ''> extends RegistryHolderBase<T, Parent, Path> {
     lookup: NestedTypeLookup<T, Path>;

@@ -164,11 +164,12 @@ and do not change core's public exports to make a consumer's error go away.
 
 ### Core-side vocabulary rule
 
-The builder public vocabulary is exactly four names, re-exported from
-`src/index.ts` on purpose: `RegistryEntry`, `AsyncRegistryEntry`,
-`LookedUpConstructor`, `LookedUpInstance` (see `src/types/index.ts`). The async
-entry constructs `Promise<F>` while lookups and hooks use the resolved `F`.
-When the builder result types change, those four stay nameable from the entry —
+The builder public vocabulary is re-exported from `src/index.ts` on purpose:
+`RegistryEntry`, `AsyncRegistryEntry`, `LookedUpConstructor`,
+`LookedUpInstance` (see `src/types/index.ts`), the names that stand in for the
+internal registry and lookup machinery. The async entry constructs
+`Promise<F>` while lookups and hooks use the resolved `F`. When the builder
+result types change, these stay nameable from the entry —
 anything else that starts leaking into consumer declaration emit is a design
 bug, not an export to add.
 
@@ -188,6 +189,31 @@ Keep it the first intersection member: TypeScript checks an intersection
 target member by member, and without the mark relating two paths walks
 both subtrees structurally, at a cost exponential in their depth and fan.
 `test-ts/checker-cost.ts` pins both the cost and the rule.
+
+### No unexported names in what consumers expand
+
+A public alias that is conditional (`typedHookOpts`, `WithHookRegister`,
+`FreeLookupResult`) resolves inside a consumer's types, and declaration
+emit then writes out what it resolved to. Keep its branches inline object
+types or public names: a helper the entry does not export, introduced into
+such a branch, makes the consumer's `.d.ts` fail with TS2883. Helpers are
+safe where consumers never expand them: inside `LookedUpConstructor` (a
+non-conditional public name), or as a generic default resolved at the call
+site (`ChildPathOf`).
+
+## Layout of `src/types/index.ts`
+
+One file, in sections marked `// --- <name> ---`, each declaration with its
+comments: handler and callable shapes; errors; constructor shapes; hooks;
+config and runtime internals (`TypeDef`, `CollectionDef`,
+`InstanceCreatorContext`, `Props`, the descriptors); registry and lookup
+(path helpers, `LookedUpConstructor` and its parts, `TypeLookup`,
+`RegistryOf`); builder holders and collections (`RegistryEntry`,
+`RegistryHolderBase`, `IDefinitorInstance`, `TypesCollection`,
+`DecoratedClass`); instance shapes and utils; lineage; the module object.
+A new type goes into its section. Every declaration is exported from this
+file, but only the `export type { … }` list in `src/index.ts` is public:
+`package.json` `exports` allows no deeper import.
 
 ## Typed hooks — Parent threading and lookup inference
 

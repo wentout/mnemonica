@@ -334,13 +334,13 @@ export function lookup(
 }
 
 
-const $run = function <E extends object, T extends object, S extends Proto<E, T>, Args extends unknown[]>(
+// returns the constructed instance as `object`: apply/call/bind name it as
+// their public merged result type
+const $run = function <E extends object, T extends object, Args extends unknown[]>(
 	entity: E,
 	Ctor: CtorParameter<T, Args>,
 	args: unknown[]
-): {
-		[key in keyof S]: S[key]
-	} {
+): object {
 
 	// debugger;
 	// CtorParameter deliberately accepts constructors without a TypeName
@@ -359,10 +359,6 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 		throw new WRONG_MODIFICATION_PATTERN(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
 	}
 	const runResult = new Cstr(...args);
-	// new Cstr returns object here; S is the caller's merged entity/constructor
-	// shape and cannot be recovered by narrowing without changing the public
-	// result type, so the return stays suppressed.
-	// @ts-expect-error -- the merged result shape cannot be recovered by narrowing
 	return runResult;
 };
 
@@ -370,31 +366,30 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 export const apply: ApplyFunction = function <
 	E extends object,
 	T extends object,
-	S extends Proto<E, T>,
 	Args extends unknown[]
 >(
 	entity: E,
 	Ctor: CtorParameter<T, Args>,
 	args: unknown[] = []
 ): InstanceResult<Merge<E, T>> {
-	const runResult = $run<E, T, S, Args>(
+	const runResult = $run<E, T, Args>(
 		entity,
 		Ctor,
 		args
 	);
-	// S extends Proto<E, T>, which is the same merged entity+ctor shape
-	// apply/call/bind promise — the named public result type
+	// the instance constructed from entity by Ctor carries the merged
+	// entity+ctor shape apply/call/bind promise — the named public result type
 	const result = runResult as InstanceResult<Merge<E, T>>;
 	return result;
 };
 
 // TODO: call type .by instance .with arguments
-export const call = function <E extends object, T extends object, S extends Proto<E, T>, Args extends unknown[]>(
+export const call = function <E extends object, T extends object, Args extends unknown[]>(
 	entity: E,
 	Ctor: CtorParameter<T, Args>,
 	...args: NoInfer<Args>
 ): InstanceResult<Merge<E, T>> {
-	const runResult = $run<E, T, S, Args>(
+	const runResult = $run<E, T, Args>(
 		entity,
 		Ctor,
 		args
@@ -405,12 +400,12 @@ export const call = function <E extends object, T extends object, S extends Prot
 };
 
 // TODO: bind type .with instance → (...args)
-export const bind = function <E extends object, T extends object, S extends Proto<E, T>, Args extends unknown[]>(
+export const bind = function <E extends object, T extends object, Args extends unknown[]>(
 	entity: E,
 	Ctor: CtorParameter<T, Args>
 ): (...args: Args) => InstanceResult<Merge<E, T>> {
 	const result = (...args: Args) => {
-		const runResult = $run<E, T, S, Args>(
+		const runResult = $run<E, T, Args>(
 			entity,
 			Ctor,
 			args

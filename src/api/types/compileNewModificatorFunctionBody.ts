@@ -95,6 +95,58 @@ export function classifyConstructHandler (
 	}
 }
 
+// const isClass = ( functionPointer: CallableFunction ) => {
+// 	const value = Function.prototype.toString.call( functionPointer );
+// 	return /^\s*class\s+/.test( value.trim() );
+// };
+
+// accordingly to the gist from here:
+// https://gist.github.com/wentout/ea3afe9c822a6b6ef32f9e4f3e98b1ba
+// a type predicate: the non-writable own prototype it checks is what
+// makes the handler a class, so the class view (construct signature)
+// of that same function value is named by this check, not by a cast
+export const isClass = (fn: ConstructHandler): fn is ConstructHandler & ClassConstructHandler => {
+
+	/*
+	const str = String(fn);
+	const result = str.indexOf('class ') === 0;
+	return result;
+
+
+	// not necessary to check fn for typeof
+	// because of other checks made before
+	// if (typeof fn !== 'function') {
+	// 	return false;
+	// }
+
+	// seemingly
+	// class prototype is always object
+	if (!(fn.prototype instanceof Object)) {
+		return false;
+	}
+	// but only if not augmented
+
+	// class prototype.constructor cannot be re-defined (usually)
+	// but for functions user may re-assign it easily
+	// just assigning the way .prototype = {}
+	// and they 99.9% do this, cause nobody cares
+	// but we are checking if this is class, so it works ...
+	if (fn.prototype.constructor !== fn) {
+		return false;
+	}
+
+	// and the most unknown thing is that,
+	// cause for functions it it writeable )))
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	return Reflect.getOwnPropertyDescriptor(fn, 'prototype')!.writable === false;
+
+	*/
+
+	const protoDesc = Reflect.getOwnPropertyDescriptor(fn, 'prototype');
+	const result = protoDesc !== undefined && protoDesc.writable === false;
+	return result;
+};
+
 const getClassConstructor = (
 	ConstructHandler: ClassConstructHandler,
 	CreationHandler: CreationHandler,
@@ -166,22 +218,20 @@ const getFunctionConstructor = (
 
 type ModificationBody = new (...args: unknown[]) => object;
 
-const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass = false ) {
+const compileNewModificatorFunctionBody = function ( FunctionName: string ) {
 	const outerResult = function (
 		ConstructHandler: ConstructHandler,
 		CreationHandler: CreationHandler,
 		SymbolConstructorName: symbol
 	): () => ModificationBody {
+		// decided once per handler, here, not per construction: the class
+		// view of the handler when isClass() proves it, undefined otherwise
+		const ClassHandler = isClass( ConstructHandler ) ? ConstructHandler : undefined;
 		const innerResult = function (): ModificationBody {
 			let ModificationBody: ModificationBody;
-			if ( asClass ) {
-				// this branch runs only when isClass() verified at define
-				// time that the handler is a class — the cast names the class
-				// view (construct signature) of that same function value
-				// ConstructHandler has no construct signature; the boolean cannot
-				// narrow it without a runtime guard or a changed public signature.
+			if ( ClassHandler !== undefined ) {
 				ModificationBody = getClassConstructor(
-					ConstructHandler as unknown as ClassConstructHandler,
+					ClassHandler,
 					CreationHandler
 				);
 			} else {
