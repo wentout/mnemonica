@@ -15,10 +15,10 @@ const userName = user.name;
 const admin = new user.Admin({ role: 'root' });
 const adminRole = admin.role;
 
-// Two-arg lookup(source, path) across the module boundary: the free lookup
-// infers the registry from the imported builder value.
-const AdminViaTwoArg = lookup(DefaultApp, 'User.Admin');
-const adminViaTwoArgRole = AdminViaTwoArg.prototype.role;
+// The imported builder value's own lookup across the module boundary: the
+// registry travels in its type.
+const AdminViaMethod = DefaultApp.lookup('User.Admin');
+const adminViaMethodRole = AdminViaMethod.prototype.role;
 
 // Relative lookup on a constructor imported from another file.
 const AdminCtor = UserCtor.lookup('Admin');
@@ -41,7 +41,7 @@ const makeAdmin = (data: { name: string; role: string }): AdminShape => {
 console.log(
 	userName,
 	adminRole,
-	adminViaTwoArgRole,
+	adminViaMethodRole,
 	superAdminRole,
 	makeAdmin({ name: 'Bob', role: 'admin' })
 );

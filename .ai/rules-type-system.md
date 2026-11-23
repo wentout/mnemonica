@@ -14,6 +14,13 @@ metadata:
 
 # Mnemonica Type System
 
+## Types describe the runtime
+
+Types describe the runtime; the public runtime interface is never changed
+to make TypeScript infer something. No new call form, argument dispatch or
+overload at runtime for typing's sake. A type limitation is solved in the
+types, or accepted and documented.
+
 ## Type vs Interface Rule
 
 Mnemonica enforces a strict separation:

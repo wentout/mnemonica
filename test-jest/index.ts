@@ -1399,28 +1399,28 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					expect(missingFromDeep).toBeUndefined();
 				});
 
-				it('should resolve two-arg lookup(source, path) same as the method form', () => {
+				it('should resolve lookup.call(type, path) same as the method form', () => {
 					const emMethod = MoreOverTypeDef.lookup('OverMore.EvenMore');
-					const emTwoArg = lookup(MoreOverTypeDef, 'OverMore.EvenMore');
-					expect(emTwoArg).toBe(emMethod);
-					const missing = lookup(MoreOverTypeDef, 'NoSuchType');
+					const emViaCall = lookup.call(MoreOverTypeDef, 'OverMore.EvenMore');
+					expect(emViaCall).toBe(emMethod);
+					const missing = lookup.call(MoreOverTypeDef, 'NoSuchType');
 					expect(missing).toBeUndefined();
 				});
 
-				it('should register types via two-arg define(source, name, handler)', () => {
+				it('should register types via define.call(collection or type, name, handler)', () => {
 					const coll = createTypesCollection();
-					const Root = define(coll, 'JestTwoArgRoot', function (this: { val: number }, data: { val: number }) {
+					const Root = define.call(coll, 'JestTwoArgRoot', function (this: { val: number }, data: { val: number }) {
 						this.val = data.val;
 					});
 					const rootInstance = new Root({ val: 7 });
 					expect(rootInstance.val).toBe(7);
-					const Sub = define(Root, 'JestTwoArgSub', function (this: { val: number; extra: string }) {
+					const Sub = define.call(Root, 'JestTwoArgSub', function (this: { val: number; extra: string }) {
 						this.extra = 'x';
 					});
 					const subInstance = apply(rootInstance, Sub, []);
 					expect(subInstance.val).toBe(7);
 					expect(subInstance.extra).toBe('x');
-					const SubCtor = lookup(Sub, 'JestTwoArgRoot.JestTwoArgSub');
+					const SubCtor = lookup.call(Sub, 'JestTwoArgRoot.JestTwoArgSub');
 					expect(SubCtor).toBeDefined();
 				});
 
@@ -2655,6 +2655,15 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 					// Use a fake constructor that won't be found in the instance's type chain
 					apply(instance, UndefinedSubType, []);
 				}).toThrow(/is not defined as a Type Constructor/);
+			});
+
+			it('should throw for a constructor carrying no TypeName', () => {
+				const { apply, define } = require('../src/index');
+				const PlainCtorRoot = define('PlainCtorRootJest', function () {});
+				const plainCtorRoot = new PlainCtorRoot();
+				expect(() => {
+					apply(plainCtorRoot, class Plain {});
+				}).toThrow(/\[ undefined \] is not defined as a Type Constructor/);
 			});
 
 			it('should cover registerHook', () => {
@@ -4006,16 +4015,17 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				});
 			});
 
-			describe('lazy coverage - explicit-source lazy', () => {
-				it('should reject the unnamed explicit-source form', () => {
+			describe('lazy coverage - lazy.call(collection, …)', () => {
+				it('should reject an unnamed lazy.call(collection, getter)', () => {
 					// the callback is never called at .lazy(), so the name
 					// cannot be derived from its result
-					expect(() => lazy(types, () => {
+					// @ts-expect-error -- a getter in the name position is the misuse under test
+					expect(() => lazy.call(types, () => {
 						return class ExplicitSourceJestType {};
 					})).toThrow(errors.TYPENAME_MUST_BE_A_STRING);
 				});
-				it('should support lazy(source, name, getter) form', () => {
-					const ExplicitSourceNamedJestType = lazy(types, 'ExplicitSourceNamedJestType', () => {
+				it('should support lazy.call(collection, name, getter)', () => {
+					const ExplicitSourceNamedJestType = lazy.call(types, 'ExplicitSourceNamedJestType', () => {
 						return class SomeOtherClassName {};
 					});
 					expect(ExplicitSourceNamedJestType.TypeName).toBe('ExplicitSourceNamedJestType');

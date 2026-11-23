@@ -259,14 +259,14 @@ type ExplicitTwoArgs = Assert<Equal<
 	unknown[]
 >>;
 
-// Explicit-source free define() carries Args into its return and registry.
-const SourceDefine = define(AB, 'CtorArgsSourceDefine', function (this: RequiredShape, data: { name: string }) {
+// A builder value's own define() carries Args into its return and registry.
+const SourceDefine = AB.define('CtorArgsSourceDefine', function (this: RequiredShape, data: { name: string }) {
 	this.name = data.name;
 });
 new SourceDefine({ name: 'source' });
-// @ts-expect-error — explicit-source define requires the declared data
+// @ts-expect-error — the method define requires the declared data
 new SourceDefine();
-// @ts-expect-error — explicit-source define checks the declared data shape
+// @ts-expect-error — the method define checks the declared data shape
 new SourceDefine({ name: 42 });
 type SourceDefineArgs = Assert<Equal<
 	ConstructorParameters<typeof SourceDefine>,
@@ -296,14 +296,14 @@ type FreeLazyArgs = Assert<Equal<
 	[data: { note: string }]
 >>;
 
-// Explicit-source free lazy() captures the same parameter list.
-const SourceLazy = lazy(AB, 'CtorArgsSourceLazy', () => function (this: LazyShape, data: { note: string }) {
+// A builder value's own lazy() captures the same parameter list.
+const SourceLazy = AB.lazy('CtorArgsSourceLazy', () => function (this: LazyShape, data: { note: string }) {
 	this.note = data.note;
 });
 new SourceLazy({ note: 'source-lazy' });
-// @ts-expect-error — explicit-source lazy requires the declared data
+// @ts-expect-error — the method lazy requires the declared data
 new SourceLazy();
-// @ts-expect-error — explicit-source lazy checks the declared data shape
+// @ts-expect-error — the method lazy checks the declared data shape
 new SourceLazy({ note: 42 });
 type SourceLazyArgs = Assert<Equal<
 	ConstructorParameters<typeof SourceLazy>,

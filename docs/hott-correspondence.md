@@ -171,7 +171,7 @@ nothing.
 ## 7. Verification
 
 All witnesses live in `test/hott-laws.js` and run in
-the standard suites (`npm run test:cov`, `npm run test:jest:cov`). A broken
+the Mocha suite (`npm run test:cov`). A broken
 witness is a falsified claim — treat any such failure as a retraction event
 for §3 until the note is updated.
 

@@ -131,10 +131,11 @@ npm version patch   # 1.0.0 → 1.0.1
 ```bash
 npm run verify                               # build + lint:check
 npm run test:cov && npm run test:jest:cov    # both suites, 100% coverage
+npm run test:ts                              # type gates, on the build test:cov made
 npm run lint:md                              # no dead links or broken anchors
 ```
 
-All three must pass before publishing.
+All of them must pass before publishing.
 
 ### 3. Inspect the tarball
 
@@ -143,10 +144,9 @@ npm pack --dry-run
 ```
 
 The tarball must include: `build/`, `module/`, `src/`, `docs/`,
-`README.md`, `FOR_HUMANS.md`, `LICENSE`.
+`README.md`, `FOR_HUMANS.md`, `SKILL.md`, `LICENSE`.
 
 It must **not** include: contributor docs (`AGENTS.md`,
-`CONTRIBUTING.md`, `.ai/`) or the agent usage skill (`SKILL.md`) — those
-live on GitHub only — nor `test/`,
+`CONTRIBUTING.md`, `.ai/`) — those live on GitHub only — nor `test/`,
 `test-jest/`, `test-ts/`, `test_async/`, `reports/`, `.husky/`,
 `node_modules/`.

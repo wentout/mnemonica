@@ -233,11 +233,11 @@ const tests = ( opts ) => {
 			const lookedUpMissing = OverMore.lookup( 'UserTypeConstructor.NoSuchType' );
 			assert.equal( lookedUpMissing, undefined );
 
-			// explicit-source form: lookup(source, path) resolves the same as the method
-			const lookedUpTwoArg = lookup( OverMore, 'EvenMore' );
-			assert.equal( lookedUpTwoArg, lookedUp );
-			const lookedUpTwoArgMissing = lookup( OverMore, 'NoSuchType' );
-			assert.equal( lookedUpTwoArgMissing, undefined );
+			// lookup.call(type, path): `this` is where lookup resolves, the same as the method
+			const lookedUpViaCall = lookup.call( OverMore, 'EvenMore' );
+			assert.equal( lookedUpViaCall, lookedUp );
+			const lookedUpViaCallMissing = lookup.call( OverMore, 'NoSuchType' );
+			assert.equal( lookedUpViaCallMissing, undefined );
 
 			assert.deepEqual( Object.keys( evenMore ), Object.keys( evenMoreFork ) );
 			
@@ -251,12 +251,12 @@ const tests = ( opts ) => {
 			expect(result).equal(undefined);
 		} );
 
-		it( 'define(source, name, handler) registers like the method form', () => {
+		it( 'define.call(collection or type, name, handler) registers like the method form', () => {
 			const coll = mnemonica.createTypesCollection();
-			const Root = mnemonica.define( coll, 'TwoArgRoot', function ( data ) { this.val = data.val; } );
+			const Root = mnemonica.define.call( coll, 'TwoArgRoot', function ( data ) { this.val = data.val; } );
 			const rootInstance = new Root( { val : 42 } );
 			assert.equal( rootInstance.val, 42 );
-			const Sub = mnemonica.define( Root, 'TwoArgSub', function () { this.extra = 'x'; } );
+			const Sub = mnemonica.define.call( Root, 'TwoArgSub', function () { this.extra = 'x'; } );
 			const subInstance = new rootInstance.TwoArgSub();
 			assert.equal( subInstance.val, 42 );
 			assert.equal( subInstance.extra, 'x' );

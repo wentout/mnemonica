@@ -194,9 +194,9 @@ ChainChild.registerHook('postCreation', (opts) => {
 	opts.inheritedInstance.tag;
 });
 
-// free explicit-source lookup resolves the same registry
+// the collection's own lookup resolves the same registry
 
-const FreeLookedChild = lookup(hookCollection, 'HookRoot.HookChild');
+const FreeLookedChild = hookCollection.lookup('HookRoot.HookChild');
 
 FreeLookedChild.registerHook('postCreation', (opts) => {
 	const parentV: number = opts.existentInstance.v;

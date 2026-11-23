@@ -279,11 +279,9 @@ reference.
 // Define nested types
 SomeType.define('SubType', function (opts) {
   this.other = opts.other;
-}, {
-  description: 'SomeSubType Constructor'
 });
 
-// Or using assignment
+// Or using assignment, instead of the define() above
 SomeType.SubType = function (opts) {
   this.other = opts.other;
 };
@@ -316,7 +314,7 @@ Extract all inherited properties into a flat object:
 ```js
 const { utils: { extract } } = require('mnemonica');
 const extracted = extract(subInstance);
-// Result: { data, description, other, some }
+// Result: { data, other, some } — and description, when SubType is made by assignment
 ```
 
 ---
@@ -479,7 +477,7 @@ import {
 } from 'mnemonica';
 ```
 
-Additional types available: `Constructor`, `TypeConstructor`, `TypeConstructorBase`, `Proto`, `ProtoFlat`, `InstanceResult`, `Merge`, `IDefinitorInstance`, `DecoratedClass`, `hooksOpts`, `WithHookRegister`, `HookableConstructor`, `TypesCollection`, `TypeLookup`, `LookupResult`, `RegistryOf`, `MnemonicaModule`, `TypeAbsorber`, and the `TypeRegistry` interface (for augmentation). See [`src/types/index.ts`](./src/types/index.ts) for full definitions.
+Additional types available: `CtorParameter`, `Constructor`, `AnyConstructor`, `TypeConstructor`, `TypeConstructorBase`, `Proto`, `ProtoFlat`, `InstanceResult`, `Merge`, `IDefinitorInstance`, `DecoratedClass`, `hooksOpts`, `deliveredHookOpts`, `WithHookRegister`, `HookableConstructor`, `TypesCollection`, `TypeLookup`, `LookupResult`, `FreeLookupResult`, `RegistryOf`, `RegistryEntry`, `AsyncRegistryEntry`, `LookedUpConstructor`, `LookedUpInstance`, `MnemonicaModule`, `TypeAbsorber`, `CreationError`, `ErrorProps`, and the `TypeRegistry` interface (for augmentation). See [`src/types/index.ts`](./src/types/index.ts) for full definitions.
 
 ### Generic Type Patterns
 
@@ -518,7 +516,7 @@ const AsyncType = define('AsyncType', async function (this: UserData, data: stri
 });
 
 // With explicit unchain option (no return required)
-const AsyncTypeNoReturn = define('AsyncType', async function () {
+const AsyncTypeNoReturn = define('AsyncTypeNoReturn', async function () {
   // No return needed
 }, { unchain: true });
 ```
@@ -725,7 +723,7 @@ For advanced TypeScript usage, the following types are exported from `mnemonica`
 | `TypeConstructor<T>` | Registry-stored constructor type | What an augmented `TypeRegistry` maps paths to |
 | `TypeClass` | Base type constructor | `const MyType: TypeClass = define(...)` |
 | `DecoratedClass<T>` | Decorated class type | `@decorate() class MyClass {}` (see [`docs/decorate.md`](./docs/decorate.md)) |
-| `IDefinitorInstance<N, R, Registry, Path, Parent>` | Constructor with subtypes | Returned by `define()` with `.define()` method; `Parent` types hook callbacks' `existentInstance` |
+| `IDefinitorInstance<N, R, Registry, Path, Parent, Args>` | Constructor with subtypes | Returned by `define()` with `.define()` method; `Parent` types hook callbacks' `existentInstance`, `Args` the construction arguments |
 | `constructorOptions` | Configuration options | `{ strictChain: true, blockErrors: true }` |
 | `hooksTypes` | Hook type literals | `'preCreation' \| 'postCreation' \| 'creationError'` |
 | `hook` | Hook callback type (stored/invoked) | `(opts: deliveredHookOpts) => unknown` — the payload callbacks receive |
@@ -770,7 +768,7 @@ Creates a new **isolated** types collection. Types defined in one collection are
 
 > **Important:** Collections have **no global registry**. Once you create one, you must pass the pointer around yourself. If you lose the reference, the collection and its types are unreachable. This is boilerplate you pay for isolation.
 >
-> Every collection **does** carry a name — for lineage exports (`utils.lineage` reports `type.collection`). Name it explicitly with `createTypesCollection({ name: 'payments' })`; unnamed collections get an automatic unique one (`collection_1`, `collection_2`, … in creation order; the default collection exports as `'defaultTypes'`). `name` is a collection option only — `define('T', fn, { name: 'x' })` is rejected with a readable error.
+> Every collection **does** carry a name — for lineage exports (`utils.lineage` reports `type.collection`). Name it explicitly with `createTypesCollection({ name: 'widgets' })`; unnamed collections get an automatic unique one (`collection_1`, `collection_2`, … in creation order; the default collection exports as `'defaultTypes'`). `name` is a collection option only — `define('T', fn, { name: 'x' })` is rejected with a readable error.
 
 ```js
 const { createTypesCollection } = require('mnemonica');
@@ -791,26 +789,32 @@ const FoundType = myCollection.lookup('MyType');
 interface TypesCollection {
   // Define a new type in this collection
   define: TypeAbsorber;
-  
+
+  // Define a type whose constructor is resolved per construction
+  lazy: LazyAbsorber;
+
+  // Class decorator bound to this collection: .decorate() or .decorate(config)
+  decorate: (config?: constructorOptions) => ClassDecorator;
+
   // Look up a type by its nested path (e.g., 'TypeName.SubType')
   lookup: (path: string) => TypeClass | undefined;
   
   // Register a hook for all types in this collection
-  // (untyped by design: opts fields are object — narrow with instanceof lookup(...))
-  registerHook(hookType: hooksTypes, callback: hook): void;
+  // (opts are split per hookType; instance fields are object — narrow with instanceof lookup(...))
+  registerHook<HT extends hooksTypes>(hookType: HT, callback: typedHook<HT>): void;
   
   // Invoke hooks manually (advanced usage)
-  invokeHook(hookType: hooksTypes, opts: hooksOpts): void;
+  invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
   
   // Register a flow checker that runs after the hook callbacks,
   // receiving their invocation results
-  registerFlowChecker(callback: () => unknown): void;
+  registerFlowChecker(callback: (opts: object) => unknown): void;
   
   // Map of all types defined in this collection
   subtypes: Map<string, TypeClass>;
   
   // Registered hooks for this collection
-  hooks: Record<string, hook[]>;
+  hooks: Record<string, Set<hook>>;
 }
 ```
 
@@ -841,8 +845,7 @@ const FoundType = myCollection.lookup('MyType');
 
 Only known option keys are applied to a collection: unknown keys are
 silently dropped, and a value whose type does not match the option's default
-falls back to that default. Note that `asClass` is a per-`define()` option —
-it is not part of the collection-level defaults and is ignored here.
+falls back to that default.
 
 #### `getProps(instance)` / `setProps(instance, values)`
 
@@ -1034,7 +1037,7 @@ explicit `<T>` cast is required for ordinary use.
 | `utils.extract(instance)` | `Extracted<T>` — plain user-field object |
 | `utils.pick(instance, 'a', 'b')` | `{ a: T['a'], b: T['b'] }` |
 | `utils.clone(instance)` | `T` |
-| `utils.fork(instance)` | `(this: object, ...args: unknown[]) => T` |
+| `utils.fork(instance)` | `ForkInvoker<T>` — `(this: object \| void, ...forkArgs: unknown[]) => T` |
 | `utils.parent(instance, path?)` | `object \| null` (no path); `object \| undefined` (path form) |
 | `utils.sibling(instance)` | `SiblingAccessor` |
 | `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>>` |
@@ -1304,8 +1307,7 @@ define('SomeType', function () {}, {
   blockErrors: true,        // Disallow construction if error in prototype chain
   submitStack: false,       // Collect stack trace as __stack__ property
   unchain: false,            // Ensure await new Constructor() resolves to the instance
-  ModificationConstructor: fn,  // Custom modification constructor
-  asClass: false            // Force class mode (auto-detected by default)
+  ModificationConstructor: fn  // Custom modification constructor
 });
 ```
 
@@ -1317,7 +1319,6 @@ define('SomeType', function () {}, {
 | `blockErrors` | `boolean` | `true` | If `true`, prevents construction when errors exist in the prototype chain. |
 | `submitStack` | `boolean` | `false` | If `true`, collects stack trace and stores as `__stack__` property on instances. |
 | `unchain` | `boolean` | `false` | For async constructors: `false` (default) requires the construction to resolve to its instance; `true` drops the chain on a non-object result — that value is the result. |
-| `asClass` | `boolean` | `auto` | Force class mode detection. Usually auto-detected from constructor syntax. |
 | `ModificationConstructor` | `Function` | - | Custom constructor function for internal instance modification. |
 
 ### What `strictChain` actually guards

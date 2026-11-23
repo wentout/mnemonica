@@ -1294,7 +1294,11 @@ export interface UtilsCollection {
 	clone<T extends object>(instance: T): T;
 	fork<T extends object>(instance: T): ForkInvoker<T>;
 	sibling(instance: object): SiblingAccessor;
-	collectConstructors: (instance: object, flat?: boolean) => (DefineNewableOrCallable | string)[];
+	// the second argument picks the result: the ordered names for true, a
+	// { name : true } lookup object by default
+	collectConstructors(instance: object, asSequence: true): string[];
+	collectConstructors(instance: object, asSequence?: false): Record<string, boolean>;
+	collectConstructors(instance: object, asSequence?: boolean): string[] | Record<string, boolean>;
 	merge<A extends object, B extends object>(
 		a: A,
 		b: B,

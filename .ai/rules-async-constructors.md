@@ -235,7 +235,7 @@ try {
 Mnemonica replaces standard JS `instanceof` with **nominal typing** checked by `getTypeChecker` (`src/api/utils/index.ts`):
 
 ```ts
-// abridged — two defensive guards (typeof, constructor presence) omitted
+// abridged — the defensive guards (non-object, no constructor, null prototype) omitted
 const getTypeChecker = (TypeName: string) => {
 	return (instance: object) => {
 		if (Reflect.getPrototypeOf(instance).constructor.name === 'Promise') {
@@ -247,13 +247,14 @@ const getTypeChecker = (TypeName: string) => {
 };
 ```
 
-`collectConstructors` (`src/utils/collectConstructors.ts`) walks the prototype chain upward, collecting `constructor.name` values into a lookup object like `{ AsyncInitParent: true, AsyncInitChild: true, Mnemonica: true, Object: true }`. It stops at `Mnemonica`.
+`collectConstructors` (`src/utils/collectConstructors.ts`) walks the prototype chain upward, collecting `constructor.name` values into a lookup object like `{ AsyncInitChild: true, AsyncInitParent: true, Mnemonica: true, Mnemosyne: true }`. It stops at `Mnemonica`.
 
-Three places define `Symbol.hasInstance`:
+Four places define `Symbol.hasInstance`:
 
 1. **`TypeDescriptor.prototype`** (`src/api/types/index.ts`) — for `instanceof TypeName` where `TypeName` is what `define()` returned
-2. **`Mnemosyne.prototype`** (`src/api/types/Mnemosyne.ts`) — for `instanceof` checks on the instance itself
+2. **`Mnemonica.prototype`**, made per root inside `Mnemosyne` (`src/api/types/Mnemosyne.ts`) — for `instanceof` checks on the instance itself
 3. **`makeSubTypeProxy`** (`src/api/types/Mnemosyne.ts`) — for subtype access like `parent.SubType()`
+4. **the types collection** (`src/descriptors/types/index.ts`) — for `instance instanceof collection`
 
 ### Impact on Pre-existing Class Hierarchies
 
