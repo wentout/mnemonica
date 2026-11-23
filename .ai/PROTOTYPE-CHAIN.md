@@ -66,13 +66,13 @@ define(TypeName, ctor)  →  new TypeDescriptor()  →  new TypeProxy()
 
 ## Hooks in the pipeline
 
-Hooks are stored per-type and per-collection (`type.hooks.preCreation` etc.); each firing invokes the collection's list first, then the type's, and collects results into `{ type, collection }` `Set`s. Three firing points, all inside `InstanceCreator`:
+Hooks are stored per-type and per-collection (`type.hooks.preCreation` etc., each a `Set`). `preCreation` invokes the collection's hooks first, then the type's; `postCreation` and `creationError` invoke the type's first, then the collection's, and collect the results into `{ type, collection }` `Set`s. Three firing points, all inside `InstanceCreator`:
 
 - **`preCreation`** — fired by `invokePreHooks` before `runBuild`, i.e. *before the memory layer exists*. A throw here aborts construction raw: there is no instance yet to wrap the error into.
 - **`postCreation`** — fired by `invokePostHooks` at the end of `postProcessing`, after the user constructor has run, validation has passed, and `__self__` is set.
 - **`creationError`** — the same `invokePostHooks` code path, selected instead of `postCreation` whenever `inheritedInstance instanceof Error`. It fires on the errored instance (see below); a hook returning `true` suppresses the throw and the errored instance becomes the construction result. It fires **once per failed construction**: `throwModificationError` marks the construction when the post hooks fire, and `postProcessing` skips its own `invokePostHooks` call when the mark is present.
 
-The per-target flow checker lives in `flowCheckers`, a `WeakMap<Hookable, () => unknown>` (the `flowCheckers` export in `src/api/hooks/flowCheckers.ts`) — keyed by the hookable object, so checkers never leak into enumeration.
+The per-target flow checker lives in `flowCheckers`, a `WeakMap<Hookable, FlowChecker>` (the `flowCheckers` export in `src/api/hooks/flowCheckers.ts`) — keyed by the hookable object, so checkers never leak into enumeration.
 
 ## The error path
 
@@ -168,7 +168,7 @@ The Proxy avoids that by doing a live lookup in the type’s `__subtypes__` Map 
 
 The final chain shape is identical for class and function definitions. The difference is only in how `ModificatorType` runs the user constructor:
 
-- **Function:** the wrapper runs `Reflect.construct(ConstructHandler, args, this.constructor)` — the constructor executes with `new.target` set to the per-type `ModificatorType`.
+- **Function:** the wrapper runs `Reflect.construct(ConstructHandler, args, this.constructor)` — the constructor executes with `new.target` set to the per-type `ModificatorType`. A handler that is not newable this way — no own `prototype` (async functions), or a replaced one whose `constructor` is not the handler — runs as `ConstructHandler.call(this, ...args)` instead.
 - **Class:** the generated class `extends ConstructHandler`, calls `super(...)`, then runs the post-construction handler.
 
 In both cases the resulting prototype chain is rewired to `instance → ModificatorType.prototype → memoryLayer → parent`.

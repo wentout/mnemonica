@@ -246,38 +246,36 @@ const bridgedSuperLevel: number = BridgedSuperAdmin.prototype.level;
 // @ts-expect-error — unknown paths are rejected by the bridged registry
 bridgedLookup('User.Nope');
 
-// --- Two-arg lookup(source, path) (proof) ---
-// The free lookup resolves against the registry carried by the source value,
-// so mixing free functions with a builder registry is typed, not a silent
+// --- The builder value's own lookup(path) (proof) ---
+// It resolves against the registry the value carries, typed, not a silent
 // fallback to `TypeClass | undefined`.
 
-const AdminViaTwoArg = lookup(DefaultApp, 'User.Admin');
-const adminViaTwoArgRole: string = AdminViaTwoArg.prototype.role;
+const AdminViaMethod = DefaultApp.lookup('User.Admin');
+const adminViaMethodRole: string = AdminViaMethod.prototype.role;
 
 // @ts-expect-error — the resolved constructor is precise, not TypeClass | undefined
-const adminViaTwoArgNope: unknown = AdminViaTwoArg.prototype.nonexistentProp;
+const adminViaMethodNope: unknown = AdminViaMethod.prototype.nonexistentProp;
 
-// --- Two-arg define(source, name, handler) (proof) ---
-// Semantics follow the source object: a collection source defines a root
-// type, a constructor source defines a subtype — exactly like the method.
+// --- The method define(name, handler) on a collection and on a type (proof) ---
+// A collection defines a root type, a constructor defines a subtype.
 
 const Fresh = createTypesCollection();
-const Widget = define(Fresh, 'Widget', function (this: { w: number }, data: { w: number }) {
+const Widget = Fresh.define('Widget', function (this: { w: number }, data: { w: number }) {
 	this.w = data.w;
 });
 const widget = new Widget({ w: 1 });
 const widgetW: number = widget.w;
 
-const WidgetPart = define(Widget, 'Part', function (this: { w: number; p: string }, data: { p: string }) {
+const WidgetPart = Widget.define('Part', function (this: { w: number; p: string }, data: { p: string }) {
 	this.p = data.p;
 });
-const WidgetPartViaLookup = lookup(WidgetPart, 'Widget.Part');
+const WidgetPartViaLookup = WidgetPart.lookup('Widget.Part');
 const widgetPartP: string = WidgetPartViaLookup.prototype.p;
 
 console.log(
 	bridgedUserName,
 	bridgedSuperLevel,
-	adminViaTwoArgRole,
+	adminViaMethodRole,
 	widgetW,
 	widgetPartP
 );

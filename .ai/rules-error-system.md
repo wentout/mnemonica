@@ -66,13 +66,15 @@ expect(String(error.constructor.name)).toEqual('ALREADY_DECLARED');
 
 | Error | When Thrown |
 |-------|------------|
-| `WRONG_TYPE_DEFINITION` | Invalid type name, non-function handler |
-| `WRONG_INSTANCE_INVOCATION` | extract() on non-object |
-| `WRONG_MODIFICATION_PATTERN` | Bad prototype chain, wrong parent type |
+| `WRONG_TYPE_DEFINITION` | Invalid type name, missing definition, unknown parent in a dotted path, bad `lookup()` path, non-function assigned as a type, non-object prototype |
+| `TYPENAME_MUST_BE_A_STRING` | `define()` with an anonymous function first, `lazy()` without a name |
+| `HANDLER_MUST_BE_A_FUNCTION` | `lazy()` callback is not a function, or returns something that is not one |
+| `WRONG_INSTANCE_INVOCATION` | `extract` / `pick` / `parent` on a non-object, `utils.exception` without `new`, a detached subtype called without `new` |
+| `WRONG_MODIFICATION_PATTERN` | Wrong parent type, broken chain, unsupported handler shape, async constructor that does not resolve to its instance, `apply`/`call`/`bind` of a type unknown to the entity |
 | `ALREADY_DECLARED` | Type name already exists |
-| `WRONG_ARGUMENTS_USED` | Invalid constructor arguments |
+| `WRONG_ARGUMENTS_USED` | `utils.merge` / `utils.parse` / `utils.exception` given the wrong arguments |
 | `WRONG_HOOK_TYPE` | Unknown hook type |
-| `MISSING_HOOK_CALLBACK` | registerHook without callback |
-| `MISSING_CALLBACK_ARGUMENT` | Callback required but missing |
-| `OPTIONS_ERROR` | Invalid config options |
-| `WRONG_STACK_CLEANER` | Invalid stack cleaner regex |
+| `MISSING_HOOK_CALLBACK` | `registerHook` without callback |
+| `MISSING_CALLBACK_ARGUMENT` | `registerFlowChecker` without callback |
+| `OPTIONS_ERROR` | `name` in a type's config (it is a collection option) |
+| `WRONG_STACK_CLEANER` | `defineStackCleaner` given something that is not a `RegExp` |

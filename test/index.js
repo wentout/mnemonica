@@ -957,6 +957,13 @@ describe('Main Test', () => {
 					extract(null);
 				}).to.throw();
 			});
+			it('apply() with a constructor carrying no TypeName throws WRONG_MODIFICATION_PATTERN', () => {
+				const PlainCtorRoot = define('PlainCtorRoot', function () {});
+				const plainCtorRoot = new PlainCtorRoot();
+				expect(() => {
+					apply(plainCtorRoot, class Plain {});
+				}).to.throw(errors.WRONG_MODIFICATION_PATTERN, '[ undefined ] is not defined as a Type Constructor');
+			});
 			try {
 				extract(null);
 			} catch (error) {
@@ -1745,8 +1752,8 @@ describe('Main Test', () => {
 				expect(thrownError.message).to.equal('wrong type definition : definition is not provided');
 			});
 
-			it('should cover explicit-source lazy form', () => {
-				const LazyExplicitSourceTypeResult = lazy(defaultTypes, 'LazyExplicitSourceType', () => {
+			it('should cover lazy.call(collection, …)', () => {
+				const LazyExplicitSourceTypeResult = lazy.call(defaultTypes, 'LazyExplicitSourceType', () => {
 					const result = class LazyExplicitSourceType {};
 					return result;
 				});

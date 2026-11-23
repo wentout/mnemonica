@@ -2,6 +2,7 @@
 
 import { hop } from '../../utils/hop';
 import { ErrorsTypes } from '../../descriptors/errors';
+import type { MnemonicaConstructor } from '../../types';
 
 const { WRONG_MODIFICATION_PATTERN, } = ErrorsTypes;
 /*
@@ -95,6 +96,58 @@ export function classifyConstructHandler (
 	}
 }
 
+// const isClass = ( functionPointer: CallableFunction ) => {
+// 	const value = Function.prototype.toString.call( functionPointer );
+// 	return /^\s*class\s+/.test( value.trim() );
+// };
+
+// accordingly to the gist from here:
+// https://gist.github.com/wentout/ea3afe9c822a6b6ef32f9e4f3e98b1ba
+// a type predicate: the non-writable own prototype it checks is what
+// makes the handler a class, so the class view (construct signature)
+// of that same function value is named by this check, not by a cast
+export const isClass = (fn: ConstructHandler): fn is ConstructHandler & ClassConstructHandler => {
+
+	/*
+	const str = String(fn);
+	const result = str.indexOf('class ') === 0;
+	return result;
+
+
+	// not necessary to check fn for typeof
+	// because of other checks made before
+	// if (typeof fn !== 'function') {
+	// 	return false;
+	// }
+
+	// seemingly
+	// class prototype is always object
+	if (!(fn.prototype instanceof Object)) {
+		return false;
+	}
+	// but only if not augmented
+
+	// class prototype.constructor cannot be re-defined (usually)
+	// but for functions user may re-assign it easily
+	// just assigning the way .prototype = {}
+	// and they 99.9% do this, cause nobody cares
+	// but we are checking if this is class, so it works ...
+	if (fn.prototype.constructor !== fn) {
+		return false;
+	}
+
+	// and the most unknown thing is that,
+	// cause for functions it it writeable )))
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	return Reflect.getOwnPropertyDescriptor(fn, 'prototype')!.writable === false;
+
+	*/
+
+	const protoDesc = Reflect.getOwnPropertyDescriptor(fn, 'prototype');
+	const result = protoDesc !== undefined && protoDesc.writable === false;
+	return result;
+};
+
 const getClassConstructor = (
 	ConstructHandler: ClassConstructHandler,
 	CreationHandler: CreationHandler,
@@ -112,7 +165,10 @@ const getClassConstructor = (
 			return castResult;
 		}
 	};
-	return result;
+	// the class as the pipeline uses it: the SymbolConstructorName mark
+	// it lacks here is attached by the compiler right after
+	const newableResult = result as MnemonicaConstructor;
+	return newableResult;
 };
 
 const getFunctionConstructor = (
@@ -157,46 +213,51 @@ const getFunctionConstructor = (
 		}
 		const result = CreationHandler.call(
 			this,
-			answer 
+			answer
 		);
 		return result;
 	};
-	return funcResult;
+	// the compiled body is invoked with `new` by the pipeline;
+	// a function expression carries no construct signature, so
+	// the `new`-able view of the same value is named here
+	const newableResult = funcResult as FunctionModificationBody;
+	return newableResult;
 };
 
-type ModificationBody = new (...args: unknown[]) => object;
+// the function-branch body: the plain function above, as the pipeline
+// uses it — invoked with `new`, constructing an object
+interface FunctionModificationBody extends MnemonicaConstructor {
+	(this: object, ...args: unknown[]): unknown;
+}
 
-const compileNewModificatorFunctionBody = function ( FunctionName: string, asClass = false ) {
+// what both branches produce and every caller stores: only ever invoked
+// with `new` (a class body cannot be called without it)
+type ModificationBody = MnemonicaConstructor;
+
+const compileNewModificatorFunctionBody = function ( FunctionName: string ) {
 	const outerResult = function (
 		ConstructHandler: ConstructHandler,
 		CreationHandler: CreationHandler,
 		SymbolConstructorName: symbol
 	): () => ModificationBody {
+		// decided once per handler, here, not per construction: the class
+		// view of the handler when isClass() proves it, undefined otherwise
+		const ClassHandler = isClass( ConstructHandler ) ? ConstructHandler : undefined;
 		const innerResult = function (): ModificationBody {
 			let ModificationBody: ModificationBody;
-			if ( asClass ) {
-				// this branch runs only when isClass() verified at define
-				// time that the handler is a class — the cast names the class
-				// view (construct signature) of that same function value
-				// ConstructHandler has no construct signature; the boolean cannot
-				// narrow it without a runtime guard or a changed public signature.
+			if ( ClassHandler !== undefined ) {
 				ModificationBody = getClassConstructor(
-					ConstructHandler as unknown as ClassConstructHandler,
+					ClassHandler,
 					CreationHandler
 				);
 			} else {
 				// const ReNamedConstructHandler = {} as unknown;
 				// ReNamedConstructHandler[FunctionName] = ConstructHandler;
 				// ModificationBody = getFunctionConstructor(ReNamedConstructHandler[FunctionName], CreationHandler);
-				// the compiled body is invoked with `new` by the pipeline;
-				// a function expression carries no construct signature, so
-				// the `new`-able view of the same value is named here
-				// CreationHandler returns unknown; ModificationBody must construct
-				// object, so a direct return annotation cannot replace this cast.
 				ModificationBody = getFunctionConstructor(
 					ConstructHandler,
 					CreationHandler
-				) as unknown as ModificationBody;
+				);
 			}
 			ModificationBody.prototype.constructor = ModificationBody;
 			Object.defineProperty(

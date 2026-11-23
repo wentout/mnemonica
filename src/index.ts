@@ -18,13 +18,8 @@ import type {
 	MnemonicaModule,
 	InstanceResult,
 	Merge,
-	TypeLookup,
-	RegistryHolderBase,
-	RegistryEntry,
 	GlobalRegistry,
-	LookedUpConstructor,
 	FreeLookupResult,
-	WithHookRegister,
 	typedHook,
 	HookableConstructor,
 	DefineNewableOrCallable,
@@ -149,30 +144,6 @@ function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolea
 
 // Define function using TypeAbsorber interface with proper type casting
 export function define <
-	Reg extends object,
-	Parent extends object,
-	Path extends string,
-	const Name extends string,
-	N extends object,
-	Args extends unknown[] = unknown[],
-	F extends Proto<Parent, N> = Proto<Parent, N>,
-	ChildPath extends string = Path extends '' ? Name : `${Path}.${Name}`
->(
-	// explicit-source form: define(source, name, handler, config?)
-	// mirrors RegistryHolderBase.define; semantics follow the source object
-	source: RegistryHolderBase<Reg, Parent, Path>,
-	TypeName: Name,
-	constructHandler?: IDEF<N, Args>,
-	config?: constructorOptions
-): IDefinitorInstance<
-	F,
-	InstanceResult<F>,
-	Reg & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>,
-	ChildPath,
-	Parent,
-	Args
->;
-export function define <
 	T extends object,
 	Args extends unknown[] = unknown[]
 >(
@@ -208,56 +179,28 @@ export function define <
 	constructHandler?: IDEF<T> | DefineNewableOrCallable | object | boolean,
 	config?: constructorOptions,
 ): R;
+// `this` is the collection: defaultTypes for a plain call, the given one for
+// define.call(collection, …); a single function or class names the type
+// itself (TypeName from its own name)
 export function define <T extends object>(
 	this: unknown,
-	TypeNameOrSource?: string | DefineNewableOrCallable | RegistryHolderBase<object, object, string>,
-	constructHandlerOrName?: IDEF<T> | DefineNewableOrCallable | object | boolean | string,
-	configOrHandler?: constructorOptions | IDEF<T> | DefineNewableOrCallable | object | boolean,
+	TypeName?: string | DefineNewableOrCallable,
+	constructHandler?: IDEF<T> | DefineNewableOrCallable | object | boolean,
 	config?: constructorOptions,
 ): IDefinitorInstance<T> {
-
-	// explicit-source form: define(source, name, handler, config?)
-	// the source may be a TypesCollection (object) or a TypeProxy (function),
-	// so detection is: has a callable .define AND the next arg is a string name
-	const sourceCandidate = TypeNameOrSource as { define?: unknown };
-	const mayBeSource = (
-		(typeof TypeNameOrSource === 'object' && TypeNameOrSource !== null) ||
-		typeof TypeNameOrSource === 'function'
-	) && typeof sourceCandidate.define === 'function';
-	if (mayBeSource && typeof constructHandlerOrName === 'string') {
-		// .define was verified callable above; the cast only adds its signature
-		const source = sourceCandidate as { define: TypeAbsorber };
-		// The implementation returns the delegated constructor directly;
-		// caller-specific R views live only on the overloads.
-		const sourceDefineResult = source.define(
-			constructHandlerOrName,
-			configOrHandler as IDEF<T>,
-			config
-		);
-		return sourceDefineResult;
-	}
-
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
 	// The implementation returns the delegated constructor directly.
 	const defineResult = (types as { define: TypeAbsorber })
 		.define(
-			TypeNameOrSource as string,
-			constructHandlerOrName as IDEF<T>,
-			configOrHandler as constructorOptions
+			TypeName as string,
+			constructHandler as IDEF<T>,
+			config
 		);
 	return defineResult;
 }
 
 export function lazy<T extends object, Args extends unknown[] = unknown[]>(
-	// explicit-source form: lazy(source, TypeName, getter, config?)
-	source: RegistryHolderBase<object, object, string>,
-	TypeName: string,
-	getter: LazyDef<T, Args>,
-	config?: constructorOptions
-): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
-export function lazy<T extends object, Args extends unknown[] = unknown[]>(
-	// named form: lazy(TypeName, getter, config?)
 	this: unknown,
 	TypeName: string,
 	getter: LazyDef<T, Args>,
@@ -265,36 +208,17 @@ export function lazy<T extends object, Args extends unknown[] = unknown[]>(
 ): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
 export function lazy(
 	this: unknown,
-	sourceOrTypeName: unknown,
-	TypeNameOrGetter?: unknown,
-	getterOrConfig?: unknown,
-	config?: unknown
+	TypeName: string,
+	getter: unknown,
+	config?: constructorOptions
 ): unknown {
-
-	// explicit-source form: lazy(source, TypeName, getter, config?)
-	// the source may be a TypesCollection (object) or a TypeProxy (function),
-	// so detection is: has a callable .lazy
-	const mayBeSource = (
-		(typeof sourceOrTypeName === 'object' && sourceOrTypeName !== null) ||
-		typeof sourceOrTypeName === 'function'
-	) && typeof (sourceOrTypeName as { lazy?: unknown }).lazy === 'function';
-	if (mayBeSource) {
-		const source = sourceOrTypeName as { lazy: LazyAbsorber };
-		const sourceLazyResult = source.lazy(
-			TypeNameOrGetter as string,
-			getterOrConfig as LazyDef<object>,
-			config as constructorOptions
-		) as unknown;
-		return sourceLazyResult;
-	}
-
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
 	const lazyResult = (types as { lazy: LazyAbsorber })
 		.lazy(
-			sourceOrTypeName as string,
-			TypeNameOrGetter as LazyDef<object>,
-			getterOrConfig as constructorOptions
+			TypeName,
+			getter as LazyDef<object>,
+			config
 		) as unknown;
 	return lazyResult;
 }
@@ -303,66 +227,48 @@ export function lookup<const K extends keyof TypeRegistry>(
 	this: unknown,
 	TypeNestedPath: K
 ): FreeLookupResult<K>;
-export function lookup<Reg extends object, const K extends keyof Reg & string>(
-	// explicit-source form: lookup(source, path)
-	// resolves against the registry carried by a builder/collection value
-	source: { lookup: TypeLookup<Reg> },
-	TypeNestedPath: K
-): WithHookRegister<LookedUpConstructor<Reg, K>>;
 export function lookup(this: unknown, TypeNestedPath: string): TypeClass | undefined;
 export function lookup(
-	source: LookupSource,
-	TypeNestedPath: string
-): TypeClass | undefined;
-export function lookup(
 	this: unknown,
-	sourceOrPath: unknown,
-	TypeNestedPath?: unknown
+	TypeNestedPath: string
 ): unknown {
-
-	// explicit-source form: lookup(source, path)
-	if (typeof sourceOrPath !== 'string' && typeof TypeNestedPath === 'string') {
-		const source = sourceOrPath as LookupSource;
-		const sourceResult = source.lookup(TypeNestedPath);
-		return sourceResult;
-	}
-
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
-	const lookupResult = (types as LookupSource).lookup(sourceOrPath as string);
+	const lookupResult = (types as LookupSource).lookup(TypeNestedPath);
 	return lookupResult;
 }
 
 
-const $run = function <E extends object, T extends object, S extends Proto<E, T>, Args extends unknown[]>(
+// returns the constructed instance as `object`: apply/call/bind name it as
+// their public merged result type
+const $run = function <E extends object, T extends object, Args extends unknown[]>(
 	entity: E,
 	Ctor: CtorParameter<T, Args>,
 	args: unknown[]
-): {
-		[key in keyof S]: S[key]
-	} {
+): object {
 
 	// debugger;
 	// CtorParameter deliberately accepts constructors without a TypeName
-	// declaration; runtime mnemonica constructors carry it. Widening that
-	// public input type would change the API, so this property read stays.
-	// @ts-expect-error -- runtime mnemonica constructors carry TypeName
-	const { TypeName } = Ctor;
+	// declaration; runtime mnemonica constructors carry it. A constructor
+	// without one (a plain class or function) resolves no subtype and
+	// throws the same error below as an unknown TypeName
+	const TypeName: unknown = Reflect.get(
+		Ctor,
+		'TypeName'
+	);
 	// the returned SubTypeProxy is a plain function at runtime — constructable —
 	// so TypeConstructorBase (the named minimal constructor shape) is its
 	// honest static type here
-	const Cstr = prepareSubtypeForConstruction(
-		TypeName,
-		entity
-	) as TypeConstructorBase;
+	const Cstr = typeof TypeName === 'string' ?
+		prepareSubtypeForConstruction(
+			TypeName,
+			entity
+		) as TypeConstructorBase :
+		undefined;
 	if (Cstr === undefined) {
 		throw new WRONG_MODIFICATION_PATTERN(`[ ${TypeName} ] is not defined as a Type Constructor on used instance`);
 	}
 	const runResult = new Cstr(...args);
-	// new Cstr returns object here; S is the caller's merged entity/constructor
-	// shape and cannot be recovered by narrowing without changing the public
-	// result type, so the return stays suppressed.
-	// @ts-expect-error -- the merged result shape cannot be recovered by narrowing
 	return runResult;
 };
 
@@ -370,31 +276,30 @@ const $run = function <E extends object, T extends object, S extends Proto<E, T>
 export const apply: ApplyFunction = function <
 	E extends object,
 	T extends object,
-	S extends Proto<E, T>,
 	Args extends unknown[]
 >(
 	entity: E,
 	Ctor: CtorParameter<T, Args>,
 	args: unknown[] = []
 ): InstanceResult<Merge<E, T>> {
-	const runResult = $run<E, T, S, Args>(
+	const runResult = $run<E, T, Args>(
 		entity,
 		Ctor,
 		args
 	);
-	// S extends Proto<E, T>, which is the same merged entity+ctor shape
-	// apply/call/bind promise — the named public result type
+	// the instance constructed from entity by Ctor carries the merged
+	// entity+ctor shape apply/call/bind promise — the named public result type
 	const result = runResult as InstanceResult<Merge<E, T>>;
 	return result;
 };
 
 // TODO: call type .by instance .with arguments
-export const call = function <E extends object, T extends object, S extends Proto<E, T>, Args extends unknown[]>(
+export const call = function <E extends object, T extends object, Args extends unknown[]>(
 	entity: E,
 	Ctor: CtorParameter<T, Args>,
 	...args: NoInfer<Args>
 ): InstanceResult<Merge<E, T>> {
-	const runResult = $run<E, T, S, Args>(
+	const runResult = $run<E, T, Args>(
 		entity,
 		Ctor,
 		args
@@ -405,12 +310,12 @@ export const call = function <E extends object, T extends object, S extends Prot
 };
 
 // TODO: bind type .with instance → (...args)
-export const bind = function <E extends object, T extends object, S extends Proto<E, T>, Args extends unknown[]>(
+export const bind = function <E extends object, T extends object, Args extends unknown[]>(
 	entity: E,
 	Ctor: CtorParameter<T, Args>
 ): (...args: Args) => InstanceResult<Merge<E, T>> {
 	const result = (...args: Args) => {
-		const runResult = $run<E, T, S, Args>(
+		const runResult = $run<E, T, Args>(
 			entity,
 			Ctor,
 			args

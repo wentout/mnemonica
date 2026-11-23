@@ -22,7 +22,6 @@
  */
 
 import {
-	_Internal_TC_,
 	TypeDescriptorInstance,
 	TypeClass,
 	TypeDef,
@@ -197,10 +196,7 @@ const installLazyDefinition = function (
 			return shimResult;
 		}
 		const { handler } = cell;
-		const modificatorBody = compileNewModificatorFunctionBody(
-			TypeName,
-			cell.asClass
-		);
+		const modificatorBody = compileNewModificatorFunctionBody(TypeName);
 		const wrappedBody = modificatorBody(
 			handler,
 			CreationHandler,
@@ -375,13 +371,22 @@ const typeDescriptorCreator = function (
 
 };
 
-// the creator is only ever invoked with `new` (the createFrom* call sites
-// below); a function expression carries no construct signature, so it is
-// named once as the constructor interface it is used through — the
-// prototype contract is attached immediately below
-// The registered result is a TypeProxy, not the descriptor's declared
-// TypeDescriptorInstance shape.
-const TypeDescriptor = typeDescriptorCreator as _Internal_TC_<TypeDescriptorInstance>;
+// the creator, as it is used: invoked with `new` (the createFrom* call
+// sites below), it returns the TypeProxy it registers in the subtypes map
+// — a Proxy materializing the TypeClass surface dynamically — while its
+// prototype is the descriptor's TypeDescriptorInstance contract
+type TypeDescriptorArgs = Parameters<typeof typeDescriptorCreator>;
+interface TypeDescriptorConstructor extends NewableFunction {
+	new (...args: TypeDescriptorArgs): TypeClass;
+	(this: TypeDescriptorInstance, ...args: TypeDescriptorArgs): ReturnType<typeof typeDescriptorCreator>;
+	readonly prototype: TypeDescriptorInstance;
+}
+
+// the creator is only ever invoked with `new`; a function expression
+// carries no construct signature, so it is named once as the constructor
+// interface it is used through — the prototype contract is attached
+// immediately below
+const TypeDescriptor = typeDescriptorCreator as TypeDescriptorConstructor;
 
 Object.assign(
 	TypeDescriptor.prototype,
@@ -550,8 +555,10 @@ const createFromDirectHandler = function (
 	defineOrigin: TypeAbsorber,
 	target: TypesMap,
 	name: string,
-	handler?: ConstructHandler,
-	config?: constructorOptions,
+	handler: ConstructHandler | undefined,
+	// always an object here: the define() dispatcher replaces a missing
+	// config with {}, the lazy path passes its own
+	config: constructorOptions,
 	lazyGetter?: LazyDef<object>
 ) {
 	// for a lazy type the handler stays the empty shim: the real constructor
@@ -559,10 +566,7 @@ const createFromDirectHandler = function (
 	// installLazyDefinition above and lazyDefinition.ts)
 	handler = handler || function () { };
 	const asClass = isClass(handler);
-	const modificatorBody = compileNewModificatorFunctionBody(
-		name,
-		asClass
-	);
+	const modificatorBody = compileNewModificatorFunctionBody(name);
 
 	const makeConstructHandler = modificatorBody(
 		handler as ConstructHandler,
@@ -576,7 +580,7 @@ const createFromDirectHandler = function (
 		};
 	}
 
-	config!.asClass = asClass;
+	config.asClass = asClass;
 
 	const proto = (
 		hop(
@@ -606,12 +610,7 @@ const createFromDirectHandler = function (
 		proto,
 		config,
 		lazyGetter
-		// new TypeDescriptor() returns the TypeProxy it registers in the
-		// subtypes map — a Proxy materializing the TypeClass surface
-		// dynamically — so the public constructor contract is named here
-		// The declared descriptor result and dynamic proxy surface differ;
-		// changing the producing signature breaks descriptor prototype methods.
-	) as unknown as TypeClass;
+	);
 	return result;
 };
 

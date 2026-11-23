@@ -104,7 +104,7 @@ export interface SiblingAccessor {
 | `utils.extract(instance)` | `Extracted<T>` | Data-only view; methods filtered. |
 | `utils.pick(instance, 'a', 'b')` | `{ a: T['a'], b: T['b'] } & {}` | Literal keys → typed subset. Dynamic `string[]` → `Record<string, unknown>`. |
 | `utils.clone(instance)` | `T` | Same instance type. |
-| `utils.fork(instance)` | `(this: object, ...args: unknown[]) => T` | Returns a fork constructor. |
+| `utils.fork(instance)` | `ForkInvoker<T>` — `(this: object \| void, ...forkArgs: unknown[]) => T` | Returns a fork constructor. |
 | `utils.parent(instance, path?)` | `object \| null` (no path); `object \| undefined` (path: searched, not found) | Structural only; nominal path typing needs `TypeRegistry`. |
 | `utils.sibling(instance)` | `SiblingAccessor` | Look up sibling constructors by string name or property access. |
 | `utils.merge(A, B, ...args)` | `InstanceResult<Merge<B, A>>` | `A` wins; `B` fills non-overlapping keys. |
@@ -183,7 +183,7 @@ const parsed = utils.parse(user);
 const name: string = parsed.name;
 const propsName: string | undefined = parsed.props.name;
 const self: typeof user = parsed.self;
-const parent: object | undefined = parsed.parent;
+const parent: object | null = parsed.parent;
 ```
 
 ---
@@ -253,13 +253,11 @@ const graph = utils.lineage([chunk1, chunk2]);
 `exception` wraps a caught `Error` in an error instance of the instance's own
 type, with a stack traced through the type's construction. It **must be called
 with `new`** — without it, mnemonica throws `WRONG_INSTANCE_INVOCATION`
-(`'exception should be made with new keyword'`). It is also available as an
-instance method:
+(`'exception should be made with new keyword'`):
 
 ```typescript
 try {
 	throw new utils.exception(user, new Error('boom'), 1, 2, 3);
-	// equivalent: throw new user.exception(new Error('boom'), 1, 2, 3);
 } catch (exception) {
 	exception instanceof Error; // true
 	// and instanceof the type of `user`

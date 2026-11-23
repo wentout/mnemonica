@@ -18,22 +18,18 @@ TypeScript, however, cannot see a type graph built by runtime calls. There are
 > `lookup()` typed. Reach for Tactica when you need `@decorate()`, or when a
 > large codebase already uses free `define()` calls everywhere.
 >
-> **The third thing only Tactica solves — async-vs-sync detection.** An async
-> constructor returns a Promise at runtime, but `new` is typed as the finished
-> instance on BOTH builder and free-define paths, and neither TypeScript's
-> checks nor the runtime can see the difference (an async class constructor
-> returning a Promise is invisible to both). Only an AST reader sees it:
-> Tactica detects `async function`/async-class handlers from the source and
-> can type `new` as `Promise<X>` (see [`async-constructors.md`](./async-constructors.md)).
-> Together with `@decorate()` and declaration merging, this is the third
-> capability the builder pattern fundamentally cannot provide.
+> **Async handlers.** An `async function` handler makes `new` a Promise at
+> runtime. Builder lookups and instance-carried subtype constructors type it as
+> one (`AsyncRegistryEntry`), and so do Tactica's registry entries. The
+> constructor value that `define()` itself returns still types `new` as the
+> instance (see [`async-constructors.md`](./async-constructors.md#typescript)).
 
 ---
 
 ## Every `define()` lands in the same collection
 
 All of these call the **same function** and register into the same runtime
-collection (`defaultTypes`, unless you pass another source explicitly):
+collection (`defaultTypes`, unless called on another collection):
 
 ```typescript
 import { mnemonica, define, defaultTypes } from 'mnemonica';
@@ -433,37 +429,37 @@ Caveats:
 
 ---
 
-## Explicit source: `lookup(source, path)` and `define(source, name, handler)`
+## Holding a builder value: use its own methods
 
-The free `lookup()` resolves against the global `TypeRegistry`. The free
-`define()` resolves against the default collection. When you hold a builder
-value and want the free-function style anyway, pass it as the first argument —
-the registry is then inferred from the source, not from the global interface:
+The free `lookup()` resolves against the global `TypeRegistry`; the free
+`define()` and `lazy()` define into their `this` — the default collection for
+a plain call. When you hold a builder value, call its own methods: the
+registry travels in the value's type.
 
 ```typescript
-import { lookup, define, lazy } from 'mnemonica';
-
 // typed from App's registry, never a silent `TypeClass | undefined`
-const Admin = lookup(App, 'User.Admin');
+const Admin = App.lookup('User.Admin');
 
-// same semantics as User.define('Guest', ...) — a subtype of User
-const Guest = define(User, 'Guest', function (this: GuestShape, data: { token: string }) {
+// a subtype of User
+const Guest = User.define('Guest', function (this: GuestShape, data: { token: string }) {
 	this.token = data.token;
 });
 
-// same semantics as collection.define('NewRoot', ...) — a root type
-const NewRoot = define(AppCollection, 'NewRoot', function (this: NewRootShape) { /* ... */ });
+// a root type of the collection
+const NewRoot = AppCollection.define('NewRoot', function (this: NewRootShape) { /* ... */ });
 
-// lazy variants infer the registry from the source as well
-const LazyGuest = lazy(User, 'Guest', () => function (this: GuestShape, data: { token: string }) {
+// a lazy subtype of User
+const LazyGuest = User.lazy('Guest', () => function (this: GuestShape, data: { token: string }) {
 	this.token = data.token;
 });
 ```
 
-Semantics follow the source object: a **collection** source defines a root
-type, a **constructor** source defines a subtype. `lookup(source, path)`
-resolves exactly like `source.lookup(path)` — relative first, root fallback.
-The same source inference applies to `lazy(source, name, getter, config?)`.
+A **collection** defines a root type, a **constructor** defines a subtype;
+`lookup(path)` on a constructor resolves relative first, then from the root.
+At runtime the free functions reach the same place through `this`:
+`define.call(AppCollection, 'NewRoot', handler)` and
+`lookup.call(App, 'User.Admin')` behave like the methods, typed as the free
+functions (the global `TypeRegistry`).
 
 ---
 
@@ -621,7 +617,6 @@ Adding Tactica (or a bridge) to a project that already uses the builder API does
 |---|---|---|
 | `const App = mnemonica.define(...)` | Builder registry | The returned object carries its own type map. |
 | `App.lookup('User')` | Builder registry | `lookup()` is a method on the builder object. |
-| `lookup(App, 'User')` | Builder registry | The source argument carries the registry. |
 | `new user.Admin(...)` | Builder registry | Subtypes are resolved from the instance's inferred chain type. |
 | `define('User', ...)` free import | `TypeRegistry` augmentation | The free export has no local registry, so it relies on the global interface. |
 | `lookup('User')` free import | `TypeRegistry` augmentation | Same as above — populated by Tactica, hand-written, or the `RegistryOf` bridge. |
@@ -693,8 +688,8 @@ The split is a consequence of TypeScript's design, not mnemonica's. You cannot h
 2. Free function calls.
 3. Decorated classes.
 
-So mnemonica exposes the builder API for case 1, the bridge and two-arg
-overloads to connect cases 1 and 2, and the augmented API for cases 2 and 3.
+So mnemonica exposes the builder API for case 1, the bridge to connect
+cases 1 and 2, and the augmented API for cases 2 and 3.
 The runtime is the same everywhere; only the way TypeScript discovers the
 types differs.
 
@@ -783,7 +778,6 @@ regenerate after changing `define()` calls shows up as
 |---|---|---|
 | Get a typed constructor (builder mode) | `const T = App.lookup('T')` | `import { T } from './models/T'` + cast |
 | Get a typed constructor (augmented mode) | `const T = lookup('T')` | `import { T } from './models/T'` + cast |
-| Get a typed constructor from a builder value | `lookup(App, 'T')` | `lookup('T') as any` |
 | Create an instance | `new T({ ... })` | `new T({ ... }) as unknown as TShape` |
 | Chain to a child type | `new instance.Child({ ... })` | `new (instance as any).Child({ ... })` |
 | Type free `lookup()` without tactica | one-line `RegistryOf` bridge | a second registry file kept in sync by hand |
@@ -802,5 +796,5 @@ taken a wrong turn. Stop. Use `lookup`. Trust the registry.
 - **Default:** builder mode — `mnemonica.define(...)` or `createTypesCollection()`, `.lookup()` on the result. No tooling.
 - **Multiple files:** thread the chain through exports; the registry type travels with the value.
 - **Want free `lookup()` typed:** add the one-line `RegistryOf` bridge in a `registry.ts`.
-- **Mixing styles:** `lookup(source, path)` / `define(source, name, handler)` infer the registry from the source value.
+- **Holding a builder value:** call its own methods — `App.lookup(path)`, `User.define(name, handler)`; the registry travels in its type.
 - **Need `@decorate()` typed:** use Tactica — it is the only path, and the reason is a TypeScript limitation, not a missing feature.

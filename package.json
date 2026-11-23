@@ -1,6 +1,6 @@
 {
 	"name": "mnemonica",
-	"version": "1.4.8",
+	"version": "1.4.9",
 	"description": "AI-agent ready instance inheritance system for JavaScript/TypeScript via prototype chains",
 	"type": "commonjs",
 	"main": "./build/index.js",
@@ -62,7 +62,7 @@
 		"lint:fix": "npm run lint:src && npm run lint:test",
 		"pretest": "npm run decorate:ts",
 		"test": "mocha --allow-uncaught --enable-source-maps test/index.js",
-		"test:cov": "npm run build:all && nyc --reporter=text-summary --reporter=lcov mocha --allow-uncaught --enable-source-maps --ui bdd --reporter spec ./test/index.js",
+		"test:cov": "npm run build:all && nyc --check-coverage --statements 100 --branches 100 --functions 100 --lines 100 --reporter=text-summary --reporter=lcov mocha --allow-uncaught --enable-source-maps --ui bdd --reporter spec ./test/index.js",
 		"debug": "npx tsc --pretty --project tsconfig.json && npx mocha --allow-uncaught --enable-source-maps --reporter spec --inspect-brk test/index",
 		"test:jest": "npx jest",
 		"test:async_init": "mocha --allow-uncaught test_async/index.js",

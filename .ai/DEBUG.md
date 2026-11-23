@@ -21,8 +21,8 @@ npm run test:cov
 # Run Jest with verbose output
 npm run test:jest -- --verbose
 
-# Run specific test file
-npx jest test-jest/types.ts --verbose
+# Run specific tests by name (test-jest/index.ts is the only entry)
+npx jest -t 'lazy deferred define semantics' --verbose
 
 # Build and check for TypeScript errors
 npm run build
@@ -34,8 +34,8 @@ npx eslint ./src
 ### Build Output Inspection
 
 When running `npm run build` or `npm run build:all`, **check the beginning of the
-output** for errors and warnings. Build failures (TypeScript compilation errors,
-ESLint issues, etc.) often appear at the start of the output. Do not rely only on
+output** for TypeScript errors (the build does not run ESLint). Build failures
+often appear at the start of the output. Do not rely only on
 the end of the output or `tail` for build status.
 
 For test passing confirmations (e.g., `npm run test:cov`), checking the end of
@@ -141,18 +141,18 @@ console.log(getProps(instance));
 ### Mocha Tests
 
 ```bash
-# Run single test file
-npx mocha test-ts/test-example.js
+# Run specific tests by name (test/index.js is the only entry)
+npx mocha --allow-uncaught test/index.js --grep 'fork on lazy types'
 ```
 
 ### Jest Tests
 
 ```bash
 # Run with debugger
-node --inspect-brk node_modules/.bin/jest --runInBand test-jest/types.ts
+npm run test:jest:debug
 
 # With console output
-npx jest test-jest/types.ts --verbose --no-coverage
+npx jest -t 'lazy deferred define semantics' --verbose --no-coverage
 ```
 
 ---

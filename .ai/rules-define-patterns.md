@@ -148,7 +148,6 @@ Root constructors **may** be exported when tactica has generated standalone inst
 | `blockErrors` | `true` | Block construction if error exists in prototype chain |
 | `submitStack` | `false` | Collect stack trace as `__stack__` property |
 | `unchain` | `false` | `await new Constructor()` must resolve to its instance; `true` drops the chain on a non-object result |
-| `asClass` | auto-detected | Force class mode detection |
 
 ## Instance Method Opt-In
 
@@ -166,7 +165,7 @@ const ChildType = RootType.define('ChildType', function () {}, { strictChain: fa
 
 // This would succeed even if made from wrong parent
 const wrong = new SomeOtherType();
-const child = new ChildType.call(wrong); // chain corruption possible
+const child = ChildType.call(wrong); // child instanceof RootType === false
 ```
 
 **After** (strictChain: true — default, enforced)

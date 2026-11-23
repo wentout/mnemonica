@@ -22,7 +22,7 @@ import type {
 	TypeClass
 } from '../../types';
 
-import compileNewModificatorFunctionBody, { ConstructHandler } from '../types/compileNewModificatorFunctionBody';
+import compileNewModificatorFunctionBody, { isClass } from '../types/compileNewModificatorFunctionBody';
 
 // CreationHandler - handles constructor return values
 // Moved to api/types/index.ts as per refactoring plan
@@ -213,54 +213,9 @@ const findSubTypeFromParent = (instance: parentSub | object | undefined, subType
 	return subtype;
 };
 
-// const isClass = ( functionPointer: CallableFunction ) => {
-// 	const value = Function.prototype.toString.call( functionPointer );
-// 	return /^\s*class\s+/.test( value.trim() );
-// };
-
-// accordingly to the gist from here:
-// https://gist.github.com/wentout/ea3afe9c822a6b6ef32f9e4f3e98b1ba
-const isClass = (fn: ConstructHandler) => {
-
-	/*
-	const str = String(fn);
-	const result = str.indexOf('class ') === 0;
-	return result;
-
-
-	// not necessary to check fn for typeof
-	// because of other checks made before
-	// if (typeof fn !== 'function') {
-	// 	return false;
-	// }
-
-	// seemingly
-	// class prototype is always object
-	if (!(fn.prototype instanceof Object)) {
-		return false;
-	}
-	// but only if not augmented
-
-	// class prototype.constructor cannot be re-defined (usually)
-	// but for functions user may re-assign it easily
-	// just assigning the way .prototype = {}
-	// and they 99.9% do this, cause nobody cares
-	// but we are checking if this is class, so it works ...
-	if (fn.prototype.constructor !== fn) {
-		return false;
-	}
-
-	// and the most unknown thing is that,
-	// cause for functions it it writeable )))
-	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	return Reflect.getOwnPropertyDescriptor(fn, 'prototype')!.writable === false;
-
-	*/
-
-	const protoDesc = Reflect.getOwnPropertyDescriptor(fn, 'prototype');
-	const result = protoDesc !== undefined && protoDesc.writable === false;
-	return result;
-};
+// isClass lives beside the construct-handler shapes it narrows, in
+// compileNewModificatorFunctionBody.ts (the compiler picks the class
+// branch with it); re-exported here as part of TypesUtils
 
 const makeErrorModificatorType = (
 	TypeName: string,
@@ -277,8 +232,7 @@ const makeErrorModificatorType = (
 	);
 
 	const result = modificatorType();
-	const constructorResult = result as MnemonicaConstructor;
-	return constructorResult;
+	return result;
 
 };
 

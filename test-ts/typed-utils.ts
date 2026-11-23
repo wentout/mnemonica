@@ -210,6 +210,24 @@ const parsedParent: object | null = parsed.parent;
 
 const userJson: string = utils.toJSON(user);
 
+// ============================================================
+// utils.collectConstructors
+// ============================================================
+
+// the second argument picks the result: ordered names, or a lookup object
+const constructorNames: string[] = utils.collectConstructors(user, true);
+const constructorsByName: Record<string, boolean> = utils.collectConstructors(user);
+const constructorsByNameExplicit: Record<string, boolean> = utils.collectConstructors(user, false);
+
+// a flag known only at runtime gives either
+const asSequence: boolean = constructorNames.length > 0;
+const constructorsEither: string[] | Record<string, boolean> = utils.collectConstructors(user, asSequence);
+
+// @ts-expect-error - the default result is a lookup object, not a list
+const _notAList: string[] = utils.collectConstructors(user);
+// @ts-expect-error - the flag is a boolean
+const _wrongFlag = utils.collectConstructors(user, 'true');
+
 console.log({
 	extractedName,
 	extractedEmail,
@@ -251,5 +269,10 @@ console.log({
 	parsedPropsName,
 	parsedSelf,
 	parsedParent,
-	userJson
+	userJson,
+	constructorsByName,
+	constructorsByNameExplicit,
+	constructorsEither,
+	_notAList,
+	_wrongFlag
 });

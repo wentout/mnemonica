@@ -178,13 +178,13 @@ const engineer = new alice.Employee({ role: 'Engineer' });
       SuperAdminType
 ```
 
-In mnemonica, you **cannot**:
+In mnemonica:
 
-- Modify a prototype after creation (would corrupt the Trie)
-- Reuse a constructor's `.prototype` object across type definitions (would create parallel paths)
-- Create subtypes from the wrong parent (`strictChain: true` enforces — default)
+- **A subtype cannot be created from the wrong parent** — `strictChain: true` (the default) rejects the construction.
+- **Every construction gets its own prototype level.** `instance.constructor.prototype` is that exact level of the chain: a member added to it is seen by that instance and by everything constructed from it, and by no other instance. Assigning a new object to `instance.constructor.prototype` does not change the existing chain.
+- **One handler may define several types.** The types stay distinct, and so do the levels of their instances; only the handler's own `.prototype` object is shared. A root instance has that object in its chain, so a member added to it later is seen by existing instances too; a subtype gets a copy of its members at construction (see [`docs/prototype-chain.md`](./docs/prototype-chain.md#root-and-subtype-differ-here)).
 
-These restrictions are not arbitrary. They are runtime enforcement of the identity-as-path discipline that HoTT inspired: a path is determined by its endpoints and the specific steps taken, not by arbitrary identifications.
+These rules are not arbitrary. They are runtime enforcement of the identity-as-path discipline that HoTT inspired: a path is determined by its endpoints and the specific steps taken, not by arbitrary identifications.
 
 ---
 
@@ -217,8 +217,9 @@ const ResponseData = PageData.define('ResponseData', function (this: { statusCod
 // Hook: validate at each transition
 defaultTypes.registerHook('preCreation', (hookData) => {
     if (hookData.TypeName === 'PageData') {
-        const path = (hookData.args[0] as { pagePath?: string })?.pagePath;
-        if (!path) throw new Error('PageData requires pagePath');
+        // existentInstance is the parent: the RouteData this page is made from
+        const { pagePath } = hookData.existentInstance as { pagePath?: string };
+        if (!pagePath) throw new Error('PageData requires pagePath');
     }
 });
 
@@ -363,7 +364,7 @@ surrounding toolchain.
 4. [`.ai/PROTOTYPE-CHAIN.md`](https://github.com/wentout/mnemonica/blob/master/.ai/PROTOTYPE-CHAIN.md) — the exact chain shape, the construction pipeline, and how subtype lookup walks it
 5. [`.ai/`](https://github.com/wentout/mnemonica/tree/master/.ai) — the focused `rules-*.md` files (define patterns, type system, hooks, errors, testing, style) and session notes from prior agents
 
-The full TypeScript source is in [`src/`](./src/) (on GitHub; the npm package ships compiled output in `build/` and `module/`).
+The full TypeScript source is in [`src/`](./src/) (shipped in the npm package too, beside the compiled output in `build/` and `module/`).
 
 ---
 

@@ -1,5 +1,4 @@
 import type { InstanceConstructor, MnemonicaConstructor, TypeClass } from '../../types';
-import { ConstructHandler } from '../types/compileNewModificatorFunctionBody';
 export declare const CreationHandler: (this: object & {
     constructor: InstanceConstructor;
 }, constructionAnswer: unknown) => unknown;
@@ -18,7 +17,7 @@ export type parentSub = {
     __parent__: parentSub;
 };
 declare const TypesUtils: {
-    isClass: (fn: ConstructHandler) => boolean;
+    isClass: (fn: import("../types/compileNewModificatorFunctionBody").ConstructHandler) => fn is import("../types/compileNewModificatorFunctionBody").ConstructHandler & import("../types/compileNewModificatorFunctionBody").ClassConstructHandler;
     checkProto: (proto: unknown) => void;
     getTypeChecker: (TypeName: string) => unknown;
     getCachedTypeChecker: (TypeName: string) => unknown;

@@ -214,9 +214,9 @@ For user-facing semantics, see [`README.md`](./README.md) and [`docs/typed-looku
   via declaration merging.
 - Overloads make augmented keys return the typed constructor while
   unaugmented keys fall back to `TypeClass | undefined`.
-- The explicit-source forms `lookup(source, path)` resolve against the
-  registry carried by a builder/collection value instead of the global
-  interface.
+- The free `define`/`lazy`/`lookup` act on their `this`: the default
+  collection for a plain call, the given collection or type for
+  `define.call(collection, …)`. No argument ever overrides `this`.
 - At runtime `lookup()` delegates to `types.lookup()`; type safety is
   compile-time only, so behavior is identical whether or not `TypeRegistry`
   is augmented.
@@ -282,12 +282,11 @@ absolute path from the collection root. Exported builder values carry the
 registry across files (registry threading).
 
 The free `define()`/`lookup()` exports resolve against the global
-`TypeRegistry` (augmentation or bridge). When you hold a builder value, prefer
-the explicit-source forms — `lookup(source, path)` and
-`define(source, name, handler)` — which infer the registry from the source
-instead of falling back to the global interface.
+`TypeRegistry` (augmentation or bridge). When you hold a builder value, call
+its own methods — `App.lookup(path)`, `User.define(name, handler)` — the
+registry travels in its type.
 
-For the full guide — multi-file threading, the bridge, two-arg overloads,
+For the full guide — multi-file threading, the bridge,
 `strictChain` notes, and `@decorate` limitations — see
 [`docs/typed-lookup.md`](./docs/typed-lookup.md).
 
@@ -372,6 +371,8 @@ return result;
 This applies to **all** `return` statements where the expression is anything other than a bare variable or literal. The rule exists because Chrome Dev Tools' debugger cannot show the evaluated result of a complex expression on the `return` line — you must step past it, at which point the frame has already exited.
 
 ## TypeScript Type Rules
+
+**Types describe the runtime; the public runtime interface is never changed to make TypeScript infer something.** No new call form, argument dispatch or overload at runtime for typing's sake — see [`.ai/rules-type-system.md`](./.ai/rules-type-system.md#types-describe-the-runtime).
 
 **Never use bare `Function`, `CallableFunction`, or `NewableFunction` as types** — always define a purpose-specific interface that extends them. See [`.ai/rules-code-style.md`](./.ai/rules-code-style.md) for examples and allowed exceptions.
 

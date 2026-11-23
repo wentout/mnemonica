@@ -27,13 +27,19 @@ Hooks can be registered at two levels:
 MyType.registerHook('postCreation', (opts) => {
 	console.log(`Created ${opts.type.TypeName}`);
 });
+
+// the free form registers on the type as well
+import { registerHook } from 'mnemonica';
+registerHook(MyType, 'preCreation', (opts) => {
+	console.log('About to create instance');
+});
 ```
 
 ### Collection-level
 ```typescript
-import { registerHook } from 'mnemonica';
-registerHook(MyType, 'preCreation', (opts) => {
-	console.log('About to create instance');
+import { defaultTypes } from 'mnemonica';
+defaultTypes.registerHook('preCreation', (opts) => {
+	console.log(`About to create ${opts.TypeName}`);
 });
 ```
 

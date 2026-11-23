@@ -62,8 +62,9 @@ its own instance, and `null` throws exactly like `undefined`
 
 ### TypeScript
 
-A handler returning a Promise is typed as what it is at runtime: `new` gives
-a Promise, and `await` gives the instance.
+A handler returning a Promise is typed as what it is at runtime wherever its
+constructor comes from the registry — `lookup()` on a builder value, or a
+parent instance: `new` gives a Promise, and `await` gives the instance.
 
 ```typescript
 const Sessions = App.lookup('User').define('Session', async function (this: SessionShape, token: string) {
@@ -76,8 +77,10 @@ const session = await pending;           // session.token: string
 ```
 
 The registry entry is an `AsyncRegistryEntry`; lookups, subtypes and hooks
-see the resolved instance. The same holds for a `lazy()` getter returning
-an `async function`. An async *class* (a constructor returning a Promise)
+see the resolved instance. The same holds for a builder `lazy()` getter
+returning an `async function`. The constructor value that `define()` /
+`lazy()` itself returns — free or builder — still types `new` as the
+instance: `await` it all the same, or reach it through `lookup()`. An async *class* (a constructor returning a Promise)
 cannot be written in typed code — TypeScript rejects it (TS2409) — so it
 has no special typing.
 
@@ -125,17 +128,17 @@ This is standard JavaScript behavior, not mnemonica-specific. But it matters bec
 When you pass a class to `define()`, mnemonica detects it via `isClass()` and uses `getClassConstructor()`:
 
 ```typescript
-// src/api/types/compileNewModificatorFunctionBody.ts
-return class extends ConstructHandler {
-	constructor(...args: unknown[]) {
+// src/api/types/compileNewModificatorFunctionBody.ts (abridged)
+const result = class extends ConstructHandler {
+	constructor (...args: unknown[]) {
 		const answer = super(...args);  // ← catches whatever the class returns
-		const result = CreationHandler.call(this, answer);
-		return result as object;
+		const creationResult = CreationHandler.call(this, answer);
+		return creationResult;
 	}
 };
 ```
 
-`ConstructHandler` is your class. `CreationHandler` is mnemonica's internal wiring (hook invocation, prototype setup, `strictChain` validation). If your class returns a Promise, `super(...args)` returns that Promise, and mnemonica's async pipeline (`InstanceCreator.ts` Phase 5) handles the rest.
+`ConstructHandler` is your class. `CreationHandler` passes the constructor's answer through unchanged; hooks, prototype wiring and `strictChain` validation run around this call, in `InstanceCreator`. If your class returns a Promise, `super(...args)` returns that Promise, and mnemonica's async pipeline (`InstanceCreator.ts` Phase 5) handles the rest.
 
 ---
 
@@ -196,7 +199,7 @@ console.log(second instanceof MyAsyncClass);   // true
 console.log(second instanceof MySubAsyncClass); // false ← native subclass lost
 ```
 
-**Why:** `MySubAsyncClass` calls `super()` which returns a `MyAsyncClass` instance. mnemonica's `CreationHandler` then replaces the prototype with `Second.prototype → First.prototype → MyAsyncClass.prototype`. The native `MySubAsyncClass.prototype` is skipped.
+**Why:** a subtype instance's chain goes through its parent instance, so the members of `MySubAsyncClass.prototype` are copied onto the per-construction prototype and the object itself is not in the chain. `MyAsyncClass.prototype` is there because `First` is a root, and a root sits on its handler's own `.prototype` (see [`prototype-chain.md`](./prototype-chain.md#root-and-subtype-differ-here)).
 
 The async construction behavior still works (field propagation, Promise resolution). But `instanceof` follows mnemonica's graph. The native class is the construction vehicle; mnemonica owns the inheritance.
 
