@@ -1817,6 +1817,14 @@ describe('Main Test', () => {
 				expect(LazyWithConfigTypeResult.config.strictChain).to.equal(false);
 			});
 
+			it('should keep the given config object as it is, with the detected class mode on the type', () => {
+				const options = { strictChain : false };
+				const ClassModeConfigType = UserType.define('ClassModeConfigType', class ClassModeConfigType {}, options);
+				expect(options).to.deep.equal({ strictChain : false });
+				expect(ClassModeConfigType.config.asClass).to.equal(true);
+				expect(ClassModeConfigType.config.strictChain).to.equal(false);
+			});
+
 			it('should cover lazy getter returning function with non-object prototype', () => {
 				const NonObjectProtoTypeResult = lazy('NonObjectProtoType', () => {
 					function NonObjectProtoType () {}

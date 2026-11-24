@@ -178,6 +178,7 @@ export const environmentTests = (opts: EnvironmentTestOptions) => {
 				'lazy',
 				'decorate',
 				'registerHook',
+				'unregisterHook',
 				'getProps',
 				'setProps',
 				'isClass',

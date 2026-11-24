@@ -21,6 +21,12 @@ to make TypeScript infer something. No new call form, argument dispatch or
 overload at runtime for typing's sake. A type limitation is solved in the
 types, or accepted and documented.
 
+Runtime comes first: what an argument means is what the runtime does with it
+for a user of the API. Only the names of the user-facing API carry that
+meaning. A parameter name inside `src/` is not a contract: never derive the
+API, its types or its documents from one. For example, the second parameter
+named `constructHandlerOrConfig` is the config when a function comes first.
+
 ## Type vs Interface Rule
 
 Mnemonica enforces a strict separation:
@@ -107,9 +113,17 @@ export type TypeConstructor<ConstructorInstance extends object> = _Internal_TC_<
 
 `_Internal_TC_` carries `Args` through both invocation signatures and the
 recursive `prototype.constructor`. `IDefinitorInstance` takes the same tuple as
-its sixth generic (`N, R, Registry, Path, Parent, Args`), and `RegistryEntry`
-takes it as its fourth (`F, Path, Parent, Args`). Both default to `unknown[]`,
-which is also the signature for `define()` without a handler.
+its sixth generic (`N, R, Registry, Path, Parent, Args, New`), and
+`RegistryEntry` takes it as its fourth (`F, Path, Parent, Args`). Both default
+to `unknown[]`, which is also the signature for `define()` without a handler.
+
+`New` (default `R`) is what `new` gives. The async `define()` / `lazy()`
+overloads, which precede the `IDEF` forms and take an `AsyncIDEF` (an async
+function, or a declared constructor of a Promise), pass `Promise<InstanceResult<F>>`;
+`N` stays the resolved instance, so subtypes and hooks merge over it. A handler
+returning `any` is sync: overload resolution first tries the subtype relation,
+where `any` is not a `PromiseLike`. `apply` / `call` / `bind` have an async
+overload, and `NotAny` keeps an `any` constructor off it.
 
 `RegistryHolderBase.define()` and `.lazy()` pass the inferred tuple into both
 the returned constructor and the stored registry entry. The free forms do the

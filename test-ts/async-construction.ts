@@ -4,7 +4,9 @@
 // instance-carried subtype constructors, while the resolved value remains the
 // instance for inheritance, hooks, lookups, and extracted registry entries.
 
-import { lookup, mnemonica } from '..';
+import {
+	apply, bind, call, createTypesCollection, define, lazy, lookup, mnemonica, registerHook
+} from '..';
 import type { AsyncRegistryEntry, LookedUpInstance, RegistryOf } from '..';
 
 type IsPromise<T> = T extends PromiseLike<unknown> ? true : false;
@@ -154,4 +156,176 @@ export const extractedSerial = readExtracted();
 ExtractedAsync.registerHook('postCreation', (opts) => {
 	const serial: string = opts.inheritedInstance.serial;
 	void serial;
+});
+
+// ---------------------------------------------------------------------------
+// The constructor define() / lazy() returns types `new` the same way: a
+// Promise for an async handler, whichever path defined it.
+
+// what a construction gives: 'ok' is a Promise resolving to the entity's
+// fields merged with the child's, with none of them on the Promise itself
+type Pending<T, Entity extends string, Child extends string> =
+	T extends Promise<infer R>
+		? HasKey<T, Entity> extends true ? 'garbage'
+			: HasKey<R, Entity> extends true
+				? HasKey<R, Child> extends true ? 'ok' : 'noChild'
+				: 'noEntity'
+		: 'notPromise';
+
+const asyncResult = new AsyncSessions('direct');
+export const defineResultIsPromise: IsPromise<typeof asyncResult> = true;
+// @ts-expect-error — the pending Promise has no instance field
+asyncResult.token;
+export const awaitDefineResult = async () => {
+	const session = await new AsyncSessions('direct');
+	const token: string = session.token;
+	return token;
+};
+// @ts-expect-error — the async overload keeps the handler's arguments
+new AsyncSessions(42);
+
+const FreeAsync = define('AsyncTypingFree', async function (this: AsyncSessionShape, token: string) {
+	this.token = token;
+	return this;
+});
+const freeAsync = new FreeAsync('free');
+export const freeIsPromise: IsPromise<typeof freeAsync> = true;
+
+const FreeSingleAsync = define(async function AsyncTypingSingle (this: AsyncSessionShape, token: string) {
+	this.token = token;
+	return this;
+});
+const freeSingleAsync = new FreeSingleAsync('single');
+export const singleIsPromise: IsPromise<typeof freeSingleAsync> = true;
+
+const BuilderSingleAsync = AsyncSessions.define(async function AsyncTypingBuilderSingle (this: AsyncScopeShape, scope: string) {
+	this.scope = scope;
+	return this;
+}, { strictChain : false });
+const builderSingleAsync = new BuilderSingleAsync('single');
+export const builderSingleIsPromise: IsPromise<typeof builderSingleAsync> = true;
+export const awaitBuilderSingle = async () => {
+	const child = await new BuilderSingleAsync('single');
+	const scope: string = child.scope;
+	const token: string = child.token;
+	const result = { scope, token };
+	return result;
+};
+
+const FreeLazyAsync = lazy('AsyncTypingFreeLazy', () => async function (this: AsyncLazyShape, note: string) {
+	this.note = note;
+	return this;
+});
+const freeLazyAsync = new FreeLazyAsync('lazy');
+export const freeLazyIsPromise: IsPromise<typeof freeLazyAsync> = true;
+
+const asyncCollection = createTypesCollection();
+const CollectionAsync = asyncCollection.define('AsyncTypingCollection', async function (this: AsyncSessionShape, token: string) {
+	this.token = token;
+	return this;
+});
+const collectionAsync = new CollectionAsync('collection');
+export const collectionIsPromise: IsPromise<typeof collectionAsync> = true;
+
+// a sync handler stays an instance, whatever it returns
+const SyncFree = define('AsyncTypingSyncFree', function (this: AsyncUserShape, data: { name: string }) {
+	this.name = data.name;
+});
+const syncFree = new SyncFree({ name : 'sync' });
+export const syncIsInstance: IsPromise<typeof syncFree> = false;
+const syncAnyHandler = function (this: AsyncUserShape, data: { name: string }) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const result: any = Object.assign(this, data);
+	return result;
+};
+const AnyReturning = define('AsyncTypingAny', syncAnyHandler);
+const anyReturning = new AnyReturning({ name : 'any' });
+export const anyIsInstance: IsPromise<typeof anyReturning> = false;
+// ... a handler that only throws (its result is never) ...
+const throwing = new (define('AsyncTypingThrow', function () { throw new Error('sync'); }))();
+export const throwIsInstance: IsPromise<typeof throwing> = false;
+const throwingFn = new (define(function AsyncTypingThrowFn () { throw new Error('sync'); }))();
+export const throwFnIsInstance: IsPromise<typeof throwingFn> = false;
+const throwingBuilder = new (asyncCollection.define('AsyncTypingThrowB', function () { throw new Error('sync'); }))();
+export const throwBuilderIsInstance: IsPromise<typeof throwingBuilder> = false;
+const throwingBuilderFn = new (asyncCollection.define(function AsyncTypingThrowBFn () { throw new Error('sync'); }))();
+export const throwBuilderFnIsInstance: IsPromise<typeof throwingBuilderFn> = false;
+// ... and an `any` handler
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const anyHandler: any;
+const anyNamed = new (define('AsyncTypingAnyNamed', anyHandler))();
+export const anyNamedIsInstance: IsPromise<typeof anyNamed> = false;
+const anyFn = new (define(anyHandler))();
+export const anyFnIsInstance: IsPromise<typeof anyFn> = false;
+const anyLazy = new (lazy('AsyncTypingAnyLazy', () => anyHandler))();
+export const anyLazyIsInstance: IsPromise<typeof anyLazy> = false;
+const anyBuilder = new (asyncCollection.define('AsyncTypingAnyBuilder', anyHandler))();
+export const anyBuilderIsInstance: IsPromise<typeof anyBuilder> = false;
+
+// A declared constructor of a Promise is async the same way. (A class that
+// returns one cannot be written: TS2409.)
+declare const PromiseCtor: new (size: number) => Promise<{ size: number }>;
+const CtorFree = new (define('AsyncTypingCtorFree', PromiseCtor))(1);
+export const ctorFreeIsPromise: IsPromise<typeof CtorFree> = true;
+export const ctorFreeHasNoField: HasKey<typeof CtorFree, 'size'> = false;
+export const ctorFreeSize: Promise<number> = CtorFree.then((instance) => instance.size);
+const CtorFn = new (define(PromiseCtor))(1);
+export const ctorFnIsPromise: IsPromise<typeof CtorFn> = true;
+export const ctorFnHasNoField: HasKey<typeof CtorFn, 'size'> = false;
+export const ctorFnSize: Promise<number> = CtorFn.then((instance) => instance.size);
+const CtorLazy = new (lazy('AsyncTypingCtorLazy', () => PromiseCtor))(1);
+export const ctorLazyIsPromise: IsPromise<typeof CtorLazy> = true;
+export const ctorLazyHasNoField: HasKey<typeof CtorLazy, 'size'> = false;
+export const ctorLazySize: Promise<number> = CtorLazy.then((instance) => instance.size);
+const CtorBuilder = asyncCollection.define('AsyncTypingCtor', PromiseCtor);
+const ctorBuilder = new CtorBuilder(1);
+export const ctorBuilderIsPromise: IsPromise<typeof ctorBuilder> = true;
+export const ctorBuilderHasNoField: HasKey<typeof ctorBuilder, 'size'> = false;
+export const ctorBuilderSize: Promise<number> = ctorBuilder.then((instance) => instance.size);
+// @ts-expect-error — the declared arguments stay
+new CtorBuilder('1');
+const CtorKid = CtorBuilder.define('AsyncTypingCtorKid', function (this: AsyncScopeShape) {
+	this.scope = 's';
+});
+const CtorLookedUp = CtorKid.lookup('AsyncTypingCtor');
+export async function ctorSubtype (): Promise<[ number, string, number ]> {
+	const instance = await new CtorLookedUp(1);
+	const kid = new instance.AsyncTypingCtorKid();
+	const result: [ number, string, number ] = [ instance.size, kid.scope, kid.size ];
+	return result;
+}
+
+// subtypes of an async type merge over the resolved instance
+const AsyncChild = AsyncSessions.define('AsyncTypingChild', function (this: AsyncScopeShape, scope: string) {
+	this.scope = scope;
+});
+export const childRegistryKeepsAsync: RegistryOf<typeof AsyncChild> extends {
+	'AsyncTypingUser.AsyncTypingSession': unknown;
+} ? true : false = true;
+
+// apply / call / bind take an async constructor, looked up or defined
+const asyncUserForApply = new AsyncUser({ name : 'Apply' });
+const applied = apply(asyncUserForApply, AsyncSessionCtor, [ 't' ]);
+export const appliedIsPending: Pending<typeof applied, 'name', 'token'> = 'ok';
+const called = call(asyncUserForApply, AsyncSessionCtor, 't');
+export const calledIsPending: Pending<typeof called, 'name', 'token'> = 'ok';
+const bound = bind(asyncUserForApply, AsyncSessionCtor)('t');
+export const boundIsPending: Pending<typeof bound, 'name', 'token'> = 'ok';
+const appliedDefined = apply(asyncUserForApply, AsyncSessions, [ 't' ]);
+export const appliedDefinedIsPending: Pending<typeof appliedDefined, 'name', 'token'> = 'ok';
+const appliedModule = mnemonica.apply(asyncUserForApply, AsyncSessions, [ 't' ]);
+export const appliedModuleIsPending: Pending<typeof appliedModule, 'name', 'token'> = 'ok';
+// @ts-expect-error — apply checks the async constructor's arguments
+apply(asyncUserForApply, AsyncSessions, [ 42 ]);
+const syncApplied = apply(asyncUserForApply, SyncFree, [ { name : 'sync' } ]);
+export const syncAppliedIsInstance: IsPromise<typeof syncApplied> = false;
+
+// hooks see the resolved instance
+registerHook(AsyncSessions, 'postCreation', (opts) => {
+	const token: string = opts.inheritedInstance.token;
+	void token;
+});
+registerHook(AsyncSessionCtor, 'postCreation', (opts) => {
+	const token: string = opts.inheritedInstance.token;
+	void token;
 });

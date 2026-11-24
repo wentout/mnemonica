@@ -5,7 +5,12 @@ export type IDEF<T, Args extends unknown[] = unknown[]> = {
 } | {
     (this: T, ...args: Args): void;
 };
-export type CtorParameter<T, Args extends unknown[] = never[]> = IDEF<T, Args> | {
+export type AsyncIDEF<T, Args extends unknown[] = unknown[]> = {
+    (this: T, ...args: Args): PromiseLike<unknown>;
+} | {
+    new (...args: Args): PromiseLike<T>;
+};
+export type CtorParameter<T, Args extends unknown[] = never[]> = {
     new (...args: Args): T;
 };
 export type LazyDef<T, Args extends unknown[] = unknown[]> = () => IDEF<T, Args>;
@@ -64,6 +69,7 @@ export interface FlowChecker extends CallableFunction {
     (opts: object): unknown;
 }
 export type hooksTypes = 'preCreation' | 'postCreation' | 'creationError';
+export type hookName = hooksTypes | 'pre' | 'post' | 'error';
 export type hooksOpts<P = object, T = P> = {
     TypeName: string;
     type: TypeDef;
@@ -82,7 +88,7 @@ export type deliveredHookOpts<P = object, T = P> = {
     inheritedInstance?: T;
     throwModificationError?: ThrowModificationError;
 };
-export type typedHookOpts<HT extends hooksTypes, P extends object, T extends object> = HT extends 'preCreation' ? {
+export type typedHookOpts<HT extends hookName, P extends object, T extends object> = HT extends 'preCreation' | 'pre' ? {
     TypeName: string;
     type: TypeDef;
     args: unknown[];
@@ -95,16 +101,21 @@ export type typedHookOpts<HT extends hooksTypes, P extends object, T extends obj
     inheritedInstance: T;
     throwModificationError: ThrowModificationError;
 };
-export interface typedHook<HT extends hooksTypes, P extends object = object, T extends object = object> extends CallableFunction {
+export interface typedHook<HT extends hookName, P extends object = object, T extends object = object> extends CallableFunction {
     (opts: typedHookOpts<HT, P, T>): unknown;
 }
-export type HookableConstructor<T extends object> = Constructor<T> & {
-    registerHook(hookType: hooksTypes, cb: AnyHookCallback): void;
+export interface HookMethods<P extends object = object, T extends object = object> {
+    registerHook<HT extends hookName>(hookType: HT, cb: typedHook<HT, P, T>): void;
+    unregisterHook(hookType: hookName, cb: AnyHookCallback): boolean;
+    on<HT extends hookName>(hookType: HT, cb: typedHook<HT, P, T>): void;
+    off(hookType: hookName, cb: AnyHookCallback): boolean;
+}
+export type HookableConstructor<T extends object> = Constructor<T | PromiseLike<T>> & {
+    registerHook(hookType: hookName, cb: AnyHookCallback): void;
 };
-export interface Hookable {
+export interface Hookable extends HookMethods {
     hooks: Record<string, Set<hook>>;
     invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
-    registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT>): void;
     registerFlowChecker(cb: FlowChecker): void;
 }
 export interface AddPropsCallback extends CallableFunction {
@@ -129,7 +140,11 @@ export type constructorOptions = {
     blockErrors?: boolean;
     submitStack?: boolean;
     unchain?: boolean;
-    asClass?: boolean;
+};
+export type DefineConfig = constructorOptions | boolean | ModificationConstructorFactory;
+export type NoHandlerConfig = constructorOptions | boolean;
+export type TypeConfig = constructorOptions & {
+    asClass: boolean;
 };
 export type SubtypesMap = Map<string, TypeClass>;
 export type TypeDef = {
@@ -138,7 +153,7 @@ export type TypeDef = {
     isSubType: boolean;
     subtypes: SubtypesMap;
     collection: CollectionDef;
-    config: constructorOptions;
+    config: TypeConfig;
     parentType?: TypeDef;
     constructHandler: MnemonicaConstructorFactory;
     title: string;
@@ -177,7 +192,7 @@ export interface InstanceCreatorContext {
     ModificatorType: MnemonicaConstructor;
     InstanceModificator: MnemonicaConstructor;
     inheritedInstance: object | Promise<object>;
-    config: constructorOptions;
+    config: TypeConfig;
     proto: object;
     __proto_proto__?: object;
     stack?: string[];
@@ -215,10 +230,10 @@ export interface MnemonicaConstructor extends NewableFunction {
     [key: symbol]: unknown;
 }
 export interface TypeDescriptorDefine extends CallableFunction {
-    (TypeOrTypeName: string | DefineNewableOrCallable, constructHandlerOrConfig?: DefineNewableOrCallable | object, config?: object): TypeClass;
+    (TypeOrTypeName: string | DefineNewableOrCallable, constructHandlerOrConfig?: DefineNewableOrCallable | object | boolean, config?: object | boolean): TypeClass;
 }
 export interface TypeDescriptorLazy extends CallableFunction {
-    (TypeName: string, getter: LazyDef<object>, config?: object): TypeClass;
+    (TypeName: string, getter: LazyDef<object>, config?: object | boolean): TypeClass;
 }
 export interface TypeDescriptorLookup extends CallableFunction {
     (TypeNestedPath: string): TypeClass | undefined;
@@ -226,7 +241,7 @@ export interface TypeDescriptorLookup extends CallableFunction {
 export type TypeDescriptorInstance = {
     define: TypeDescriptorDefine;
     lazy: TypeDescriptorLazy;
-    decorate: (config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
+    decorate: (config?: DefineConfig) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U>;
     lookup: TypeDescriptorLookup;
     subtypes: Map<string, object>;
     TypeName: string;
@@ -280,13 +295,9 @@ export type WithHookRegister<C> = C extends {
     registerHook: AnyHookCallback;
 } ? C : C extends {
     new (...args: never[]): infer R;
-} ? R extends object ? C & {
-    registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, object, R>): void;
-} : C : C extends {
+} ? Awaited<R> extends infer A extends object ? C & HookMethods<object, A> : C : C extends {
     (...args: never[]): infer R;
-} ? R extends object ? C & {
-    registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, object, R>): void;
-} : C : C;
+} ? R extends object ? C & HookMethods<object, R> : C : C;
 export type FreeLookupResult<K extends keyof TypeRegistry> = TypeRegistry[K] extends {
     define: unknown;
 } ? LookedUpConstructor<TypeRegistry, K & string> : WithHookRegister<TypeRegistry[K]>;
@@ -295,7 +306,7 @@ export interface TypeLookup<T extends object = GlobalRegistry> extends CallableF
     <const K extends keyof T & string>(this: unknown, TypeNestedPath: K): LookedUpConstructor<T, K>;
     (this: unknown, TypeNestedPath: string): TypeClass | undefined;
 }
-export type RegistryOf<T> = T extends IDefinitorInstance<object, InstanceResult<object>, infer Registry, string, object, never[]> ? Registry : T extends TypesCollection<infer Registry, object, string> ? Registry : T extends MnemonicaModule<infer Registry> ? Registry : never;
+export type RegistryOf<T> = T extends IDefinitorInstance<object, InstanceResult<object>, infer Registry, string, object, never[], object> ? Registry : T extends TypesCollection<infer Registry, object, string> ? Registry : T extends MnemonicaModule<infer Registry> ? Registry : never;
 export type RelativeKeys<Registry extends object, Path extends string> = Path extends '' ? keyof Registry & string : (keyof Registry extends infer K ? K extends `${Path}.${infer Child}` ? Child : never : never);
 export type NestedTypeLookup<Registry extends object, Path extends string = ''> = (Path extends '' ? {
     <const K extends keyof Registry & string>(this: unknown, TypeNestedPath: K): LookedUpConstructor<Registry, K>;
@@ -304,50 +315,60 @@ export type NestedTypeLookup<Registry extends object, Path extends string = ''> 
 }) & {
     (this: unknown, TypeNestedPath: string): TypeClass | undefined;
 };
-export interface RegistryEntry<F extends object, Path extends string = '', Parent extends object = object, Args extends unknown[] = unknown[]> extends _Internal_TC_<F, Args>, RegistryHolderBase<{}, F, Path> {
-    registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
+export interface RegistryEntry<F extends object, Path extends string = '', Parent extends object = object, Args extends unknown[] = unknown[]> extends _Internal_TC_<F, Args>, RegistryHolderBase<{}, F, Path>, HookMethods<Parent, F> {
 }
-export interface AsyncRegistryEntry<F extends object, Path extends string = '', Parent extends object = object, Args extends unknown[] = unknown[]> extends RegistryHolderBase<{}, F, Path> {
+export interface AsyncRegistryEntry<F extends object, Path extends string = '', Parent extends object = object, Args extends unknown[] = unknown[]> extends RegistryHolderBase<{}, F, Path>, HookMethods<Parent, F> {
     new (...args: Args): Promise<F>;
     (this: F, ...args: Args): Promise<F>;
     readonly prototype: F & {
         readonly constructor: AsyncRegistryEntry<F, Path, Parent, Args>;
     };
-    registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, F>): void;
 }
 export type ChildPathOf<Path extends string, Name extends string> = Path extends '' ? Name : `${Path}.${Name}`;
 export interface RegistryHolderBase<T extends object = {}, Parent extends object = object, Path extends string = ''> {
-    define<SubType extends object>(this: RegistryHolderBase<T, Parent, Path>, TypeOrTypeName: DefineNewableOrCallable, constructHandlerOrConfig?: IDEF<SubType> | object | boolean | DefineNewableOrCallable, configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean): IDefinitorInstance<SubType>;
-    define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler: (this: N, ...args: Args) => PromiseLike<unknown>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
-    define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler?: IDEF<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
-    lazy<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: () => (this: N, ...args: Args) => PromiseLike<unknown>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
-    lazy<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: LazyDef<N, Args>, config?: constructorOptions): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
+    define<N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>>(this: RegistryHolderBase<T, Parent, Path>, constructHandler: (this: N, ...args: Args) => never, config?: DefineConfig): IDefinitorInstance<F, InstanceResult<F>, T, never, Parent, Args>;
+    define<N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>>(this: RegistryHolderBase<T, Parent, Path>, constructHandler: AsyncIDEF<N, Args>, config?: DefineConfig): IDefinitorInstance<F, InstanceResult<F>, T, never, Parent, Args, Promise<InstanceResult<F>>>;
+    define<N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>>(this: RegistryHolderBase<T, Parent, Path>, constructHandler: IDEF<N, Args>, config?: DefineConfig): IDefinitorInstance<F, InstanceResult<F>, T, never, Parent, Args>;
+    define<N extends object, F extends Proto<Parent, N> = Proto<Parent, N>>(this: RegistryHolderBase<T, Parent, Path>, constructHandler: DefineNewableOrCallable, config?: DefineConfig): IDefinitorInstance<F, InstanceResult<F>, T, never, Parent>;
+    define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler: (this: N, ...args: Args) => never, config?: DefineConfig): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
+    define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler: AsyncIDEF<N, Args>, config?: DefineConfig): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args, Promise<InstanceResult<F>>>;
+    define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, constructHandler: IDEF<N, Args> | undefined, config?: DefineConfig): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
+    define<const Name extends string, N extends object, Args extends unknown[] = unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, config?: NoHandlerConfig): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
+    lazy<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: () => (this: N, ...args: Args) => never, config?: DefineConfig): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
+    lazy<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: () => AsyncIDEF<N, Args>, config?: DefineConfig): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, AsyncRegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args, Promise<InstanceResult<F>>>;
+    lazy<const Name extends string, N extends object, Args extends unknown[], F extends Proto<Parent, N> = Proto<Parent, N>, ChildPath extends string = ChildPathOf<Path, Name>>(this: RegistryHolderBase<T, Parent, Path>, TypeName: Name, getter: LazyDef<N, Args>, config?: DefineConfig): IDefinitorInstance<F, InstanceResult<F>, T & Record<ChildPath, RegistryEntry<F, ChildPath, Parent, Args>>, ChildPath, Parent, Args>;
 }
 export interface RegistryHolder<T extends object = {}, Parent extends object = object, Path extends string = ''> extends RegistryHolderBase<T, Parent, Path> {
     lookup: NestedTypeLookup<T, Path>;
 }
-export interface IDefinitorInstance<N extends object, R extends InstanceResult<N> = InstanceResult<N>, Registry extends object = GlobalRegistry, Path extends string = '', Parent extends object = object, Args extends unknown[] = unknown[]> extends RegistryHolderBase<Registry, N, Path> {
+export interface IDefinitorInstance<N extends object, R extends InstanceResult<N> = InstanceResult<N>, Registry extends object = GlobalRegistry, Path extends string = '', Parent extends object = object, Args extends unknown[] = unknown[], New extends object = R> extends RegistryHolderBase<Registry, N, Path>, HookMethods<Parent, N> {
     TypeName: string;
     prototype: N;
-    new (...args: Args): R;
+    new (...args: Args): New;
     (...args: unknown[]): IDefinitorInstance<R>;
     lookup: TypeLookup<Registry>;
-    decorate: (config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, Registry>;
-    registerHook<HT extends hooksTypes>(hookType: HT, cb: typedHook<HT, Parent, N>): void;
+    decorate: (config?: DefineConfig) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, Registry>;
     subtypes: SubtypesMap;
     __type__?: TypeDef;
     collection?: CollectionDef;
 }
 export interface TypeAbsorber extends CallableFunction {
-    <T extends object, Args extends unknown[] = unknown[]>(this: unknown, TypeOrTypeName: string | DefineNewableOrCallable, constructHandlerOrConfig?: IDEF<T, Args> | object | boolean | DefineNewableOrCallable, configOrUndefined?: constructorOptions | DefineNewableOrCallable | boolean): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
+    <T extends object, Args extends unknown[] = unknown[]>(this: unknown, TypeName: string, constructHandler: (this: T, ...args: Args) => never, config?: DefineConfig): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
+    <T extends object, Args extends unknown[] = unknown[]>(this: unknown, TypeName: string, constructHandler: AsyncIDEF<T, Args>, config?: DefineConfig): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args, Promise<InstanceResult<T>>>;
+    <T extends object, Args extends unknown[] = unknown[]>(this: unknown, TypeName: string, constructHandler: IDEF<T, Args> | undefined, config?: DefineConfig): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
+    <T extends object>(this: unknown, TypeName: string, constructHandler: DefineNewableOrCallable, config?: DefineConfig): IDefinitorInstance<T>;
+    <T extends object, Args extends unknown[] = unknown[]>(this: unknown, TypeName: string, config?: NoHandlerConfig): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
+    <T extends object, Args extends unknown[] = unknown[]>(this: unknown, constructHandler: (this: T, ...args: Args) => never, config?: DefineConfig): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
+    <T extends object, Args extends unknown[] = unknown[]>(this: unknown, constructHandler: AsyncIDEF<T, Args>, config?: DefineConfig): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args, Promise<InstanceResult<T>>>;
+    <T extends object, Args extends unknown[] = unknown[]>(this: unknown, constructHandler: IDEF<T, Args>, config?: DefineConfig): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
+    <T extends object>(this: unknown, constructHandler: DefineNewableOrCallable, config?: DefineConfig): IDefinitorInstance<T>;
 }
 export interface LazyAbsorber extends CallableFunction {
-    <T extends object, Args extends unknown[] = unknown[]>(this: unknown, TypeName: string, getter: LazyDef<T, Args>, config?: constructorOptions): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
-    <T extends object, Args extends unknown[] = unknown[]>(this: unknown, source: RegistryHolderBase<object, object, string>, TypeName: string, getter: LazyDef<T, Args>, config?: constructorOptions): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
+    <T extends object, Args extends unknown[] = unknown[]>(this: unknown, TypeName: string, getter: LazyDef<T, Args>, config?: DefineConfig): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
 }
 export interface TypesCollection<T extends object = {}, Parent extends object = object, Path extends string = ''> extends RegistryHolder<T, Parent, Path>, Hookable {
     subtypes: SubtypesMap;
-    decorate(config?: constructorOptions): <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, T & Record<ConstructorName<U>, RegistryEntry<InstanceType<U>, ConstructorName<U>>>>;
+    decorate(config?: DefineConfig): <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, T & Record<ConstructorName<U>, RegistryEntry<InstanceType<U>, ConstructorName<U>>>>;
     [key: string]: unknown;
 }
 export type CreateTypesCollectionFunction = <T extends object = {}, Parent extends object = object>(config?: constructorOptions) => TypesCollection<T, Parent>;
@@ -415,13 +436,17 @@ export type InstanceResult<N extends object> = {
 export type Merge<E extends object, T extends object> = {
     [K in keyof T | keyof E as K extends MnemonicaInstanceMethodKeys ? never : K]: K extends keyof T ? T[K] : E[K & keyof E];
 };
+export type NotAny<C> = 0 extends (1 & C) ? never : unknown;
 export interface ApplyFunction extends CallableFunction {
+    <E extends object, C extends Constructor<PromiseLike<object>>>(entity: E, Constructor: C & NotAny<C>, ...[args]: [] extends ConstructorParameters<C> ? [args?: ConstructorParameters<C>] : [args: ConstructorParameters<C>]): Promise<InstanceResult<Merge<E, Awaited<InstanceType<C>>>>>;
     <E extends object, T extends object, Args extends unknown[]>(entity: E, Constructor: CtorParameter<T, Args>, ...[args]: [] extends Args ? [args?: NoInfer<Args>] : [args: NoInfer<Args>]): InstanceResult<Merge<E, T>>;
 }
 export interface CallFunction extends CallableFunction {
+    <E extends object, C extends Constructor<PromiseLike<object>>>(entity: E, Constructor: C & NotAny<C>, ...args: ConstructorParameters<C>): Promise<InstanceResult<Merge<E, Awaited<InstanceType<C>>>>>;
     <E extends object, T extends object, Args extends unknown[]>(entity: E, Constructor: CtorParameter<T, Args>, ...args: NoInfer<Args>): InstanceResult<Merge<E, T>>;
 }
 export interface BindFunction extends CallableFunction {
+    <E extends object, C extends Constructor<PromiseLike<object>>>(entity: E, Constructor: C & NotAny<C>): (...args: ConstructorParameters<C>) => Promise<InstanceResult<Merge<E, Awaited<InstanceType<C>>>>>;
     <E extends object, T extends object, Args extends unknown[]>(entity: E, Constructor: CtorParameter<T, Args>): (...args: Args) => InstanceResult<Merge<E, T>>;
 }
 export interface UtilsCollection {
@@ -485,8 +510,9 @@ export interface MnemonicaModule<Registry extends object = {}> extends RegistryH
     apply: ApplyFunction;
     call: CallFunction;
     bind: BindFunction;
-    decorate: <T extends Constructor<object> | constructorOptions | undefined = undefined>(target?: T, config?: constructorOptions) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, Registry>;
-    registerHook: <T extends object, HT extends hooksTypes = hooksTypes>(Constructor: IDEF<T>, hookType: HT, cb: typedHook<HT, object, T>) => void;
+    decorate: <T extends Constructor<object> | NoHandlerConfig | undefined = undefined>(target?: T, config?: DefineConfig) => <U extends Constructor<object>>(cstr: U) => DecoratedClass<U, Registry>;
+    registerHook: <T extends object, HT extends hookName = hooksTypes>(Constructor: HookableConstructor<T>, hookType: HT, cb: typedHook<HT, object, T>) => void;
+    unregisterHook: (Constructor: Pick<HookMethods, 'unregisterHook'>, hookType: hookName, cb: AnyHookCallback) => boolean;
     defaultTypes: TypesCollection<Registry>;
     BASE_MNEMONICA_ERROR: MnemonicaErrorConstructor;
     WRONG_TYPE_DEFINITION: MnemonicaErrorConstructor;
@@ -501,6 +527,7 @@ export interface MnemonicaModule<Registry extends object = {}> extends RegistryH
     HANDLER_MUST_BE_A_FUNCTION: MnemonicaErrorConstructor;
     OPTIONS_ERROR: MnemonicaErrorConstructor;
     WRONG_STACK_CLEANER: MnemonicaErrorConstructor;
+    defaultOptions: Required<constructorOptions>;
     MNEMONICA: string;
     MNEMOSYNE: string;
     SymbolParentType: symbol;

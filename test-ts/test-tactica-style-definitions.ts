@@ -23,12 +23,12 @@ User.define('Admin', function (
 
 // --- tactica-generated instance types (normally .tactica/types.ts) -----------
 
-type User = {
+export type User = {
 	name: string;
 	Admin: new (data: { role: string }) => Admin;
 }
 
-type Admin = {
+export type Admin = {
 	role: string;
 } & User;
 

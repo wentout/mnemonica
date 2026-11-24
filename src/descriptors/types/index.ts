@@ -35,6 +35,7 @@ import * as hooksAPI from '../../api/hooks';
 
 const {
 	registerHook,
+	unregisterHook,
 	invokeHook,
 	registerFlowChecker,
 } = hooksAPI;
@@ -216,7 +217,7 @@ odp(
 	{
 		get (this: TypesCollection) {
 			const self = this;
-			const result = function (config?: object) {
+			const result = function (config?: object | boolean) {
 				const decorator = function (cstr: DefineNewable) {
 					const { name } = cstr;
 					const defineResult = self.define(
@@ -258,27 +259,35 @@ odp(
 	}
 );
 
-odp(
-	TypesCollection.prototype,
-	'registerHook',
-	{
-		get (this: TypesCollection) {
+// on / off are the same two functions under short names
+Object.entries({
+	registerHook,
+	on  : registerHook,
+	unregisterHook,
+	off : unregisterHook,
+}).forEach(([ methodName, hookMethod ]) => {
+	odp(
+		TypesCollection.prototype,
+		methodName,
+		{
+			get (this: TypesCollection) {
 
-			const self = this;
-			const result = function (hookName: string, hookCallback: hook) {
-				// return proto.registerHook.call( typesCollections.get( self ), hookName, hookCallback );
-				const hookResult = registerHook.call(
-					self,
-					hookName,
-					hookCallback
-				);
-				return hookResult;
-			}.bind(this);
-			return result;
-		},
-		enumerable : true
-	}
-);
+				const self = this;
+				const result = function (hookName: string, hookCallback: hook) {
+					// return proto.registerHook.call( typesCollections.get( self ), hookName, hookCallback );
+					const hookResult = hookMethod.call(
+						self,
+						hookName,
+						hookCallback
+					);
+					return hookResult;
+				}.bind(this);
+				return result;
+			},
+			enumerable : true
+		}
+	);
+});
 
 odp(
 	TypesCollection.prototype,

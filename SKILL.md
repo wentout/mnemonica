@@ -177,10 +177,10 @@ almost always one of:
 
 | Need | API | Read |
 |---|---|---|
-| Declare / find types | `define`, `lazy`, `lookup`, `createTypesCollection` | [FOR_HUMANS.md](./FOR_HUMANS.md) API reference |
-| Construct on an existing object | `apply`, `call`, `bind` | [FOR_HUMANS.md](./FOR_HUMANS.md) |
-| React to construction | `registerHook(Type, 'preCreation' \| 'postCreation' \| 'creationError', cb)` | [FOR_HUMANS.md](./FOR_HUMANS.md) |
-| Async constructors | `await new Type(…)`, `unchain` | [docs/async-constructors.md](./docs/async-constructors.md) |
+| Declare / find types | `define('Name', handler, config?)`, `define(NamedFnOrClass, config?)`, `define('Name', config?)`; `lazy`, `lookup`, `createTypesCollection`. The config is always last | [FOR_HUMANS.md](./FOR_HUMANS.md) API reference |
+| Construct on an existing mnemonica instance | `apply`, `call`, `bind` — mnemonica constructors only | [FOR_HUMANS.md](./FOR_HUMANS.md) |
+| React to construction | `Type.on('pre' \| 'post' \| 'error', cb)`, `Type.off(…)` — short for `registerHook` / `unregisterHook` with `'preCreation'` / `'postCreation'` / `'creationError'`; the same on collections | [FOR_HUMANS.md](./FOR_HUMANS.md) |
+| Async constructors | `await new Type(…)`, typed as a Promise for an `async function` handler; `unchain` | [docs/async-constructors.md](./docs/async-constructors.md) |
 | Type config | `strictChain`, `blockErrors`, … | [FOR_HUMANS.md](./FOR_HUMANS.md) |
 | Read lineage / data | `getProps`, `utils.extract`, `pick`, `parent`, `fork` | [docs/UTILS.md](./docs/UTILS.md) |
 | What sits under an instance | — | [docs/prototype-chain.md](./docs/prototype-chain.md) |

@@ -24,12 +24,14 @@ const m = mnemonicaModule;
 // the ESM namespace object causes `checkThis()` to return false and then `this ||
 // defaultTypes` picks the namespace object (which has `.define` pointing back).
 export const define = m.define.bind(undefined);
+export const lazy = m.lazy.bind(undefined);
 export const lookup = m.lookup.bind(undefined);
 export const apply = m.apply.bind(undefined);
 export const call = m.call.bind(undefined);
 export const bind = m.bind.bind(undefined);
 export const decorate = m.decorate.bind(undefined);
 export const registerHook = m.registerHook.bind(undefined);
+export const unregisterHook = m.unregisterHook.bind(undefined);
 
 export const mnemonica = m.mnemonica;
 export const utils = m.utils;

@@ -6,7 +6,7 @@
 // works ↓↓↓
 // npx tsc --target es6 --moduleResolution NodeNext --module NodeNext --sourceMap ./test/decorate.ts
 
-import { decorate, apply, TypeConstructor, IDEF } from '..';
+import { decorate, apply, TypeConstructor } from '..';
 import { BaseClass, Strict } from 'typeomatica';
 
 // debugger;
@@ -296,7 +296,7 @@ interface ManualConstructorFn extends CallableFunction {
 	(this: { manual_field: number }): void;
 }
 interface ManualDecoratorFn extends CallableFunction {
-	(cstr: ManualConstructorFn, ctx?: unknown): IDEF<object>;
+	(cstr: ManualConstructorFn, ctx?: unknown): new () => object;
 }
 const ManualDecoratedClass = (decoratorWithConfig as unknown as ManualDecoratorFn)(
 	function ManualDecoratedClass (this: { manual_field: number }) {

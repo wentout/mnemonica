@@ -4,7 +4,10 @@ const { assert, expect } = require( 'chai' );
 
 const {
 	defaultTypes,
-	errors
+	errors,
+	createTypesCollection,
+	registerHook,
+	unregisterHook
 } = require( '..' );
 
 const tests = ( opts ) => {
@@ -172,6 +175,118 @@ const tests = ( opts ) => {
 				expect( error ).instanceOf( errors.MISSING_HOOK_CALLBACK );
 			} );
 		}
+	} );
+
+	// every type lives in its own collection: the counters above count
+	// defaultTypes only
+	describe( 'unregisterHook, on / off and the short hook names', () => {
+
+		const makeType = () => {
+			const collection = createTypesCollection();
+			const Type = collection.define( 'HookOffType', function () {} );
+			const result = { collection, Type };
+			return result;
+		};
+
+		it( 'removes exactly the given callback', () => {
+			const { Type } = makeType();
+			const calls = [];
+			const first = () => { calls.push( 'first' ); };
+			const second = () => { calls.push( 'second' ); };
+			Type.registerHook( 'preCreation', first );
+			Type.registerHook( 'preCreation', second );
+			expect( Type.unregisterHook( 'preCreation', first ) ).to.equal( true );
+			new Type();
+			expect( calls ).to.deep.equal( [ 'second' ] );
+		} );
+
+		it( 'returns false for an unknown callback or an empty hook type', () => {
+			const { Type } = makeType();
+			const cb = () => {};
+			expect( Type.unregisterHook( 'preCreation', cb ) ).to.equal( false );
+			Type.registerHook( 'preCreation', cb );
+			expect( Type.unregisterHook( 'preCreation', () => {} ) ).to.equal( false );
+			expect( Type.unregisterHook( 'postCreation', cb ) ).to.equal( false );
+			expect( Type.unregisterHook( 'preCreation', cb ) ).to.equal( true );
+			expect( Type.unregisterHook( 'preCreation', cb ) ).to.equal( false );
+		} );
+
+		it( 'validates its arguments as registerHook does', () => {
+			const { Type } = makeType();
+			expect( () => Type.unregisterHook( 'WrongHookType', () => {} ) ).to.throw( errors.WRONG_HOOK_TYPE );
+			expect( () => Type.unregisterHook( 'constructor', () => {} ) ).to.throw( errors.WRONG_HOOK_TYPE );
+			expect( () => Type.unregisterHook( 'preCreation' ) ).to.throw( errors.MISSING_HOOK_CALLBACK );
+		} );
+
+		it( 'on / off take the short names, for types, collections and the free form', () => {
+			const { collection, Type } = makeType();
+			const calls = [];
+			const typePre = () => { calls.push( 'type pre' ); };
+			const typePost = () => { calls.push( 'type post' ); };
+			const collectionPre = () => { calls.push( 'collection pre' ); };
+			const freePost = () => { calls.push( 'free post' ); };
+			Type.on( 'pre', typePre );
+			Type.on( 'postCreation', typePost );
+			collection.on( 'pre', collectionPre );
+			registerHook( Type, 'post', freePost );
+			new Type();
+			expect( calls ).to.deep.equal( [ 'collection pre', 'type pre', 'type post', 'free post' ] );
+			calls.length = 0;
+			expect( Type.off( 'preCreation', typePre ) ).to.equal( true );
+			expect( Type.off( 'post', typePost ) ).to.equal( true );
+			expect( collection.off( 'pre', collectionPre ) ).to.equal( true );
+			expect( unregisterHook( Type, 'post', freePost ) ).to.equal( true );
+			new Type();
+			expect( calls ).to.deep.equal( [] );
+		} );
+
+		it( 'the short error name is creationError', () => {
+			const { Type } = makeType();
+			const BadType = Type.define( 'HookOffBadType', function () {
+				throw new Error( 'bad' );
+			} );
+			const caught = [];
+			const onError = ( hookData ) => {
+				caught.push( hookData.inheritedInstance );
+				return true;
+			};
+			BadType.on( 'error', onError );
+			const parent = new Type();
+			const errored = new parent.HookOffBadType();
+			expect( errored ).instanceOf( Error );
+			expect( caught.length ).to.equal( 1 );
+			expect( BadType.off( 'creationError', onError ) ).to.equal( true );
+			expect( () => new ( new Type() ).HookOffBadType() ).to.throw();
+			expect( caught.length ).to.equal( 1 );
+		} );
+
+		it( 'the flow checker stops with the last callback', () => {
+			const { collection, Type } = makeType();
+			const checks = [];
+			collection.registerFlowChecker( ( hookData ) => { checks.push( hookData.hookType ); } );
+			const cb = () => {};
+			collection.on( 'pre', cb );
+			new Type();
+			expect( checks ).to.deep.equal( [ 'preCreation' ] );
+			collection.off( 'pre', cb );
+			new Type();
+			expect( checks ).to.deep.equal( [ 'preCreation' ] );
+		} );
+
+		it( 'a callback may remove itself while running', () => {
+			const { Type } = makeType();
+			const calls = [];
+			const once = () => {
+				calls.push( 'once' );
+				Type.off( 'pre', once );
+			};
+			Type.on( 'pre', once );
+			Type.on( 'pre', () => { calls.push( 'always' ); } );
+			new Type();
+			new Type();
+			expect( calls ).to.deep.equal( [ 'once', 'always', 'always' ] );
+		} );
+
 	} );
 
 };

@@ -43,6 +43,18 @@ defaultTypes.registerHook('preCreation', (opts) => {
 });
 ```
 
+## Removing hooks, short names
+
+`unregisterHook(hookType, cb)` (types, collections and the free
+`unregisterHook(Type, hookType, cb)`) deletes the exact callback and returns
+whether it was registered. `on` / `off` are the same two functions under short
+names, on types and collections. All of them take `pre` / `post` / `error` for
+`preCreation` / `postCreation` / `creationError`; hook payloads and
+`invokeHook` always carry the full name. The names and argument checks live
+once, in `src/api/hooks/hookTypes.ts`. Removing the last callback also drops
+the hook type's entry: `invokeHook` runs the flow checker whenever the entry
+exists.
+
 ## Hook Execution Order
 
 1. Collection `preCreation`
@@ -88,7 +100,10 @@ Implementation vocabulary (all in `src/types/index.ts`):
   `RegistryHolderBase.define()`/`.lazy()` pass their `Parent` through, and the
   modern define overload stores `RegistryEntry<F, ChildPath, Parent>` so
   lookups of chained subtypes keep the parent typing.
-- `RegistryEntry<F, Path, Parent>` — declares the typed `registerHook`;
+- `HookMethods<P, T>` — `registerHook` / `unregisterHook` / `on` / `off`, the
+  one place their signatures live (public, so consumer declarations can name
+  it); `hookName` is the hook types plus their short names.
+- `RegistryEntry<F, Path, Parent>` — extends `HookMethods`, so its hooks are typed;
   preserved through `ReplaceConstructorInstance`'s member preservation, so
   builder-registry lookup results are typed automatically.
 - `WithHookRegister<C>` — wraps free `lookup()` results: bare augmented

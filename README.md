@@ -287,7 +287,7 @@ The full API reference — every signature, config option, hook data shape, the 
 
 | Area | Where |
 |---|---|
-| Core API: `define`, `lazy`, `lookup`, `apply`/`call`/`bind`, `decorate`, `getProps`/`setProps`, `registerHook` | [`FOR_HUMANS.md`](./FOR_HUMANS.md) API reference |
+| Core API: `define`, `lazy`, `lookup`, `apply`/`call`/`bind`, `decorate`, `getProps`/`setProps`, `registerHook`/`unregisterHook` | [`FOR_HUMANS.md`](./FOR_HUMANS.md) API reference |
 | Instance utilities (`utils.extract`, `pick`, `parent`, `fork`, `exception`, …) | [`docs/UTILS.md`](./docs/UTILS.md) |
 | Typed `lookup()`/`define()` — builder, bridge, tactica | [`docs/typed-lookup.md`](./docs/typed-lookup.md) |
 | `@decorate()` class-based definitions | [`docs/decorate.md`](./docs/decorate.md) |

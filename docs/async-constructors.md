@@ -62,8 +62,8 @@ its own instance, and `null` throws exactly like `undefined`
 
 ### TypeScript
 
-A handler returning a Promise is typed as what it is at runtime wherever its
-constructor comes from the registry — `lookup()` on a builder value, or a
+A handler returning a Promise is typed as what it is at runtime, wherever its
+constructor comes from — what `define()` / `lazy()` returns, `lookup()`, or a
 parent instance: `new` gives a Promise, and `await` gives the instance.
 
 ```typescript
@@ -77,12 +77,28 @@ const session = await pending;           // session.token: string
 ```
 
 The registry entry is an `AsyncRegistryEntry`; lookups, subtypes and hooks
-see the resolved instance. The same holds for a builder `lazy()` getter
-returning an `async function`. The constructor value that `define()` /
-`lazy()` itself returns — free or builder — still types `new` as the
-instance: `await` it all the same, or reach it through `lookup()`. An async *class* (a constructor returning a Promise)
-cannot be written in typed code — TypeScript rejects it (TS2409) — so it
-has no special typing.
+see the resolved instance. The same holds for a `lazy()` getter returning an
+`async function`, and `apply` / `call` / `bind` with such a constructor give a
+Promise of the merged instance. `InstanceType<typeof Session>` is that Promise
+too: use `Awaited<InstanceType<typeof Session>>` for the instance. Without an
+explicit type name, `App.define(async function Session () {…})` is typed the same;
+only `lookup('User.Session')` is not, because TypeScript sees the function's
+name as `string`.
+
+An async *class* (a constructor returning a Promise) works at runtime, but
+TypeScript refuses to write one (TS2409), and its type says nothing about the
+Promise: `new` on such a class is typed as the plain instance. Tactica does not
+detect it either: a constructor can return a Promise in ways its syntax does
+not show, such as through a variable or a base class. In TypeScript write an
+`async function`, or declare the class as what it is. Then it is typed like an
+`async function`, subtypes included:
+
+```typescript
+declare const Session: new (token: string) => Promise<{ token: string }>;
+
+const App = mnemonica.define('Session', Session);
+const session = await new App('t');      // session.token: string
+```
 
 ---
 
