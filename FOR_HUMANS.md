@@ -238,11 +238,11 @@ const SomeType = define('SomeType', function (opts) {
   Object.assign(this, opts);
 });
 
-// A named function as the only argument also works —
-// the type name is taken from fn.name
+// A named function or class as the first argument also works —
+// the type name is taken from its .name, and the config comes second
 const AnotherType = define(function AnotherType(opts) {
   Object.assign(this, opts);
-});
+}, { strictChain: false });
 ```
 
 Note what does **not** work: passing an *anonymous* function as the first
@@ -469,7 +469,10 @@ import {
   IDEF,                // Base constructor function type
   LazyDef,             // Zero-arg callback returning a constructor (for lazy())
   constructorOptions,  // Type config options (strictChain, blockErrors, etc.)
+  DefineConfig,        // what define() takes as config: the options, a boolean or a function
   hooksTypes,          // 'preCreation' | 'postCreation' | 'creationError'
+  hookName,            // hooksTypes and the short names 'pre' | 'post' | 'error'
+  HookMethods,         // registerHook / unregisterHook / on / off of a type or collection
   hook,                // Hook callback type (untyped — collection-wide handlers)
   typedHook,           // Hook callback typed by hookType + parent/instance pair
   typedHookOpts,       // Hook options object typed per hookType
@@ -544,7 +547,17 @@ const AsyncTypeNoReturn = define('AsyncTypeNoReturn', async function () {
 
 #### `define(typeName, constructHandler, config?)`
 
-Defines a new type constructor. Returns a TypeClass.
+Defines a new type constructor. Returns a TypeClass. Three forms, the same for
+the free `define`, a collection and a type:
+
+| Form | Type name |
+|---|---|
+| `define(typeName, constructHandler, config?)` | `typeName` |
+| `define(typeName, config?)` | `typeName`, with no handler |
+| `define(constructHandler, config?)` | the function's or class's own `.name` |
+
+The config is always the last argument: nothing after it is read, and
+TypeScript reports it as an error.
 
 ```js
 const MyType = define('MyType', function (data) {
@@ -556,9 +569,9 @@ const MyType = define('MyType', function (data) {
 ```
 
 **Parameters:**
-- `typeName` (string): Name of the type. Must be non-empty, start with an uppercase letter, and must not be one of the reserved names `Mnemonica` or `Mnemosyne`. May be a nested path (`'Parent.Child'`) to define a subtype under an existing type. (Alternatively, pass a *named* function as the only argument — the name is then taken from `fn.name`; an anonymous first-argument function throws `TYPENAME_MUST_BE_A_STRING`.)
-- `constructHandler` (Function): Constructor function
-- `config` (object, optional): Configuration options
+- `typeName` (string): Name of the type. Must be non-empty, start with an uppercase letter, and must not be one of the reserved names `Mnemonica` or `Mnemosyne`. May be a nested path (`'Parent.Child'`) to define a subtype under an existing type. Without it, the first argument is a *named* function or class; an anonymous one throws `TYPENAME_MUST_BE_A_STRING`.
+- `constructHandler` (Function): Constructor function or class
+- `config` (object, boolean or function, optional): [Configuration options](#configuration-options)
 
 #### `lazy(typeName, callback, config?)`
 
@@ -601,7 +614,7 @@ const SubType = MyType.lazy('SubType', () => function (data) {
 **Parameters:**
 - `typeName` (string, required): Name of the type. The unnamed form was removed — the callback is never called at definition time, so there is nothing to derive a name from.
 - `callback` (Function): Zero-arg sync function returning the constructor; called once per construction.
-- `config` (object, optional): Configuration options
+- `config` (object, boolean or function, optional): [Configuration options](#configuration-options)
 
 #### `lookup(typeNestedPath)`
 
@@ -647,7 +660,11 @@ Then include the generated types in your project. See [`docs/typed-lookup.md`](.
 
 #### `apply(entity, Constructor, args?)`
 
-Applies a constructor to an entity with an array of arguments.
+Applies a constructor to an entity with an array of arguments. Here, and in
+`call` and `bind`, the constructor is what `define()`, `lookup()` or
+`@decorate()` gives, and the entity is a mnemonica instance: a plain object,
+class or function in their place throws `WRONG_MODIFICATION_PATTERN`. A plain
+function as the constructor is also a compile error.
 
 ```js
 const { apply } = require('mnemonica');
@@ -710,6 +727,20 @@ registerHook(MyType, 'postCreation', (opts) => {
 });
 ```
 
+#### `unregisterHook(Constructor, hookType, callback)`
+
+Removes exactly the given callback, matched by reference, and returns whether
+it was registered:
+
+```js
+const { registerHook, unregisterHook } = require('mnemonica');
+
+const onCreated = (hookData) => { /* … */ };
+registerHook(MyType, 'postCreation', onCreated);
+unregisterHook(MyType, 'postCreation', onCreated); // true
+unregisterHook(MyType, 'postCreation', onCreated); // false
+```
+
 ---
 
 ### Type Reference
@@ -723,9 +754,11 @@ For advanced TypeScript usage, the following types are exported from `mnemonica`
 | `TypeConstructor<T>` | Registry-stored constructor type | What an augmented `TypeRegistry` maps paths to |
 | `TypeClass` | Base type constructor | `const MyType: TypeClass = define(...)` |
 | `DecoratedClass<T>` | Decorated class type | `@decorate() class MyClass {}` (see [`docs/decorate.md`](./docs/decorate.md)) |
-| `IDefinitorInstance<N, R, Registry, Path, Parent, Args>` | Constructor with subtypes | Returned by `define()` with `.define()` method; `Parent` types hook callbacks' `existentInstance`, `Args` the construction arguments |
+| `IDefinitorInstance<N, R, Registry, Path, Parent, Args, New>` | Constructor with subtypes | Returned by `define()` with `.define()` method; `Parent` types hook callbacks' `existentInstance`, `Args` the construction arguments, `New` what `new` gives (the instance, or its Promise for an async handler) |
 | `constructorOptions` | Configuration options | `{ strictChain: true, blockErrors: true }` |
 | `hooksTypes` | Hook type literals | `'preCreation' \| 'postCreation' \| 'creationError'` |
+| `hookName` | Hook types and their short names | `hooksTypes \| 'pre' \| 'post' \| 'error'` |
+| `HookMethods<P, T>` | Registering methods of a type or collection | `registerHook` / `unregisterHook` / `on` / `off` |
 | `hook` | Hook callback type (stored/invoked) | `(opts: deliveredHookOpts) => unknown` — the payload callbacks receive |
 | `hooksOpts` | Hook options object (invokeHook input) | Carries `creator`; HookInvocation converts it to the delivered payload |
 | `deliveredHookOpts` | Delivered hook payload | What `HookInvocation.build()` hands to callbacks; NOT split per hook — `inheritedInstance` and `throwModificationError` are both optional (a manual `invokeHook` may deliver a partial payload) |
@@ -801,7 +834,12 @@ interface TypesCollection {
   
   // Register a hook for all types in this collection
   // (opts are split per hookType; instance fields are object — narrow with instanceof lookup(...))
-  registerHook<HT extends hooksTypes>(hookType: HT, callback: typedHook<HT>): void;
+  registerHook<HT extends hookName>(hookType: HT, callback: typedHook<HT>): void;
+  on<HT extends hookName>(hookType: HT, callback: typedHook<HT>): void;   // the same function
+
+  // Remove a callback; true when it was registered
+  unregisterHook(hookType: hookName, callback: AnyHookCallback): boolean;
+  off(hookType: hookName, callback: AnyHookCallback): boolean;            // the same function
   
   // Invoke hooks manually (advanced usage)
   invokeHook(hookType: hooksTypes, opts: hooksOpts): Set<unknown>;
@@ -1130,6 +1168,23 @@ defaultTypes.registerHook('postCreation', (hookData) => {
 });
 ```
 
+#### `unregisterHook(hookType, callback)`, `on` and `off`
+
+On types and on collections. `unregisterHook` removes exactly the given
+callback, by reference, and returns whether it was registered. `on` and `off`
+are `registerHook` and `unregisterHook` under short names. All four take the
+full hook names or the short ones: `pre` (`preCreation`), `post`
+(`postCreation`) and `error` (`creationError`). A callback may remove itself
+while it runs.
+
+```js
+const logCreated = (hookData) => {
+  console.log('Created:', hookData.inheritedInstance.constructor.name);
+};
+MyType.on('post', logCreated);
+MyType.off('post', logCreated); // true
+```
+
 #### `collection.registerFlowChecker(callback)`
 
 Register a flow checker that runs after the hook callbacks of one
@@ -1299,7 +1354,8 @@ const {
 
 ## Configuration Options
 
-Pass options as the third argument to `define()`:
+Pass options as the last argument to `define()`, after the handler or, with no
+handler, after the name:
 
 ```js
 define('SomeType', function () {}, {
@@ -1319,7 +1375,14 @@ define('SomeType', function () {}, {
 | `blockErrors` | `boolean` | `true` | If `true`, prevents construction when errors exist in the prototype chain. |
 | `submitStack` | `boolean` | `false` | If `true`, collects stack trace and stores as `__stack__` property on instances. |
 | `unchain` | `boolean` | `false` | For async constructors: `false` (default) requires the construction to resolve to its instance; `true` drops the chain on a non-object result — that value is the result. |
-| `ModificationConstructor` | `Function` | - | Custom constructor function for internal instance modification. |
+| `ModificationConstructor` | `Function` | built-in | Factory of the function that wires the prototype chain of a new instance. |
+
+In the config place `true` / `false` is `strictChain` alone, and a function after
+the handler is `ModificationConstructor` alone:
+
+```js
+define('SomeType', function () {}, false); // { strictChain: false }
+```
 
 ### What `strictChain` actually guards
 

@@ -322,6 +322,7 @@ const admin3 = makeAdmin({ role: 'root' });
 
 All three return `InstanceResult<Merge<E, T>>`: the parent instance's fields
 merged with the new type's fields, with the new type winning on conflicts.
+For an async constructor they return a Promise of it.
 
 The same construction rules as `new instance.SubType()` apply: `Ctor` must be
 defined on the entity's type chain (with `strictChain: true` — the default —

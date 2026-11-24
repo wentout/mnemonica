@@ -6,7 +6,12 @@ import type {
 	CtorParameter,
 	IDEF,
 	hooksTypes,
-	constructorOptions,
+	hookName,
+	HookMethods,
+	AnyHookCallback,
+	AsyncIDEF,
+	DefineConfig,
+	NoHandlerConfig,
 	Proto,
 	IDefinitorInstance,
 	Constructor,
@@ -17,6 +22,7 @@ import type {
 	LazyAbsorber,
 	MnemonicaModule,
 	InstanceResult,
+	NotAny,
 	Merge,
 	GlobalRegistry,
 	FreeLookupResult,
@@ -24,8 +30,7 @@ import type {
 	HookableConstructor,
 	DefineNewableOrCallable,
 	LookupSource,
-	LazyDef,
-	ApplyFunction
+	LazyDef
 } from './types';
 
 import TypesUtils from './api/utils/index';
@@ -44,10 +49,13 @@ export type {
 	Proto,
 	ProtoFlat,
 	constructorOptions,
+	DefineConfig,
 	deliveredHookOpts,
 	hooksOpts,
 	hook,
 	hooksTypes,
+	hookName,
+	HookMethods,
 	IDefinitorInstance,
 	InstanceResult,
 	Merge,
@@ -143,14 +151,21 @@ function checkThis(pointer: typeof mnemonica | typeof exports | unknown): boolea
 
 
 // Define function using TypeAbsorber interface with proper type casting
+// Three forms, the config is always the last argument:
+//   define(TypeName, constructHandler, config?)
+//   define(TypeName, config?)                    no handler
+//   define(constructHandler, config?)            TypeName is its own name
+// An async handler precedes IDEF, which accepts it too, its void result
+// erasing the Promise. A `=> never` handler (one that only throws) precedes
+// the async one, whose Promise it would match, and so would an `any` handler
 export function define <
 	T extends object,
 	Args extends unknown[] = unknown[]
 >(
 	this: unknown,
-	TypeName?: string | IDEF<T, Args>,
-	constructHandler?: IDEF<T, Args>,
-	config?: constructorOptions
+	TypeName: string,
+	constructHandler: (this: T, ...args: Args) => never,
+	config?: DefineConfig
 ): IDefinitorInstance<
 	T,
 	InstanceResult<T>,
@@ -159,6 +174,101 @@ export function define <
 	object,
 	Args
 >;
+export function define <
+	T extends object,
+	Args extends unknown[] = unknown[]
+>(
+	this: unknown,
+	TypeName: string,
+	constructHandler: AsyncIDEF<T, Args>,
+	config?: DefineConfig
+): IDefinitorInstance<
+	T,
+	InstanceResult<T>,
+	GlobalRegistry,
+	'',
+	object,
+	Args,
+	Promise<InstanceResult<T>>
+>;
+export function define <
+	T extends object,
+	Args extends unknown[] = unknown[]
+>(
+	this: unknown,
+	constructHandler: (this: T, ...args: Args) => never,
+	config?: DefineConfig
+): IDefinitorInstance<
+	T,
+	InstanceResult<T>,
+	GlobalRegistry,
+	'',
+	object,
+	Args
+>;
+export function define <
+	T extends object,
+	Args extends unknown[] = unknown[]
+>(
+	this: unknown,
+	constructHandler: AsyncIDEF<T, Args>,
+	config?: DefineConfig
+): IDefinitorInstance<
+	T,
+	InstanceResult<T>,
+	GlobalRegistry,
+	'',
+	object,
+	Args,
+	Promise<InstanceResult<T>>
+>;
+export function define <
+	T extends object,
+	Args extends unknown[] = unknown[]
+>(
+	this: unknown,
+	TypeName: string,
+	constructHandler: IDEF<T, Args> | undefined,
+	config?: DefineConfig
+): IDefinitorInstance<
+	T,
+	InstanceResult<T>,
+	GlobalRegistry,
+	'',
+	object,
+	Args
+>;
+export function define <
+	T extends object,
+	Args extends unknown[] = unknown[]
+>(
+	this: unknown,
+	TypeName: string,
+	config?: NoHandlerConfig
+): IDefinitorInstance<
+	T,
+	InstanceResult<T>,
+	GlobalRegistry,
+	'',
+	object,
+	Args
+>;
+export function define <
+	T extends object,
+	Args extends unknown[] = unknown[]
+>(
+	this: unknown,
+	constructHandler: IDEF<T, Args>,
+	config?: DefineConfig
+): IDefinitorInstance<
+	T,
+	InstanceResult<T>,
+	GlobalRegistry,
+	'',
+	object,
+	Args
+>;
+// the same three forms for explicit generics and flexible handlers
 export function define <
 	T extends object,
 	P extends object = object,
@@ -174,43 +284,104 @@ export function define <
 	> = IDefinitorInstance<N>,
 >(
 	this: unknown,
-	TypeName?: string | DefineNewableOrCallable,
+	TypeName: string,
 	// Allow both strict IDEF and more flexible function signatures
-	constructHandler?: IDEF<T> | DefineNewableOrCallable | object | boolean,
-	config?: constructorOptions,
+	constructHandler: IDEF<T> | DefineNewableOrCallable | undefined,
+	config?: DefineConfig,
+): R;
+export function define <
+	T extends object,
+	P extends object = object,
+	N extends Proto<P, T> = Proto<P, T>,
+	R extends IDefinitorInstance<
+		N,
+		InstanceResult<N>,
+		GlobalRegistry,
+		'',
+		object,
+		never[]
+	> = IDefinitorInstance<N>,
+>(
+	this: unknown,
+	TypeName: string,
+	config?: NoHandlerConfig,
+): R;
+export function define <
+	T extends object,
+	P extends object = object,
+	N extends Proto<P, T> = Proto<P, T>,
+	R extends IDefinitorInstance<
+		N,
+		InstanceResult<N>,
+		GlobalRegistry,
+		'',
+		object,
+		never[]
+	> = IDefinitorInstance<N>,
+>(
+	this: unknown,
+	constructHandler: IDEF<T> | DefineNewableOrCallable,
+	config?: DefineConfig,
 ): R;
 // `this` is the collection: defaultTypes for a plain call, the given one for
-// define.call(collection, …); a single function or class names the type
-// itself (TypeName from its own name)
+// define.call(collection, …); the arguments pass through as they are
 export function define <T extends object>(
 	this: unknown,
-	TypeName?: string | DefineNewableOrCallable,
-	constructHandler?: IDEF<T> | DefineNewableOrCallable | object | boolean,
-	config?: constructorOptions,
+	TypeOrTypeName: string | DefineNewableOrCallable,
+	constructHandlerOrConfig?: IDEF<T> | DefineNewableOrCallable | DefineConfig,
+	config?: DefineConfig,
 ): IDefinitorInstance<T> {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
 	// The implementation returns the delegated constructor directly.
 	const defineResult = (types as { define: TypeAbsorber })
 		.define(
-			TypeName as string,
-			constructHandler as IDEF<T>,
+			TypeOrTypeName as string,
+			constructHandlerOrConfig as IDEF<T>,
 			config
 		);
 	return defineResult;
 }
 
+// the same order as in define() above
+export function lazy<T extends object, Args extends unknown[] = unknown[]>(
+	this: unknown,
+	TypeName: string,
+	getter: () => (this: T, ...args: Args) => never,
+	config?: DefineConfig
+): IDefinitorInstance<
+	T,
+	InstanceResult<T>,
+	GlobalRegistry,
+	'',
+	object,
+	Args
+>;
+export function lazy<T extends object, Args extends unknown[] = unknown[]>(
+	this: unknown,
+	TypeName: string,
+	getter: () => AsyncIDEF<T, Args>,
+	config?: DefineConfig
+): IDefinitorInstance<
+	T,
+	InstanceResult<T>,
+	GlobalRegistry,
+	'',
+	object,
+	Args,
+	Promise<InstanceResult<T>>
+>;
 export function lazy<T extends object, Args extends unknown[] = unknown[]>(
 	this: unknown,
 	TypeName: string,
 	getter: LazyDef<T, Args>,
-	config?: constructorOptions
+	config?: DefineConfig
 ): IDefinitorInstance<T, InstanceResult<T>, GlobalRegistry, '', object, Args>;
 export function lazy(
 	this: unknown,
 	TypeName: string,
 	getter: unknown,
-	config?: constructorOptions
+	config?: DefineConfig
 ): unknown {
 	const types = checkThis(this) ? defaultTypes : this || defaultTypes;
 	// Type assertion needed because TypesCollectionProxy is a Proxy
@@ -273,68 +444,89 @@ const $run = function <E extends object, T extends object, Args extends unknown[
 };
 
 // TODO: apply instance .to type .with arguments
-export const apply: ApplyFunction = function <
-	E extends object,
-	T extends object,
-	Args extends unknown[]
->(
+// the overloads carry the merged entity+ctor shape, or its Promise for an
+// async constructor; the implementation returns what $run constructs
+export function apply <E extends object, C extends Constructor<PromiseLike<object>>>(
+	entity: E,
+	Ctor: C & NotAny<C>,
+	... [ args ]: [] extends ConstructorParameters<C>
+		? [args?: ConstructorParameters<C>]
+		: [args: ConstructorParameters<C>]
+): Promise<InstanceResult<Merge<E, Awaited<InstanceType<C>>>>>;
+export function apply <E extends object, T extends object, Args extends unknown[]>(
+	entity: E,
+	Ctor: CtorParameter<T, Args>,
+	... [ args ]: [] extends Args ? [args?: NoInfer<Args>] : [args: NoInfer<Args>]
+): InstanceResult<Merge<E, T>>;
+export function apply <E extends object, T extends object, Args extends unknown[]>(
 	entity: E,
 	Ctor: CtorParameter<T, Args>,
 	args: unknown[] = []
-): InstanceResult<Merge<E, T>> {
-	const runResult = $run<E, T, Args>(
+): object {
+	const result = $run<E, T, Args>(
 		entity,
 		Ctor,
 		args
 	);
-	// the instance constructed from entity by Ctor carries the merged
-	// entity+ctor shape apply/call/bind promise — the named public result type
-	const result = runResult as InstanceResult<Merge<E, T>>;
 	return result;
-};
+}
 
 // TODO: call type .by instance .with arguments
-export const call = function <E extends object, T extends object, Args extends unknown[]>(
+export function call <E extends object, C extends Constructor<PromiseLike<object>>>(
+	entity: E,
+	Ctor: C & NotAny<C>,
+	...args: ConstructorParameters<C>
+): Promise<InstanceResult<Merge<E, Awaited<InstanceType<C>>>>>;
+export function call <E extends object, T extends object, Args extends unknown[]>(
 	entity: E,
 	Ctor: CtorParameter<T, Args>,
 	...args: NoInfer<Args>
-): InstanceResult<Merge<E, T>> {
-	const runResult = $run<E, T, Args>(
+): InstanceResult<Merge<E, T>>;
+export function call <E extends object, T extends object, Args extends unknown[]>(
+	entity: E,
+	Ctor: CtorParameter<T, Args>,
+	...args: unknown[]
+): object {
+	const result = $run<E, T, Args>(
 		entity,
 		Ctor,
 		args
 	);
-	// same merge narrowing as apply() above
-	const result = runResult as InstanceResult<Merge<E, T>>;
 	return result;
-};
+}
 
 // TODO: bind type .with instance → (...args)
-export const bind = function <E extends object, T extends object, Args extends unknown[]>(
+export function bind <E extends object, C extends Constructor<PromiseLike<object>>>(
+	entity: E,
+	Ctor: C & NotAny<C>
+): (...args: ConstructorParameters<C>) => Promise<InstanceResult<Merge<E, Awaited<InstanceType<C>>>>>;
+export function bind <E extends object, T extends object, Args extends unknown[]>(
 	entity: E,
 	Ctor: CtorParameter<T, Args>
-): (...args: Args) => InstanceResult<Merge<E, T>> {
+): (...args: Args) => InstanceResult<Merge<E, T>>;
+export function bind <E extends object, T extends object, Args extends unknown[]>(
+	entity: E,
+	Ctor: CtorParameter<T, Args>
+): (...args: Args) => object {
 	const result = (...args: Args) => {
 		const runResult = $run<E, T, Args>(
 			entity,
 			Ctor,
 			args
 		);
-		// same merge narrowing as apply() above
-		const typedResult = runResult as InstanceResult<Merge<E, T>>;
-		return typedResult;
+		return runResult;
 	};
 	return result;
-};
+}
 
 export const decorate = function <
-	T extends Constructor<object> | constructorOptions | undefined = undefined
+	T extends Constructor<object> | NoHandlerConfig | undefined = undefined
 >(
 	target?: T,
-	config?: constructorOptions
+	config?: DefineConfig
 ): <U extends Constructor<object>>(cstr: U) => DecoratedClass<U> {
-	const opts = (config === undefined && typeof target === 'object' && !(target instanceof Function))
-		? target as constructorOptions
+	const opts = (config === undefined && !(target instanceof Function))
+		? target as NoHandlerConfig | undefined
 		: config;
 
 	// decorate(SomeType, config?) expects a constructor already carrying
@@ -374,7 +566,7 @@ export const decorate = function <
 
 export const registerHook = function <
 	T extends object,
-	HT extends hooksTypes = hooksTypes,
+	HT extends hookName = hooksTypes,
 >(
 	Ctor: HookableConstructor<T>,
 	hookType: HT,
@@ -384,6 +576,18 @@ export const registerHook = function <
 		hookType,
 		cb
 	);
+};
+
+export const unregisterHook = function (
+	Ctor: Pick<HookMethods, 'unregisterHook'>,
+	hookType: hookName,
+	cb: AnyHookCallback
+): boolean {
+	const result = Ctor.unregisterHook(
+		hookType,
+		cb
+	);
+	return result;
 };
 
 export const mnemonica = Object.entries({
@@ -396,6 +600,7 @@ export const mnemonica = Object.entries({
 	bind,
 	decorate,
 	registerHook,
+	unregisterHook,
 
 	...descriptors,
 

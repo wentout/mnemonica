@@ -3,6 +3,7 @@
 import {
 	invokeHook,
 	registerHook,
+	unregisterHook,
 	registerFlowChecker,
 } from './hooks';
 import {
@@ -16,6 +17,7 @@ export * as errors from './errors';
 export const hooks = {
 	invokeHook,
 	registerHook,
+	unregisterHook,
 	registerFlowChecker,
 };
 

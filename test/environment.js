@@ -189,6 +189,7 @@ const tests = (opts) => {
 				'bind',
 				'decorate',
 				'registerHook',
+				'unregisterHook',
 				'getProps',
 				'setProps',
 				'isClass',
@@ -988,6 +989,113 @@ const tests = (opts) => {
 				const desc = Object.getOwnPropertyDescriptor(AssignRoot.proto, 'pinnedGetter');
 				expect(typeof desc.get).to.equal('function');
 				expect(new AssignRoot().pinnedGetter).to.equal(42);
+			});
+		});
+
+		// every type lives in its own collection
+		describe('define() arguments are the same on every level', () => {
+			const levels = {
+				'free define' () {
+					const collection = createTypesCollection();
+					const result = define.bind(collection);
+					return result;
+				},
+				'collection' () {
+					const collection = createTypesCollection();
+					const result = collection.define.bind(collection);
+					return result;
+				},
+				'type' () {
+					const Root = createTypesCollection().define('ArgsRoot', function () { });
+					const result = Root.define.bind(Root);
+					return result;
+				},
+			};
+			const config = { strictChain : false };
+			class ArgsClass { }
+			const ArgsFn = function () { };
+			const ArgsAsync = async function () { };
+			const brief = (Type) => {
+				const result = [ Type.TypeName, Type.config.strictChain ];
+				return result;
+			};
+
+			Object.entries(levels).forEach(([ level, getDefine ]) => {
+				[ ArgsClass, ArgsFn, ArgsAsync ].forEach((handler) => {
+					it(`${level}: ${handler.name} first, its own name is the TypeName`, () => {
+						expect(brief(getDefine()(handler))).to.deep.equal([ handler.name, true ]);
+					});
+					it(`${level}: ${handler.name} first, config second`, () => {
+						expect(brief(getDefine()(handler, config))).to.deep.equal([ handler.name, false ]);
+					});
+					it(`${level}: ${handler.name} first, nothing after the config is read`, () => {
+						expect(brief(getDefine()(handler, undefined, config))).to.deep.equal([ handler.name, true ]);
+						expect(brief(getDefine()(handler, {}, config))).to.deep.equal([ handler.name, true ]);
+						expect(brief(getDefine()(handler, true, config))).to.deep.equal([ handler.name, true ]);
+					});
+					it(`${level}: ${handler.name} handler, a boolean config is strictChain`, () => {
+						expect(brief(getDefine()(handler, false))).to.deep.equal([ handler.name, false ]);
+						expect(brief(getDefine()(handler, true))).to.deep.equal([ handler.name, true ]);
+						expect(brief(getDefine()('ArgsNamed', handler, false))).to.deep.equal([ 'ArgsNamed', false ]);
+						expect(brief(getDefine()('ArgsNamed', handler, true))).to.deep.equal([ 'ArgsNamed', true ]);
+					});
+					it(`${level}: ${handler.name} handler, a function config is the ModificationConstructor`, () => {
+						const mc = require('./createInstanceModificator200XthWay');
+						[
+							getDefine()(handler, mc),
+							getDefine()('ArgsNamed', handler, mc),
+							getDefine()('ArgsNamed', handler, { ModificationConstructor : mc }),
+						].forEach((Type) => {
+							expect(Type.config.ModificationConstructor).to.equal(mc);
+							expect(Type.config.strictChain).to.equal(true);
+						});
+					});
+					it(`${level}: TypeName first, ${handler.name} second, config third`, () => {
+						expect(brief(getDefine()('ArgsNamed', handler))).to.deep.equal([ 'ArgsNamed', true ]);
+						expect(brief(getDefine()('ArgsNamed', handler, config))).to.deep.equal([ 'ArgsNamed', false ]);
+					});
+				});
+				it(`${level}: TypeName first, config second, nothing after it is read`, () => {
+					expect(brief(getDefine()('ArgsNamed'))).to.deep.equal([ 'ArgsNamed', true ]);
+					expect(brief(getDefine()('ArgsNamed', config))).to.deep.equal([ 'ArgsNamed', false ]);
+					expect(brief(getDefine()('ArgsNamed', {}, config))).to.deep.equal([ 'ArgsNamed', true ]);
+					expect(brief(getDefine()('ArgsNamed', false))).to.deep.equal([ 'ArgsNamed', false ]);
+					expect(brief(getDefine()('ArgsNamed', true, config))).to.deep.equal([ 'ArgsNamed', true ]);
+				});
+				it(`${level}: any other value in the config place gives the defaults`, () => {
+					[ null, 1, 0, 'false', '' ].forEach((value) => {
+						expect(brief(getDefine()(ArgsFn, value))).to.deep.equal([ 'ArgsFn', true ]);
+						expect(brief(getDefine()('ArgsNamed', ArgsFn, value))).to.deep.equal([ 'ArgsNamed', true ]);
+						expect(brief(getDefine()('ArgsNamed', value))).to.deep.equal([ 'ArgsNamed', true ]);
+					});
+				});
+			});
+			it('a boolean config overlaps the config of the collection', () => {
+				const loose = createTypesCollection({ strictChain : false });
+				expect(brief(loose.define(ArgsFn))).to.deep.equal([ 'ArgsFn', false ]);
+				expect(brief(loose.define(ArgsClass, true))).to.deep.equal([ 'ArgsClass', true ]);
+			});
+			it('lazy and decorate take the same config', () => {
+				const mc = require('./createInstanceModificator200XthWay');
+				const collection = createTypesCollection();
+				const Root = collection.define('ArgsRoot', function () { });
+				[
+					collection.lazy('ArgsLazy', () => ArgsFn, false),
+					Root.lazy('ArgsLazy', () => ArgsFn, false),
+					collection.decorate(false)(class ArgsDecorated { }),
+					Root.decorate(false)(class ArgsDecorated { }),
+					mnemonica.decorate(false)(class ArgsDecoratedFree { }),
+					mnemonica.decorate(Root, false)(class ArgsDecoratedSub { }),
+				].forEach((Type) => {
+					expect(Type.config.strictChain).to.equal(false);
+				});
+				[
+					collection.lazy('ArgsLazyMc', () => ArgsFn, mc),
+					collection.decorate(mc)(class ArgsDecoratedMc { }),
+					mnemonica.decorate(Root, mc)(class ArgsDecoratedSubMc { }),
+				].forEach((Type) => {
+					expect(Type.config.ModificationConstructor).to.equal(mc);
+				});
 			});
 		});
 

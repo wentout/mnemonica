@@ -3,8 +3,10 @@
 // Compile-only pins: define() constructors take exactly the parameters declared
 // by their function or class handler. The this parameter is never included.
 
-import { apply, bind, call, createTypesCollection, define, lazy, mnemonica } from '..';
-import type { IDefinitorInstance, InstanceResult, TypeConstructorBase, TypeRegistry } from '..';
+import { apply, bind, call, createTypesCollection, decorate, define, lazy, mnemonica } from '..';
+import type {
+	IDefinitorInstance, InstanceResult, RegistryOf, TypeAbsorber, TypeConstructorBase, TypeRegistry
+} from '..';
 
 type Equal<Left, Right> =
 	(<T>() => T extends Left ? 1 : 2) extends
@@ -223,17 +225,17 @@ type FreeDefineArgs = Assert<Equal<
 	[data: { value: string }]
 >>;
 
-// The legacy function-name define() overload carries the same parameters.
-const LegacyFreeDefine = define(function CtorArgsLegacyFree (this: RequiredShape, data: { name: string }) {
+// define() named by its own function carries the same parameters.
+const FreeFnDefine = define(function CtorArgsFreeFn (this: RequiredShape, data: { name: string }) {
 	this.name = data.name;
 });
-new LegacyFreeDefine({ name: 'legacy-free' });
-// @ts-expect-error — legacy free define requires the declared data
-new LegacyFreeDefine();
-// @ts-expect-error — legacy free define checks the declared data shape
-new LegacyFreeDefine({ name: 42 });
-type LegacyFreeDefineArgs = Assert<Equal<
-	ConstructorParameters<typeof LegacyFreeDefine>,
+new FreeFnDefine({ name: 'free-fn' });
+// @ts-expect-error — free define requires the declared data
+new FreeFnDefine();
+// @ts-expect-error — free define checks the declared data shape
+new FreeFnDefine({ name: 42 });
+type FreeFnDefineArgs = Assert<Equal<
+	ConstructorParameters<typeof FreeFnDefine>,
 	[data: { name: string }]
 >>;
 
@@ -260,16 +262,16 @@ type ExplicitTwoArgs = Assert<Equal<
 >>;
 
 // A builder value's own define() carries Args into its return and registry.
-const SourceDefine = AB.define('CtorArgsSourceDefine', function (this: RequiredShape, data: { name: string }) {
+const MethodDefine = AB.define('CtorArgsMethodDefine', function (this: RequiredShape, data: { name: string }) {
 	this.name = data.name;
 });
-new SourceDefine({ name: 'source' });
+new MethodDefine({ name: 'method' });
 // @ts-expect-error — the method define requires the declared data
-new SourceDefine();
+new MethodDefine();
 // @ts-expect-error — the method define checks the declared data shape
-new SourceDefine({ name: 42 });
-type SourceDefineArgs = Assert<Equal<
-	ConstructorParameters<typeof SourceDefine>,
+new MethodDefine({ name: 42 });
+type MethodDefineArgs = Assert<Equal<
+	ConstructorParameters<typeof MethodDefine>,
 	[data: { name: string }]
 >>;
 
@@ -310,17 +312,132 @@ type SourceLazyArgs = Assert<Equal<
 	[data: { note: string }]
 >>;
 
-// Known legacy gap: define(fn, config) reaches the R overload because the
-// config occupies the typed handler position, so its Args remain unknown[].
-const LegacyWithConfig = define(function CtorArgsLegacyConfig (this: RequiredShape, data: { name: string }) {
+// The config is the last argument: the second one when the function or class
+// comes first, on every level.
+const FnWithConfig = define(function CtorArgsFnConfig (this: RequiredShape, data: { name: string }) {
 	this.name = data.name;
 }, { strictChain: false });
-new LegacyWithConfig({ name: 'config' });
-new LegacyWithConfig();
-type LegacyWithConfigArgs = Assert<Equal<
-	ConstructorParameters<typeof LegacyWithConfig>,
-	unknown[]
+new FnWithConfig({ name: 'config' });
+// @ts-expect-error — the config changes nothing about the declared data
+new FnWithConfig();
+type FnWithConfigArgs = Assert<Equal<
+	ConstructorParameters<typeof FnWithConfig>,
+	[data: { name: string }]
 >>;
+const ClassWithConfig = define(class CtorArgsClassConfig {
+	size: number;
+	constructor (size: number) {
+		this.size = size;
+	}
+}, { strictChain: false });
+export const classWithConfigSize: number = new ClassWithConfig(1).size;
+// @ts-expect-error — the class declares its data
+new ClassWithConfig('1');
+export const noHandlerName: string = new (define<RequiredShape>('CtorArgsNoHandler', { strictChain: false }))().name;
+
+const argsCollection = createTypesCollection();
+const ArgsRoot = argsCollection.define(function CtorArgsCollectionFn (this: RequiredShape, data: { name: string }) {
+	this.name = data.name;
+}, { strictChain: false });
+export const argsRootName: string = new ArgsRoot({ name: 'root' }).name;
+const ArgsChild = AB.define(class CtorArgsChildClass {
+	size: number;
+	constructor (size: number) {
+		this.size = size;
+	}
+}, { strictChain: false });
+export const argsChildSize: number = new ArgsChild(1).size;
+// the name is only a string for TypeScript: the registry goes on unchanged,
+// also through the types defined on the result
+const ArgsGrandChild = ArgsChild.define('CtorArgsGrandChild', function (this: { leaf: boolean }) {
+	this.leaf = true;
+});
+export const argsGrandChildSize: number = new ArgsGrandChild().size;
+type ArgsChildRegistry = Assert<Equal<keyof RegistryOf<typeof ArgsChild>, keyof RegistryOf<typeof AB>>>;
+type ArgsGrandChildRegistry = Assert<Equal<keyof RegistryOf<typeof ArgsGrandChild>, keyof RegistryOf<typeof AB>>>;
+AB.define('CtorArgsNoHandlerBuilder', { strictChain: false });
+
+// Nothing goes after the config, and only a config goes there.
+// @ts-expect-error — the config was the last argument
+define(function CtorArgsExtraFn () {}, { strictChain: false }, { strictChain: false });
+// @ts-expect-error — the second argument is the config
+define(function CtorArgsUndefinedFn () {}, undefined, { strictChain: false });
+// @ts-expect-error — the config was the last argument
+define('CtorArgsExtraName', { strictChain: false }, { strictChain: false });
+// @ts-expect-error — the config was the last argument
+define('CtorArgsExtraHandler', function () {}, { strictChain: false }, { strictChain: false });
+// @ts-expect-error — a second function is not a config
+define(function CtorArgsTwoFns () {}, function Second () {});
+// @ts-expect-error — a string is not a config
+define(function CtorArgsString () {}, 'strictChain');
+// @ts-expect-error — with a string first, a second function is the handler, and a third is not a config
+define('CtorArgsTwoFnsNamed', function () {}, function Second () {});
+// @ts-expect-error — a class is not a config
+AB.define('CtorArgsTwoFnsNamedB', function () {}, class Second {});
+// @ts-expect-error — the first argument is required
+define();
+// @ts-expect-error — the config was the last argument
+AB.define(function CtorArgsExtraFnB () {}, { strictChain: false }, { strictChain: false });
+// @ts-expect-error — the second argument is the config
+AB.define(function CtorArgsUndefinedFnB () {}, undefined, { strictChain: false });
+// @ts-expect-error — the config was the last argument
+AB.define('CtorArgsExtraNameB', { strictChain: false }, { strictChain: false });
+// @ts-expect-error — a second function is not a config
+AB.define(function CtorArgsTwoFnsB () {}, function Second () {});
+// @ts-expect-error — the first argument is required
+AB.define();
+// @ts-expect-error — the config was the last argument
+argsCollection.define(function CtorArgsExtraFnC () {}, { strictChain: false }, { strictChain: false });
+declare const absorber: TypeAbsorber;
+// @ts-expect-error — the config was the last argument
+absorber(function CtorArgsExtraFnA () {}, { strictChain: false }, { strictChain: false });
+// @ts-expect-error — a second function is not a config
+absorber(function CtorArgsTwoFnsA () {}, function Second () {});
+
+// true / false in the config place is strictChain ...
+define(function CtorArgsTrue () {}, true);
+define('CtorArgsFalse', function () {}, false);
+define('CtorArgsFalseNoHandler', false);
+lazy('CtorArgsFalseLazy', () => function () {}, false);
+AB.define(function CtorArgsTrueB () {}, true);
+AB.define('CtorArgsFalseB', function () {}, false);
+AB.lazy('CtorArgsFalseLazyB', () => function () {}, false);
+absorber(function CtorArgsFalseA () {}, false);
+// ... and a function is ModificationConstructor: the built-in one ...
+const { defaultOptions: { ModificationConstructor: builtIn } } = mnemonica;
+define(function CtorArgsBuiltIn () {}, builtIn);
+define('CtorArgsBuiltInNamed', function () {}, builtIn);
+lazy('CtorArgsBuiltInLazy', () => function () {}, builtIn);
+AB.define(function CtorArgsBuiltInB () {}, builtIn);
+AB.define('CtorArgsBuiltInNamedB', function () {}, builtIn);
+absorber('CtorArgsBuiltInA', function () {}, builtIn);
+define('CtorArgsBuiltInOption', function () {}, { ModificationConstructor : builtIn });
+// ... or an own one
+const WithOwn = define(function CtorArgsOwn (this: RequiredShape, data: { name: string }) {
+	this.name = data.name;
+}, () => {
+	const modificator = function (
+		this: object,
+		...[ ModificatorType, proto, addProps ]: Parameters<ReturnType<typeof builtIn>>
+	) {
+		const result = builtIn().call(this, ModificatorType, proto, addProps);
+		return result;
+	};
+	return modificator;
+});
+export const withOwnName: string = new WithOwn({ name: 'own' }).name;
+
+// decorators take the same config
+@decorate(false)
+export class CtorArgsDecorated {}
+@decorate(ArgsRoot, false)
+export class CtorArgsDecoratedSub {}
+@decorate(ArgsRoot, builtIn)
+export class CtorArgsDecoratedMc {}
+
+// The class or function mode is detected from the handler, never an option.
+// @ts-expect-error — asClass is not part of constructorOptions
+define('CtorArgsAsClassOption', function () {}, { asClass: true });
 
 // apply/call/bind infer the constructor's required argument list.
 apply({ parent: true }, BuilderRoot, [{ name: 'apply' }]);
@@ -347,6 +464,17 @@ type BoundRootArgs = Assert<Equal<
 	Parameters<typeof BoundRoot>,
 	[data: { name: string }]
 >>;
+
+// Only constructors: the function given to define() is not one.
+const plainHandler = function (this: RequiredShape, data: { name: string }) {
+	this.name = data.name;
+};
+// @ts-expect-error — apply takes a constructor, not a plain function
+apply({ parent: true }, plainHandler, [{ name: 'apply' }]);
+// @ts-expect-error — call takes a constructor, not a plain function
+call({ parent: true }, plainHandler, { name: 'call' });
+// @ts-expect-error — bind takes a constructor, not a plain function
+bind({ parent: true }, plainHandler);
 
 // Optional and no-argument constructors keep their ordinary invocation rules.
 apply({ parent: true }, Optional);

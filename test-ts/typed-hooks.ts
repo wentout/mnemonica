@@ -18,6 +18,7 @@ import {
 	lookup,
 	decorate,
 	registerHook,
+	unregisterHook,
 	createTypesCollection,
 	mnemonica,
 	RegistryEntry,
@@ -353,3 +354,56 @@ HookUser.lazy(() => function (this: HookLazyStrict) {
 lazy(() => function (this: HookLazyStrict) {
 	this.mark = 'unnamed';
 });
+
+// --- unregisterHook, on / off, short hook names -------------------------------
+
+// on is registerHook under a short name: the same inference, and the short
+// hook names split the payload the same way
+HookAdmin.on('post', (opts) => {
+	const role: string = opts.inheritedInstance.role;
+	const parentName: string = opts.existentInstance.name;
+	opts.throwModificationError(new Error('pin'));
+	void role;
+	void parentName;
+});
+HookAdmin.on('error', (opts) => {
+	const errored: HookAdmin = opts.inheritedInstance;
+	void errored;
+});
+HookAdmin.on('pre', (opts) => {
+	const parentName: string = opts.existentInstance.name;
+	void parentName;
+	// @ts-expect-error — pre is preCreation: no inheritedInstance yet
+	opts.inheritedInstance;
+});
+registerHook(HookAdmin, 'post', (opts) => {
+	const role: string = opts.inheritedInstance.role;
+	void role;
+});
+// @ts-expect-error — not a hook name
+HookAdmin.on('after', () => {});
+
+// unregisterHook / off return whether the callback was registered
+const removable = () => {};
+HookAdmin.registerHook('postCreation', removable);
+const removedFromType: boolean = HookAdmin.unregisterHook('postCreation', removable);
+const removedShort: boolean = HookAdmin.off('post', removable);
+const removedFree: boolean = unregisterHook(HookAdmin, 'post', removable);
+const removedModule: boolean = mnemonica.unregisterHook(HookAdmin, 'post', removable);
+const removedFromCollection: boolean = plainCollection.off('pre', removable);
+// a typed callback is removed by the same reference it was registered by
+const typedCallback = (opts: { inheritedInstance: HookAdmin }) => {
+	void opts;
+};
+HookAdmin.on('post', typedCallback);
+const removedTyped: boolean = HookAdmin.off('post', typedCallback);
+// @ts-expect-error — not a hook name
+HookAdmin.off('after', removable);
+// @ts-expect-error — the callback is required
+HookAdmin.off('post');
+void removedFromType;
+void removedShort;
+void removedFree;
+void removedModule;
+void removedFromCollection;
+void removedTyped;

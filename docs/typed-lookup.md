@@ -19,10 +19,10 @@ TypeScript, however, cannot see a type graph built by runtime calls. There are
 > large codebase already uses free `define()` calls everywhere.
 >
 > **Async handlers.** An `async function` handler makes `new` a Promise at
-> runtime. Builder lookups and instance-carried subtype constructors type it as
-> one (`AsyncRegistryEntry`), and so do Tactica's registry entries. The
-> constructor value that `define()` itself returns still types `new` as the
-> instance (see [`async-constructors.md`](./async-constructors.md#typescript)).
+> runtime. The constructor `define()` returns, lookups and instance-carried
+> subtype constructors type it as one (`AsyncRegistryEntry` in the registry),
+> and so do Tactica's registry entries
+> (see [`async-constructors.md`](./async-constructors.md#typescript)).
 
 ---
 
@@ -229,10 +229,10 @@ errors in each form.
   `bind( entity, Ctor )` use the constructor's exact required, optional, and
   rest parameters.
 
-The legacy `define( fn, config )` form keeps the open `unknown[]` signature:
-the config occupies the second argument instead of a typed handler position,
-so the call resolves through the legacy `R` overload. Use
-`define( 'Name', fn, config )` when constructor argument checking is required.
+`define( fn, config )` and `define( class, config )`, where the name is the
+function's or class's own, keep the fields and arguments too. TypeScript sees
+that name as `string`, so the type is not added to the local registry: to look
+it up typed, give the name explicitly, `define( 'Name', fn, config )`.
 
 ---
 

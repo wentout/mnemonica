@@ -4,27 +4,14 @@ import type {
 	Hookable, hook
 } from '../../types';
 
-import { ErrorsTypes } from '../../descriptors/errors';
-const {
-	WRONG_HOOK_TYPE,
-	MISSING_HOOK_CALLBACK,
-} = ErrorsTypes;
+import { resolveHookType } from './hookTypes';
 
-const hooksTypes = [
-	'preCreation',
-	'postCreation',
-	'creationError',
-];
+export const registerHook = function ( this: Hookable, name: string, cb: hook ) {
 
-export const registerHook = function ( this: Hookable, hookType: string, cb: hook ) {
-
-	if ( !hooksTypes.includes( hookType ) ) {
-		throw new WRONG_HOOK_TYPE;
-	}
-
-	if ( typeof cb !== 'function' ) {
-		throw new MISSING_HOOK_CALLBACK;
-	}
+	const hookType = resolveHookType(
+		name,
+		cb
+	);
 
 	if ( !this.hooks[ hookType ] ) {
 		this.hooks[ hookType ] = new Set( [ cb ] );

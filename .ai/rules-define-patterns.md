@@ -36,7 +36,7 @@ const SubType = MyType.define('SubType', function (this: SubType, extra: string)
 | Define a subtype | `User.define('Admin', function() { ... })` | `@decorate(User) class Admin { ... }` |
 | Create instance | `new User(data)` | `new User(data)` |
 | Create subtype | `new user.Admin()` | `new user.Admin()` |
-| Config options | third arg: `define('T', fn, config)` | first/second arg: `@decorate(Parent, config)` |
+| Config options | last arg: `define('T', fn, config)`, `define(fn, config)` | first/second arg: `@decorate(Parent, config)` |
 
 When working in a codebase that uses one style: **stay consistent with that style** rather than mixing.
 
@@ -63,19 +63,29 @@ For usage patterns (options, subtype decoration, typing limits), see
 
 ## Calling Conventions
 
-### 1. Modern (explicit name)
+The same on every level: the free `define`, a collection, a type. The config is
+always the last argument; nothing after it is read (a compile error in
+TypeScript).
+
+### 1. Explicit name: `define(TypeName, constructHandler, config?)`
 ```typescript
 define('UserType', function (this: UserType, data: UserData) {
 	Object.assign(this, data);
 });
 ```
 
-### 2. Legacy (name from constructor)
+With no handler the config comes second: `define(TypeName, config?)`.
+
+### 2. Name from the function or class: `define(constructHandler, config?)`
 ```typescript
 define(function UserType(this: UserType, data: UserData) {
 	Object.assign(this, data);
-});
+}, { strictChain: false });
 ```
+
+Fields, arguments and the Promise of an async handler are inferred from it. Its
+name is only a `string` for TypeScript, so `lookup('UserType')` is typed only
+with an explicit name or through tactica.
 
 ### 3. Nested (dot-path)
 ```typescript
@@ -148,6 +158,20 @@ Root constructors **may** be exported when tactica has generated standalone inst
 | `blockErrors` | `true` | Block construction if error exists in prototype chain |
 | `submitStack` | `false` | Collect stack trace as `__stack__` property |
 | `unchain` | `false` | `await new Constructor()` must resolve to its instance; `true` drops the chain on a non-object result |
+| `ModificationConstructor` | `createInstanceModificator` | The factory of the function that wires the prototype chain of a new instance |
+
+The config overlaps the defaults (`defaultOptions` in `src/constants/index.ts`).
+In its place, after the handler or the name:
+
+- an object overlaps its own options;
+- `true` / `false` is `strictChain` alone;
+- a function after the handler is the `ModificationConstructor` alone.
+  `test/createInstanceModificator200XthWay.js` is one: it wires the chain the
+  way JavaScript did before `Object.setPrototypeOf`;
+- anything else overlaps nothing, and is a compile error.
+
+The same for `lazy()` and `decorate()`. The type is `DefineConfig`. A
+collection's config is always an object.
 
 ## Instance Method Opt-In
 

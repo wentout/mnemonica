@@ -204,7 +204,7 @@ See [`.ai/rules-code-style.md`](./.ai/rules-code-style.md) for the full style re
 The core API is `define(TypeName, constructHandler, config?)` in `src/index.ts`. It returns a constructor with additional methods:
 - `.define()` - define subtypes
 - `.lookup()` - find types by path
-- `.registerHook()` - register lifecycle hooks
+- `.registerHook()` / `.unregisterHook()` (`.on()` / `.off()`) - lifecycle hooks
 
 ### The `lookup()` Function
 
@@ -372,7 +372,7 @@ This applies to **all** `return` statements where the expression is anything oth
 
 ## TypeScript Type Rules
 
-**Types describe the runtime; the public runtime interface is never changed to make TypeScript infer something.** No new call form, argument dispatch or overload at runtime for typing's sake — see [`.ai/rules-type-system.md`](./.ai/rules-type-system.md#types-describe-the-runtime).
+**Types describe the runtime; the public runtime interface is never changed to make TypeScript infer something.** No new call form, argument dispatch or overload at runtime for typing's sake. The meaning of the API is what it does for a user at runtime, under its user-facing names: never derive it from an internal parameter name — see [`.ai/rules-type-system.md`](./.ai/rules-type-system.md#types-describe-the-runtime).
 
 **Never use bare `Function`, `CallableFunction`, or `NewableFunction` as types** — always define a purpose-specific interface that extends them. See [`.ai/rules-code-style.md`](./.ai/rules-code-style.md) for examples and allowed exceptions.
 

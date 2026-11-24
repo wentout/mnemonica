@@ -6,6 +6,7 @@ import { environmentTests } from './environment';
 import { withInstanceMethods } from './instance-methods-helper';
 import './utils';
 import './collection-decorate';
+import './unregister-hook';
 import type {
 	HookInvocationEntry,
 	HookInvocationsArray,
@@ -3958,6 +3959,65 @@ const { myDecoratedInstance, myDecoratedSubInstance, myDecoratedSubSubInstance, 
 				expect(() => {
 					new instance.ErrorSubType();
 				}).toThrow();
+			});
+		});
+
+		describe('define() takes the config right after the handler', () => {
+			it('is the second argument when a function or class comes first', () => {
+				const { createTypesCollection } = require('../src/index');
+				const config = { strictChain : false };
+				class ArgsClassJest { }
+				const ArgsFnJest = function () { };
+				[ ArgsClassJest, ArgsFnJest ].forEach((handler) => {
+					const collection = createTypesCollection();
+					const Root = collection.define('ArgsRootJest', function () { });
+					const FreeCollection = createTypesCollection();
+					[
+						define.call(FreeCollection, handler, config),
+						collection.define(handler, config),
+						Root.define(handler, config),
+					].forEach((Type) => {
+						expect(Type.TypeName).toBe(handler.name);
+						expect(Type.config.strictChain).toBe(false);
+					});
+					expect(Root.define('ArgsNamedJest', handler, config).config.strictChain).toBe(false);
+					expect(Root.define('ArgsOnlyJest', config).config.strictChain).toBe(false);
+					expect(Root.lookup(handler.name).config.strictChain).toBe(false);
+				});
+			});
+
+			it('is strictChain when it is a boolean, and nothing when it is anything else', () => {
+				const { createTypesCollection, decorate } = require('../src/index');
+				const handler = function ArgsBooleanJest () { };
+				const strict = (value: unknown) => {
+					const result = [
+						createTypesCollection().define(handler, value),
+						createTypesCollection().define('ArgsBooleanJest', handler, value),
+						createTypesCollection().define('ArgsBooleanJest', value),
+						createTypesCollection().lazy('ArgsBooleanJest', () => handler, value),
+						createTypesCollection().decorate(value)(class ArgsBooleanClassJest { }),
+					].map((Type) => Type.config.strictChain);
+					return result;
+				};
+				expect(new Set(strict(false))).toEqual(new Set([ false ]));
+				[ true, null, 0, 'false' ].forEach((value) => {
+					expect(new Set(strict(value))).toEqual(new Set([ true ]));
+				});
+				expect(decorate(false)(class ArgsBooleanFreeJest { }).config.strictChain).toBe(false);
+			});
+
+			it('is the ModificationConstructor when it is a function', () => {
+				const { createTypesCollection } = require('../src/index');
+				const handler = function ArgsModificatorJest (this: { one: number }) {
+					this.one = 1;
+				};
+				[
+					createTypesCollection().define(handler, mc),
+					createTypesCollection().define('ArgsModificatorJest', handler, mc),
+				].forEach((Type) => {
+					expect(Type.config.ModificationConstructor).toBe(mc);
+					expect(new Type().one).toBe(1);
+				});
 			});
 		});
 

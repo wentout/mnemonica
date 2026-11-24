@@ -27,6 +27,7 @@ import {
 	TypeDef,
 	CollectionDef,
 	constructorOptions,
+	TypeConfig,
 	TypeAbsorber,
 	ModificationConstructorFactory,
 	MnemonicaConstructorFactory,
@@ -396,8 +397,8 @@ Object.assign(
 TypeDescriptor.prototype.define = function (
 	this: TypeDescriptorInstance,
 	TypeOrTypeName: string | DefineNewableOrCallable,
-	constructHandlerOrConfig?: DefineNewableOrCallable | object,
-	config?: object
+	constructHandlerOrConfig?: DefineNewableOrCallable | object | boolean,
+	config?: object | boolean
 ) {
 	const result = define.call(
 		define,
@@ -413,7 +414,7 @@ TypeDescriptor.prototype.lazy = function (
 	this: TypeDescriptorInstance,
 	TypeName: string,
 	getter?: LazyDef<object>,
-	config?: object
+	config?: object | boolean
 ) {
 	const result = lazy.call(
 		this,
@@ -457,7 +458,7 @@ odp(
 	'decorate', {
 		get (this: TypeDescriptorInstance) {
 			const self = this;
-			const result = function (options?: object) {
+			const result = function (options?: object | boolean) {
 				const decorator = function (cstr: DefineNewable) {
 					const { name } = cstr;
 					// define() returns the registered constructor itself —
@@ -551,14 +552,30 @@ const checkDuplicate = function (target: TypesMap, name: string): void {
 // Both receive the resolved context and return TypeDescriptor.
 // ============================================================
 
+// what is given in the config place overlaps defaultOptions (see constants):
+// an object its own keys, a boolean strictChain alone, and a function
+// ModificationConstructor alone. Anything else overlaps nothing
+const makeOwnConfig = function (config: unknown): constructorOptions {
+	if (typeof config === 'boolean') {
+		const strictChainResult = { strictChain : config };
+		return strictChainResult;
+	}
+	if (typeof config === 'function') {
+		const modificatorResult = {
+			ModificationConstructor : config as ModificationConstructorFactory
+		};
+		return modificatorResult;
+	}
+	const result = typeof config === 'object' && config !== null ? config : {};
+	return result;
+};
+
 const createFromDirectHandler = function (
 	defineOrigin: TypeAbsorber,
 	target: TypesMap,
 	name: string,
 	handler: ConstructHandler | undefined,
-	// always an object here: the define() dispatcher replaces a missing
-	// config with {}, the lazy path passes its own
-	config: constructorOptions,
+	config: unknown,
 	lazyGetter?: LazyDef<object>
 ) {
 	// for a lazy type the handler stays the empty shim: the real constructor
@@ -574,13 +591,13 @@ const createFromDirectHandler = function (
 		SymbolConstructorName
 	);
 
-	if (config instanceof Function) {
-		config = {
-			ModificationConstructor : config as ModificationConstructorFactory
-		};
-	}
-
-	config.asClass = asClass;
+	// the detected mode goes into the type's own copy, never into the
+	// caller's options object
+	const typeConfig: TypeConfig = Object.assign(
+		{},
+		makeOwnConfig(config),
+		{ asClass }
+	);
 
 	const proto = (
 		hop(
@@ -608,7 +625,7 @@ const createFromDirectHandler = function (
 		name,
 		makeConstructHandler,
 		proto,
-		config,
+		typeConfig,
 		lazyGetter
 	);
 	return result;
@@ -625,7 +642,7 @@ const createFromLazyDefinition = function (
 	target: TypesMap,
 	name: string,
 	getter: LazyDef<object>,
-	config: constructorOptions
+	config: unknown
 ) {
 
 	const result = createFromDirectHandler(
@@ -650,15 +667,13 @@ export const define = function (
 	this: unknown,
 	subtypes: TypesMap,
 	TypeOrTypeName: string | DefineNewableOrCallable,
-	constructHandlerOrConfig?: DefineNewableOrCallable | object,
-	config?: object
+	constructHandlerOrConfig?: DefineNewableOrCallable | object | boolean,
+	config?: object | boolean
 ): TypeClass {
 
-	if (!config || (typeof config !== 'object' && typeof config !== 'function')) {
-		config = {};
-	}
-
-	// --- Branch: function passed as first arg ---
+	// --- Branch: function or class passed as first arg ---
+	// its own name is the TypeName, so the arguments shift left by one:
+	// the second is the config, and nothing after the config is read
 	if (typeof TypeOrTypeName === 'function') {
 		const fn = TypeOrTypeName;
 		if (fn.name) {
@@ -671,7 +686,7 @@ export const define = function (
 				subtypes,
 				fn.name,
 				fn,
-				config
+				constructHandlerOrConfig
 			);
 			return defineResult;
 		}
@@ -689,8 +704,8 @@ export const define = function (
 	let handler: ConstructHandler | undefined;
 	if (typeof constructHandlerOrConfig === 'function') {
 		handler = constructHandlerOrConfig as ConstructHandler;
-	} else if (typeof constructHandlerOrConfig === 'object') {
-		config = constructHandlerOrConfig as constructorOptions;
+	} else if (typeof constructHandlerOrConfig === 'object' || typeof constructHandlerOrConfig === 'boolean') {
+		config = constructHandlerOrConfig;
 	}
 
 	const {
@@ -710,7 +725,7 @@ export const define = function (
 		target,
 		name,
 		handler,
-		config as constructorOptions
+		config
 	);
 	return result;
 };
@@ -720,7 +735,7 @@ export const lazy = function (
 	subtypes: TypesMap,
 	TypeName: string,
 	getter?: LazyDef<object>,
-	config?: object
+	config?: object | boolean
 ): TypeClass {
 
 	// the unnamed lazy(() => Constructor) form is dropped: the callback is
@@ -748,10 +763,6 @@ export const lazy = function (
 		throw new WRONG_MODIFICATION_PATTERN( msg );
 	}
 
-	if (!config || (typeof config !== 'object' && typeof config !== 'function')) {
-		config = {};
-	}
-
 	// the same dotted-path resolution as define's string branch:
 	// lazy('Parent.Child', ...) lands under Parent, and a taken name fails
 	// with the descriptor's ALREADY_DECLARED, exactly like define
@@ -767,7 +778,7 @@ export const lazy = function (
 		target,
 		name,
 		getter,
-		config as constructorOptions
+		config
 	);
 	return lazyResult;
 };
